@@ -546,6 +546,10 @@ describe("tier vocabulary", () => {
   it("lists the canonical ids and the access-maps and access-tools labels in TIERS.md", () => {
     const text = readFileSync(path.join(root, "TIERS.md"), "utf8");
     expect(text).toContain("l'application");
+    expect(text).toContain("Administrator or official-page desk check. Not field-verified.");
+    expect(text).toContain(
+      "Vérification au bureau par un administrateur ou à partir d'une page officielle. Pas une vérification sur le terrain.",
+    );
     for (const id of [0, 1, 2, 3, 4, "E"]) expect(text).toContain(String(id));
     for (const label of Object.keys(ACCESS_TOOLS_TIER_LABELS)) {
       expect(text).toContain(label);

@@ -31,6 +31,9 @@ These are display labels on `provenance.prototype_label`. They are not a replace
 | `PROTOTYPE-UNVERIFIED` | `0` or `1` |
 | `COMMUNITY-REPORTED` | `2`, and not on a prototype record |
 | `VERIFIED` | `3`, with evidence, and not on a prototype record |
+| EN: Administrator or official-page desk check. Not field-verified. FR: Vérification au bureau par un administrateur ou à partir d'une page officielle. Pas une vérification sur le terrain. | `E` |
+
+`E` is a tier id, not a fifth prototype label. The English and French text is the display wording for that id. It is a desk check. It is not field-verified.
 
 ## Migration from access-maps
 
