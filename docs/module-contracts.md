@@ -7,8 +7,8 @@
 | `places` | `/places` | `access-maps` (`ALENZACODES/access-maps`) | Search stays off. No records, because the open-data files are not bundled. No map canvas and no map attribution. |
 | `journey` | `/journey` | `@access-maps/journey` | Origin and destination stay off. No itinerary. Live elevator status stays unavailable. |
 | `finders` | `/finders` | `@access-tools/finders` | Kind and text stay off. No washroom, parking, charging, repair, or adult-change records. Fixture places are not copied. |
-| `navigator` | `/navigator` | `@access-tools/navigator` at `06c9d4b` | No directory links are bundled in the page. A stored entry is `directory-record-1.0.0` with `verificationTier: "administrator_page"`, `notEligibilityAdvice: true`, and an `https` `officialUrl`. The cache provenance tier is `E`. A `directory-record-1.1.0` payload, or a payload field named `tier`, is rejected. |
-| `games` | `/games` | `@access-tools/games` | No activities yet. A real activity must set `clinicalClaim` and `seizureRiskFlash` to `false`. |
+| `navigator` | `/navigator` | `@access-tools/navigator` at `5f893a8` | No directory links are bundled in the page. A stored entry is `directory-record-1.0.0` with `verificationTier: "administrator_page"`, `notEligibilityAdvice: true`, and an `https` `officialUrl`. The cache provenance tier is `E`. A `directory-record-1.1.0` payload, or a payload field named `tier`, is rejected. |
+| `games` | `/games` | `@access-tools/games` at `5f893a8` | No activities yet. A real activity must set `clinicalClaim` and `seizureRiskFlash` to `false`. |
 | `help` | `/help` | `@access/help` | Article search stays off. No articles from that package. The shell's own short help text is separate and translated. |
 
 The pins, including the commit each binding was checked against, live in `packages/shared/src/lanes.ts`. `createModules` accepts a real module for any of those ids. Omitted ids return an empty list and `modules.unavailable`. The screen says that part is not available yet. The package and repository names sit in a technical note, not in the lead sentence. They do not invent records.
