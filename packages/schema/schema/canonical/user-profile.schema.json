@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/user-profile.schema.json",
+  "title": "User profile",
+  "description": "Device-only preferences for filtering and display. Profile name is the only required preference. Chair size and transfer side are optional and user-stated. No diagnosis, medication, injury level, location history, clinical reminder, pressure-relief timer, washroom interval, or continuous-travel limit. Health-aware timing is out of the prototype.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "profile_name",
+    "storage",
+    "server_persistence"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "user_profile"
+    },
+    "schema_version": {
+      "const": "user-profile-1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "storage": {
+      "const": "local_device_only"
+    },
+    "server_persistence": {
+      "const": "forbidden"
+    },
+    "language_preference": {
+      "enum": [
+        "en",
+        "fr"
+      ]
+    },
+    "region_preference": {
+      "type": "string"
+    },
+    "chair_type": {
+      "enum": [
+        "power_chair",
+        "manual_chair",
+        "scooter",
+        "walker",
+        "other",
+        "prefer_not_to_say"
+      ]
+    },
+    "chair_width_mm": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "chair_length_mm": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "turning_circle_mm": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "transfer_type": {
+      "enum": [
+        "left",
+        "right",
+        "both",
+        "front",
+        "prefer_not_to_say"
+      ]
+    },
+    "gradient_tolerance": {
+      "enum": [
+        "low",
+        "moderate",
+        "steep_rejected",
+        "prefer_not_to_say"
+      ]
+    },
+    "preferences": {
+      "type": "string"
+    },
+    "routing_preference": {
+      "enum": [
+        "low_slope",
+        "shortest_distance",
+        "charging_aware",
+        "balanced"
+      ]
+    },
+    "text_size_preference": {
+      "enum": [
+        "system",
+        "large",
+        "extra_large"
+      ]
+    },
+    "reduced_motion_preference": {
+      "type": "boolean"
+    },
+    "high_contrast_preference": {
+      "type": "boolean"
+    },
+    "screen_reader_user": {
+      "type": "boolean"
+    },
+    "switch_or_voice_user": {
+      "type": "boolean"
+    },
+    "saved_place_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  }
+}

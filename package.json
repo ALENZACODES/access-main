@@ -3,26 +3,37 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "the App — Ontario accessibility prototype shell. No organisation endorses this repository.",
+  "description": "Ontario accessibility prototype. The web shell is apps/web. Shared JSON Schema and verification tiers are @access-main/schema.",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
+  "exports": {
+    "./schema": "./packages/schema/dist/index.js"
+  },
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "npm run dev -w @access/web",
-    "build": "npm run build -w @access/web",
+    "build": "npm run build -w @access-main/schema && npm run build -w @access/web",
     "preview": "npm run preview -w @access/web",
-    "typecheck": "tsc -p packages/shared/tsconfig.json && tsc -p apps/web/tsconfig.json",
+    "prepare": "tsc -p packages/schema/tsconfig.json",
+    "typecheck": "tsc -p packages/schema/tsconfig.json && tsc -p packages/shared/tsconfig.json && tsc -p apps/web/tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run",
-    "test:e2e": "npm run test:e2e -w @access/web"
+    "test": "vitest run && npm test -w @access-main/schema",
+    "test:e2e": "npm run test:e2e -w @access/web",
+    "validate": "npm run validate -w @access-main/schema --",
+    "count": "npm run count -w @access-main/schema --"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.19.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
@@ -37,5 +48,6 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",
     "vitest": "^4.0.8"
-  }
+  },
+  "license": "MIT"
 }

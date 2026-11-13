@@ -1,0 +1,25 @@
+{
+  "record_type": "correction_report",
+  "schema_version": "correction-report-1.0.0",
+  "id": "example-correction",
+  "publication_context": "prototype",
+  "example": true,
+  "target_record_type": "washroom",
+  "target_record_id": "example-washroom",
+  "field_name": "hoist_present",
+  "suggested_correction": "unknown",
+  "note": "Synthetic correction. It does not change the record.",
+  "moderation_status": "pending",
+  "storage": "local_device_only",
+  "changes_published_record": false,
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  }
+}

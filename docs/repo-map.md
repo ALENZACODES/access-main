@@ -4,7 +4,7 @@
 | --- | --- |
 | `apps/web` | The PWA: routes, layout, design system, English and French strings, onboarding, settings, data status, service worker. |
 | `packages/shared` | TypeScript contracts: profile shape, provenance checks, cache rules, and the module interfaces other lanes implement. |
-| `packages/schema` | JSON Schemas. Owned by another lane. Not created or edited here. |
+| `packages/schema` | JSON Schema 2020-12, the validator, the seed counter, and the canonical verification tiers (`@access-main/schema`). |
 | `docs` | Decisions, this map, and the privacy note for device storage. |
 | `.github/workflows/ci.yml` | Pull-request checks only. |
 

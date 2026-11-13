@@ -1,0 +1,24 @@
+{
+  "record_type": "washroom",
+  "schema_version": "washroom-1.0.0",
+  "id": "example-washroom-tier3",
+  "place_id": "example-place",
+  "record_status": "draft",
+  "publication_context": "canonical",
+  "example": true,
+  "provenance": {
+    "tier": 3,
+    "source_name": "Synthetic survey, not a real washroom",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13",
+    "evidence": {
+      "protocol_version": "measurement-protocol-1.0.0",
+      "verifier_role": "trained_verifier",
+      "method": "tape",
+      "observed_at": "2026-11-13"
+    }
+  }
+}

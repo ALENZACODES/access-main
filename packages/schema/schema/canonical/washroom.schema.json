@@ -1,0 +1,1606 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/washroom.schema.json",
+  "title": "Washroom",
+  "description": "One washroom, including adult change table and hoist fields. Baby changing is not an adult change table. A hoist without a sling policy is not a complete hoist record. Part 3 section 3.8.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "record_status",
+    "publication_context",
+    "provenance"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "washroom"
+    },
+    "example": {
+      "type": "boolean",
+      "description": "True on a synthetic fixture. The counter excludes example records from the headline."
+    },
+    "publication_context": {
+      "enum": [
+        "canonical",
+        "prototype"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://access-main.local/schema/common/provenance.schema.json"
+    },
+    "id": {
+      "description": "Stable washroom id. Does not count.",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "washroom-1.0.0",
+      "description": "Schema version. Does not count."
+    },
+    "place_id": {
+      "description": "Parent place id. A reference, not a data piece.",
+      "type": "string"
+    },
+    "record_status": {
+      "description": "Publication status. Does not count.",
+      "enum": [
+        "draft",
+        "in_review",
+        "published",
+        "stale_flagged",
+        "archived",
+        "disputed"
+      ]
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name_en": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Name as published by the source. A washroom that is its own open-data record may have no parent place.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "latitude": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Latitude in WGS84 when the source publishes a point.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "longitude": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Longitude in WGS84 when the source publishes a point.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "washroom_name": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Name such as universal washroom, ground floor, near lobby.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "washroom_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Washroom type. Standard means no accessibility features were observed, which is a fact, not a gap.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "universal",
+                    "single_occupant_accessible",
+                    "accessible_stall",
+                    "standard",
+                    "family",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "location_description": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Floor, wing, and directions from the entrance.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "floor_level": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Floor, with a lift-access note where one was observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "route_to_washroom_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Step-free route, including stairs, lifts, or narrow points that were observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "door_clear_width_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Washroom door clear width. Counted on the washroom, not on the entrance.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "door_operator_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Door operator present.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "door_operator_working": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Door operator working on the verification date.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "door_swing": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Door swing.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "outward",
+                    "inward",
+                    "sliding",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "door_lock_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Lock type. A lock without the access process is not a usable access fact on its own.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "none",
+                    "key",
+                    "code",
+                    "staff_assist",
+                    "radar_key",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "door_lock_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Where the key is, how the code is published, staff-assist method, and hours when locked.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "turning_space_diameter_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Clear turning diameter excluding the door swing and fixtures.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "turning_space_shape_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Shape, obstructions, and door-swing intrusion.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "transfer_side": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Transfer side. unknown_recorded counts only as a tri-state observation with method and date. none means no clear transfer space.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "left",
+                    "right",
+                    "both",
+                    "front",
+                    "none",
+                    "unknown_recorded",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "transfer_space_width_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Clear transfer-space width beside the toilet.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "transfer_space_depth_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Clear transfer-space depth.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "toilet_seat_height_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Floor to top of seat.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "toilet_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Toilet type as observed.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "floor_mounted",
+                    "wall_hung",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "grab_bar_left": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Left grab bar present.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "grab_bar_right": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Right grab bar present.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "grab_bar_rear": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Rear grab bar present.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "grab_bar_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Lengths, heights, diameters, folding or fixed, as observed. No invented dimensions.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "sink_height_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Sink rim height.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "sink_knee_clearance_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Clearance height under the sink.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "sink_tap_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Tap operation.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "lever",
+                    "sensor",
+                    "push",
+                    "twist",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "mirror_height_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Mirror bottom height and whether it is usable from a seated position.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "shelf_and_hook_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Shelf and hook for bags and supplies.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "shelf_and_hook_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Shelf and hook heights and locations.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "emergency_call_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Emergency cord or button present. Do not test emergency systems without permission.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "emergency_call_reach_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Cord length and reach from the floor and from the toilet, as observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "privacy_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Door privacy, gaps, and attendant space.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "attendant_space_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Space for an attendant inside the washroom.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "adult_change_table_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Adult change table. Distinct from baby changing.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "adult_change_table_dimensions": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Length, width, and height range, measured or read from a label. Do not invent a size.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "adult_change_table_load_kg": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Rated load as labelled or published. Do not guess a load.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "kg"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "adult_change_table_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Adult change table type.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "fixed",
+                    "height_adjustable",
+                    "fold_down",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hoist_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Hoist present. Presence is not a claim that it is working or that a sling is provided.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hoist_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Hoist type. none is a recorded absence, not an unknown.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "ceiling_track",
+                    "mobile",
+                    "none",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hoist_sling_policy": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Bring-your-own sling, sling provided, and sling type, as published or observed. Quoted, not paraphrased into advice.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hoist_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Track coverage, labelled load, operation, and whether staff assistance is required.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "lighting_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Lighting as observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "flooring_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Surface, slip, and drainage as observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "cleanliness_and_maintenance_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Condition on the verification date.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "reliability_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Known outages, storage use, or blockages, with dates.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hours_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Hours the washroom is available when they differ from the place hours.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "access_restriction_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Customers only, key, staff only, or fee, with source and date.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "Plan fields. Absent means not collected. unknown means collected as unknown."
+    },
+    "imported_facts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+      },
+      "description": "Original access-maps keys that have no safe canonical rename. Counted once. Not a second copy of facts."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publication_context": {
+            "const": "prototype"
+          }
+        },
+        "required": [
+          "publication_context"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "required": [
+              "prototype_label"
+            ],
+            "properties": {
+              "prototype_label": {
+                "enum": [
+                  "PROTOTYPE-UNVERIFIED",
+                  "SEEDED-OPEN-DATA"
+                ]
+              },
+              "tier": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_status": {
+            "const": "published"
+          }
+        },
+        "required": [
+          "record_status"
+        ]
+      },
+      "then": {
+        "required": [
+          "place_id"
+        ],
+        "properties": {
+          "place_id": true
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": [
+          "provenance"
+        ],
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "required": [
+              "tier"
+            ],
+            "properties": {
+              "tier": {
+                "const": 3
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "required": [
+              "evidence"
+            ],
+            "properties": {
+              "evidence": {
+                "type": "object",
+                "required": [
+                  "photo_ids"
+                ],
+                "properties": {
+                  "photo_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

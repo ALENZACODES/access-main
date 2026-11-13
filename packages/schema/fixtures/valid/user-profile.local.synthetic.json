@@ -1,0 +1,10 @@
+{
+  "record_type": "user_profile",
+  "schema_version": "user-profile-1.0.0",
+  "id": "example-profile",
+  "profile_name": "Example chair",
+  "storage": "local_device_only",
+  "server_persistence": "forbidden",
+  "chair_type": "power_chair",
+  "transfer_type": "left"
+}

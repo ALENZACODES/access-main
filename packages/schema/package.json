@@ -1,0 +1,59 @@
+{
+  "name": "@access-main/schema",
+  "version": "0.1.0",
+  "description": "JSON Schema 2020-12, validators, and field-value counting for the App. Unbranded. No accessibility facts are invented here.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ALENZACODES/access-main.git",
+    "directory": "packages/schema"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "access-schema": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./tiers": {
+      "types": "./dist/tiers.d.ts",
+      "import": "./dist/tiers.js"
+    },
+    "./schema/*": "./schema/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "src",
+    "docs",
+    "README.md",
+    "TIERS.md"
+  ],
+  "scripts": {
+    "emit": "tsx scripts/emit-schemas.ts",
+    "generate-types": "tsx scripts/generate-types.ts",
+    "build": "tsc -p tsconfig.json",
+    "prepare": "tsc -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts",
+    "validate": "node dist/cli.js validate",
+    "count": "node dist/cli.js count"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

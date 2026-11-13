@@ -1,0 +1,9 @@
+{
+  "record_type": "user_profile",
+  "schema_version": "user-profile-1.0.0",
+  "id": "example-profile-diagnosis",
+  "profile_name": "Example",
+  "storage": "local_device_only",
+  "server_persistence": "forbidden",
+  "diagnosis": "not collected"
+}

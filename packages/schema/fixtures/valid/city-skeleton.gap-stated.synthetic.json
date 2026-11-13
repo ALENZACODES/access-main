@@ -1,0 +1,27 @@
+{
+  "record_type": "city_skeleton",
+  "schema_version": "city-skeleton-1.0.0",
+  "id": "example-city",
+  "publication_context": "prototype",
+  "example": true,
+  "city_name": "Example City",
+  "province": "Ontario",
+  "transit_system_names": [],
+  "paratransit_name": "unknown",
+  "booking_contact": "unknown",
+  "not_yet_seeded": [
+    "washrooms",
+    "entrances",
+    "elevator status"
+  ],
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  }
+}

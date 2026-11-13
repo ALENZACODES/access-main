@@ -1,0 +1,4577 @@
+{
+  "records": [
+    {
+      "recordType": "place",
+      "schemaVersion": "place-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 3 section 3.6, Table T3-16",
+      "fields": [
+        {
+          "name": "place_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable identifier. Never reused. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "protocol_version",
+          "property": "protocol_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Measurement protocol version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_version",
+          "property": "record_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Increments on each published change. Does not count.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "draft, in_review, published, stale_flagged, archived, or disputed. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "name_en",
+          "property": "name_en",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Official English name as published by the venue or operator.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name_fr",
+          "property": "name_fr",
+          "requirement": "conditional",
+          "count": "translation",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Official French name where it exists. A translation of name_en does not add a second piece.",
+          "value": {
+            "type": "string"
+          },
+          "translationOf": "name_en"
+        },
+        {
+          "name": "former_names",
+          "property": "former_names",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Former names with dates. One piece when the array is populated.",
+          "value": {
+            "type": "string_array"
+          }
+        },
+        {
+          "name": "also_known_as",
+          "property": "also_known_as",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Search aliases. One piece when populated.",
+          "value": {
+            "type": "string_array"
+          }
+        },
+        {
+          "name": "category_primary",
+          "property": "category_primary",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Primary category as published. The controlled list is versioned and is not closed in this schema, because the plan does not publish the list and a closed list would force relabelled categories.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "category_secondary",
+          "property": "category_secondary",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Secondary categories. One piece when populated.",
+          "value": {
+            "type": "string_array"
+          }
+        },
+        {
+          "name": "place_type",
+          "property": "place_type",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Place type from the plan. Not inferred from an amenity tag during migration.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "venue",
+              "facility",
+              "park",
+              "trailhead",
+              "station_building",
+              "healthcare",
+              "retail",
+              "hospitality",
+              "education",
+              "government",
+              "recreation",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "address_street",
+          "property": "address_street",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Street address, including unit where it is already one published string.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "address_city",
+          "property": "address_city",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "City, town, or community name.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "municipality_lower_tier",
+          "property": "municipality_lower_tier",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Lower-tier municipality where applicable.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "municipality_upper_tier",
+          "property": "municipality_upper_tier",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Upper-tier municipality or region where applicable.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "postal_code",
+          "property": "postal_code",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Postal code as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "latitude",
+          "property": "latitude",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Latitude in WGS84 decimal degrees.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "longitude",
+          "property": "longitude",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Longitude in WGS84 decimal degrees.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "location_accuracy_m",
+          "property": "location_accuracy_m",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Estimated accuracy in metres, with method.",
+          "value": {
+            "type": "measurement",
+            "unit": "m"
+          }
+        },
+        {
+          "name": "geocode_source",
+          "property": "geocode_source",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "How the coordinate was obtained.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "field_gps",
+              "osm",
+              "municipal_open_data",
+              "operator_data",
+              "manual",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "geocode_date",
+          "property": "geocode_date",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Date the location was determined or last checked.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "phone_main",
+          "property": "phone_main",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Main public phone number.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "phone_accessibility",
+          "property": "phone_accessibility",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Accessibility or assistance phone, where published separately.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "email_public",
+          "property": "email_public",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Public email address.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "website_url",
+          "property": "website_url",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Official website.",
+          "value": {
+            "type": "url"
+          }
+        },
+        {
+          "name": "accessibility_page_url",
+          "property": "accessibility_page_url",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Venue accessibility page, where published.",
+          "value": {
+            "type": "url"
+          }
+        },
+        {
+          "name": "hours_general",
+          "property": "hours_general",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "General opening hours as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "hours_accessibility_note",
+          "property": "hours_accessibility_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Hours that differ for the accessible entrance or route.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "admission_cost",
+          "property": "admission_cost",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Admission cost or free status as published. Not pricing advice.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "booking_required",
+          "property": "booking_required",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Whether booking or advance notice is required.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "booking_details",
+          "property": "booking_details",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Booking method and lead time where booking is required.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "general_access_summary",
+          "property": "general_access_summary",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Factual summary written from measurements. Not a bare accessible label.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "step_free_route_exists",
+          "property": "step_free_route_exists",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether a step-free route to the main activity was observed. Never assumed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "step_free_route_description",
+          "property": "step_free_route_description",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Description of the step-free route, including a side or rear entrance where that is the route.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "accessible_entrance_location",
+          "property": "accessible_entrance_location",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Where the step-free entrance is relative to the street and the main entrance.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "entrance_count_total",
+          "property": "entrance_count_total",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Count of public entrances observed.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "entrance_count_step_free",
+          "property": "entrance_count_step_free",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Count of step-free public entrances observed.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "lift_or_elevator_present",
+          "property": "lift_or_elevator_present",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether a lift or elevator serves public areas.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "lift_or_elevator_details",
+          "property": "lift_or_elevator_details",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Lift location, floors served, and operator. Elevator assets are separate records.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "platform_lift_present",
+          "property": "platform_lift_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether a platform lift was observed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "ramp_present_general",
+          "property": "ramp_present_general",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether a ramp serves the main access route. Ramp measurements live on the entrance.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "interior_path_min_width_mm",
+          "property": "interior_path_min_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Minimum clear interior path width, measured.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "interior_turning_space_mm",
+          "property": "interior_turning_space_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Clear turning diameter in key interior areas, measured.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "interior_floor_surface",
+          "property": "interior_floor_surface",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Primary interior floor surface as observed.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "tile",
+              "carpet",
+              "wood",
+              "concrete",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "interior_floor_obstructions",
+          "property": "interior_floor_obstructions",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Recurring obstructions as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "seating_available",
+          "property": "seating_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether seating is available in public areas.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "seating_types",
+          "property": "seating_types",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Seating types, armrests, back support, and space for a wheelchair alongside.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "wheelchair_spaces_count",
+          "property": "wheelchair_spaces_count",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Designated wheelchair spaces as observed or as published.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "wheelchair_spaces_location",
+          "property": "wheelchair_spaces_location",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Location and sightline note for wheelchair spaces.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "counter_heights_mm",
+          "property": "counter_heights_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Service counter heights in millimetres, including a lowered section where present.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "counter_knee_clearance",
+          "property": "counter_knee_clearance",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Knee clearance at a lowered counter, height and depth, measured.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "till_or_service_desk_access",
+          "property": "till_or_service_desk_access",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Access note for tills, desks, and reception, including the queue.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "changing_facilities_general",
+          "property": "changing_facilities_general",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "General changing note. Adult change and hoist fields live on the washroom.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "baby_change_present",
+          "property": "baby_change_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Baby changing, distinct from an adult change table.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "hearing_loop_present",
+          "property": "hearing_loop_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Hearing loop or assistive listening as observed or published.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "hearing_loop_locations",
+          "property": "hearing_loop_locations",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Where the hearing loop works and how to request it.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "signage_braille_tactile",
+          "property": "signage_braille_tactile",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Braille or tactile signage observed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "signage_visual_contrast",
+          "property": "signage_visual_contrast",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Visual signage contrast, size, and placement as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "lighting_general",
+          "property": "lighting_general",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Lighting note. No invented lux value.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "noise_level_general",
+          "property": "noise_level_general",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Noise note. No decibel claim without a measurement.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "quiet_space_available",
+          "property": "quiet_space_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Quiet or low-stimulation space as observed or published.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "scent_free_policy",
+          "property": "scent_free_policy",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Scent policy as published, with its own source and date on the fact.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "service_animal_policy",
+          "property": "service_animal_policy",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Service-animal policy as published for this place. Not generalised.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "support_person_policy_place",
+          "property": "support_person_policy_place",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Support-person admission or fare policy as published for this place.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "accessible_format_available",
+          "property": "accessible_format_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Accessible formats and how to request them, as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "asl_lsq_available",
+          "property": "asl_lsq_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "ASL or LSQ interpretation as published, including lead time.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "french_service_available",
+          "property": "french_service_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "French-language service as published or designated. Not machine-translated.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "staff_assistance_available",
+          "property": "staff_assistance_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Staff assistance and how to request it.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "queue_management",
+          "property": "queue_management",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Queue layout, accessible queue route, and seating while waiting.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "emergency_procedure_note",
+          "property": "emergency_procedure_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Evacuation note as published by the venue. The App does not invent a procedure.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "emergency_exit_access",
+          "property": "emergency_exit_access",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Emergency exit access as observed or published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "charging_available_general",
+          "property": "charging_available_general",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether device or power-chair charging is available. Detail lives on a charging record.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "charging_details_general",
+          "property": "charging_details_general",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Charging location, permission, and hours where charging is available.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "wifi_available",
+          "property": "wifi_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Public Wi-Fi as published.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "drinking_water_available",
+          "property": "drinking_water_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Drinking water or a bottle-filling station as observed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "outdoor_areas_access",
+          "property": "outdoor_areas_access",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Outdoor path, seating, shade, and shelter note.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "trail_access_summary",
+          "property": "trail_access_summary",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Trail summary for parks and trailheads. Segment records hold the measured parts.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "construction_or_disruption_note",
+          "property": "construction_or_disruption_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Construction or closure note with its own expiry on the fact.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "winter_access_note",
+          "property": "winter_access_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Snow, ice, and seasonal entrance changes. A summer note is not a winter verification.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "build_or_renovation_year",
+          "property": "build_or_renovation_year",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Build or last major renovation year where known. Context only, not a compliance label.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "code_version_context",
+          "property": "code_version_context",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Code-version context where known. Never a compliance label.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "rhfac_or_certification_note",
+          "property": "rhfac_or_certification_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Voluntary certification note where published. Distinct from a code-compliance claim.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "accessibility_plan_url",
+          "property": "accessibility_plan_url",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Multi-year accessibility plan where the venue publishes one.",
+          "value": {
+            "type": "url"
+          }
+        },
+        {
+          "name": "feedback_process",
+          "property": "feedback_process",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Venue accessibility feedback process as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "photo_evidence_summary",
+          "property": "photo_evidence_summary",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Computed from photograph records. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "linked_entrance_ids",
+          "property": "linked_entrance_ids",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Entrance record ids. Does not count.",
+          "value": {
+            "type": "id_array"
+          }
+        },
+        {
+          "name": "linked_washroom_ids",
+          "property": "linked_washroom_ids",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Washroom record ids. Does not count.",
+          "value": {
+            "type": "id_array"
+          }
+        },
+        {
+          "name": "linked_parking_ids",
+          "property": "linked_parking_ids",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Parking record ids. Does not count.",
+          "value": {
+            "type": "id_array"
+          }
+        },
+        {
+          "name": "linked_segment_ids",
+          "property": "linked_segment_ids",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Approach segment ids. Does not count.",
+          "value": {
+            "type": "id_array"
+          }
+        },
+        {
+          "name": "linked_transit_stop_ids",
+          "property": "linked_transit_stop_ids",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Transit stop ids. Does not count.",
+          "value": {
+            "type": "id_array"
+          }
+        },
+        {
+          "name": "source_primary",
+          "property": "source_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "provenance",
+          "description": "Primary source id. Provenance, not a data piece. source_name is the display name.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "source_date",
+          "property": "source_date",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "provenance",
+          "description": "Date of the primary source. Provenance, not a data piece.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "verification_tier_summary",
+          "property": "verification_tier_summary",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Optional computed summary. The stored field tiers are authoritative. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "last_verified_date",
+          "property": "last_verified_date",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Optional computed date. Does not count.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "verification_method_summary",
+          "property": "verification_method_summary",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Optional computed method summary. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "stale_flag",
+          "property": "stale_flag",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Optional computed stale flag. Freshness is evaluated by the counter. Does not count.",
+          "value": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "created_at",
+          "property": "created_at",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Creation timestamp. Does not count.",
+          "value": {
+            "type": "timestamp"
+          }
+        },
+        {
+          "name": "updated_at",
+          "property": "updated_at",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Modification timestamp. Does not count.",
+          "value": {
+            "type": "timestamp"
+          }
+        },
+        {
+          "name": "created_by_role",
+          "property": "created_by_role",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Creator role only. No personal identifier. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "verifier",
+              "moderator",
+              "importer",
+              "administrator",
+              "peer"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "entrance",
+      "schemaVersion": "entrance-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 3 section 3.7",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable entrance id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "place_id",
+          "property": "place_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Parent place id. A reference, not a data piece.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "entrance_name",
+          "property": "entrance_name",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Name such as main, north, rear, or parking level.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "entrance_type",
+          "property": "entrance_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Which kind of entrance this is.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "main",
+              "side",
+              "rear",
+              "parking_level",
+              "service",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "is_primary_public_entrance",
+          "property": "is_primary_public_entrance",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Whether this is the primary public entrance.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "step_free",
+          "property": "step_free",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Step-free status as observed. Never assumed from a missing step count.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "step_count",
+          "property": "step_count",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Observed step count. Zero is a recorded observation only when method and date are present.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "step_height_max_mm",
+          "property": "step_height_max_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Largest single step, tread to tread, at the centre.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "threshold_height_mm",
+          "property": "threshold_height_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Highest threshold, including a weather bar.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "door_clear_width_mm",
+          "property": "door_clear_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Clear opening with the door at 90 degrees, excluding door thickness and hardware.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "door_type",
+          "property": "door_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Door type as observed.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "single",
+              "double",
+              "sliding",
+              "revolving",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "door_operator_present",
+          "property": "door_operator_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Power or automatic operator observed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "door_operator_working",
+          "property": "door_operator_working",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Operator working on the verification date. Presence is not working status.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "door_opening_force_note",
+          "property": "door_opening_force_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Observed heavy, moderate, or light, with the method note. No invented Newton value.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "door_swing",
+          "property": "door_swing",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Door swing as observed.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "outward",
+              "inward",
+              "sliding",
+              "revolving",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "ramp_present",
+          "property": "ramp_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Ramp present at this entrance.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "ramp_gradient_ratio",
+          "property": "ramp_gradient_ratio",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Ratio computed from recorded rise and run. A ratio alone is not accepted as a measurement.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "ramp_rise_mm",
+          "property": "ramp_rise_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Total rise, bottom to top, measured.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "ramp_run_mm",
+          "property": "ramp_run_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Total run, measured.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "ramp_length_mm",
+          "property": "ramp_length_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Total length including landings.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "ramp_clear_width_mm",
+          "property": "ramp_clear_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Clear width between handrails at the narrowest point.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "ramp_landing_top_mm",
+          "property": "ramp_landing_top_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Top landing length and width, clear of the door swing.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "ramp_landing_bottom_mm",
+          "property": "ramp_landing_bottom_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Bottom landing length and width, clear of obstructions.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "ramp_handrails",
+          "property": "ramp_handrails",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Handrails as observed.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "both_sides",
+              "one_side",
+              "none",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "ramp_surface",
+          "property": "ramp_surface",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Ramp surface with slip and drainage note.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "approach_surface",
+          "property": "approach_surface",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Approach surface and condition.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "approach_width_min_mm",
+          "property": "approach_width_min_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Narrowest clear approach width, excluding obstructions at the time of verification.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "approach_gradient_note",
+          "property": "approach_gradient_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Gradient observations on the approach. Not a computed slope from a map.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "lighting_note",
+          "property": "lighting_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Lighting at the entrance as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "signage_note",
+          "property": "signage_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Directions from the street and accessible-entrance signage.",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "washroom",
+      "schemaVersion": "washroom-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 3 section 3.8",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable washroom id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "place_id",
+          "property": "place_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Parent place id. A reference, not a data piece.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "name_en",
+          "property": "name_en",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Name as published by the source. A washroom that is its own open-data record may have no parent place.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "latitude",
+          "property": "latitude",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Latitude in WGS84 when the source publishes a point.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "longitude",
+          "property": "longitude",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Longitude in WGS84 when the source publishes a point.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "washroom_name",
+          "property": "washroom_name",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Name such as universal washroom, ground floor, near lobby.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "washroom_type",
+          "property": "washroom_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Washroom type. Standard means no accessibility features were observed, which is a fact, not a gap.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "universal",
+              "single_occupant_accessible",
+              "accessible_stall",
+              "standard",
+              "family",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "location_description",
+          "property": "location_description",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Floor, wing, and directions from the entrance.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "floor_level",
+          "property": "floor_level",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Floor, with a lift-access note where one was observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "route_to_washroom_note",
+          "property": "route_to_washroom_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Step-free route, including stairs, lifts, or narrow points that were observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "door_clear_width_mm",
+          "property": "door_clear_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Washroom door clear width. Counted on the washroom, not on the entrance.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "door_operator_present",
+          "property": "door_operator_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Door operator present.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "door_operator_working",
+          "property": "door_operator_working",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Door operator working on the verification date.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "door_swing",
+          "property": "door_swing",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Door swing.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "outward",
+              "inward",
+              "sliding",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "door_lock_type",
+          "property": "door_lock_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Lock type. A lock without the access process is not a usable access fact on its own.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "none",
+              "key",
+              "code",
+              "staff_assist",
+              "radar_key",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "door_lock_details",
+          "property": "door_lock_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Where the key is, how the code is published, staff-assist method, and hours when locked.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "turning_space_diameter_mm",
+          "property": "turning_space_diameter_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Clear turning diameter excluding the door swing and fixtures.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "turning_space_shape_note",
+          "property": "turning_space_shape_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Shape, obstructions, and door-swing intrusion.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "transfer_side",
+          "property": "transfer_side",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Transfer side. unknown_recorded counts only as a tri-state observation with method and date. none means no clear transfer space.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "left",
+              "right",
+              "both",
+              "front",
+              "none",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "transfer_space_width_mm",
+          "property": "transfer_space_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Clear transfer-space width beside the toilet.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "transfer_space_depth_mm",
+          "property": "transfer_space_depth_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Clear transfer-space depth.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "toilet_seat_height_mm",
+          "property": "toilet_seat_height_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Floor to top of seat.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "toilet_type",
+          "property": "toilet_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Toilet type as observed.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "floor_mounted",
+              "wall_hung",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "grab_bar_left",
+          "property": "grab_bar_left",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Left grab bar present.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "grab_bar_right",
+          "property": "grab_bar_right",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Right grab bar present.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "grab_bar_rear",
+          "property": "grab_bar_rear",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Rear grab bar present.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "grab_bar_details",
+          "property": "grab_bar_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Lengths, heights, diameters, folding or fixed, as observed. No invented dimensions.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "sink_height_mm",
+          "property": "sink_height_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Sink rim height.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "sink_knee_clearance_mm",
+          "property": "sink_knee_clearance_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Clearance height under the sink.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "sink_tap_type",
+          "property": "sink_tap_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Tap operation.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "lever",
+              "sensor",
+              "push",
+              "twist",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "mirror_height_note",
+          "property": "mirror_height_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Mirror bottom height and whether it is usable from a seated position.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "shelf_and_hook_present",
+          "property": "shelf_and_hook_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Shelf and hook for bags and supplies.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "shelf_and_hook_details",
+          "property": "shelf_and_hook_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Shelf and hook heights and locations.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "emergency_call_present",
+          "property": "emergency_call_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Emergency cord or button present. Do not test emergency systems without permission.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "emergency_call_reach_note",
+          "property": "emergency_call_reach_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Cord length and reach from the floor and from the toilet, as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "privacy_note",
+          "property": "privacy_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Door privacy, gaps, and attendant space.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "attendant_space_present",
+          "property": "attendant_space_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Space for an attendant inside the washroom.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "adult_change_table_present",
+          "property": "adult_change_table_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Adult change table. Distinct from baby changing.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "adult_change_table_dimensions",
+          "property": "adult_change_table_dimensions",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Length, width, and height range, measured or read from a label. Do not invent a size.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "adult_change_table_load_kg",
+          "property": "adult_change_table_load_kg",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Rated load as labelled or published. Do not guess a load.",
+          "value": {
+            "type": "measurement",
+            "unit": "kg"
+          }
+        },
+        {
+          "name": "adult_change_table_type",
+          "property": "adult_change_table_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Adult change table type.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "fixed",
+              "height_adjustable",
+              "fold_down",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "hoist_present",
+          "property": "hoist_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Hoist present. Presence is not a claim that it is working or that a sling is provided.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "hoist_type",
+          "property": "hoist_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Hoist type. none is a recorded absence, not an unknown.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "ceiling_track",
+              "mobile",
+              "none",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "hoist_sling_policy",
+          "property": "hoist_sling_policy",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Bring-your-own sling, sling provided, and sling type, as published or observed. Quoted, not paraphrased into advice.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "hoist_details",
+          "property": "hoist_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Track coverage, labelled load, operation, and whether staff assistance is required.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "lighting_note",
+          "property": "lighting_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Lighting as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "flooring_note",
+          "property": "flooring_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Surface, slip, and drainage as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "cleanliness_and_maintenance_note",
+          "property": "cleanliness_and_maintenance_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Condition on the verification date.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "reliability_note",
+          "property": "reliability_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Known outages, storage use, or blockages, with dates.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "hours_available",
+          "property": "hours_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Hours the washroom is available when they differ from the place hours.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "access_restriction_note",
+          "property": "access_restriction_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Customers only, key, staff only, or fee, with source and date.",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "parking",
+      "schemaVersion": "parking-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 3 section 3.9 parking",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable parking id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "place_id",
+          "property": "place_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Parent place id. A reference, not a data piece.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "record_level",
+          "property": "record_level",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Lot, bay, or bay group. Usability claims need bay-level records.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "lot",
+              "bay",
+              "bay_group"
+            ]
+          }
+        },
+        {
+          "name": "lot_name",
+          "property": "lot_name",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Lot or garage name as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "operator_name",
+          "property": "operator_name",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Operator. Required in practice for a private-lot privilege claim.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "lot_access",
+          "property": "lot_access",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Whether the lot is municipal or private. A private rule is not stated as a municipal bylaw.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "municipal",
+              "private",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "bay_identifier",
+          "property": "bay_identifier",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Bay number or label where it exists.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "bay_type",
+          "property": "bay_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Bay type. Type A is van-accessible. unknown_recorded is not a van-accessible claim.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "type_a_van_accessible",
+              "type_b_standard_accessible",
+              "standard",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "bay_width_mm",
+          "property": "bay_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Bay width measured.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "bay_length_mm",
+          "property": "bay_length_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Bay length measured.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "access_aisle_width_mm",
+          "property": "access_aisle_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Access aisle width. Zero only when the absence of an aisle was observed and recorded with method and date.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "access_aisle_side",
+          "property": "access_aisle_side",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Which side the access aisle is on.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "left",
+              "right",
+              "both",
+              "none"
+            ]
+          }
+        },
+        {
+          "name": "surface_type",
+          "property": "surface_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Surface type and condition.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "surface_gradient_note",
+          "property": "surface_gradient_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Gradient observations. Not a guessed percent.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "signage_present",
+          "property": "signage_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "International Symbol of Access signage observed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "distance_to_entrance_m",
+          "property": "distance_to_entrance_m",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Step-free route distance to the accessible entrance, when measured.",
+          "value": {
+            "type": "measurement",
+            "unit": "m"
+          }
+        },
+        {
+          "name": "route_to_entrance_note",
+          "property": "route_to_entrance_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Kerb ramps, crossings, and gradients on the route to the entrance.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "kerb_ramp_present",
+          "property": "kerb_ramp_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Kerb ramp on the route to the entrance.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "payment_method",
+          "property": "payment_method",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Payment method as observed or published.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "cash",
+              "card",
+              "app_only",
+              "attendant",
+              "free",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "payment_details",
+          "property": "payment_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "App name, attendant hours, and cash acceptance.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "reservation_required",
+          "property": "reservation_required",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether a reservation is required.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "reservation_details",
+          "property": "reservation_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Cutoff, phone, and permit rules as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "privilege_municipality",
+          "property": "privilege_municipality",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Municipality that sets the privilege. Required when privilege_details is populated.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "privilege_source",
+          "property": "privilege_source",
+          "requirement": "conditional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Bylaw or page, with URL and date. Required when privilege_details is populated.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "privilege_details",
+          "property": "privilege_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Fee, time limit, and exemptions as sourced. Never a province-wide rule.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "snow_clearance_note",
+          "property": "snow_clearance_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Snow clearance observation, dated. Seasonal.",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "segment",
+      "schemaVersion": "segment-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 3 section 3.9 segment",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable segment id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "routing_cost_version",
+          "property": "routing_cost_version",
+          "requirement": "optional",
+          "count": "derived",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Cost-function version. Derived product marker. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "segment_type",
+          "property": "segment_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Segment type.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "sidewalk",
+              "path",
+              "crossing",
+              "trail",
+              "indoor_route",
+              "ramp",
+              "bridge",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "surface_type",
+          "property": "surface_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Surface type.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "asphalt",
+              "concrete",
+              "pavers",
+              "gravel",
+              "grass",
+              "wood",
+              "tile",
+              "carpet",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "surface_condition",
+          "property": "surface_condition",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Surface condition with a date on the fact.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "good",
+              "fair",
+              "poor",
+              "damaged",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "width_min_mm",
+          "property": "width_min_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Minimum clear width, measured or imported with the import method named on the fact.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "gradient_max_percent",
+          "property": "gradient_max_percent",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Maximum gradient. Derived slopes stay derived and do not count twice.",
+          "value": {
+            "type": "measurement",
+            "unit": "percent"
+          }
+        },
+        {
+          "name": "gradient_note",
+          "property": "gradient_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Gradient profile, rest landings, and steep sections.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "kerb_ramp_start",
+          "property": "kerb_ramp_start",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Kerb ramp at the start of the segment.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "present",
+              "absent",
+              "blocked",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "kerb_ramp_end",
+          "property": "kerb_ramp_end",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Kerb ramp at the end of the segment.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "present",
+              "absent",
+              "blocked",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "kerb_ramp_details",
+          "property": "kerb_ramp_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Ramp widths, slopes, and tactile paving as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "obstacles",
+          "property": "obstacles",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Recurring obstacles with dates.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "construction_flag",
+          "property": "construction_flag",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Active construction or closure. Needs an expiry and does not outlive it.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "construction_details",
+          "property": "construction_details",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Detour, dates, source, and expiry.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "snow_status",
+          "property": "snow_status",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Snow status. A summer verification is not a winter status.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "cleared",
+              "partially_cleared",
+              "blocked",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "snow_status_date",
+          "property": "snow_status_date",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "When the snow status was observed.",
+          "value": {
+            "type": "timestamp"
+          }
+        },
+        {
+          "name": "snow_source",
+          "property": "snow_source",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Who reported the snow status.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "municipal_data",
+              "user_report",
+              "verifier",
+              "unknown_recorded"
+            ]
+          }
+        },
+        {
+          "name": "rest_opportunity",
+          "property": "rest_opportunity",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Seating, shelter, or a rest area on the segment.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "shade_shelter_note",
+          "property": "shade_shelter_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Shade, shelter, and lighting.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "osm_way_id",
+          "property": "osm_way_id",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "OSM way id when the geometry comes from OSM. ODbL provenance stays on the fact.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "geometry_geojson",
+          "property": "geometry_geojson",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "LineString coordinates as a JSON string. One piece for the geometry, not one piece per vertex. Routing costs computed from it do not count.",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "transit_stop",
+      "schemaVersion": "transit-stop-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 3 section 3.9 transit stop",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "gtfs_stop_id",
+          "property": "gtfs_stop_id",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Agency GTFS stop id. Empty location_type in GTFS is already normalised by the importer; this schema does not redo that default.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "agency_id",
+          "property": "agency_id",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Operator id.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "agency_name",
+          "property": "agency_name",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Operator name as published. Not an endorsement.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "stop_name",
+          "property": "stop_name",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Stop name as published by the operator.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "stop_name_fr",
+          "property": "stop_name_fr",
+          "requirement": "optional",
+          "count": "translation",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "French stop name where published. Does not add a piece when stop_name is populated.",
+          "value": {
+            "type": "string"
+          },
+          "translationOf": "stop_name"
+        },
+        {
+          "name": "stop_type",
+          "property": "stop_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Stop type. entrance_exit, boarding_area, and generic_node are the access-maps GTFS normalisations and are not relabelled.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "stop",
+              "station",
+              "station_entrance",
+              "entrance_exit",
+              "platform",
+              "boarding_area",
+              "generic_node",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "parent_station_id",
+          "property": "parent_station_id",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Parent station id where the operator publishes one.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "latitude",
+          "property": "latitude",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Latitude in WGS84.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "longitude",
+          "property": "longitude",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Longitude in WGS84.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "location_accuracy_m",
+          "property": "location_accuracy_m",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Location accuracy when known.",
+          "value": {
+            "type": "measurement",
+            "unit": "m"
+          }
+        },
+        {
+          "name": "gtfs_wheelchair_boarding",
+          "property": "gtfs_wheelchair_boarding",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Operator-reported GTFS wheelchair_boarding. some_vehicles_accessible is GTFS code 1. It is not an App verification that the station is step-free. Code 0 stays unknown and does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "0_unknown",
+              "1_some_vehicles_accessible",
+              "2_boarding_not_possible",
+              "some_vehicles_accessible",
+              "boarding_not_possible"
+            ]
+          }
+        },
+        {
+          "name": "gtfs_feed_version",
+          "property": "gtfs_feed_version",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Feed version or effective dates.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "gtfs_feed_date",
+          "property": "gtfs_feed_date",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Feed publication or effective date.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "app_verified_step_free",
+          "property": "app_verified_step_free",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "App verification of step-free access. Supersedes the GTFS value only for display of this fact, and only when evidence is present. Never copied from wheelchair_boarding.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "app_verification_date",
+          "property": "app_verification_date",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Date of the App step-free verification.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "platform_access_note",
+          "property": "platform_access_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Level boarding, mini-platform, ramp, or lift, as verified or as published and labelled.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "shelter_present",
+          "property": "shelter_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Shelter observed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "seating_present",
+          "property": "seating_present",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Seating observed.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "lighting_note",
+          "property": "lighting_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Lighting note.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "approach_note",
+          "property": "approach_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Approach path. Measured approach segments are separate records.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "fare_media_note",
+          "property": "fare_media_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Fare media as published for this operator. Not generalised across operators.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "support_person_note",
+          "property": "support_person_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Support-person policy summary with a link or source. Not eligibility advice.",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "elevator_asset",
+      "schemaVersion": "elevator-asset-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 1 section 5.2 and Part 3 section 3.9",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "parent_id",
+          "property": "parent_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Station or place id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "asset_kind",
+          "property": "asset_kind",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Asset kind.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "elevator",
+              "escalator",
+              "platform_lift",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "asset_name",
+          "property": "asset_name",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Operator's name or code for this asset.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "operator_name",
+          "property": "operator_name",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Who operates the asset. Displayed with the help number. Not an endorsement.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "help_number",
+          "property": "help_number",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Help number published for this asset, such as an elevator status line.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "floors_served",
+          "property": "floors_served",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Floors served as published or observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "car_width_mm",
+          "property": "car_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Car width measured or taken from an operator sheet that states the dimension.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "car_depth_mm",
+          "property": "car_depth_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Car depth measured or taken from an operator sheet that states the dimension.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "door_clear_width_mm",
+          "property": "door_clear_width_mm",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Door clear width.",
+          "value": {
+            "type": "measurement",
+            "unit": "mm"
+          }
+        },
+        {
+          "name": "control_height_note",
+          "property": "control_height_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Control heights as measured or published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "signals_note",
+          "property": "signals_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Audible and visible signals as observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "single_point_of_failure",
+          "property": "single_point_of_failure",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "True when this asset is the only step-free path. Unknown stays unknown.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "alternate_route_note",
+          "property": "alternate_route_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Alternate step-free route when one has been verified. Absence of text is not an alternate.",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "outage",
+      "schemaVersion": "outage-1.0.0",
+      "shape": "facts",
+      "counting": "status_snapshot",
+      "planRef": "Part 1 section 5.5 Tier 4 and Part 5 Day 1 elevator outage",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "asset_id",
+          "property": "asset_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Elevator asset id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "parent_id",
+          "property": "parent_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Station or place id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "status",
+          "property": "status",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "status",
+          "placement": "facts",
+          "description": "Status from the feed or report. There is no default.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "in_service",
+              "out_of_service",
+              "planned_outage",
+              "unknown"
+            ]
+          }
+        },
+        {
+          "name": "reported_at",
+          "property": "reported_at",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "status",
+          "placement": "facts",
+          "description": "When the operator or reporter said the status was observed.",
+          "value": {
+            "type": "timestamp"
+          }
+        },
+        {
+          "name": "received_at",
+          "property": "received_at",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "status",
+          "placement": "facts",
+          "description": "When the App received the status.",
+          "value": {
+            "type": "timestamp"
+          }
+        },
+        {
+          "name": "expires_at",
+          "property": "expires_at",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "status",
+          "placement": "facts",
+          "description": "When this observation must no longer be shown as current.",
+          "value": {
+            "type": "timestamp"
+          }
+        },
+        {
+          "name": "feed_age_seconds",
+          "property": "feed_age_seconds",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "status",
+          "placement": "facts",
+          "description": "Age of the feed at receipt, when the feed provides it.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "alternate_available",
+          "property": "alternate_available",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "status",
+          "placement": "facts",
+          "description": "Whether a verified alternate was known at this time. Unknown is not an alternate.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "effect_note",
+          "property": "effect_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "status",
+          "placement": "facts",
+          "description": "What the outage blocks, in the operator's words or a verifier's observation. Not a guessed reroute.",
+          "value": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "charging",
+      "schemaVersion": "charging-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 1 section 5.2 transport, charging, and live-status fields",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "place_id",
+          "property": "place_id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Place id when the point is inside a place. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "charging_present",
+          "property": "charging_present",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Whether a charging point was observed or published.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "location_description",
+          "property": "location_description",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Where the outlet is.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "connector_type",
+          "property": "connector_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Connector as labelled. Do not guess a plug from a photo that does not show it.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "plug_type",
+          "property": "plug_type",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Plug type as labelled.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "hours",
+          "property": "hours",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Hours charging is available.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "access_note",
+          "property": "access_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Who can use it and how, as published or observed.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "cost_note",
+          "property": "cost_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Cost or free status as published. Not pricing advice.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "seating_while_charging",
+          "property": "seating_while_charging",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "accessibility",
+          "placement": "facts",
+          "description": "Seating while charging.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        }
+      ]
+    },
+    {
+      "recordType": "repair_supply",
+      "schemaVersion": "repair-supply-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 1 section 5.2 repair and supply proximity",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "name_en",
+          "property": "name_en",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Published name.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name_fr",
+          "property": "name_fr",
+          "requirement": "optional",
+          "count": "translation",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "French name where published.",
+          "value": {
+            "type": "string"
+          },
+          "translationOf": "name_en"
+        },
+        {
+          "name": "service_kind",
+          "property": "service_kind",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "What the listing is. pharmacy is a directory category, not a clinical recommendation.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "repair",
+              "parts",
+              "pharmacy",
+              "supply",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "hours",
+          "property": "hours",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Published hours.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "mobile_service",
+          "property": "mobile_service",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Whether mobile service is published.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "out_of_hours",
+          "property": "out_of_hours",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Whether out-of-hours availability is published.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        },
+        {
+          "name": "phone",
+          "property": "phone",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Public phone.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "official_url",
+          "property": "official_url",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Official page.",
+          "value": {
+            "type": "url"
+          }
+        },
+        {
+          "name": "address",
+          "property": "address",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Published address or service area.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "latitude",
+          "property": "latitude",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Latitude when the source publishes one.",
+          "value": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "longitude",
+          "property": "longitude",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Longitude when the source publishes one.",
+          "value": {
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "benefits_directory",
+      "schemaVersion": "benefits-directory-1.0.0",
+      "shape": "facts",
+      "counting": "canonical",
+      "planRef": "Part 3 section 3.10 benefits rules",
+      "fields": [
+        {
+          "name": "record_id",
+          "property": "id",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Stable id. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "schema_version",
+          "property": "schema_version",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Schema version. Does not count.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "record_status",
+          "property": "record_status",
+          "requirement": "system",
+          "count": "system",
+          "factClass": "identity",
+          "placement": "envelope",
+          "description": "Publication status. Does not count.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "draft",
+              "in_review",
+              "published",
+              "stale_flagged",
+              "archived",
+              "disputed"
+            ]
+          }
+        },
+        {
+          "name": "name_en",
+          "property": "name_en",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "Programme name in English as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name_fr",
+          "property": "name_fr",
+          "requirement": "optional",
+          "count": "translation",
+          "factClass": "identity",
+          "placement": "facts",
+          "description": "French programme name where the official source publishes one.",
+          "value": {
+            "type": "string"
+          },
+          "translationOf": "name_en"
+        },
+        {
+          "name": "administering_body",
+          "property": "administering_body",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Body that administers the programme, as named on the official page.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "organisation_type",
+          "property": "organisation_type",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Which government publishes the page. Not a partnership.",
+          "value": {
+            "type": "enum",
+            "values": [
+              "government_federal",
+              "government_provincial",
+              "government_municipal",
+              "other"
+            ]
+          }
+        },
+        {
+          "name": "benefit_type",
+          "property": "benefit_type",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Benefit type in the programme's own words.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "description_general",
+          "property": "description_general",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Short general description. Not eligibility advice.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "eligibility_general_note",
+          "property": "eligibility_general_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "General note pointing at the official eligibility page. Not an assessment.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "application_route",
+          "property": "application_route",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "How to apply, with the official link and phone.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "appeal_or_review_route",
+          "property": "appeal_or_review_route",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Appeal or review route as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "official_url",
+          "property": "official_url",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Official programme page.",
+          "value": {
+            "type": "url"
+          }
+        },
+        {
+          "name": "official_url_checked_on",
+          "property": "official_url_checked_on",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Date the official page was checked.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "rate_or_amount_text",
+          "property": "rate_or_amount_text",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Rate or amount copied from the official page, as text, with the source date on the fact. Not a calculated entitlement.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "rate_effective_date",
+          "property": "rate_effective_date",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Date the published rate took effect, as stated by the programme.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "indexation_note",
+          "property": "indexation_note",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Indexation note as published.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "related_programmes",
+          "property": "related_programmes",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Related programme names as published. One piece for the array.",
+          "value": {
+            "type": "string_array"
+          }
+        },
+        {
+          "name": "phone",
+          "property": "phone",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Public phone on the official page.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "languages_offered",
+          "property": "languages_offered",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Languages of service as published.",
+          "value": {
+            "type": "string_array"
+          }
+        },
+        {
+          "name": "geography",
+          "property": "geography",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Geography the official page says the programme covers.",
+          "value": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "desk_verified_date",
+          "property": "desk_verified_date",
+          "requirement": "required",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Date of desk verification against the official page.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "review_due_date",
+          "property": "review_due_date",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Next scheduled check. Quarterly or on indexation.",
+          "value": {
+            "type": "date"
+          }
+        },
+        {
+          "name": "referral_required",
+          "property": "referral_required",
+          "requirement": "optional",
+          "count": "piece",
+          "factClass": "directory",
+          "placement": "facts",
+          "description": "Whether the official page says a referral is required.",
+          "value": {
+            "type": "boolean"
+          },
+          "triState": true
+        }
+      ]
+    }
+  ]
+}

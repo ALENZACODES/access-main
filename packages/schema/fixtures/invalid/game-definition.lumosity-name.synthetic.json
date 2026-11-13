@@ -1,0 +1,24 @@
+{
+  "record_type": "game_definition",
+  "schema_version": "game-definition-1.0.0",
+  "id": "example-game-bad",
+  "publication_context": "prototype",
+  "example": true,
+  "name": "Lumosity",
+  "timing_mode": "untimed",
+  "input_modes": [
+    "keyboard"
+  ],
+  "colour_independence_note": "n/a",
+  "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  }
+}

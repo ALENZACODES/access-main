@@ -1,0 +1,110 @@
+{
+  "id": "gtfs:gtfs-go-transit:08047",
+  "tranche": "transit",
+  "region": "n42.5_w080.5",
+  "fields": {
+    "name": {
+      "value": "New Credit Variety & Gas Bar",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "stop_name"
+    },
+    "lat": {
+      "value": 42.976706,
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "stop_lat"
+    },
+    "lon": {
+      "value": -80.037399,
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "stop_lon"
+    },
+    "stop_code": {
+      "value": "108047",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "stop_code"
+    },
+    "location_type": {
+      "value": "stop",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "location_type",
+      "raw": "0"
+    },
+    "parent_station": {
+      "value": "UNKNOWN",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "parent_station",
+      "raw": ""
+    },
+    "wheelchair_boarding": {
+      "value": "boarding_not_possible",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "wheelchair_boarding",
+      "raw": "2"
+    },
+    "platform_code": {
+      "value": "UNKNOWN",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "level_id": {
+      "value": "UNKNOWN",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "level_id"
+    },
+    "level_index": {
+      "value": "UNKNOWN",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "level_name": {
+      "value": "UNKNOWN",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "description": {
+      "value": "UNKNOWN",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "url": {
+      "value": "https://www.gotransit.com/find-a-station-or-stop/08047/station-details",
+      "source_id": "gtfs-go-transit",
+      "licence": "OGL-Ontario-Metrolinx-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 1,
+      "source_key": "stop_url"
+    }
+  }
+}

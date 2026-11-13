@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/common/provenance.schema.json",
+  "title": "Provenance",
+  "description": "Record-level source, licence, dates, and tier. Tier 3 and the prototype label VERIFIED require evidence. A prototype record cannot carry VERIFIED or tier 3.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tier",
+    "source_name",
+    "source_id",
+    "source_date",
+    "record_date",
+    "licence_id",
+    "retrieved_at"
+  ],
+  "properties": {
+    "tier": {
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        "E"
+      ]
+    },
+    "prototype_label": {
+      "enum": [
+        "PROTOTYPE-UNVERIFIED",
+        "SEEDED-OPEN-DATA",
+        "COMMUNITY-REPORTED",
+        "VERIFIED"
+      ]
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "record_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "licence_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retrieved_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "verifier_role",
+        "method",
+        "observed_at"
+      ],
+      "properties": {
+        "protocol_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verifier_role": {
+          "enum": [
+            "trained_verifier",
+            "peer",
+            "operator",
+            "importer",
+            "desk_reviewer"
+          ]
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "photo_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "tier": {
+            "const": 3
+          }
+        },
+        "required": [
+          "tier"
+        ]
+      },
+      "then": {
+        "required": [
+          "evidence"
+        ],
+        "properties": {
+          "evidence": {
+            "required": [
+              "protocol_version",
+              "verifier_role",
+              "method",
+              "observed_at"
+            ],
+            "properties": {
+              "protocol_version": true,
+              "verifier_role": true,
+              "method": true,
+              "observed_at": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "prototype_label": {
+            "const": "VERIFIED"
+          }
+        },
+        "required": [
+          "prototype_label"
+        ]
+      },
+      "then": {
+        "required": [
+          "evidence"
+        ],
+        "properties": {
+          "evidence": true,
+          "tier": {
+            "const": 3
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "prototype_label": {
+            "const": "SEEDED-OPEN-DATA"
+          }
+        },
+        "required": [
+          "prototype_label"
+        ]
+      },
+      "then": {
+        "properties": {
+          "tier": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "prototype_label": {
+            "const": "COMMUNITY-REPORTED"
+          }
+        },
+        "required": [
+          "prototype_label"
+        ]
+      },
+      "then": {
+        "properties": {
+          "tier": {
+            "const": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "prototype_label": {
+            "const": "PROTOTYPE-UNVERIFIED"
+          }
+        },
+        "required": [
+          "prototype_label"
+        ]
+      },
+      "then": {
+        "properties": {
+          "tier": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

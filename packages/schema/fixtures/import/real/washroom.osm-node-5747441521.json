@@ -1,0 +1,276 @@
+{
+  "id": "osm:node/5747441521",
+  "tranche": "washroom",
+  "region": "n46.5_w079.5",
+  "fields": {
+    "name": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "lat": {
+      "value": 46.550851,
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0,
+      "source_key": "geometry"
+    },
+    "lon": {
+      "value": -79.161418,
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0,
+      "source_key": "geometry"
+    },
+    "facility_type": {
+      "value": "toilets",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0,
+      "source_key": "amenity"
+    },
+    "wheelchair": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "wheelchair_description": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "changing_table": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "changing_table_fee": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "changing_table_location": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "adult_changing_table": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "access": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "fee": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "opening_hours": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "unisex": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "male": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "female": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "supervised": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "level": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "indoor": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "operator": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "addr_housenumber": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "addr_street": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "addr_city": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "addr_postcode": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "address": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "description": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "locked": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "drinking_water": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "shower": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "disposal": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "capacity": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "seasonal": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "location": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "published_accessibility": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "building": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "parent_id": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "status": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "website": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/outage.schema.json",
+  "title": "Elevator outage",
+  "description": "One timestamped status observation for one asset. Counted only inside the 30-day snapshot window. A missing status is unknown, never working. Part 1 section 5.5 Tier 4 and Part 5 Day 1 elevator outage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "record_status",
+    "publication_context",
+    "provenance",
+    "asset_id"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "outage"
+    },
+    "example": {
+      "type": "boolean",
+      "description": "True on a synthetic fixture. The counter excludes example records from the headline."
+    },
+    "publication_context": {
+      "enum": [
+        "canonical",
+        "prototype"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://access-main.local/schema/common/provenance.schema.json"
+    },
+    "id": {
+      "description": "Stable id. Does not count.",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "outage-1.0.0",
+      "description": "Schema version. Does not count."
+    },
+    "record_status": {
+      "description": "Publication status. Does not count.",
+      "enum": [
+        "draft",
+        "in_review",
+        "published",
+        "stale_flagged",
+        "archived",
+        "disputed"
+      ]
+    },
+    "asset_id": {
+      "description": "Elevator asset id. Does not count.",
+      "type": "string"
+    },
+    "parent_id": {
+      "description": "Station or place id. Does not count.",
+      "type": "string"
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Status from the feed or report. There is no default.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "in_service",
+                    "out_of_service",
+                    "planned_outage",
+                    "unknown",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "reported_at": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "When the operator or reporter said the status was observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "received_at": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "When the App received the status.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "expires_at": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "When this observation must no longer be shown as current.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "feed_age_seconds": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Age of the feed at receipt, when the feed provides it.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "alternate_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether a verified alternate was known at this time. Unknown is not an alternate.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "effect_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "What the outage blocks, in the operator's words or a verifier's observation. Not a guessed reroute.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "Plan fields. Absent means not collected. unknown means collected as unknown."
+    },
+    "imported_facts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+      },
+      "description": "Original access-maps keys that have no safe canonical rename. Counted once. Not a second copy of facts."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publication_context": {
+            "const": "prototype"
+          }
+        },
+        "required": [
+          "publication_context"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "required": [
+              "prototype_label"
+            ],
+            "properties": {
+              "prototype_label": {
+                "enum": [
+                  "PROTOTYPE-UNVERIFIED",
+                  "SEEDED-OPEN-DATA"
+                ]
+              },
+              "tier": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_status": {
+            "const": "published"
+          }
+        },
+        "required": [
+          "record_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": [
+              "status",
+              "reported_at",
+              "received_at",
+              "expires_at"
+            ],
+            "properties": {
+              "status": true,
+              "reported_at": true,
+              "received_at": true,
+              "expires_at": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}
