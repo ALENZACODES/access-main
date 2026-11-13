@@ -2,6 +2,7 @@ import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createEmptyProfile, type CacheEntry, type UserProfile } from "@access/shared";
 import { db } from "./db.ts";
+import { exportPhrases } from "../profile/exportCopy.ts";
 import {
   clearCachedRecords,
   deleteProfile,
@@ -66,7 +67,7 @@ describe("device storage", () => {
     const withdrawn = await withdrawStoredConsent("2026-11-13T16:00:00.000Z");
     expect(withdrawn?.equipment_type_general).toBeNull();
     expect(withdrawn?.consent_records[0]?.withdrawn_at).toBe("2026-11-13T16:00:00.000Z");
-    const text = exportProfileText(withdrawn!);
+    const text = exportProfileText(withdrawn!, exportPhrases("en"));
     expect(text).toContain("Consent withdrawn: 2026-11-13T16:00:00.000Z");
     expect(text).not.toContain("manual_chair");
     expect(text).not.toContain("null");

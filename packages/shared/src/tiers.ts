@@ -1,6 +1,7 @@
 /**
  * Verification tiers for the shell.
- * Canonical ids and prototype labels come from @access-main/schema.
+ * Canonical ids, prototype labels, and access-tools tier strings, including
+ * `administrator_page` → `E`, come from `@access-main/schema/tiers`.
  * This module does not keep a second copy of those lists.
  * `unknown` and `UNKNOWN` are missing values, not tiers.
  *
@@ -28,12 +29,8 @@ export const PROTOTYPE_CACHE_LABELS = ["PROTOTYPE-UNVERIFIED", "SEEDED-OPEN-DATA
 export const DISPLAY_TIERS = [...PROTOTYPE_CACHE_TIERS, ...PROTOTYPE_CACHE_LABELS] as const;
 export type DisplayTier = (typeof DISPLAY_TIERS)[number];
 
-/**
- * Shell inputs that are not canonical ids. `administrator_page` is the directory
- * desk-check token (cache provenance stores E). TIER_N is an older spelling.
- */
+/** Older shell spellings. Access-tools strings, including `administrator_page`, are mapped by `@access-main/schema/tiers`. */
 const SHELL_ONLY_TIERS: Record<string, CanonicalTierId> = {
-  administrator_page: "E",
   TIER_0: 0,
   TIER_1: 1,
   TIER_2: 2,

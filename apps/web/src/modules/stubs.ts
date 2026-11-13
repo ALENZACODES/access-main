@@ -4,59 +4,30 @@ import {
   type GamesModule,
   type HelpModule,
   type JourneyModule,
+  type ModuleId,
   type ModuleRegistry,
+  type ModuleResult,
   type NavigatorModule,
   type PlacesModule,
 } from "@access/shared";
 
-const places: PlacesModule = {
-  id: "places",
-  search() {
-    return Promise.resolve(emptyModuleResult("places", "modules.notConnected"));
-  },
-};
+function unlinked<T>(id: ModuleId): Promise<ModuleResult<T>> {
+  return Promise.resolve(emptyModuleResult(id, "modules.assigned"));
+}
 
-const journey: JourneyModule = {
-  id: "journey",
-  plan() {
-    return Promise.resolve(emptyModuleResult("journey", "modules.notConnected"));
-  },
-};
+/**
+ * Builds the route modules. Pass a lane package's adapter in `linked` when
+ * that package can be imported. Omitted lanes stay empty and say which
+ * package the route calls. They do not invent records.
+ */
+export function createModules(linked: Partial<ModuleRegistry> = {}): ModuleRegistry {
+  const places: PlacesModule = linked.places ?? { id: "places", search: () => unlinked("places") };
+  const journey: JourneyModule = linked.journey ?? { id: "journey", plan: () => unlinked("journey") };
+  const finders: FindersModule = linked.finders ?? { id: "finders", search: () => unlinked("finders") };
+  const navigatorModule: NavigatorModule = linked.navigator ?? { id: "navigator", list: () => unlinked("navigator") };
+  const games: GamesModule = linked.games ?? { id: "games", list: () => unlinked("games") };
+  const help: HelpModule = linked.help ?? { id: "help", list: () => unlinked("help") };
+  return { places, journey, finders, navigator: navigatorModule, games, help };
+}
 
-const finders: FindersModule = {
-  id: "finders",
-  search() {
-    return Promise.resolve(emptyModuleResult("finders", "modules.notConnected"));
-  },
-};
-
-const navigatorModule: NavigatorModule = {
-  id: "navigator",
-  list() {
-    return Promise.resolve(emptyModuleResult("navigator", "modules.notConnected"));
-  },
-};
-
-const games: GamesModule = {
-  id: "games",
-  list() {
-    return Promise.resolve(emptyModuleResult("games", "modules.notConnected"));
-  },
-};
-
-const help: HelpModule = {
-  id: "help",
-  list() {
-    return Promise.resolve(emptyModuleResult("help", "modules.notConnected"));
-  },
-};
-
-/** Replace a property when another lane ships a real module. Stubs return no records. */
-export const modules: ModuleRegistry = {
-  places,
-  journey,
-  finders,
-  navigator: navigatorModule,
-  games,
-  help,
-};
+export const modules: ModuleRegistry = createModules();

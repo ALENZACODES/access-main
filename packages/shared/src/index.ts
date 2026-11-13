@@ -63,6 +63,7 @@ export {
   type CacheKind,
   type OutboxItem,
 } from "./cache.ts";
+export { LANE_BINDINGS, laneBinding, laneBindingList, type LaneBinding } from "./lanes.ts";
 export {
   FINDER_KINDS,
   MODULE_IDS,

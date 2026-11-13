@@ -1,9 +1,16 @@
 import type { FieldIssue } from "./provenance.ts";
 
 /**
- * Flat directory record used by access-tools pull request 2 (`packages/navigator`).
- * The fact-shaped benefits record stays in packages/schema. This is the shape
- * the shell will store for an official-page link. It is not an eligibility decision.
+ * One directory contract, shared with access-tools `packages/navigator`
+ * at 06c9d4b.
+ *
+ * The record is `directory-record-1.0.0` and carries
+ * `verificationTier: "administrator_page"`. That field is not a second tier
+ * list. A stored copy uses canonical provenance tier `E`.
+ *
+ * `directory-record-1.1.0` and a payload field named `tier` are not this
+ * contract. The fact-shaped benefits record stays in packages/schema.
+ * A directory link is not an eligibility decision.
  */
 export const DIRECTORY_SCHEMA_VERSION = "directory-record-1.0.0";
 
@@ -110,6 +117,9 @@ export function validateDirectoryRecord(value: unknown): FieldIssue[] {
   }
   if (value.verificationTier !== "administrator_page") {
     issues.push({ field: "payload.verificationTier", code: "invalid_tier" });
+  }
+  if ("tier" in value) {
+    issues.push({ field: "payload.tier", code: "invalid_tier" });
   }
   if (value.notEligibilityAdvice !== true) issues.push({ field: "payload.notEligibilityAdvice", code: "eligibility_advice" });
   for (const field of ["verificationPlain", "neverMeans", "licenceNote", "framing"] as const) {

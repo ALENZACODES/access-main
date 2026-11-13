@@ -65,6 +65,20 @@ test("withdraw clears preferences and delete moves focus to the status", async (
   await page.getByRole("button", { name: "Save on this device" }).click();
   await expect(page.getByText("Saved on this device. Nothing was uploaded.")).toBeVisible();
   await page.getByRole("button", { name: "Withdraw consent" }).click();
+  const withdrawDialog = page.getByRole("dialog");
+  await expect(withdrawDialog.getByRole("heading", { name: "Withdraw consent on this device?" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Withdraw consent" })).toBeFocused();
+  await expect(page.getByRole("checkbox", { name: "Store these preferences on this device only" })).toBeChecked();
+
+  await page.getByRole("button", { name: "Withdraw consent" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Keep consent" }).click();
+  await expect(page.getByRole("button", { name: "Withdraw consent" })).toBeFocused();
+  await expect(page.getByRole("checkbox", { name: "Store these preferences on this device only" })).toBeChecked();
+
+  await page.getByRole("button", { name: "Withdraw consent" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Withdraw consent" }).click();
   const withdrawn = page.getByText("Consent was withdrawn. Entered preferences were cleared on this device.");
   await expect(withdrawn).toBeVisible();
   await expect(withdrawn).toBeFocused();
@@ -76,6 +90,7 @@ test("withdraw clears preferences and delete moves focus to the status", async (
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Delete preferences" })).toBeFocused();
   await page.reload();
   await expect(page.getByRole("checkbox", { name: "Store these preferences on this device only" })).toBeChecked();
 
@@ -86,4 +101,22 @@ test("withdraw clears preferences and delete moves focus to the status", async (
   await expect(deleted).toBeFocused();
   await page.goto("/data-status");
   await expect(page.getByText("No preferences record is stored.")).toBeVisible();
+});
+
+test("French withdraw dialog returns focus when cancelled", async ({ page }) => {
+  await page.goto("/profile");
+  await page.getByRole("button", { name: "Français" }).click();
+  const consent = page.getByRole("checkbox", { name: "Enregistrer ces préférences sur cet appareil seulement" });
+  await consent.focus();
+  await page.keyboard.press("Space");
+  await expect(consent).toBeChecked();
+  await page.getByRole("button", { name: "Enregistrer sur cet appareil" }).click();
+  await expect(page.getByText("Enregistré sur cet appareil. Rien n'a été envoyé.")).toBeVisible();
+  const withdraw = page.getByRole("button", { name: "Retirer le consentement" });
+  await withdraw.click();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "Retirer le consentement sur cet appareil ?" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(withdraw).toBeFocused();
+  await expect(consent).toBeChecked();
 });

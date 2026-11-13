@@ -550,6 +550,7 @@ describe("tier vocabulary", () => {
     expect(text).toContain(
       "Vérification au bureau par un administrateur ou à partir d'une page officielle. Pas une vérification sur le terrain.",
     );
+    expect(text).not.toContain("access-tools has no tier");
     for (const id of [0, 1, 2, 3, 4, "E"]) expect(text).toContain(String(id));
     for (const label of Object.keys(ACCESS_TOOLS_TIER_LABELS)) {
       expect(text).toContain(label);

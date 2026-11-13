@@ -5,6 +5,7 @@ import { Button } from "../design/Button.tsx";
 import { CheckField } from "../design/fields.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
 import { draftFromProfile, emptyDraft, profileFromDraft, type ProfileDraft } from "../profile/draft.ts";
+import { exportPhrases } from "../profile/exportCopy.ts";
 import { PreferenceFields } from "../profile/PreferenceFields.tsx";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
@@ -16,7 +17,9 @@ export function ProfilePage() {
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
   const [issues, setIssues] = useState<FieldIssue[]>([]);
   const [status, setStatus] = useState<"idle" | "saved" | "deleted" | "withdrawn" | "error">("idle");
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState<"withdraw" | "delete" | null>(null);
+  const withdrawRef = useRef<HTMLButtonElement>(null);
+  const deleteRef = useRef<HTMLButtonElement>(null);
   const loaded = useRef(false);
   const statusRef = useRef<HTMLParagraphElement>(null);
   useDocumentTitle(t("profile.title"));
@@ -77,6 +80,13 @@ export function ProfilePage() {
     ? t("errors.consent_required")
     : undefined;
   const activeConsent = Boolean(profile?.consent_records.some((record) => record.withdrawn_at === null));
+  const language = i18n.language.startsWith("fr") ? "fr" : "en";
+
+  const returnFocus = (action: "withdraw" | "delete") => {
+    setConfirming(null);
+    const target = action === "withdraw" ? withdrawRef.current : deleteRef.current;
+    window.requestAnimationFrame(() => target?.focus());
+  };
 
   return (
     <div className="stack">
@@ -122,44 +132,59 @@ export function ProfilePage() {
       </form>
       <section className="stack" aria-labelledby="data-actions">
         <h2 id="data-actions">{t("profile.sectionData")}</h2>
+        <p>{t("profile.dataActionsHelp")}</p>
         <h3>{t("profile.savedPlaces")}</h3>
         <p>{t("profile.savedPlacesBody")}</p>
         <div className="button-row">
-          <Button variant="secondary" onPress={() => profile && download("the-app-preferences.txt", exportProfileText(profile), "text/plain")} isDisabled={!profile}>
+          <Button
+            variant="secondary"
+            onPress={() => profile && download("the-app-preferences.txt", exportProfileText(profile, exportPhrases(language)), "text/plain")}
+            isDisabled={!profile}
+          >
             {t("profile.export")}
           </Button>
           <Button variant="secondary" onPress={() => profile && download("the-app-preferences.json", exportProfileJson(profile), "application/json")} isDisabled={!profile}>
             {t("profile.exportJson")}
           </Button>
-          <Button
-            variant="secondary"
-            onPress={() => {
-              void withdraw().then((stored) => {
-                if (!stored) return;
-                setStatus("withdrawn");
-                setIssues([]);
-                setDraft(draftFromProfile(stored));
-              });
-            }}
-            isDisabled={!activeConsent}
-          >
+          <Button ref={withdrawRef} variant="secondary" onPress={() => setConfirming("withdraw")} isDisabled={!activeConsent}>
             {t("profile.withdraw")}
           </Button>
-          <Button variant="secondary" onPress={() => setConfirming(true)} isDisabled={!profile}>{t("profile.delete")}</Button>
+          <Button ref={deleteRef} variant="secondary" onPress={() => setConfirming("delete")} isDisabled={!profile}>{t("profile.delete")}</Button>
         </div>
       </section>
-      {confirming ? (
+      {confirming === "withdraw" ? (
+        <ConfirmDialog
+          title={t("profile.withdrawTitle")}
+          body={t("profile.withdrawBody")}
+          confirmLabel={t("profile.withdrawConfirm")}
+          cancelLabel={t("profile.withdrawCancel")}
+          onCancel={() => returnFocus("withdraw")}
+          onConfirm={() => {
+            void withdraw().then((stored) => {
+              if (!stored) {
+                returnFocus("withdraw");
+                return;
+              }
+              setConfirming(null);
+              setStatus("withdrawn");
+              setIssues([]);
+              setDraft(draftFromProfile(stored));
+            });
+          }}
+        />
+      ) : null}
+      {confirming === "delete" ? (
         <ConfirmDialog
           title={t("profile.deleteTitle")}
           body={t("profile.deleteBody")}
           confirmLabel={t("profile.deleteConfirm")}
           cancelLabel={t("profile.deleteCancel")}
-          onCancel={() => setConfirming(false)}
+          onCancel={() => returnFocus("delete")}
           onConfirm={() => {
             void remove().then(() => {
-              setConfirming(false);
+              setConfirming(null);
               setStatus("deleted");
-              setDraft(emptyDraft(i18n.language.startsWith("fr") ? "fr" : "en"));
+              setDraft(emptyDraft(language));
             });
           }}
         />

@@ -63,8 +63,9 @@ Source: `ALENZACODES/access-tools` pull request 1, `packages/place/src/types.ts`
 | `tier-2-peer` | `2` |
 | `tier-3-surveyor` | `3` |
 | `tier-4-live-feed` | `4` |
+| `administrator_page` | `E` |
 
-access-tools has no tier `E`. Add `E` only when a desk check of an official page is recorded with its link and date.
+`administrator_page` is the navigator directory field `verificationTier` on `directory-record-1.0.0` (access-tools `packages/navigator`). It means a desk check of an official page, with the page link and the date that page was read. It is not a second tier list, not field verification, and not an eligibility decision. The shell stores that record with provenance `tier` `E`. A payload field named `tier` is not this mapping.
 
 These access-tools fields are not tiers:
 
@@ -75,3 +76,5 @@ These access-tools fields are not tiers:
 | `value: null` | Canonical unknown. Do not coerce null to `0` or to `false`. |
 
 `canonicalTierFromForeign("tier-0-open-data")` returns `0`, and the same for the other four strings. The canonical schema still rejects those strings until a record is rewritten with the numeric id.
+
+`canonicalTierFromForeign("administrator_page")` returns `E`. The directory record keeps `verificationTier: "administrator_page"`. The stored provenance `tier` is `E`. Do not rewrite that field to a payload `tier`.

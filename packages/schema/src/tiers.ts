@@ -12,13 +12,17 @@ export const CANONICAL_TIER_IDS = TIERS;
 export type CanonicalTierId = (typeof CANONICAL_TIER_IDS)[number];
 export type PrototypeLabelId = (typeof PROTOTYPE_LABELS)[number];
 
-/** Labels stored by access-tools PR #1 (packages/place/src/types.ts). Not canonical. */
+/**
+ * access-tools strings. Not canonical ids.
+ * `administrator_page` is the navigator directory field `verificationTier`.
+ */
 export const ACCESS_TOOLS_TIER_LABELS = {
   "tier-0-open-data": 0,
   "tier-1-business-claimed": 1,
   "tier-2-peer": 2,
   "tier-3-surveyor": 3,
   "tier-4-live-feed": 4,
+  administrator_page: "E",
 } as const satisfies Record<string, CanonicalTierId>;
 
 const NUMERIC_STRINGS: Record<string, CanonicalTierId> = {
