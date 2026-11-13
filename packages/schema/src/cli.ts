@@ -7,7 +7,7 @@ import { createGunzip } from "node:zlib";
 import { Readable } from "node:stream";
 import { RecordCounter } from "./count.js";
 import { migrateImportRecord, type ImportRecord } from "./migrate.js";
-import { getValidator } from "./validate.js";
+import { getValidator, isServiceAlertRecord } from "./validate.js";
 
 interface Loaded {
   file: string;
@@ -96,6 +96,10 @@ async function migrateCommand(args: string[]): Promise<number> {
     if (item.parseError || item.value === undefined) {
       failed += 1;
       process.stdout.write(`FAIL ${label(item)}\n  / ${item.parseError ?? "empty record"}\n`);
+      continue;
+    }
+    if (typeof item.value === "object" && item.value !== null && isServiceAlertRecord(item.value as Record<string, unknown>)) {
+      process.stdout.write(`SKIP ${label(item)} service alert stays in the access-maps shape\n`);
       continue;
     }
     const migrated = migrateImportRecord(item.value as ImportRecord);

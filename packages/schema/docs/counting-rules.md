@@ -24,8 +24,11 @@ Not counted:
 - Records identified as fixtures without that flag: a path with a `fixtures` directory or a `.synthetic.` file name, an id that starts with `example-` or `synthetic-`, or source id `example` or licence id `not-a-real-dataset`. The flag alone is not the only signal.
 - Values older than 730 days.
 - Status observations outside the 30-day window.
-- TTC service alerts. Each alert is one record. It adds no headline piece. It is a tier 4 live status snapshot, not a measurement.
 - Values with no date.
+
+## Service alerts
+
+A TTC service alert is counted as one `service_alert` record. It adds no headline piece and no accessibility-fact piece. It is a tier 4 live status snapshot, not a measurement.
 
 The counter also reports **accessibility-fact pieces** on their own. Those are measurements, barriers, tags that describe access, and live status. Names, addresses, phones, and coordinates are pieces too, but they are not accessibility facts. `headline_pieces = accessibility_fact_pieces + other_pieces`.
 

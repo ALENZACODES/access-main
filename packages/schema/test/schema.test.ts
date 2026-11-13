@@ -16,7 +16,8 @@ import {
 import { migrateImportRecord, odblShareAlikeMissing } from "../src/migrate.js";
 import { loadFieldsFile } from "../src/count.js";
 import { schemaDir } from "../src/paths.js";
-import { detectSchemaId, getValidator } from "../src/validate.js";
+import { detectSchemaId, getValidator, isServiceAlertRecord } from "../src/validate.js";
+import { isServiceAlertRecord as exportedIsServiceAlert } from "../src/index.js";
 import { runCli } from "../src/cli.js";
 import { ACCESS_TOOLS_TIER_LABELS, canonicalTierFromForeign } from "../src/tiers.js";
 
@@ -254,6 +255,49 @@ describe("TTC service alerts", () => {
     expect(validator.validateDetected(withoutCause).ok).toBe(false);
     expect(validator.validateDetected({ ...first, equipment: "UNKNOWN" }).ok).toBe(true);
     expect(validator.validateDetected({ ...first, equipment: "elevator_and_escalator" }).ok).toBe(true);
+    expect(validator.validateDetected({ ...first, tier: "VERIFIED" }).ok).toBe(false);
+    expect(validator.validateDetected({ ...first, tier: "UNKNOWN" }).ok).toBe(false);
+    for (const key of ["source_id", "licence", "retrieved_at"] as const) {
+      const missing = { ...first };
+      delete missing[key];
+      expect(validator.validateDetected(missing).ok, key).toBe(false);
+    }
+    expect(validator.validateDetected({ ...first, retrieved_at: "2099-01-01", feed_timestamp: 4_000_000_000 }).ok).toBe(true);
+    expect(startOnly).toHaveLength(12);
+
+    const decisions = readFileSync(path.join(root, "docs/decisions.md"), "utf8");
+    expect(decisions).toContain("When the shape next changes, add a versioned `$id` or a `schema_version` field");
+    expect(decisions).toContain("A future `retrieved_at` or `feed_timestamp` is accepted.");
+    const tiers = readFileSync(path.join(root, "TIERS.md"), "utf8");
+    expect(tiers).toContain("The schema has no `expires_at` field");
+    expect(tiers).toContain("the 30-day status window");
+    const counting = readFileSync(path.join(root, "docs/counting-rules.md"), "utf8");
+    const notCounted = counting.slice(counting.indexOf("Not counted:"), counting.indexOf("## Service alerts"));
+    expect(notCounted).not.toContain("TTC service alert");
+    expect(counting).toContain("counted as one `service_alert` record");
+  });
+
+  it("skips a service alert in migrate instead of throwing on a missing tranche", async () => {
+    const rows = alerts();
+    expect(exportedIsServiceAlert).toBe(isServiceAlertRecord);
+    expect(exportedIsServiceAlert(rows[0] as Record<string, unknown>)).toBe(true);
+    expect(migrateImportRecord(rows[0] as never)).toEqual([]);
+    const logs: string[] = [];
+    const original = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+      logs.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    let code = 1;
+    try {
+      code = await runCli(["migrate", alertFile]);
+    } finally {
+      process.stdout.write = original;
+    }
+    expect(code).toBe(0);
+    const text = logs.join("");
+    expect(text.match(/SKIP /g)).toHaveLength(rows.length);
+    expect(text).toContain("service alert stays in the access-maps shape");
   });
 
   it("counts each alert as a record and adds no headline piece", () => {

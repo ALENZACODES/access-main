@@ -23,7 +23,7 @@ export {
 } from "./import-class.js";
 export { migrateImportRecord, odblShareAlikeMissing } from "./migrate.js";
 export type { ImportRecord, SourceName } from "./migrate.js";
-export { SchemaValidator, detectSchemaId, getValidator } from "./validate.js";
+export { SchemaValidator, detectSchemaId, getValidator, isServiceAlertRecord } from "./validate.js";
 export type { ValidationIssue, ValidationResult } from "./validate.js";
 export { runCli } from "./cli.js";
 export { ACCESS_TOOLS_TIER_LABELS, CANONICAL_TIER_IDS, PROTOTYPE_LABELS, canonicalTierFromForeign } from "./tiers.js";
