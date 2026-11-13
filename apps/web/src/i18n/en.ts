@@ -134,8 +134,11 @@ export const en = {
   },
   modules: {
     notConnected: "This part of the App is not connected yet.",
-    assigned:
-      "This route calls {{packageName}} from {{repository}}. That package is not loaded in this build, so no records are shown.",
+    unavailable: "This part of the App is not available yet. No records are shown.",
+    searchUnavailable: "Search stays off until this part is available. A search here cannot return records.",
+    detailsSummary: "Technical note",
+    detailsBody:
+      "A later version may load {{packageName}} from {{repository}}. Nothing from that package is included in this build.",
     noMap: "No map is shown. This shell does not load map tiles, so it does not show a map attribution.",
     searchLabel: "Text to look for",
     searchAction: "Search",

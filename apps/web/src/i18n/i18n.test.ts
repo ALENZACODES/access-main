@@ -39,6 +39,13 @@ describe("shell strings", () => {
     }
   });
 
+  it("puts a narrow no-break space before a French colon", () => {
+    for (const [key, value] of french) {
+      expect(value, key).not.toMatch(/ :/);
+      if (value.includes(":")) expect(value, key).toContain("\u202f:");
+    }
+  });
+
   it("does not claim a partnership, a clinical interval, or a verified place", () => {
     const blob = JSON.stringify({ en, fr }).toLowerCase();
     expect(blob).not.toContain("wheelchair-bound");

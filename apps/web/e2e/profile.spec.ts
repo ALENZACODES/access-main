@@ -65,20 +65,24 @@ test("withdraw clears preferences and delete moves focus to the status", async (
   await page.getByRole("button", { name: "Save on this device" }).click();
   await expect(page.getByText("Saved on this device. Nothing was uploaded.")).toBeVisible();
   await page.getByRole("button", { name: "Withdraw consent" }).click();
-  const withdrawDialog = page.getByRole("dialog");
+  const withdrawDialog = page.getByRole("alertdialog");
   await expect(withdrawDialog.getByRole("heading", { name: "Withdraw consent on this device?" })).toBeVisible();
+  await expect(withdrawDialog.getByRole("button", { name: "Keep consent" })).toBeFocused();
+  const describedBy = await withdrawDialog.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`[id="${describedBy}"]`)).toContainText("Entered preferences will be cleared on this device.");
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Withdraw consent" })).toBeFocused();
   await expect(page.getByRole("checkbox", { name: "Store these preferences on this device only" })).toBeChecked();
 
   await page.getByRole("button", { name: "Withdraw consent" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Keep consent" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Keep consent" }).click();
   await expect(page.getByRole("button", { name: "Withdraw consent" })).toBeFocused();
   await expect(page.getByRole("checkbox", { name: "Store these preferences on this device only" })).toBeChecked();
 
   await page.getByRole("button", { name: "Withdraw consent" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Withdraw consent" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Withdraw consent" }).click();
   const withdrawn = page.getByText("Consent was withdrawn. Entered preferences were cleared on this device.");
   await expect(withdrawn).toBeVisible();
   await expect(withdrawn).toBeFocused();
@@ -87,15 +91,15 @@ test("withdraw clears preferences and delete moves focus to the status", async (
   await grantConsent(page);
   await page.getByRole("button", { name: "Save on this device" }).click();
   await page.getByRole("button", { name: "Delete preferences" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Delete preferences" })).toBeFocused();
   await page.reload();
   await expect(page.getByRole("checkbox", { name: "Store these preferences on this device only" })).toBeChecked();
 
   await page.getByRole("button", { name: "Delete preferences" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Delete preferences" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Delete preferences" }).click();
   const deleted = page.getByText("Preferences were deleted from this device.");
   await expect(deleted).toBeVisible();
   await expect(deleted).toBeFocused();
@@ -114,9 +118,9 @@ test("French withdraw dialog returns focus when cancelled", async ({ page }) => 
   await expect(page.getByText("Enregistré sur cet appareil. Rien n'a été envoyé.")).toBeVisible();
   const withdraw = page.getByRole("button", { name: "Retirer le consentement" });
   await withdraw.click();
-  await expect(page.getByRole("dialog").getByRole("heading", { name: "Retirer le consentement sur cet appareil ?" })).toBeVisible();
+  await expect(page.getByRole("alertdialog").getByRole("heading", { name: "Retirer le consentement sur cet appareil ?" })).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(withdraw).toBeFocused();
   await expect(consent).toBeChecked();
 });

@@ -9,11 +9,11 @@ describe("tier constants", () => {
     expect([...CANONICAL_TIER_IDS]).toEqual([0, 1, 2, 3, 4, "E"]);
   });
 
-  it("maps foreign strings through the schema package and keeps shell-only tokens", () => {
+  it("maps access-tools strings through the schema package", () => {
     expect(canonicalTierFromForeign("tier-0-open-data")).toBe(0);
     expect(canonicalTierFromForeign("tier-4-live-feed")).toBe(4);
     expect(canonicalTierFromForeign("administrator_page")).toBe("E");
-    expect(canonicalTierFromForeign("TIER_2")).toBe(2);
+    expect(canonicalTierFromForeign("TIER_2")).toBeNull();
     expect(canonicalTierFromForeign("UNKNOWN")).toBeNull();
   });
 });

@@ -7,6 +7,7 @@ export function TextInput({
   onChange,
   error,
   inputMode,
+  isDisabled,
 }: {
   label: string;
   description?: string;
@@ -14,9 +15,10 @@ export function TextInput({
   onChange: (value: string) => void;
   error?: string;
   inputMode?: "text" | "numeric";
+  isDisabled?: boolean;
 }) {
   return (
-    <TextField isInvalid={Boolean(error)} value={value} onChange={onChange} className="field">
+    <TextField isDisabled={isDisabled} isInvalid={Boolean(error)} value={value} onChange={onChange} className="field">
       <Label>{label}</Label>
       {description ? <Text slot="description">{description}</Text> : null}
       <Input inputMode={inputMode ?? "text"} autoComplete="off" />
@@ -31,15 +33,17 @@ export function ChoiceGroup({
   value,
   onChange,
   options,
+  isDisabled,
 }: {
   label: string;
   description?: string;
   value: string;
   onChange: (value: string) => void;
   options: ReadonlyArray<{ value: string; label: string }>;
+  isDisabled?: boolean;
 }) {
   return (
-    <RadioGroup className="field" value={value} onChange={onChange}>
+    <RadioGroup className="field" isDisabled={isDisabled} value={value} onChange={onChange}>
       <Label>{label}</Label>
       {description ? <Text slot="description">{description}</Text> : null}
       <div className="choice-grid">

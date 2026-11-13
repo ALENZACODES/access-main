@@ -29,7 +29,7 @@ describe("module stubs", () => {
       expect(result.items).toEqual([]);
       expect(result.availability).toBe("stub");
       expect(result.liveStatus).toBe("unavailable");
-      expect(result.messageKey).toBe("modules.assigned");
+      expect(result.messageKey).toBe("modules.unavailable");
     }
   });
 

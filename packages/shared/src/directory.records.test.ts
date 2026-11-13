@@ -47,6 +47,19 @@ describe("access-tools directory records", () => {
     }
   });
 
+  it("rejects an unknown extra field such as eligibility", () => {
+    const [sample] = RECORDS;
+    expect(sample).toBeDefined();
+    const extra = { ...(sample as DirectoryRecord), eligibility: "yes" };
+    expect(validateDirectoryRecord(extra).some((issue) => issue.field === "payload.eligibility")).toBe(true);
+    const nested = {
+      ...(sample as DirectoryRecord),
+      name: { ...(sample as DirectoryRecord).name, eligibility: "yes" },
+    };
+    expect(validateDirectoryRecord(nested).some((issue) => issue.field === "payload.name.eligibility")).toBe(true);
+    expect(RECORDS.every((record) => validateDirectoryRecord(record).length === 0)).toBe(true);
+  });
+
   it("rejects the old 1.1.0 record that carried tier E on the payload", () => {
     const [sample] = RECORDS;
     expect(sample).toBeDefined();

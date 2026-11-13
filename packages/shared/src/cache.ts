@@ -1,5 +1,6 @@
 import { validateDirectoryRecord } from "./directory.ts";
 import { findForbiddenKeys, validateProvenance, type FieldIssue, type Provenance } from "./provenance.ts";
+import { canonicalTierFromForeign } from "./tiers.ts";
 
 export const CACHE_KINDS = [
   "place",
@@ -48,7 +49,8 @@ export function validateCacheEntry(entry: CacheEntry): FieldIssue[] {
   }
   if (entry.kind === "directory-link") {
     issues.push(...validateDirectoryRecord(entry.payload));
-    if (entry.provenance?.tier !== "E") {
+    const expectedTier = canonicalTierFromForeign(entry.payload.verificationTier);
+    if (expectedTier === null || entry.provenance?.tier !== expectedTier) {
       issues.push({ field: "provenance.tier", code: "invalid_tier" });
     }
   }

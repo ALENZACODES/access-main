@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FINDER_KINDS, laneBinding, type FinderKind, type ModuleId, type ModuleResult } from "@access/shared";
+import { FINDER_KINDS, type FinderKind, type ModuleId, type ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
+import { StubNote } from "../modules/StubNote.tsx";
 import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
@@ -39,7 +40,6 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   const { t, i18n } = useTranslation();
   const { profile } = useProfileState();
   const online = useOnline();
-  const binding = laneBinding(id);
   const [text, setText] = useState("");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -79,17 +79,24 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   }, [id, i18n.language, online, profile, submitted]);
 
   const items = (result?.items ?? []).map(itemText).filter((label): label is string => Boolean(label));
+  const canSearch = result?.availability === "ready";
+  const hasSearch = id === "places" || id === "finders" || id === "journey";
 
   return (
     <div className="stack">
       <h1>{t(copy.title)}</h1>
       <p className="lead">{t(copy.body)}</p>
       {id === "places" || id === "journey" ? <p>{t("modules.noMap")}</p> : null}
+      {result?.availability === "stub" ? <StubNote id={id} search={hasSearch} /> : (
+        <p>{result ? t(result.messageKey) : t("home.checking")}</p>
+      )}
       {id === "places" || id === "finders" ? (
         <form
           className="stack"
+          aria-describedby={result?.availability === "stub" ? `${id}-search-unavailable` : undefined}
           onSubmit={(event) => {
             event.preventDefault();
+            if (!canSearch) return;
             setSubmitted((current) => ({ ...current, text, kind }));
           }}
         >
@@ -97,40 +104,36 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
             <ChoiceGroup
               label={t("modules.finderKind")}
               value={kind}
+              isDisabled={!canSearch}
               onChange={(value) => {
                 if ((FINDER_KINDS as readonly string[]).includes(value)) setKind(value as FinderKind);
               }}
               options={FINDER_KINDS.map((value) => ({ value, label: t(KIND_KEY[value]) }))}
             />
           ) : null}
-          <TextInput label={t("modules.searchLabel")} value={text} onChange={setText} />
+          <TextInput label={t("modules.searchLabel")} value={text} onChange={setText} isDisabled={!canSearch} />
           <div className="button-row">
-            <Button type="submit">{t("modules.searchAction")}</Button>
+            <Button type="submit" isDisabled={!canSearch}>{t("modules.searchAction")}</Button>
           </div>
         </form>
       ) : null}
       {id === "journey" ? (
         <form
           className="stack"
+          aria-describedby={result?.availability === "stub" ? `${id}-search-unavailable` : undefined}
           onSubmit={(event) => {
             event.preventDefault();
+            if (!canSearch) return;
             setSubmitted((current) => ({ ...current, origin, destination }));
           }}
         >
-          <TextInput label={t("modules.origin")} value={origin} onChange={setOrigin} />
-          <TextInput label={t("modules.destination")} value={destination} onChange={setDestination} />
+          <TextInput label={t("modules.origin")} value={origin} onChange={setOrigin} isDisabled={!canSearch} />
+          <TextInput label={t("modules.destination")} value={destination} onChange={setDestination} isDisabled={!canSearch} />
           <div className="button-row">
-            <Button type="submit">{t("modules.plan")}</Button>
+            <Button type="submit" isDisabled={!canSearch}>{t("modules.plan")}</Button>
           </div>
         </form>
       ) : null}
-      <p>
-        {result?.availability === "stub"
-          ? t("modules.assigned", { packageName: binding.packageName, repository: binding.repository })
-          : result
-            ? t(result.messageKey)
-            : t("home.checking")}
-      </p>
       <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
       {items.length > 0 ? (
         <ul>

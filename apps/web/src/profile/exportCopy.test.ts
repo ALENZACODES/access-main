@@ -34,15 +34,16 @@ describe("plain-text export language", () => {
   it("writes French labels and choice names when the UI language is French", () => {
     const text = exportProfileInLanguage(filled("fr"), "fr");
     expect(text.startsWith("the App — préférences saisies sur cet appareil\n")).toBe(true);
-    expect(text).toContain("Langue: Français");
-    expect(text).toContain("Équipement: Fauteuil roulant manuel");
-    expect(text).toContain("Côté du transfert: Gauche");
-    expect(text).toContain("Préférence d'itinéraire: Préférer des pentes plus douces");
-    expect(text).toContain("Taille du texte: Très grande");
-    expect(text).toContain("Mouvement: Réduire le mouvement");
-    expect(text).toContain("Contraste plus élevé: Activé");
-    expect(text).toContain("Lecteur d'écran: Non");
-    expect(text).toContain("Consentement à enregistrer sur cet appareil: 2026-11-13T12:00:00.000Z");
+    expect(text).toContain("Langue\u202f: Français");
+    expect(text).toContain("Équipement\u202f: Fauteuil roulant manuel");
+    expect(text).toContain("Côté du transfert\u202f: Gauche");
+    expect(text).toContain("Préférence d'itinéraire\u202f: Préférer des pentes plus douces");
+    expect(text).toContain("Taille du texte\u202f: Très grande");
+    expect(text).toContain("Mouvement\u202f: Réduire le mouvement");
+    expect(text).toContain("Contraste plus élevé\u202f: Activé");
+    expect(text).toContain("Lecteur d'écran\u202f: Non");
+    expect(text).toContain("Consentement à enregistrer sur cet appareil\u202f: 2026-11-13T12:00:00.000Z");
+    expect(text).not.toContain("Langue: ");
     expect(text).not.toContain("manual_chair");
     expect(text).not.toContain("low_slope");
     expect(text).not.toContain("extra_large");
