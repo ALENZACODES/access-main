@@ -179,6 +179,30 @@
         },
         "website": {
           "$ref": "https://access-maps.local/schema/field-value.schema.json"
+        },
+        "posted_date": {
+          "description": "Optional. The source PostedDate, sourced like every other field. value is an ISO date (YYYY-MM-DD) or UNKNOWN when the source did not state one. The original timestamp stays in raw.",
+          "allOf": [
+            {
+              "$ref": "https://access-maps.local/schema/field-value.schema.json"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "const": "UNKNOWN"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     }

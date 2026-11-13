@@ -21,3 +21,5 @@
 10. **This package is the tier source of truth.** Canonical ids are `0`, `1`, `2`, `3`, `4`, and `E`, plus the four prototype labels. access-maps numbers and access-tools `tier-N-*` strings map into that list. The map is `TIERS.md`. In French the product is called l'application. The ids are not translated. The shell imports `CANONICAL_TIER_IDS` and `PROTOTYPE_LABELS` from `@access-main/schema/tiers`.
 
 11. **`dist/` is not committed.** `prepare` runs `tsc`. A git install builds it. The profile has no pressure-relief reminder, washroom interval, or continuous-travel limit. Those are health-aware timing, and the prototype does not include them.
+
+12. **Washroom `posted_date` is optional.** It is the source `PostedDate`, kept as a sourced field. The value is an ISO date (`YYYY-MM-DD`) or `UNKNOWN`. It is not an accessibility fact and it is not required, so records that never had the column still validate.

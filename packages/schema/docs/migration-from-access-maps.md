@@ -54,6 +54,7 @@ Every other import key is stored once under `imported_facts` with that key. It s
 | GTFS code 1 | "station is accessible" | The importer stores `some_vehicles_accessible`. The canonical enum keeps that token. |
 | Empty GTFS `location_type` | a new default | The importer already stored `stop` and the raw code. This step does not redo it. |
 | `source_id` | `agency_name` or `geocode_source` | That would add a piece the import did not have. |
+| `posted_date` | a washroom fact or a measured date | City of Toronto `PostedDate`. Optional on the import record. The value is copied once into `imported_facts`. |
 
 OSM rows are ODbL. `odblShareAlikeMissing` is true for the registry fixture until `share_alike` is set true. The import schema does not add that flag, because the stored registry row does not have it yet.
 

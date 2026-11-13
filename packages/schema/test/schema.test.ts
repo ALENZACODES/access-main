@@ -11,6 +11,7 @@ import { judgeFreshness } from "../src/freshness.js";
 import {
   VENUE_ENTRANCE_KEYS,
   VENUE_PLACE_KEYS,
+  WASHROOM_ACCESS_KEYS,
 } from "../src/import-class.js";
 import { migrateImportRecord, odblShareAlikeMissing } from "../src/migrate.js";
 import { loadFieldsFile } from "../src/count.js";
@@ -169,6 +170,48 @@ describe("validator", () => {
     const canonical = validator.validate(canonicalSchemaId("source"), source);
     expect(canonical.ok, JSON.stringify(canonical.errors)).toBe(true);
     expect(odblShareAlikeMissing(source as { licence_id: string })).toBe(true);
+  });
+
+  it("accepts a sourced posted_date on a washroom and rejects a value that is not an ISO date", () => {
+    const washroom = readJson("import/real/washroom.osm-node-5747441521.json") as {
+      fields: Record<string, unknown>;
+    };
+    const postedDate = {
+      value: "2026-11-12",
+      source_id: "toronto-park-washrooms",
+      licence: "OGL-Toronto-1.0",
+      retrieved_at: "2026-11-13",
+      tier: 0,
+      source_key: "PostedDate",
+      raw: "2026-11-12T08:46:41",
+    };
+    const withDate = { ...washroom, fields: { ...washroom.fields, posted_date: postedDate } };
+    const accepted = validator.validateDetected(withDate);
+    expect(accepted.ok, JSON.stringify(accepted.errors)).toBe(true);
+    const unknownDate = {
+      ...washroom,
+      fields: {
+        ...washroom.fields,
+        posted_date: { ...postedDate, value: "UNKNOWN", raw: "" },
+      },
+    };
+    expect(validator.validateDetected(unknownDate).ok).toBe(true);
+    const timestamp = {
+      ...washroom,
+      fields: { ...washroom.fields, posted_date: { ...postedDate, value: "2026-11-12T08:46:41" } },
+    };
+    expect(validator.validateDetected(timestamp).ok).toBe(false);
+    expect(WASHROOM_ACCESS_KEYS.has("posted_date")).toBe(false);
+    const [migrated] = migrateImportRecord(withDate as never) as Array<{
+      facts: Record<string, { value: unknown }>;
+      imported_facts: Record<string, { value: unknown; import_field?: string; source_key?: string }>;
+    }>;
+    expect(migrated?.imported_facts.posted_date?.value).toBe("2026-11-12");
+    expect(migrated?.imported_facts.posted_date?.source_key).toBe("PostedDate");
+    expect(migrated?.imported_facts.posted_date?.import_field).toBe("posted_date");
+    expect(migrated?.facts.posted_date).toBeUndefined();
+    const canonical = validator.validateDetected(migrated);
+    expect(canonical.ok, JSON.stringify(canonical.errors)).toBe(true);
   });
 });
 
