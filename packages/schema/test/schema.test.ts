@@ -4,7 +4,7 @@ import path from "node:path";
 import { gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { RECONCILIATION_LINES, RECONCILIATION_TARGET, RECORDS, ILLUSTRATIVE_TOTAL, canonicalSchemaId } from "../src/catalog/index.js";
+import { RECONCILIATION_LINES, RECONCILIATION_TARGET, RECORDS, ILLUSTRATIVE_TOTAL, IMPORT_SCHEMA_IDS, canonicalSchemaId } from "../src/catalog/index.js";
 import { countRecords, isFixturePath, isFixtureRecord } from "../src/count.js";
 import { GAME_NAMES } from "../src/flat-schemas.js";
 import { judgeFreshness } from "../src/freshness.js";
@@ -215,6 +215,57 @@ describe("validator", () => {
   });
 });
 
+describe("TTC service alerts", () => {
+  const alertFile = path.join(fixtures, "import/alerts/gtfs-rt-ttc-accessibility.ndjson");
+
+  function alerts(): Record<string, unknown>[] {
+    return readFileSync(alertFile, "utf8")
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+  }
+
+  it("accepts the 32 alerts published at access-maps 4dd1682", () => {
+    const rows = alerts();
+    expect(rows).toHaveLength(32);
+    const validator = getValidator();
+    const equipment = new Set<unknown>();
+    for (const row of rows) {
+      equipment.add(row.equipment);
+      expect(detectSchemaId(row)).toBe(IMPORT_SCHEMA_IDS.alert);
+      const result = validator.validateDetected(row);
+      expect(result.ok, `${String(row.id)} ${JSON.stringify(result.errors)}`).toBe(true);
+      expect(row.tier).toBe(4);
+      expect(row.route_ids).toEqual([]);
+    }
+    expect(equipment).toEqual(new Set(["elevator", "escalator"]));
+    const startOnly = rows.filter((row) => {
+      const periods = row.active_periods as Array<Record<string, unknown>>;
+      return periods.some((period) => period.start !== undefined && period.end === undefined);
+    });
+    expect(startOnly.length).toBeGreaterThan(0);
+
+    const first = rows[0] ?? {};
+    expect(validator.validateDetected({ ...first, tier: 0 }).ok).toBe(false);
+    expect(validator.validateDetected({ ...first, equipment: "stair" }).ok).toBe(false);
+    expect(validator.validateDetected({ ...first, measured: true }).ok).toBe(false);
+    const withoutCause = { ...first };
+    delete withoutCause.cause;
+    expect(validator.validateDetected(withoutCause).ok).toBe(false);
+    expect(validator.validateDetected({ ...first, equipment: "UNKNOWN" }).ok).toBe(true);
+    expect(validator.validateDetected({ ...first, equipment: "elevator_and_escalator" }).ok).toBe(true);
+  });
+
+  it("counts each alert as a record and adds no headline piece", () => {
+    const report = countRecords(alerts(), "2026-11-13");
+    expect(report.records).toBe(32);
+    expect(report.headline_pieces).toBe(0);
+    expect(report.accessibility_fact_pieces).toBe(0);
+    expect(report.by_record_type.service_alert?.records).toBe(32);
+    expect(report.by_record_type.service_alert?.headline_pieces).toBe(0);
+  });
+});
+
 describe("counting", () => {
   const asOf = "2026-11-13";
 
@@ -411,7 +462,12 @@ describe("cli", () => {
       return true;
     }) as typeof process.stdout.write;
     try {
-      const valid = await runCli(["validate", path.join(fixtures, "valid"), path.join(fixtures, "import/real")]);
+      const valid = await runCli([
+        "validate",
+        path.join(fixtures, "valid"),
+        path.join(fixtures, "import/real"),
+        path.join(fixtures, "import/alerts/gtfs-rt-ttc-accessibility.ndjson"),
+      ]);
       const invalid = await runCli(["validate", path.join(fixtures, "invalid")]);
       expect(valid).toBe(0);
       expect(invalid).toBe(1);

@@ -23,3 +23,5 @@
 11. **`dist/` is not committed.** `prepare` runs `tsc`. A git install builds it. The profile has no pressure-relief reminder, washroom interval, or continuous-travel limit. Those are health-aware timing, and the prototype does not include them.
 
 12. **Washroom `posted_date` is optional.** It is the source `PostedDate`, kept as a sourced field. The value is an ISO date (`YYYY-MM-DD`) or `UNKNOWN`. It is not an accessibility fact and it is not required, so records that never had the column still validate.
+
+13. **TTC service alerts keep the access-maps shape.** `schema/import/service-alert.schema.json` is the schema from access-maps commit `4dd1682` (`schema/service-alert.schema.json`). The `$id` is unchanged. Tier is the constant `4`. Equipment is `elevator`, `escalator`, `elevator_and_escalator`, or `UNKNOWN`. The counter records the alert and adds no headline piece. It is not rewritten into an outage record.

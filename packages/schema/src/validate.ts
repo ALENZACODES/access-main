@@ -91,7 +91,21 @@ export function detectSchemaId(data: unknown): string | null {
   if (typeof row.confirmation_status === "string" && typeof row.attribution === "string" && !row.kind) {
     return canonicalSchemaId("licence");
   }
+  if (isServiceAlertRecord(row)) return IMPORT_SCHEMA_IDS.alert;
   return null;
+}
+
+/** GTFS-RT service alert from access-maps. Tier 4 live status, not a canonical outage record. */
+export function isServiceAlertRecord(row: Record<string, unknown>): boolean {
+  return (
+    typeof row.entity_id === "string" &&
+    typeof row.header_text === "string" &&
+    typeof row.feed_timestamp === "number" &&
+    typeof row.equipment === "string" &&
+    Array.isArray(row.active_periods) &&
+    row.record_type === undefined &&
+    row.tranche === undefined
+  );
 }
 
 export function formatErrors(errors: ErrorObject[] | null | undefined): ValidationIssue[] {
