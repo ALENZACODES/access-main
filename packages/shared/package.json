@@ -1,0 +1,13 @@
+{
+  "name": "@access/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed contracts for the App shell. Verification tier ids come from @access-main/schema.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@access-main/schema": "*"
+  }
+}

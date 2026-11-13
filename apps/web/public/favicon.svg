@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="the App">
+  <rect width="32" height="32" rx="6" fill="#083734"/>
+  <path d="M8 22.5h16" stroke="#f4f1ea" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="16" cy="13" r="3.2" fill="#f4f1ea"/>
+</svg>

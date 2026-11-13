@@ -1,0 +1,28 @@
+{
+  "name": "@access/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@access/shared": "*",
+    "dexie": "^4.2.1",
+    "i18next": "^25.6.2",
+    "react": "^19.2.0",
+    "react-aria-components": "^1.13.0",
+    "react-dom": "^19.2.0",
+    "react-i18next": "^16.3.3",
+    "react-router-dom": "^7.9.6"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
+    "@playwright/test": "^1.57.0",
+    "vite": "^7.2.2",
+    "vite-plugin-pwa": "^1.2.0"
+  }
+}

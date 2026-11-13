@@ -1,0 +1,12 @@
+# Decisions for the shell
+
+Owner: app shell lane. These choices are for this repository's web shell. They are not a claim about a future native app.
+
+1. **Web app, TypeScript, React, Vite.** One responsive PWA. `apps/web` is the only application. The root `package.json` is an npm workspace so later packages can join it.
+2. **React Aria Components for controls.** Buttons, radios, checkboxes, text fields, and dialogs use the library so names, state, and keyboard behaviour are exposed to assistive technology. Styling is ours. Automated axe checks still run, because a component kit is not a finished audit.
+3. **i18next for English and French.** Strings live in `apps/web/src/i18n`. French shell text is a prototype translation and the French screens say so. Missing French falls back to English. Official names stay as published (`the App`, Spinal Cord Injury Ontario).
+4. **Preferences are device-only.** Dexie stores one anonymous profile in IndexedDB. The prototype profile is equipment, chair size, transfer, route preference, and display. Washroom intervals, travel limits, and pressure-relief reminders are rejected. Consent is a checkbox. The shell does not store a diagnosis or injury level, does not store place lists on the profile, and does not call the geolocation API. There is no account and no upload.
+5. **Offline shell, not an offline dataset.** vite-plugin-pwa / Workbox precaches the built shell and asks before replacing it. Live status is rejected by the cache validator. Cached records must carry a source, a licence, a date, and a canonical tier. Prototype records cannot be labelled verified. The cache starts empty. Showing a source does not make a record verified.
+6. **Other lanes plug in through `packages/shared`.** `ModuleRegistry` is the seam for places, journey, finders, navigator, games, and help. Stubs return an empty list and `liveStatus: "unavailable"`. JSON Schema and the canonical tier ids live in `packages/schema`. The shell imports those ids from `@access-main/schema/tiers` and does not keep a second list.
+7. **CI runs on pull requests only.** Typecheck, lint, Vitest, and one Chromium Playwright run. No scheduled workflows.
+8. **No analytics and no third-party runtime requests.** The shell does not embed an analytics SDK. Attribution for libraries is text in the About page and in `THIRD_PARTY_NOTICES.md`.

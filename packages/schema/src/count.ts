@@ -57,10 +57,6 @@ export interface CountReport {
   by_record_type_note: string;
 }
 
-interface Mutable {
-  slice: TypeSlice;
-}
-
 function emptySlice(): TypeSlice {
   return {
     records: 0,
