@@ -76,6 +76,19 @@ test("module pages do not invent places and axe is clean", async ({ page }) => {
     expect(results.violations, `${route} ${JSON.stringify(results.violations, null, 2)}`).toEqual([]);
   }
   expect(await page.evaluate(() => (window as unknown as { __geo?: boolean }).__geo ?? false)).toBe(false);
+
+  await page.goto("/places");
+  await expect(page.getByText("This part of the App is not available yet. No records are shown.")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Text to look for" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
+  await expect(page.getByText("access-maps")).toBeHidden();
+
+  await page.goto("/finders");
+  await expect(page.getByRole("radio", { name: "Washroom" })).toBeDisabled();
+  await page.goto("/journey");
+  await expect(page.getByRole("button", { name: "Plan this journey" })).toBeDisabled();
+  await page.goto("/help");
+  await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
 });
 
 test("narrow and enlarged text do not force horizontal scrolling", async ({ page }) => {

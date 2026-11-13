@@ -70,7 +70,7 @@ export const fr: Messages = {
     countsTitle: "Enregistrements dans cette interface",
     countsIntro: "Ces nombres sont lus sur cet appareil. Ils ne décrivent pas une couverture.",
     verified:
-      "Enregistrements stockés qui disent encore vérifiés : {{count}}. Ce prototype refuse cette étiquette.",
+      "Enregistrements stockés qui disent encore vérifiés\u202f: {{count}}. Ce prototype refuse cette étiquette.",
     frenchNote:
       "Le texte français de l'interface est une traduction provisoire. Il doit encore être révisé par une personne qualifiée. Au-delà de l'interface, le contenu est en anglais dans ce prototype.",
     audit:
@@ -91,7 +91,7 @@ export const fr: Messages = {
     profileTitle: "Préférences",
     profileStored: "Un enregistrement de préférences est sur cet appareil. Mis à jour le {{date}}.",
     profileMissing: "Aucun enregistrement de préférences n'est stocké.",
-    profileLocal: "Les préférences ne sont pas envoyées. Dernier envoi : aucun.",
+    profileLocal: "Les préférences ne sont pas envoyées. Dernier envoi\u202f: aucun.",
     cacheTitle: "Enregistrements en cache",
     cacheEmpty: "Aucun lieu, trajet ou résultat de recherche n'est stocké sur cet appareil.",
     outboxNone: "Aucun signalement n'est en attente. Cette interface n'envoie pas de signalements.",
@@ -118,10 +118,10 @@ export const fr: Messages = {
       "Aucune tuile de carte n'est stockée. Quand une carte sera ajoutée, les données OpenStreetMap resteront dans leur propre couche, avec leur licence et leur attribution.",
     legendTitle: "Comment lire les niveaux",
     storageUnavailable: "Ce navigateur n'a pas autorisé le stockage sur l'appareil.",
-    wifi: "Préférence Wi-Fi pour les futurs téléchargements : {{value}}.",
+    wifi: "Préférence Wi-Fi pour les futurs téléchargements\u202f: {{value}}.",
     wifiOn: "Wi-Fi seulement",
     wifiOff: "n'importe quel réseau",
-    limit: "Plafond de stockage pour les futurs téléchargements : {{value}}.",
+    limit: "Plafond de stockage pour les futurs téléchargements\u202f: {{value}}.",
     limitNone: "aucun plafond",
     asOf: "En date du {{date}}",
     noAsOf: "Pas de date, parce que rien n'est en cache.",
@@ -143,8 +143,11 @@ export const fr: Messages = {
   },
   modules: {
     notConnected: "Cette partie de the App n'est pas encore branchée.",
-    assigned:
-      "Cette route appelle {{packageName}} depuis {{repository}}. Ce paquet n'est pas chargé dans cette version, donc aucune fiche n'est affichée.",
+    unavailable: "Cette partie de the App n'est pas encore disponible. Aucune fiche n'est affichée.",
+    searchUnavailable: "La recherche reste inactive tant que cette partie n'est pas disponible. Une recherche ici ne peut pas donner de fiche.",
+    detailsSummary: "Note technique",
+    detailsBody:
+      "Une version ultérieure pourra charger {{packageName}} depuis {{repository}}. Rien de ce paquet n'est inclus dans cette version.",
     noMap: "Aucune carte n'est affichée. Cette interface ne charge pas de tuiles, donc elle n'affiche pas d'attribution de carte.",
     searchLabel: "Texte à chercher",
     searchAction: "Rechercher",

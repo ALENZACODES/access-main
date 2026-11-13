@@ -178,9 +178,9 @@ export async function summarizeStorage(): Promise<StorageSummary> {
   };
 }
 
-function enteredLine(label: string, value: string | number | null | undefined): string | null {
+function enteredLine(label: string, value: string | number | null | undefined, separator: string): string | null {
   if (value === null || value === undefined || value === "") return null;
-  return `${label}: ${String(value)}`;
+  return `${label}${separator}${String(value)}`;
 }
 
 export interface ExportPhrases {
@@ -214,6 +214,8 @@ export interface ExportPhrases {
   storage: string;
   consent: string;
   withdrawn: string;
+  /** English uses ": ". French uses a narrow no-break space before the colon. */
+  separator: ": " | "\u202f: ";
 }
 
 function named(names: Record<string, string>, value: string | null): string | null {
@@ -234,7 +236,7 @@ function yesNo(phrases: ExportPhrases, value: boolean | null): string | null {
 export function exportProfileText(profile: UserProfile, phrases: ExportPhrases): string {
   const lines = [phrases.title];
   const push = (label: string, value: string | number | null | undefined) => {
-    const line = enteredLine(label, value);
+    const line = enteredLine(label, value, phrases.separator);
     if (line) lines.push(line);
   };
   push(phrases.language, phrases.languageName[profile.language_preference]);

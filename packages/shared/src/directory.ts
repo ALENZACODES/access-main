@@ -84,9 +84,50 @@ function isMember(value: unknown, allowed: readonly string[]): boolean {
   return typeof value === "string" && allowed.includes(value);
 }
 
+const DIRECTORY_KEYS = new Set([
+  "schemaVersion",
+  "id",
+  "category",
+  "topics",
+  "readingContexts",
+  "name",
+  "administrator",
+  "geography",
+  "summary",
+  "doesNot",
+  "officialUrl",
+  "frenchOfficialUrl",
+  "phone",
+  "phoneNote",
+  "figure",
+  "sourceName",
+  "retrievedOn",
+  "nextReviewOn",
+  "verificationTier",
+  "verificationPlain",
+  "neverMeans",
+  "licenceNote",
+  "notEligibilityAdvice",
+  "framing",
+  "placeFacts",
+]);
+
+const TEXT_KEYS = new Set(["en", "fr"]);
+const FIGURE_KEYS = new Set(["statement", "qualifier", "sourceUrls", "retrievedOn"]);
+
+function unknownKeyIssues(value: Record<string, unknown>, allowed: ReadonlySet<string>, field: string): FieldIssue[] {
+  return Object.keys(value)
+    .filter((key) => !allowed.has(key))
+    .map((key) => ({ field: `${field}.${key}`, code: "invalid_directory" }));
+}
+
+function textKeyIssues(value: unknown, field: string): FieldIssue[] {
+  return isRecord(value) ? unknownKeyIssues(value, TEXT_KEYS, field) : [];
+}
+
 export function validateDirectoryRecord(value: unknown): FieldIssue[] {
   if (!isRecord(value)) return [{ field: "payload", code: "invalid_directory" }];
-  const issues: FieldIssue[] = [];
+  const issues: FieldIssue[] = unknownKeyIssues(value, DIRECTORY_KEYS, "payload");
   if (value.schemaVersion !== DIRECTORY_SCHEMA_VERSION) issues.push({ field: "payload.schemaVersion", code: "invalid_directory" });
   if (typeof value.id !== "string" || !value.id.trim()) issues.push({ field: "payload.id", code: "missing_id" });
   if (!isMember(value.category, DIRECTORY_CATEGORIES)) issues.push({ field: "payload.category", code: "invalid_enum" });
@@ -100,9 +141,19 @@ export function validateDirectoryRecord(value: unknown): FieldIssue[] {
     issues.push({ field: "payload.readingContexts", code: "invalid_enum" });
   }
   if (!isText(value.name)) issues.push({ field: "payload.name", code: "invalid_directory" });
+  issues.push(...textKeyIssues(value.name, "payload.name"));
   if (!isText(value.administrator)) issues.push({ field: "payload.administrator", code: "invalid_directory" });
+  issues.push(...textKeyIssues(value.administrator, "payload.administrator"));
   if (!isMember(value.geography, DIRECTORY_GEOGRAPHIES)) issues.push({ field: "payload.geography", code: "invalid_enum" });
   if (!isText(value.summary)) issues.push({ field: "payload.summary", code: "invalid_directory" });
+  issues.push(...textKeyIssues(value.summary, "payload.summary"));
+  issues.push(...textKeyIssues(value.doesNot, "payload.doesNot"));
+  issues.push(...textKeyIssues(value.phoneNote, "payload.phoneNote"));
+  if (isRecord(value.figure)) {
+    issues.push(...unknownKeyIssues(value.figure, FIGURE_KEYS, "payload.figure"));
+    issues.push(...textKeyIssues(value.figure.statement, "payload.figure.statement"));
+    issues.push(...textKeyIssues(value.figure.qualifier, "payload.figure.qualifier"));
+  }
   if (typeof value.officialUrl !== "string" || !value.officialUrl.startsWith("https://")) {
     issues.push({ field: "payload.officialUrl", code: "invalid_url" });
   }
@@ -124,6 +175,7 @@ export function validateDirectoryRecord(value: unknown): FieldIssue[] {
   if (value.notEligibilityAdvice !== true) issues.push({ field: "payload.notEligibilityAdvice", code: "eligibility_advice" });
   for (const field of ["verificationPlain", "neverMeans", "licenceNote", "framing"] as const) {
     if (!isText(value[field])) issues.push({ field: `payload.${field}`, code: "invalid_directory" });
+    issues.push(...textKeyIssues(value[field], `payload.${field}`));
   }
   if (value.placeFacts !== undefined && value.placeFacts !== "none") {
     issues.push({ field: "payload.placeFacts", code: "invalid_enum" });

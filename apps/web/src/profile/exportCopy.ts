@@ -68,6 +68,7 @@ export function exportPhrases(language: "en" | "fr"): ExportPhrases {
     storage: messages.profile.storageLimit,
     consent: messages.profile.exportConsent,
     withdrawn: messages.profile.exportWithdrawn,
+    separator: language === "fr" ? "\u202f: " : ": ",
   };
 }
 

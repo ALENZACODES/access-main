@@ -9,14 +9,10 @@
  * PROTOTYPE-UNVERIFIED and SEEDED-OPEN-DATA. It refuses tier 2, tier 3,
  * tier 4, COMMUNITY-REPORTED, and VERIFIED.
  */
-import {
-  CANONICAL_TIER_IDS,
-  PROTOTYPE_LABELS,
-  canonicalTierFromForeign as schemaTierFromForeign,
-} from "@access-main/schema/tiers";
+import { CANONICAL_TIER_IDS, PROTOTYPE_LABELS, canonicalTierFromForeign } from "@access-main/schema/tiers";
 import type { CanonicalTierId, PrototypeLabelId } from "@access-main/schema/tiers";
 
-export { CANONICAL_TIER_IDS, PROTOTYPE_LABELS };
+export { CANONICAL_TIER_IDS, PROTOTYPE_LABELS, canonicalTierFromForeign };
 export type { CanonicalTierId };
 export type PrototypeLabel = PrototypeLabelId;
 
@@ -28,15 +24,6 @@ export const PROTOTYPE_CACHE_LABELS = ["PROTOTYPE-UNVERIFIED", "SEEDED-OPEN-DATA
 /** Display keys for the data-status legend. Refused tiers are explained in copy, not offered as stored values. */
 export const DISPLAY_TIERS = [...PROTOTYPE_CACHE_TIERS, ...PROTOTYPE_CACHE_LABELS] as const;
 export type DisplayTier = (typeof DISPLAY_TIERS)[number];
-
-/** Older shell spellings. Access-tools strings, including `administrator_page`, are mapped by `@access-main/schema/tiers`. */
-const SHELL_ONLY_TIERS: Record<string, CanonicalTierId> = {
-  TIER_0: 0,
-  TIER_1: 1,
-  TIER_2: 2,
-  TIER_3: 3,
-  TIER_4: 4,
-};
 
 const TIER_MESSAGE_KEYS: Record<string, string> = {
   0: "tiers.tier0",
@@ -50,15 +37,6 @@ const TIER_MESSAGE_KEYS: Record<string, string> = {
   "COMMUNITY-REPORTED": "tiers.communityReported",
   VERIFIED: "tiers.verifiedClaim",
 };
-
-export function canonicalTierFromForeign(value: unknown): CanonicalTierId | null {
-  const fromSchema = schemaTierFromForeign(value);
-  if (fromSchema !== null) return fromSchema;
-  if (typeof value === "string" && Object.prototype.hasOwnProperty.call(SHELL_ONLY_TIERS, value)) {
-    return SHELL_ONLY_TIERS[value] ?? null;
-  }
-  return null;
-}
 
 export function isPrototypeLabel(value: unknown): value is PrototypeLabel {
   return typeof value === "string" && (PROTOTYPE_LABELS as readonly string[]).includes(value);

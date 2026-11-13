@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { laneBinding, type ModuleResult } from "@access/shared";
+import type { ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { TextInput } from "../design/fields.tsx";
+import { StubNote } from "../modules/StubNote.tsx";
 import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
@@ -12,7 +13,6 @@ export function HelpPage() {
   const { t, i18n } = useTranslation();
   const { profile } = useProfileState();
   const online = useOnline();
-  const binding = laneBinding("help");
   const [text, setText] = useState("");
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
@@ -51,21 +51,21 @@ export function HelpPage() {
       </section>
       <section className="stack" aria-labelledby="help-articles">
         <h2 id="help-articles">{t("modules.helpArticles")}</h2>
+        {result?.availability === "stub" ? <StubNote id="help" search /> : null}
         <form
           className="stack"
+          aria-describedby={result?.availability === "stub" ? "help-search-unavailable" : undefined}
           onSubmit={(event) => {
             event.preventDefault();
+            if (result?.availability !== "ready") return;
             setQuery(text);
           }}
         >
-          <TextInput label={t("modules.searchLabel")} value={text} onChange={setText} />
+          <TextInput label={t("modules.searchLabel")} value={text} onChange={setText} isDisabled={result?.availability !== "ready"} />
           <div className="button-row">
-            <Button type="submit">{t("modules.searchAction")}</Button>
+            <Button type="submit" isDisabled={result?.availability !== "ready"}>{t("modules.searchAction")}</Button>
           </div>
         </form>
-        {result?.availability === "stub" ? (
-          <p>{t("modules.assigned", { packageName: binding.packageName, repository: binding.repository })}</p>
-        ) : null}
         <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
       </section>
     </div>

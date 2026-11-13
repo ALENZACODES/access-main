@@ -203,6 +203,15 @@ body {
 .stack { display: grid; gap: 0.9rem; min-width: 0; max-width: 100%; }
 .stack > * { margin: 0; }
 
+.lane-note summary {
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  cursor: pointer;
+}
+
 h1 { font-size: 2rem; line-height: 1.2; margin: 0; }
 h2 { font-size: 1.45rem; line-height: 1.25; }
 h3 { font-size: 1.2rem; }

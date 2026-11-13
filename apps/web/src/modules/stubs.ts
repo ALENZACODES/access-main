@@ -12,7 +12,7 @@ import {
 } from "@access/shared";
 
 function unlinked<T>(id: ModuleId): Promise<ModuleResult<T>> {
-  return Promise.resolve(emptyModuleResult(id, "modules.assigned"));
+  return Promise.resolve(emptyModuleResult(id, "modules.unavailable"));
 }
 
 /**
