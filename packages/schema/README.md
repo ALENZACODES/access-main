@@ -44,7 +44,7 @@ access-schema migrate fixtures/import/real/venue.osm-node-238726675.json
 
 Canonical records: place, entrance, washroom (adult change table and hoist), parking (type A van-accessible bay), segment, transit stop, elevator asset, outage, charging, repair and supply, benefits directory, journey, user profile (device only), game definition, game session, city skeleton, correction report, source, licence.
 
-Import records: the access-maps venue, washroom, path, transit, and source shapes. Real fixtures from that pull request are in `fixtures/import/real/`.
+Import records: the access-maps venue, washroom, path, transit, and source shapes, plus the GTFS-RT service alert. Real fixtures from that pull request are in `fixtures/import/real/`. The 32 TTC alerts are in `fixtures/import/alerts/`.
 
 Counting rules: `docs/counting-rules.md`. Tiers: `docs/verification-tiers.md`. Migration: `docs/migration-from-access-maps.md`.
 

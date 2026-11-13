@@ -3,6 +3,7 @@ import { RECORDS, ILLUSTRATIVE_TOTAL, ILLUSTRATIVE_TRANCHE_TARGETS, RECONCILIATI
 import type { FactClass, RecordDef } from "./catalog/types.js";
 import { judgeFreshness } from "./freshness.js";
 import { accessKeysFor } from "./import-class.js";
+import { isServiceAlertRecord } from "./validate.js";
 import { isFactLike, isGapToken, observationComplete, type FactLike } from "./values.js";
 import { schemaFile } from "./paths.js";
 
@@ -135,6 +136,12 @@ export class RecordCounter {
     if (recordType === "licence") {
       this.registers += 1;
       this.remember(recordType, String(row.id ?? ""));
+      return;
+    }
+    if (isServiceAlertRecord(row)) {
+      this.remember("service_alert", String(row.id ?? ""));
+      const slice = this.slice("service_alert");
+      slice.records += 1;
       return;
     }
     throw new Error(`cannot count record type ${recordType || "(missing)"}`);

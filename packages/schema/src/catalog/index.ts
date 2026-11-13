@@ -82,6 +82,7 @@ export const IMPORT_SCHEMA_IDS = {
   path: "https://access-maps.local/schema/path-segment.schema.json",
   transit: "https://access-maps.local/schema/transit-stop.schema.json",
   source: "https://access-maps.local/schema/source-registry-entry.schema.json",
+  alert: "https://access-maps.local/schema/service-alert.schema.json",
 } as const;
 
 export const IMPORT_TRANCHES = ["venue", "washroom", "path", "transit"] as const;
