@@ -1,0 +1,10 @@
+{
+  "name": "@access/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed contracts for the App shell. JSON Schemas live in packages/schema (another lane).",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
