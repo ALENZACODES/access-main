@@ -22,6 +22,8 @@ export interface ModuleContext {
   offline: boolean;
   profile: UserProfile | null;
   nowIso: string;
+  /** Text the person submitted on this route. Omitted when the field is empty. */
+  query?: string;
 }
 
 export interface ModuleResult<T> {

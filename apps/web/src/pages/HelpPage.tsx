@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ModuleResult } from "@access/shared";
+import { laneBinding, type ModuleResult } from "@access/shared";
+import { Button } from "../design/Button.tsx";
+import { TextInput } from "../design/fields.tsx";
+import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
-import { modules } from "../modules/stubs.ts";
 
 export function HelpPage() {
   const { t, i18n } = useTranslation();
   const { profile } = useProfileState();
   const online = useOnline();
-  const [count, setCount] = useState<number | null>(null);
+  const binding = laneBinding("help");
+  const [text, setText] = useState("");
+  const [query, setQuery] = useState("");
+  const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
   useDocumentTitle(t("modules.helpTitle"));
 
   useEffect(() => {
@@ -20,9 +25,10 @@ export function HelpPage() {
         offline: !online,
         profile,
         nowIso: new Date().toISOString(),
+        query,
       })
-      .then((result: ModuleResult<unknown>) => setCount(result.items.length));
-  }, [i18n.language, online, profile]);
+      .then((value: ModuleResult<unknown>) => setResult(value));
+  }, [i18n.language, online, profile, query]);
 
   return (
     <div className="stack">
@@ -45,7 +51,22 @@ export function HelpPage() {
       </section>
       <section className="stack" aria-labelledby="help-articles">
         <h2 id="help-articles">{t("modules.helpArticles")}</h2>
-        <p role="status">{count === null ? t("home.checking") : t("modules.resultCount", { count })}</p>
+        <form
+          className="stack"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setQuery(text);
+          }}
+        >
+          <TextInput label={t("modules.searchLabel")} value={text} onChange={setText} />
+          <div className="button-row">
+            <Button type="submit">{t("modules.searchAction")}</Button>
+          </div>
+        </form>
+        {result?.availability === "stub" ? (
+          <p>{t("modules.assigned", { packageName: binding.packageName, repository: binding.repository })}</p>
+        ) : null}
+        <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
       </section>
     </div>
   );

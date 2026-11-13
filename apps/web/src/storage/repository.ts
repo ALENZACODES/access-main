@@ -178,38 +178,89 @@ export async function summarizeStorage(): Promise<StorageSummary> {
   };
 }
 
-function enteredLine(label: string, value: string | number | boolean | null | undefined): string | null {
+function enteredLine(label: string, value: string | number | null | undefined): string | null {
   if (value === null || value === undefined || value === "") return null;
   return `${label}: ${String(value)}`;
 }
 
-/** Plain text of fields the person entered. Empty fields and system keys are omitted. */
-export function exportProfileText(profile: UserProfile): string {
-  const lines = ["the App — preferences entered on this device"];
-  const push = (label: string, value: string | number | boolean | null | undefined) => {
+export interface ExportPhrases {
+  title: string;
+  empty: string;
+  language: string;
+  languageName: Record<"en" | "fr", string>;
+  region: string;
+  equipment: string;
+  equipmentName: Record<string, string>;
+  width: string;
+  length: string;
+  transfer: string;
+  transferName: Record<string, string>;
+  attendant: string;
+  yes: string;
+  no: string;
+  routing: string;
+  routingName: Record<string, string>;
+  textSize: string;
+  textSizeName: Record<string, string>;
+  motion: string;
+  motionReduce: string;
+  motionAllow: string;
+  contrast: string;
+  on: string;
+  off: string;
+  screenReader: string;
+  switchOrVoice: string;
+  wifi: string;
+  storage: string;
+  consent: string;
+  withdrawn: string;
+}
+
+function named(names: Record<string, string>, value: string | null): string | null {
+  if (!value) return null;
+  return names[value] || null;
+}
+
+function yesNo(phrases: ExportPhrases, value: boolean | null): string | null {
+  if (value === true) return phrases.yes;
+  if (value === false) return phrases.no;
+  return null;
+}
+
+/**
+ * Plain text of fields the person entered, in the phrases' language.
+ * Empty fields, system keys, and raw enum codes are omitted.
+ */
+export function exportProfileText(profile: UserProfile, phrases: ExportPhrases): string {
+  const lines = [phrases.title];
+  const push = (label: string, value: string | number | null | undefined) => {
     const line = enteredLine(label, value);
     if (line) lines.push(line);
   };
-  push("Language", profile.language_preference);
-  push("Region", profile.region_preference);
-  push("Equipment", profile.equipment_type_general);
-  push("Chair width mm", profile.chair_width_mm);
-  push("Chair length mm", profile.chair_length_mm);
-  push("Transfer side", profile.transfer_side_preference);
-  push("Support person travels", profile.attendant_travels);
-  push("Route preference", profile.routing_preference);
-  if (profile.text_size_preference !== "system") push("Text size", profile.text_size_preference);
-  push("Reduced motion", profile.reduced_motion_preference);
-  push("Higher contrast", profile.high_contrast_preference);
-  push("Screen reader", profile.screen_reader_user);
-  push("Switch or voice", profile.switch_or_voice_user);
-  if (!profile.offline_pack_preferences.wifi_only) push("Wi-Fi only downloads", false);
-  push("Storage cap MB", profile.offline_pack_preferences.storage_limit_mb);
-  for (const record of profile.consent_records) {
-    if (record.withdrawn_at) push("Consent withdrawn", record.withdrawn_at);
-    else push("Consent to store on this device", record.granted_at);
+  push(phrases.language, phrases.languageName[profile.language_preference]);
+  push(phrases.region, profile.region_preference);
+  push(phrases.equipment, named(phrases.equipmentName, profile.equipment_type_general));
+  push(phrases.width, profile.chair_width_mm);
+  push(phrases.length, profile.chair_length_mm);
+  push(phrases.transfer, named(phrases.transferName, profile.transfer_side_preference));
+  push(phrases.attendant, yesNo(phrases, profile.attendant_travels));
+  push(phrases.routing, named(phrases.routingName, profile.routing_preference));
+  if (profile.text_size_preference !== "system") {
+    push(phrases.textSize, named(phrases.textSizeName, profile.text_size_preference));
   }
-  if (lines.length === 1) lines.push("No preferences were entered.");
+  if (profile.reduced_motion_preference === true) push(phrases.motion, phrases.motionReduce);
+  if (profile.reduced_motion_preference === false) push(phrases.motion, phrases.motionAllow);
+  if (profile.high_contrast_preference === true) push(phrases.contrast, phrases.on);
+  if (profile.high_contrast_preference === false) push(phrases.contrast, phrases.off);
+  push(phrases.screenReader, yesNo(phrases, profile.screen_reader_user));
+  push(phrases.switchOrVoice, yesNo(phrases, profile.switch_or_voice_user));
+  if (!profile.offline_pack_preferences.wifi_only) push(phrases.wifi, phrases.no);
+  push(phrases.storage, profile.offline_pack_preferences.storage_limit_mb);
+  for (const record of profile.consent_records) {
+    if (record.withdrawn_at) push(phrases.withdrawn, record.withdrawn_at);
+    else push(phrases.consent, record.granted_at);
+  }
+  if (lines.length === 1) lines.push(phrases.empty);
   return `${lines.join("\n")}\n`;
 }
 

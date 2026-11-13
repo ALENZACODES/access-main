@@ -1,0 +1,1957 @@
+[
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "odsp",
+    "category": "benefits",
+    "topics": [
+      "income",
+      "disability-support"
+    ],
+    "readingContexts": [
+      "rehabilitation",
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Ontario Disability Support Program",
+      "fr": "Programme ontarien de soutien aux personnes handicapées"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/ontario-disability-support-program",
+    "frenchOfficialUrl": "https://www.ontario.ca/fr/page/programme-ontarien-de-soutien-aux-personnes-handicapees",
+    "sourceName": "Ontario.ca program page and income-support directive 6.1",
+    "summary": {
+      "en": "Provincial income support and related assistance. The program page says rates rose by 1.9% effective July 2026. Apply through the province's own social-assistance pages, not through the App.",
+      "fr": "Soutien du revenu provincial et aide connexe. La page du programme indique une hausse des taux de 1,9 % en vigueur en juillet 2026. La demande se fait sur les pages d'aide sociale de la province, pas dans l'application."
+    },
+    "doesNot": {
+      "en": "The App does not decide an application, estimate a household payment, or give appeal advice.",
+      "fr": "L'application ne décide pas d'une demande, n'estime pas un paiement du ménage et ne conseille pas un appel."
+    },
+    "figure": {
+      "retrievedOn": "2026-11-13",
+      "sourceUrls": [
+        "https://www.ontario.ca/page/ontario-disability-support-program",
+        "https://www.ontario.ca/document/ontario-disability-support-program-policy-directives-income-support/61-basic-needs"
+      ],
+      "statement": {
+        "en": "The program page says a single person could receive up to $1,436 for basic needs and shelter. Directive 6.1, marked July 2026, shows $825 as a single-recipient basic-needs amount. In the sponsored-immigrant-living-with-sponsor example, the directive calculates $611, adds that amount as shelter, and then deducts it under Reg. s. 40, so that example's income support is $825. The $611 figure is not a general shelter amount.",
+        "fr": "La page du programme indique qu'une personne seule pourrait recevoir jusqu'à 1 436 $ pour les besoins essentiels et le logement. La directive 6.1, datée de juillet 2026, indique 825 $ comme montant de besoins essentiels pour une personne seule. Dans l'exemple de la personne immigrante parrainée qui vit avec son répondant, la directive calcule 611 $, ajoute ce montant comme logement, puis le déduit en vertu du règl. art. 40, de sorte que le soutien du revenu de cet exemple est de 825 $. Le montant de 611 $ n'est pas un montant général de logement."
+      },
+      "qualifier": {
+        "en": "Household size, shelter costs, and other published rules change the amount. This is not your payment.",
+        "fr": "La taille du ménage, les coûts de logement et d'autres règles publiées changent le montant. Ce n'est pas votre paiement."
+      }
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "ontario-works",
+    "category": "benefits",
+    "topics": [
+      "income",
+      "social-assistance"
+    ],
+    "readingContexts": [
+      "newly_injured",
+      "rehabilitation",
+      "early_community",
+      "any"
+    ],
+    "name": {
+      "en": "Ontario Works",
+      "fr": "Ontario au travail"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/ontario-works",
+    "frenchOfficialUrl": "https://www.ontario.ca/fr/page/ontario-au-travail",
+    "phone": "tel:+18889991142",
+    "phoneNote": {
+      "en": "Social Assistance Support Line, published on the Ontario Works page: 1-888-999-1142, TTY 1-800-387-5559.",
+      "fr": "Ligne de soutien de l'aide sociale, publiée sur la page d'Ontario au travail : 1-888-999-1142, ATS 1-800-387-5559."
+    },
+    "sourceName": "Ontario.ca Ontario Works page",
+    "summary": {
+      "en": "Provincial social assistance. The page says a single person could receive up to $733 a month for basic needs and shelter, and that the Canada Disability Benefit does not change Ontario Works eligibility or the payment amount. People may be on Ontario Works while another application is in progress. The App does not assume which program applies.",
+      "fr": "Aide sociale provinciale. La page indique qu'une personne seule pourrait recevoir jusqu'à 733 $ par mois pour les besoins essentiels et le logement, et que la Prestation canadienne pour les personnes handicapées ne change ni l'admissibilité à Ontario au travail ni le montant du paiement. Une personne peut recevoir Ontario au travail pendant qu'une autre demande est en cours. L'application ne suppose pas quel programme s'applique."
+    },
+    "doesNot": {
+      "en": "The App does not calculate earnings, deductions, or a payment.",
+      "fr": "L'application ne calcule pas les gains, les déductions ou un paiement."
+    },
+    "figure": {
+      "retrievedOn": "2026-11-13",
+      "sourceUrls": [
+        "https://www.ontario.ca/page/ontario-works"
+      ],
+      "statement": {
+        "en": "The Ontario Works page says a single person could receive up to $733 a month for basic needs and shelter.",
+        "fr": "La page d'Ontario au travail indique qu'une personne seule pourrait recevoir jusqu'à 733 $ par mois pour les besoins essentiels et le logement."
+      },
+      "qualifier": {
+        "en": "The same page says the amount can be higher for benefits or for other immediate family members. This is not your payment.",
+        "fr": "La même page indique que le montant peut être plus élevé pour des prestations ou pour d'autres membres de la famille immédiate. Ce n'est pas votre paiement."
+      }
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "social-assistance",
+    "category": "benefits",
+    "topics": [
+      "income",
+      "application"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Social assistance application pages",
+      "fr": "Pages de demande d'aide sociale"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/social-assistance",
+    "phone": "tel:+18889991142",
+    "phoneNote": {
+      "en": "Published hours Monday to Friday, 8:30 a.m. to 5:00 p.m. Eastern. Toll-free 1-888-999-1142. TTY 1-800-387-5559.",
+      "fr": "Heures publiées du lundi au vendredi, de 8 h 30 à 17 h, heure de l'Est. Sans frais 1-888-999-1142. ATS 1-800-387-5559."
+    },
+    "sourceName": "Ontario.ca social assistance page",
+    "summary": {
+      "en": "The shared provincial page for starting or continuing a social-assistance application, in person through an office locator, or by phone. It says Ontario Disability Support Program decisions depend on medical and financial circumstances, and it points job seekers to Employment Ontario.",
+      "fr": "La page provinciale commune pour commencer ou continuer une demande d'aide sociale, en personne grâce à un localisateur de bureaux, ou par téléphone. Elle indique que les décisions du Programme ontarien de soutien aux personnes handicapées dépendent de la situation médicale et financière, et elle oriente les personnes vers Emploi Ontario."
+    },
+    "doesNot": {
+      "en": "The App does not submit an application and does not interpret medical or financial circumstances.",
+      "fr": "L'application ne présente pas de demande et n'interprète pas la situation médicale ou financière."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "mybenefits",
+    "category": "benefits",
+    "topics": [
+      "income",
+      "application"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "MyBenefits",
+      "fr": "MyBenefits"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://access.mybenefits.mccss.gov.on.ca/",
+    "sourceName": "Address reached from the province's MyBenefits link on 13 November 2026",
+    "summary": {
+      "en": "The sign-in address the province's MyBenefits link resolved to on 13 November 2026, for people who already use that online service for Ontario Works or the Ontario Disability Support Program.",
+      "fr": "L'adresse de connexion vers laquelle le lien MyBenefits de la province menait le 13 novembre 2026, pour les personnes qui utilisent déjà ce service en ligne pour Ontario au travail ou le Programme ontarien de soutien aux personnes handicapées."
+    },
+    "doesNot": {
+      "en": "The App does not sign in for you and does not read a MyBenefits account.",
+      "fr": "L'application ne se connecte pas à votre place et ne lit pas un compte MyBenefits."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "disability-tax-credit",
+    "category": "benefits",
+    "topics": [
+      "tax"
+    ],
+    "readingContexts": [
+      "rehabilitation",
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Disability tax credit",
+      "fr": "Crédit d'impôt pour personnes handicapées"
+    },
+    "administrator": {
+      "en": "Canada Revenue Agency",
+      "fr": "Agence du revenu du Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.canada.ca/en/revenue-agency/services/tax/individuals/segments/tax-credits-deductions-persons-disabilities/disability-tax-credit.html",
+    "sourceName": "Canada.ca Disability tax credit page",
+    "summary": {
+      "en": "A federal tax credit described on the Canada Revenue Agency page. Amounts and forms are on that page. This directory does not restate a dollar figure that was not read from the page in this build.",
+      "fr": "Un crédit d'impôt fédéral décrit sur la page de l'Agence du revenu du Canada. Les montants et les formulaires sont sur cette page. Ce répertoire ne répète pas un montant en dollars qui n'a pas été lu sur la page pour cette version."
+    },
+    "doesNot": {
+      "en": "The App does not complete a tax form or say whether a credit applies.",
+      "fr": "L'application ne remplit pas de formulaire d'impôt et ne dit pas si un crédit s'applique."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "rdsp",
+    "category": "benefits",
+    "topics": [
+      "savings",
+      "tax"
+    ],
+    "readingContexts": [
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Registered disability savings plan",
+      "fr": "Régime enregistré d'épargne-invalidité"
+    },
+    "administrator": {
+      "en": "Canada Revenue Agency",
+      "fr": "Agence du revenu du Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/registered-disability-savings-plan-rdsp.html",
+    "sourceName": "Canada.ca RDSP page",
+    "summary": {
+      "en": "A federal registered savings plan described on the Canada Revenue Agency page. Grants, bonds, and holdback rules belong on that page and with a financial institution. This directory does not restate contribution limits.",
+      "fr": "Un régime d'épargne enregistré fédéral décrit sur la page de l'Agence du revenu du Canada. Les subventions, les bons et les règles de retenue appartiennent à cette page et à une institution financière. Ce répertoire ne répète pas les plafonds de cotisation."
+    },
+    "doesNot": {
+      "en": "The App does not give financial advice.",
+      "fr": "L'application ne donne pas de conseil financier."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "canada-disability-benefit",
+    "category": "benefits",
+    "topics": [
+      "income"
+    ],
+    "readingContexts": [
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Canada Disability Benefit",
+      "fr": "Prestation canadienne pour les personnes handicapées"
+    },
+    "administrator": {
+      "en": "Government of Canada",
+      "fr": "Gouvernement du Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.canada.ca/en/services/benefits/disability/canada-disability-benefit.html",
+    "sourceName": "Canada.ca Canada Disability Benefit page",
+    "summary": {
+      "en": "A federal benefit with its own Canada.ca page. Current amounts are on that page. Separately, the Ontario Works page retrieved the same day says this benefit does not change Ontario Works eligibility or the Ontario Works payment.",
+      "fr": "Une prestation fédérale avec sa propre page Canada.ca. Les montants actuels sont sur cette page. Par ailleurs, la page d'Ontario au travail consultée le même jour indique que cette prestation ne change ni l'admissibilité à Ontario au travail ni le paiement d'Ontario au travail."
+    },
+    "doesNot": {
+      "en": "The App does not calculate the benefit or its effect on a provincial payment.",
+      "fr": "L'application ne calcule pas la prestation ni son effet sur un paiement provincial."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "cpp-disability",
+    "category": "benefits",
+    "topics": [
+      "income"
+    ],
+    "readingContexts": [
+      "rehabilitation",
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Canada Pension Plan disability benefits",
+      "fr": "Prestations d'invalidité du Régime de pensions du Canada"
+    },
+    "administrator": {
+      "en": "Government of Canada",
+      "fr": "Gouvernement du Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.canada.ca/en/services/benefits/publicpensions/cpp-disability-benefit.html",
+    "sourceName": "Canada.ca Canada Pension Plan disability benefits page",
+    "summary": {
+      "en": "Federal disability benefits under the Canada Pension Plan. Rules and the application route are on the Canada.ca page.",
+      "fr": "Prestations d'invalidité fédérales du Régime de pensions du Canada. Les règles et la façon de présenter une demande sont sur la page Canada.ca."
+    },
+    "doesNot": {
+      "en": "The App does not say whether a contribution history meets a federal rule.",
+      "fr": "L'application ne dit pas si un historique de cotisation respecte une règle fédérale."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "child-disability-benefit",
+    "category": "benefits",
+    "topics": [
+      "tax",
+      "income"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Child disability benefit",
+      "fr": "Prestation pour enfants handicapés"
+    },
+    "administrator": {
+      "en": "Canada Revenue Agency",
+      "fr": "Agence du revenu du Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.canada.ca/en/revenue-agency/services/child-family-benefits/child-disability-benefit.html",
+    "sourceName": "Canada.ca Child disability benefit page",
+    "summary": {
+      "en": "A federal child-family benefit page. This directory does not describe children's clinical needs and does not collect information about a child.",
+      "fr": "Une page fédérale sur une prestation pour enfants. Ce répertoire ne décrit pas les besoins cliniques d'un enfant et ne recueille pas de renseignements sur un enfant."
+    },
+    "doesNot": {
+      "en": "The App is not a children's service and does not assess a child.",
+      "fr": "L'application n'est pas un service pour enfants et n'évalue pas un enfant."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "ontario-drug-benefit",
+    "category": "benefits",
+    "topics": [
+      "drugs"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Ontario prescription drug coverage",
+      "fr": "Couverture des médicaments d'ordonnance en Ontario"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/get-coverage-prescription-drugs",
+    "sourceName": "Ontario.ca prescription drug coverage page",
+    "summary": {
+      "en": "The provincial page about coverage for prescription drugs. Which drugs and which programs apply is stated there.",
+      "fr": "La page provinciale sur la couverture des médicaments d'ordonnance. Les médicaments et les programmes visés y sont indiqués."
+    },
+    "doesNot": {
+      "en": "The App does not say which drug is covered for a person.",
+      "fr": "L'application ne dit pas quel médicament est couvert pour une personne."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "non-insured-health-benefits",
+    "category": "benefits",
+    "topics": [
+      "drugs",
+      "first-nations-inuit"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Non-insured health benefits for First Nations and Inuit",
+      "fr": "Services de santé non assurés pour les Premières Nations et les Inuit"
+    },
+    "administrator": {
+      "en": "Indigenous Services Canada",
+      "fr": "Services aux Autochtones Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.sac-isc.gc.ca/eng/1572537161086/1572537234517",
+    "sourceName": "Indigenous Services Canada non-insured health benefits page",
+    "summary": {
+      "en": "The federal page titled for non-insured health benefits for First Nations and Inuit. It is a separate program from Ontario disability income support. Read that page for what it covers.",
+      "fr": "La page fédérale sur les services de santé non assurés pour les Premières Nations et les Inuit. C'est un programme distinct du soutien du revenu pour personnes handicapées de l'Ontario. Lisez cette page pour savoir ce qu'elle couvre."
+    },
+    "doesNot": {
+      "en": "The App does not merge this program with a provincial rule and does not hold community or Nation data.",
+      "fr": "L'application ne fusionne pas ce programme avec une règle provinciale et ne détient pas de données d'une communauté ou d'une Nation."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "interim-federal-health",
+    "category": "benefits",
+    "topics": [
+      "drugs"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Interim Federal Health Program",
+      "fr": "Programme fédéral de santé intérimaire"
+    },
+    "administrator": {
+      "en": "Government of Canada",
+      "fr": "Gouvernement du Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/help-within-canada/health-care/interim-federal-health-program.html",
+    "sourceName": "Canada.ca temporary health care coverage page",
+    "summary": {
+      "en": "The Canada.ca page on temporary health care coverage, retrieved under the Interim Federal Health Program address. Coverage rules are on that page.",
+      "fr": "La page Canada.ca sur la couverture de soins de santé temporaire, consultée à l'adresse du Programme fédéral de santé intérimaire. Les règles de couverture sont sur cette page."
+    },
+    "doesNot": {
+      "en": "The App does not decide immigration or health-coverage status.",
+      "fr": "L'application ne décide pas d'un statut d'immigration ou de couverture santé."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "veterans-affairs",
+    "category": "benefits",
+    "topics": [
+      "income",
+      "veterans"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Veterans Affairs financial programs",
+      "fr": "Programmes financiers d'Anciens Combattants"
+    },
+    "administrator": {
+      "en": "Veterans Affairs Canada",
+      "fr": "Anciens Combattants Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.veterans.gc.ca/en/financial-programs-and-services/compensation-illness-or-injury",
+    "sourceName": "Veterans Affairs Canada compensation page",
+    "summary": {
+      "en": "A Veterans Affairs Canada page about compensation related to illness or injury. It is separate from provincial social assistance.",
+      "fr": "Une page d'Anciens Combattants Canada sur l'indemnisation liée à une maladie ou à une blessure. C'est distinct de l'aide sociale provinciale."
+    },
+    "doesNot": {
+      "en": "The App does not combine veteran benefits with a provincial payment.",
+      "fr": "L'application ne combine pas les prestations d'ancien combattant avec un paiement provincial."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "wsib",
+    "category": "benefits",
+    "topics": [
+      "workplace-insurance"
+    ],
+    "readingContexts": [
+      "newly_injured",
+      "any"
+    ],
+    "name": {
+      "en": "Workplace Safety and Insurance Board",
+      "fr": "Commission de la sécurité professionnelle et de l'assurance contre les accidents du travail"
+    },
+    "administrator": {
+      "en": "Workplace Safety and Insurance Board",
+      "fr": "Commission de la sécurité professionnelle et de l'assurance contre les accidents du travail"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.wsib.ca/en/online-services-injured-or-ill-people",
+    "sourceName": "WSIB page for injured or ill people",
+    "summary": {
+      "en": "The Board's own page for people who are injured or ill. Workplace insurance is separate from provincial social assistance.",
+      "fr": "La page de la Commission pour les personnes blessées ou malades. L'assurance au travail est distincte de l'aide sociale provinciale."
+    },
+    "doesNot": {
+      "en": "The App does not file a claim or interpret a workplace decision.",
+      "fr": "L'application ne présente pas de réclamation et n'interprète pas une décision au travail."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "assistive-devices-program",
+    "category": "equipment",
+    "topics": [
+      "equipment",
+      "funding"
+    ],
+    "readingContexts": [
+      "rehabilitation",
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Assistive Devices Program",
+      "fr": "Programme d'appareils et accessoires fonctionnels"
+    },
+    "administrator": {
+      "en": "Ontario Ministry of Health",
+      "fr": "Ministère de la Santé de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/assistive-devices-program",
+    "frenchOfficialUrl": "https://www.ontario.ca/fr/page/programme-dappareils-accessoires-fonctionnels",
+    "sourceName": "Ontario.ca Assistive Devices Program page, updated 9 November 2026",
+    "summary": {
+      "en": "The Ministry of Health page, updated 9 November 2026, says the program helps people with long-term physical disabilities pay for customized equipment, with wheelchairs and hearing aids given as examples, and for some supplies. For many devices it describes paying 75% of an approved price or up to 75% of an approved maximum. It says that for someone receiving Ontario Works, the Ontario Disability Support Program, or Assistance for Children with Severe Disabilities, the amount depends on the funding model and could be 100% of the approved price, 100% of the approved maximum, or the full grant.",
+      "fr": "La page du ministère de la Santé, mise à jour le 9 novembre 2026, indique que le programme aide les personnes ayant une incapacité physique de longue durée à payer de l'équipement adapté, avec les fauteuils roulants et les appareils auditifs comme exemples, et certaines fournitures. Pour de nombreux appareils, elle décrit un paiement de 75 % d'un prix approuvé ou jusqu'à 75 % d'un maximum approuvé. Elle indique que pour une personne qui reçoit Ontario au travail, le Programme ontarien de soutien aux personnes handicapées ou l'Aide à l'enfance ayant une déficience grave, le montant dépend du modèle de financement et pourrait être 100 % du prix approuvé, 100 % du maximum approuvé, ou la pleine subvention."
+    },
+    "doesNot": {
+      "en": "The same page says repairs are not covered and that care and maintenance are the person's responsibility. Its not-covered list includes batteries, automobile modifications, grab bars, home renovations including ramps and porch lifts, hospital beds, urinary catheters, and incontinence supplies. The full list is only on the official page. The App does not price a device.",
+      "fr": "La même page indique que les réparations ne sont pas couvertes et que l'entretien relève de la personne. Sa liste d'exclusions comprend les piles, les modifications d'automobile, les barres d'appui, les rénovations domiciliaires y compris les rampes et les monte-personne de galerie, les lits d'hôpital, les sondes urinaires et les fournitures d'incontinence. La liste complète est seulement sur la page officielle. L'application ne fixe pas le prix d'un appareil."
+    },
+    "figure": {
+      "retrievedOn": "2026-11-13",
+      "sourceUrls": [
+        "https://www.ontario.ca/page/assistive-devices-program"
+      ],
+      "statement": {
+        "en": "The page describes 75% contribution models, and a possible 100% of the approved price, approved maximum, or full grant for people receiving Ontario Works, ODSP, or Assistance for Children with Severe Disabilities, depending on the funding model.",
+        "fr": "La page décrit des modèles de contribution à 75 %, et un possible 100 % du prix approuvé, du maximum approuvé ou de la pleine subvention pour les personnes qui reçoivent Ontario au travail, le POSPH ou l'Aide à l'enfance ayant une déficience grave, selon le modèle de financement."
+      },
+      "qualifier": {
+        "en": "The page says the amount depends on the device and the funding model. This is not a quote for a chair or a supply.",
+        "fr": "La page indique que le montant dépend de l'appareil et du modèle de financement. Ce n'est pas un prix pour un fauteuil ou une fourniture."
+      }
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "home-vehicle-modification",
+    "category": "funding",
+    "topics": [
+      "home-modification",
+      "vehicle-modification"
+    ],
+    "readingContexts": [
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Home and Vehicle Modification Program",
+      "fr": "Programme d'adaptation des habitations et des véhicules"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/home-and-vehicle-modification-program",
+    "frenchOfficialUrl": "https://www.ontario.ca/fr/page/programme-dadaptation-des-habitations-et-des-vehicules",
+    "sourceName": "Ontario.ca Home and Vehicle Modification Program page",
+    "summary": {
+      "en": "A provincial program for home and vehicle modifications. The Ontario page, updated 1 September 2026, says the service coordinator decides applications and tells people to apply on the March of Dimes website. Listed home-modification examples include ramps, platform and stair lifts, door widening, and bathroom changes. The same page says applicants with a household income of over $38,000 may be required to contribute towards the cost. No per-person funding maximum is restated here.",
+      "fr": "Un programme provincial pour les modifications au domicile et au véhicule. La page de l'Ontario, mise à jour le 1er septembre 2026, indique que le coordonnateur de services décide des demandes et invite à présenter une demande sur le site de la Marche des dix sous. Les exemples de modifications au domicile comprennent les rampes, les plateformes et monte-escaliers, l'élargissement de portes et des changements à la salle de bain. La même page indique que les demandeurs dont le revenu du ménage dépasse 38 000 $ peuvent avoir à contribuer au coût. Aucun plafond par personne n'est répété ici."
+    },
+    "doesNot": {
+      "en": "The App does not approve work, choose a contractor, or describe the accessibility of a home.",
+      "fr": "L'application n'approuve pas de travaux, ne choisit pas d'entrepreneur et ne décrit pas l'accessibilité d'un domicile."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "enabling-accessibility-fund",
+    "category": "funding",
+    "topics": [
+      "grants"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Enabling Accessibility Fund",
+      "fr": "Fonds pour l'accessibilité"
+    },
+    "administrator": {
+      "en": "Government of Canada",
+      "fr": "Gouvernement du Canada"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.canada.ca/en/employment-social-development/programs/enabling-accessibility-fund.html",
+    "sourceName": "Canada.ca Enabling Accessibility Fund page",
+    "summary": {
+      "en": "The federal page titled Enabling Accessibility Fund. What it pays for, and who may apply, is on that page. This entry does not restate grant rules.",
+      "fr": "La page fédérale intitulée Fonds pour l'accessibilité. Ce qu'il paie, et qui peut présenter une demande, est sur cette page. Cette fiche ne répète pas les règles de subvention."
+    },
+    "doesNot": {
+      "en": "The App does not treat this fund as a personal equipment grant unless the official page says that, and it does not prepare an application.",
+      "fr": "L'application ne traite pas ce fonds comme une subvention d'équipement personnel, sauf si la page officielle le dit, et elle ne prépare pas de demande."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "direct-funding",
+    "category": "funding",
+    "topics": [
+      "attendant-services"
+    ],
+    "readingContexts": [
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Direct Funding",
+      "fr": "Financement direct"
+    },
+    "administrator": {
+      "en": "Centre for Independent Living in Toronto, with the Ontario Network of Independent Living Centres",
+      "fr": "Centre for Independent Living in Toronto, avec l'Ontario Network of Independent Living Centres"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.dfontario.ca/",
+    "phone": "tel:+18003549950",
+    "phoneNote": {
+      "en": "Published on the Direct Funding site: CILT toll-free 1-800-354-9950, Toronto 416-599-2458, TTY 416-599-5077.",
+      "fr": "Publié sur le site du financement direct : CILT sans frais 1-800-354-9950, Toronto 416-599-2458, ATS 416-599-5077."
+    },
+    "sourceName": "Direct Funding site, dfontario.ca",
+    "summary": {
+      "en": "The site describes self-managed attendant services in Ontario. It says the program is administered by the Centre for Independent Living in Toronto, in partnership with the Ontario Network of Independent Living Centres, and funded by the Ontario Ministry of Health. Application steps are on that site.",
+      "fr": "Le site décrit des services d'auxiliaires autogérés en Ontario. Il indique que le programme est administré par le Centre for Independent Living in Toronto, en partenariat avec l'Ontario Network of Independent Living Centres, et financé par le ministère de la Santé de l'Ontario. Les étapes de demande sont sur ce site."
+    },
+    "doesNot": {
+      "en": "The App does not decide whether someone can manage attendants, and it does not attribute the program to any other organization.",
+      "fr": "L'application ne décide pas si une personne peut gérer des auxiliaires, et elle n'attribue pas le programme à une autre organisation."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "employment-ontario",
+    "category": "employment",
+    "topics": [
+      "employment-services"
+    ],
+    "readingContexts": [
+      "early_community",
+      "long_term",
+      "any"
+    ],
+    "name": {
+      "en": "Employment Ontario",
+      "fr": "Emploi Ontario"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/employment-ontario",
+    "sourceName": "Ontario.ca Employment Ontario page",
+    "summary": {
+      "en": "The provincial employment page. It points to job search, apprenticeships, adult learning, Better Jobs Ontario, and local employment and training services. It is not a list of jobs, and it does not describe whether a workplace is accessible.",
+      "fr": "La page provinciale sur l'emploi. Elle mène vers la recherche d'emploi, l'apprentissage, la formation des adultes, Meilleurs emplois Ontario et les services locaux d'emploi et de formation. Ce n'est pas une liste d'emplois, et elle ne décrit pas si un lieu de travail est accessible."
+    },
+    "doesNot": {
+      "en": "The App is not a job board and does not store résumés or disclosure choices.",
+      "fr": "L'application n'est pas un site d'emplois et ne conserve pas de curriculum vitae ni de choix de divulgation."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "accessibility-in-ontario",
+    "category": "employment",
+    "topics": [
+      "accommodation",
+      "aoda"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Accessibility in Ontario",
+      "fr": "Accessibilité en Ontario"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/accessibility-in-ontario",
+    "sourceName": "Ontario.ca Accessibility in Ontario page",
+    "summary": {
+      "en": "The provincial page on accessibility laws and information. It includes sections for people with disabilities, employment, and requesting accommodations, plus information for organizations about the Accessibility for Ontarians with Disabilities Act.",
+      "fr": "La page provinciale sur les lois et l'information en accessibilité. Elle comprend des sections pour les personnes handicapées, l'emploi et les demandes d'adaptation, ainsi que de l'information pour les organisations sur la Loi sur l'accessibilité pour les personnes handicapées de l'Ontario."
+    },
+    "doesNot": {
+      "en": "The App does not label a workplace, building, or organization as compliant.",
+      "fr": "L'application n'indique pas qu'un lieu de travail, un bâtiment ou une organisation est conforme."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "ohrc-disability-policy",
+    "category": "employment",
+    "topics": [
+      "human-rights",
+      "accommodation"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Policy on ableism and discrimination based on disability",
+      "fr": "Politique sur le capacitisme et la discrimination fondée sur le handicap"
+    },
+    "administrator": {
+      "en": "Ontario Human Rights Commission",
+      "fr": "Commission ontarienne des droits de la personne"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ohrc.on.ca/en/policy-ableism-and-discrimination-based-disability",
+    "sourceName": "Ontario Human Rights Commission policy page",
+    "summary": {
+      "en": "The Commission's own policy page on ableism and discrimination based on disability, including accommodation. Read it there.",
+      "fr": "La page de politique de la Commission sur le capacitisme et la discrimination fondée sur le handicap, y compris l'adaptation. Lisez-la là-bas."
+    },
+    "doesNot": {
+      "en": "The App does not give legal advice and does not say what a person should disclose to an employer.",
+      "fr": "L'application ne donne pas de conseil juridique et ne dit pas ce qu'une personne devrait divulguer à un employeur."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "housing-in-ontario",
+    "category": "housing",
+    "topics": [
+      "housing-programs",
+      "tenancy"
+    ],
+    "readingContexts": [
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Housing in Ontario",
+      "fr": "Logement en Ontario"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/housing-in-ontario",
+    "sourceName": "Ontario.ca Housing in Ontario page",
+    "summary": {
+      "en": "The provincial housing page covers renting, community housing, and supportive housing. It says to contact the local service manager about community housing programs, including eligibility and how to apply. Supportive housing is described there as long-term housing assistance with support services. This directory has no home listings.",
+      "fr": "La page provinciale sur le logement traite de la location, du logement communautaire et du logement avec soutien. Elle indique de communiquer avec le gestionnaire de services local au sujet des programmes de logement communautaire, y compris l'admissibilité et la façon de présenter une demande. Le logement avec soutien y est décrit comme une aide au logement à long terme avec des services de soutien. Ce répertoire n'a aucune annonce de domicile."
+    },
+    "doesNot": {
+      "en": "No accessibility measurement of a real place is stored here. Unknown stays unknown. The App does not certify that a home is accessible or lawful.",
+      "fr": "Aucune mesure d'accessibilité d'un lieu réel n'est conservée ici. Ce qui est inconnu reste inconnu. L'application ne certifie pas qu'un domicile est accessible ou conforme."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "cmhc-accessible-housing",
+    "category": "housing",
+    "topics": [
+      "housing-design"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "CMHC accessible and adaptable housing",
+      "fr": "Logement accessible et adaptable de la SCHL"
+    },
+    "administrator": {
+      "en": "Canada Mortgage and Housing Corporation",
+      "fr": "Société canadienne d'hypothèques et de logement"
+    },
+    "geography": "canada",
+    "officialUrl": "https://www.cmhc-schl.gc.ca/professionals/industry-innovation-and-leadership/industry-expertise/accessible-adaptable-housing",
+    "sourceName": "CMHC accessible and adaptable housing page",
+    "summary": {
+      "en": "A CMHC page about accessible and adaptable housing as a design topic. It is not a list of homes in Ontario and not a measurement of any building.",
+      "fr": "Une page de la SCHL sur le logement accessible et adaptable comme sujet de conception. Ce n'est pas une liste de domiciles en Ontario et pas une mesure d'un bâtiment."
+    },
+    "doesNot": {
+      "en": "No accessibility measurement of a real place is stored here. Unknown stays unknown.",
+      "fr": "Aucune mesure d'accessibilité d'un lieu réel n'est conservée ici. Ce qui est inconnu reste inconnu."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "211-ontario",
+    "category": "services",
+    "topics": [
+      "community-services"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "211 Ontario",
+      "fr": "211 Ontario"
+    },
+    "administrator": {
+      "en": "211 Ontario",
+      "fr": "211 Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://211ontario.ca/",
+    "phone": "tel:211",
+    "phoneNote": {
+      "en": "The site presents 211 as the helpline.",
+      "fr": "Le site présente le 211 comme la ligne d'aide."
+    },
+    "sourceName": "211 Ontario homepage",
+    "summary": {
+      "en": "The homepage says 211 is a helpline that connects people to social services, programs, and community supports. The App links to 211. It does not copy the 211 database.",
+      "fr": "La page d'accueil indique que le 211 est une ligne d'aide qui relie les personnes aux services sociaux, aux programmes et aux soutiens communautaires. L'application mène vers le 211. Elle ne copie pas la base du 211."
+    },
+    "doesNot": {
+      "en": "A count of 211 records is not a count of records in the App.",
+      "fr": "Un nombre de fiches du 211 n'est pas un nombre de fiches dans l'application."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "connexontario",
+    "category": "services",
+    "topics": [
+      "mental-health",
+      "crisis"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "ConnexOntario",
+      "fr": "ConnexOntario"
+    },
+    "administrator": {
+      "en": "ConnexOntario",
+      "fr": "ConnexOntario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://connexontario.ca/",
+    "phone": "tel:+18665312600",
+    "phoneNote": {
+      "en": "Published on the site: 1-866-531-2600, and text CONNEX to 247247.",
+      "fr": "Publié sur le site : 1-866-531-2600, et le texto CONNEX au 247247."
+    },
+    "sourceName": "ConnexOntario homepage",
+    "summary": {
+      "en": "ConnexOntario publishes connections for mental health, addiction, and problem gambling support across Ontario. The App is not that service.",
+      "fr": "ConnexOntario publie des liens vers du soutien en santé mentale, en dépendance et en jeu problématique partout en Ontario. L'application n'est pas ce service."
+    },
+    "doesNot": {
+      "en": "The App does not assess risk, offer counselling, or ask anyone to describe a crisis in the App.",
+      "fr": "L'application n'évalue pas le risque, n'offre pas de counseling et ne demande à personne de décrire une crise dans l'application."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "suicide-crisis-helpline",
+    "category": "services",
+    "topics": [
+      "crisis",
+      "mental-health"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "9-8-8 Suicide Crisis Helpline",
+      "fr": "9-8-8 Ligne d'aide en cas de crise de suicide"
+    },
+    "administrator": {
+      "en": "9-8-8 Suicide Crisis Helpline",
+      "fr": "9-8-8 Ligne d'aide en cas de crise de suicide"
+    },
+    "geography": "canada",
+    "officialUrl": "https://988.ca/",
+    "phone": "tel:988",
+    "phoneNote": {
+      "en": "The page says to call or text 9-8-8.",
+      "fr": "La page indique d'appeler ou de texter le 9-8-8."
+    },
+    "sourceName": "9-8-8 Suicide Crisis Helpline homepage",
+    "summary": {
+      "en": "The public crisis line at 9-8-8. Call or text. Nothing in the App has to be filled in first.",
+      "fr": "La ligne publique de crise au 9-8-8. Appelez ou textez. Rien dans l'application n'a à être rempli d'abord."
+    },
+    "doesNot": {
+      "en": "The App is not a crisis service.",
+      "fr": "L'application n'est pas un service de crise."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "health-care-connect",
+    "category": "services",
+    "topics": [
+      "primary-care"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Health Care Connect",
+      "fr": "Accès soins"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/health-care-connect-find-family-doctor-or-nurse-practitioner",
+    "sourceName": "Ontario.ca Health Care Connect page",
+    "summary": {
+      "en": "The provincial registration page for finding a family doctor, nurse practitioner, or primary care team. It says a Care Connector searches for someone accepting patients, that people who need urgent care are matched first, and that registering does not guarantee a provider will be found immediately.",
+      "fr": "La page provinciale d'inscription pour trouver un médecin de famille, une infirmière praticienne ou une équipe de soins primaires. Elle indique qu'un connecteur de soins cherche une personne qui accepte des patients, que les personnes qui ont besoin de soins urgents sont jumelées d'abord, et que l'inscription ne garantit pas qu'un fournisseur sera trouvé immédiatement."
+    },
+    "doesNot": {
+      "en": "The App does not register anyone and does not replace primary care.",
+      "fr": "L'application n'inscrit personne et ne remplace pas les soins primaires."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "toronto-rehab",
+    "category": "services",
+    "topics": [
+      "rehabilitation"
+    ],
+    "readingContexts": [
+      "newly_injured",
+      "rehabilitation"
+    ],
+    "name": {
+      "en": "Toronto Rehab",
+      "fr": "Toronto Rehab"
+    },
+    "administrator": {
+      "en": "University Health Network",
+      "fr": "University Health Network"
+    },
+    "geography": "toronto",
+    "officialUrl": "https://www.uhn.ca/TorontoRehab",
+    "sourceName": "Toronto Rehab page",
+    "summary": {
+      "en": "The Toronto Rehab page on the University Health Network site. Program names, referral rules, and building access were not extracted from the page in this build, so none are stated.",
+      "fr": "La page Toronto Rehab sur le site du University Health Network. Les noms de programmes, les règles d'aiguillage et l'accès au bâtiment n'ont pas été extraits de la page pour cette version, donc aucun n'est indiqué."
+    },
+    "doesNot": {
+      "en": "No accessibility measurement of a real place is stored here. Unknown stays unknown.",
+      "fr": "Aucune mesure d'accessibilité d'un lieu réel n'est conservée ici. Ce qui est inconnu reste inconnu."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "st-josephs-london",
+    "category": "services",
+    "topics": [
+      "rehabilitation"
+    ],
+    "readingContexts": [
+      "newly_injured",
+      "rehabilitation"
+    ],
+    "name": {
+      "en": "St. Joseph's Health Care London",
+      "fr": "St. Joseph's Health Care London"
+    },
+    "administrator": {
+      "en": "St. Joseph's Health Care London",
+      "fr": "St. Joseph's Health Care London"
+    },
+    "geography": "london",
+    "officialUrl": "https://www.sjhc.london.on.ca/",
+    "sourceName": "St. Joseph's Health Care London homepage",
+    "summary": {
+      "en": "The hospital homepage in London. Its menu includes Parkwood Institute. Spinal-cord program details, referral rules, and building access were not stated on the text read for this build, so none are stated here.",
+      "fr": "La page d'accueil de l'hôpital à London. Son menu comprend le Parkwood Institute. Les détails d'un programme pour lésion médullaire, les règles d'aiguillage et l'accès au bâtiment n'étaient pas indiqués dans le texte lu pour cette version, donc ils ne sont pas indiqués ici."
+    },
+    "doesNot": {
+      "en": "No accessibility measurement of a real place is stored here. Unknown stays unknown.",
+      "fr": "Aucune mesure d'accessibilité d'un lieu réel n'est conservée ici. Ce qui est inconnu reste inconnu."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "hamilton-health-sciences",
+    "category": "services",
+    "topics": [
+      "rehabilitation"
+    ],
+    "readingContexts": [
+      "newly_injured",
+      "rehabilitation"
+    ],
+    "name": {
+      "en": "Hamilton Health Sciences",
+      "fr": "Hamilton Health Sciences"
+    },
+    "administrator": {
+      "en": "Hamilton Health Sciences",
+      "fr": "Hamilton Health Sciences"
+    },
+    "geography": "hamilton",
+    "officialUrl": "https://www.hamiltonhealthsciences.ca/",
+    "sourceName": "Hamilton Health Sciences homepage",
+    "summary": {
+      "en": "The Hamilton Health Sciences homepage. A specific rehabilitation program was not extracted, so none is named. Referral rules and building access are not stated.",
+      "fr": "La page d'accueil de Hamilton Health Sciences. Un programme de réadaptation précis n'a pas été extrait, donc aucun n'est nommé. Les règles d'aiguillage et l'accès au bâtiment ne sont pas indiqués."
+    },
+    "doesNot": {
+      "en": "No accessibility measurement of a real place is stored here. Unknown stays unknown.",
+      "fr": "Aucune mesure d'accessibilité d'un lieu réel n'est conservée ici. Ce qui est inconnu reste inconnu."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "st-josephs-care-group",
+    "category": "services",
+    "topics": [
+      "rehabilitation"
+    ],
+    "readingContexts": [
+      "rehabilitation",
+      "any"
+    ],
+    "name": {
+      "en": "St. Joseph's Care Group",
+      "fr": "St. Joseph's Care Group"
+    },
+    "administrator": {
+      "en": "St. Joseph's Care Group",
+      "fr": "St. Joseph's Care Group"
+    },
+    "geography": "thunder_bay",
+    "officialUrl": "https://sjcg.net/",
+    "sourceName": "St. Joseph's Care Group homepage",
+    "summary": {
+      "en": "The organization's site, which mentions Thunder Bay. This directory does not state which programs are offered and does not describe any building.",
+      "fr": "Le site de l'organisation, qui mentionne Thunder Bay. Ce répertoire n'indique pas quels programmes sont offerts et ne décrit aucun bâtiment."
+    },
+    "doesNot": {
+      "en": "No accessibility measurement of a real place is stored here. Unknown stays unknown.",
+      "fr": "Aucune mesure d'accessibilité d'un lieu réel n'est conservée ici. Ce qui est inconnu reste inconnu."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "health-sciences-north",
+    "category": "services",
+    "topics": [
+      "rehabilitation"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Health Sciences North",
+      "fr": "Health Sciences North"
+    },
+    "administrator": {
+      "en": "Health Sciences North",
+      "fr": "Health Sciences North"
+    },
+    "geography": "sudbury",
+    "officialUrl": "https://hsnsudbury.ca/en",
+    "sourceName": "Health Sciences North site",
+    "summary": {
+      "en": "Health Sciences North in Sudbury. This directory does not classify the hospital as a specialist spinal-cord rehabilitation centre. Program and building details are only on the hospital's own pages.",
+      "fr": "Health Sciences North à Sudbury. Ce répertoire ne classe pas l'hôpital comme un centre spécialisé en réadaptation pour lésion médullaire. Les détails des programmes et des bâtiments sont seulement sur les pages de l'hôpital."
+    },
+    "doesNot": {
+      "en": "No accessibility measurement of a real place is stored here. Unknown stays unknown.",
+      "fr": "Aucune mesure d'accessibilité d'un lieu réel n'est conservée ici. Ce qui est inconnu reste inconnu."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "serviceontario",
+    "category": "services",
+    "topics": [
+      "provincial-services"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "ServiceOntario",
+      "fr": "ServiceOntario"
+    },
+    "administrator": {
+      "en": "Government of Ontario",
+      "fr": "Gouvernement de l'Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.ontario.ca/page/serviceontario",
+    "sourceName": "Ontario.ca ServiceOntario page",
+    "summary": {
+      "en": "The provincial counter for many government transactions. Use it for the service the province lists. The App does not book an appointment.",
+      "fr": "Le comptoir provincial pour de nombreuses démarches gouvernementales. Utilisez-le pour le service que la province indique. L'application ne prend pas de rendez-vous."
+    },
+    "doesNot": {
+      "en": "The App does not describe the accessibility of a ServiceOntario counter.",
+      "fr": "L'application ne décrit pas l'accessibilité d'un comptoir ServiceOntario."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "arch-disability-law",
+    "category": "services",
+    "topics": [
+      "legal-information"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "ARCH Disability Law Centre",
+      "fr": "ARCH Disability Law Centre"
+    },
+    "administrator": {
+      "en": "ARCH Disability Law Centre",
+      "fr": "ARCH Disability Law Centre"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://archdisabilitylaw.ca/",
+    "sourceName": "ARCH Disability Law Centre homepage",
+    "summary": {
+      "en": "A disability law centre's public site. Legal information lives there.",
+      "fr": "Le site public d'une clinique juridique en droit des personnes handicapées. L'information juridique s'y trouve."
+    },
+    "doesNot": {
+      "en": "The App does not give legal advice.",
+      "fr": "L'application ne donne pas de conseil juridique."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "legal-aid-ontario",
+    "category": "services",
+    "topics": [
+      "legal-information"
+    ],
+    "readingContexts": [
+      "any"
+    ],
+    "name": {
+      "en": "Legal Aid Ontario",
+      "fr": "Aide juridique Ontario"
+    },
+    "administrator": {
+      "en": "Legal Aid Ontario",
+      "fr": "Aide juridique Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.legalaid.on.ca/",
+    "sourceName": "Legal Aid Ontario homepage",
+    "summary": {
+      "en": "The public Legal Aid Ontario site. Certificate and clinic rules are on that site.",
+      "fr": "Le site public d'Aide juridique Ontario. Les règles des certificats et des cliniques sont sur ce site."
+    },
+    "doesNot": {
+      "en": "The App does not give legal advice or start a legal aid application.",
+      "fr": "L'application ne donne pas de conseil juridique et ne commence pas une demande d'aide juridique."
+    }
+  },
+  {
+    "schemaVersion": "directory-record-1.0.0",
+    "notEligibilityAdvice": true,
+    "framing": {
+      "en": "Directory and linking only. This is not eligibility advice, not a benefits calculation, and not a decision about a payment.",
+      "fr": "Répertoire et liens seulement. Ce n'est pas un avis d'admissibilité, ni un calcul de prestations, ni une décision sur un paiement."
+    },
+    "retrievedOn": "2026-11-13",
+    "nextReviewOn": "2027-02-13",
+    "verificationTier": "administrator_page",
+    "verificationPlain": {
+      "en": "Desk-checked against the administrator's own page on 13 November 2026. The page text is not copied here.",
+      "fr": "Vérification au bureau sur la page de l'administrateur le 13 novembre 2026. Le texte de la page n'est pas reproduit ici."
+    },
+    "neverMeans": {
+      "en": "It does not mean you qualify, and it does not mean the administrator endorses the App.",
+      "fr": "Cela ne signifie pas une décision d'admissibilité, ni que l'administrateur appuie l'application."
+    },
+    "licenceNote": {
+      "en": "Link only. Official page text is not reproduced and is not claimed as open data.",
+      "fr": "Lien seulement. Le texte officiel n'est pas reproduit et n'est pas présenté comme des données ouvertes."
+    },
+    "placeFacts": "none",
+    "id": "scio-public-site",
+    "category": "services",
+    "topics": [
+      "peer-organization",
+      "information"
+    ],
+    "readingContexts": [
+      "newly_injured",
+      "rehabilitation",
+      "early_community",
+      "long_term"
+    ],
+    "name": {
+      "en": "Spinal Cord Injury Ontario public site",
+      "fr": "Site public de Spinal Cord Injury Ontario"
+    },
+    "administrator": {
+      "en": "Spinal Cord Injury Ontario",
+      "fr": "Spinal Cord Injury Ontario"
+    },
+    "geography": "ontario",
+    "officialUrl": "https://www.sciontario.org/",
+    "sourceName": "Spinal Cord Injury Ontario public homepage",
+    "summary": {
+      "en": "The organization's public website. Its navigation includes information on equipment and a new-client referral. The App is not operated by Spinal Cord Injury Ontario. A link is not an endorsement, a partnership, or a statement that the organization has adopted the App.",
+      "fr": "Le site public de l'organisation. Sa navigation comprend de l'information sur l'équipement et une orientation pour une nouvelle personne. L'application n'est pas exploitée par Spinal Cord Injury Ontario. Un lien n'est pas un appui, un partenariat, ni une affirmation que l'organisation a adopté l'application."
+    },
+    "doesNot": {
+      "en": "The App does not match peers, send messages, or speak for the organization.",
+      "fr": "L'application ne jumelle pas de pairs, n'envoie pas de messages et ne parle pas au nom de l'organisation."
+    }
+  }
+]

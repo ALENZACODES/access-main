@@ -8,4 +8,4 @@
 | `docs` | Decisions, this map, and the privacy note for device storage. |
 | `.github/workflows/ci.yml` | Pull-request checks only. |
 
-`apps/web/src/modules/stubs.ts` is the file to replace, one property at a time, when a lane ships a real module. A module must return records that already satisfy `validateCacheEntry` before the shell will store them.
+`packages/shared/src/lanes.ts` names the package for each route. `apps/web/src/modules/stubs.ts` (`createModules`) is where a real module is passed in. A module must return records that already satisfy `validateCacheEntry` before the shell will store them. The shell does not bundle access-maps data files and does not mount a map.
