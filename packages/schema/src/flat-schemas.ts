@@ -101,7 +101,7 @@ export function flatSchemas(): Record<string, Record<string, unknown>> {
     $id: id("user-profile"),
     title: "User profile",
     description:
-      "Device-only preferences for filtering and display. Profile name is the only required preference. Chair size and transfer side are optional and user-stated. Timing fields are user-stated journey limits, not clinical advice. No diagnosis, medication, injury level, location history, or clinical reminder, including no pressure-relief timer.",
+      "Device-only preferences for filtering and display. Profile name is the only required preference. Chair size and transfer side are optional and user-stated. No diagnosis, medication, injury level, location history, clinical reminder, pressure-relief timer, washroom interval, or continuous-travel limit. Health-aware timing is out of the prototype.",
     type: "object",
     additionalProperties: false,
     required: ["record_type", "schema_version", "id", "profile_name", "storage", "server_persistence"],
@@ -121,16 +121,6 @@ export function flatSchemas(): Record<string, Record<string, unknown>> {
       transfer_type: { enum: ["left", "right", "both", "front", "prefer_not_to_say"] },
       gradient_tolerance: { enum: ["low", "moderate", "steep_rejected", "prefer_not_to_say"] },
       preferences: { type: "string" },
-      max_time_between_washrooms_min: {
-        type: "number",
-        exclusiveMinimum: 0,
-        description: "User-stated timing preference. Not a clinical interval and not medical advice.",
-      },
-      max_continuous_travel_min: {
-        type: "number",
-        exclusiveMinimum: 0,
-        description: "User-stated timing preference. Not medical advice.",
-      },
       routing_preference: { enum: ["low_slope", "shortest_distance", "charging_aware", "balanced"] },
       text_size_preference: { enum: ["system", "large", "extra_large"] },
       reduced_motion_preference: { type: "boolean" },

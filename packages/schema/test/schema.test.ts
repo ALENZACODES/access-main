@@ -148,16 +148,15 @@ describe("validator", () => {
       "pressure_relief",
       "pressure_relief_reminder",
       "pressure_relief_timer",
+      "max_time_between_washrooms_min",
+      "max_continuous_travel_min",
     ];
+    const profile = readJson("valid/user-profile.local.synthetic.json") as Record<string, unknown>;
     for (const forbidden of clinicalFields) {
       expect(profileSchema.properties[forbidden], forbidden).toBeUndefined();
+      const rejected = validator.validateDetected({ ...profile, [forbidden]: forbidden.startsWith("max_") ? 30 : true });
+      expect(rejected.ok, forbidden).toBe(false);
     }
-    const reminder = {
-      ...(readJson("valid/user-profile.local.synthetic.json") as Record<string, unknown>),
-      pressure_relief_reminder: true,
-    };
-    const rejected = validator.validateDetected(reminder);
-    expect(rejected.ok).toBe(false);
   });
 
   it("validates unmodified access-maps records, including the source registry row", () => {
@@ -382,6 +381,25 @@ describe("cli", () => {
     expect(text).toContain("FAIL");
     expect(text).toContain("place.missing-tier.synthetic.json");
     expect(text).toContain("place.verified-without-evidence.synthetic.json");
+  });
+
+  it("warns when a fixtures path excludes every record from the headline", async () => {
+    const errors: string[] = [];
+    const originalErr = process.stderr.write.bind(process.stderr);
+    const originalOut = process.stdout.write.bind(process.stdout);
+    process.stderr.write = ((chunk: string | Uint8Array) => {
+      errors.push(String(chunk));
+      return true;
+    }) as typeof process.stderr.write;
+    process.stdout.write = (() => true) as typeof process.stdout.write;
+    try {
+      const code = await runCli(["count", path.join(fixtures, "import/real/venue.osm-node-238726675.json")]);
+      expect(code).toBe(0);
+    } finally {
+      process.stderr.write = originalErr;
+      process.stdout.write = originalOut;
+    }
+    expect(errors.join("")).toContain("excluded as fixtures");
   });
 
   it("keeps U+2028 and U+2029 inside an NDJSON record, including a gzipped file", async () => {

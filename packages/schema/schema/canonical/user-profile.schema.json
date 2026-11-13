@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://access-main.local/schema/canonical/user-profile.schema.json",
   "title": "User profile",
-  "description": "Device-only preferences for filtering and display. Profile name is the only required preference. Chair size and transfer side are optional and user-stated. Timing fields are user-stated journey limits, not clinical advice. No diagnosis, medication, injury level, location history, or clinical reminder, including no pressure-relief timer.",
+  "description": "Device-only preferences for filtering and display. Profile name is the only required preference. Chair size and transfer side are optional and user-stated. No diagnosis, medication, injury level, location history, clinical reminder, pressure-relief timer, washroom interval, or continuous-travel limit. Health-aware timing is out of the prototype.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -84,16 +84,6 @@
     },
     "preferences": {
       "type": "string"
-    },
-    "max_time_between_washrooms_min": {
-      "type": "number",
-      "exclusiveMinimum": 0,
-      "description": "User-stated timing preference. Not a clinical interval and not medical advice."
-    },
-    "max_continuous_travel_min": {
-      "type": "number",
-      "exclusiveMinimum": 0,
-      "description": "User-stated timing preference. Not medical advice."
     },
     "routing_preference": {
       "enum": [

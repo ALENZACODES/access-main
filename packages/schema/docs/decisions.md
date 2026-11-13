@@ -20,4 +20,4 @@
 
 10. **This package is the tier source of truth.** Canonical ids are `0`, `1`, `2`, `3`, `4`, and `E`, plus the four prototype labels. access-maps numbers and access-tools `tier-N-*` strings map into that list. The map is `TIERS.md`. In French the product is called l'application. The ids are not translated.
 
-11. **`dist/` is not committed.** `prepare` runs `tsc`. A git install builds it. The profile has no pressure-relief reminder. That would be a clinical timer, and this package does not ship one.
+11. **`dist/` is not committed.** `prepare` runs `tsc`. A git install builds it. The profile has no pressure-relief reminder, washroom interval, or continuous-travel limit. Those are health-aware timing, and the prototype does not include them.

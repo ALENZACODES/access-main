@@ -16,7 +16,14 @@ interface Loaded {
   parseError?: string;
 }
 
+function ignoreEpipe(stream: NodeJS.WriteStream): void {
+  stream.on("error", (error: NodeJS.ErrnoException) => {
+    if (error.code !== "EPIPE") throw error;
+  });
+}
+
 export async function runCli(argv: string[]): Promise<number> {
+  ignoreEpipe(process.stdout);
   const [command, ...rest] = argv;
   if (command === "validate") return validateCommand(rest);
   if (command === "count") return countCommand(rest);
@@ -72,7 +79,13 @@ async function countCommand(args: string[]): Promise<number> {
     }
     counter.add(item.value, item.file);
   }
-  process.stdout.write(`${JSON.stringify(counter.finish(), null, 2)}\n`);
+  const report = counter.finish();
+  if (report.records === 0 && report.examples_excluded_records > 0) {
+    process.stderr.write(
+      `warning: ${report.examples_excluded_records} record(s) excluded as fixtures by path, id prefix, source marker, or example flag. Headline count is 0.\n`,
+    );
+  }
+  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   return failed === 0 ? 0 : 1;
 }
 
