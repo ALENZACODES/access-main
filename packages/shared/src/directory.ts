@@ -2,7 +2,7 @@ import type { FieldIssue } from "./provenance.ts";
 
 /**
  * One directory contract, shared with access-tools `packages/navigator`
- * at 06c9d4b.
+ * on main (`5f893a8`).
  *
  * The record is `directory-record-1.0.0` and carries
  * `verificationTier: "administrator_page"`. That field is not a second tier

@@ -19,7 +19,7 @@ Stored as `tier` on provenance and on every field fact. JSON Schema accepts only
 
 `unknown` and `UNKNOWN` are missing values. They are not tiers. A missing number is not zero.
 
-A TTC service alert is tier `4`. Feed time is `feed_timestamp`. Receipt time is `retrieved_at`. The schema has no `expires_at` field, and this package does not add one. When an `active_periods` entry has `end`, that end is the expiry. When a period has no end, the next snapshot replaces the alert, and the 30-day status window is what takes it out of the headline. Twelve of the 32 rows in `fixtures/import/alerts/gtfs-rt-ttc-accessibility.ndjson` have a period with no end.
+A TTC service alert is tier `4`. Feed time is `feed_timestamp`. Receipt time is `retrieved_at`. The schema has no `expires_at` field, and this package does not add one. When an `active_periods` entry has `end`, that end is the expiry. When a period has no end, the next snapshot replaces the alert, and the 30-day status window is what takes it out of the headline.
 
 Tier `3` fails validation when evidence is missing.
 

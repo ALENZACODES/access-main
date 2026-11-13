@@ -142,7 +142,6 @@ export const fr: Messages = {
     verifiedClaim: "Étiquette vérifiée. Un enregistrement de prototype ne peut pas la porter.",
   },
   modules: {
-    notConnected: "Cette partie de the App n'est pas encore branchée.",
     unavailable: "Cette partie de the App n'est pas encore disponible. Aucune fiche n'est affichée.",
     searchUnavailable: "La recherche reste inactive tant que cette partie n'est pas disponible. Une recherche ici ne peut pas donner de fiche.",
     detailsSummary: "Note technique",

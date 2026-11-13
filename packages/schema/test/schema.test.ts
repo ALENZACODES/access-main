@@ -271,6 +271,7 @@ describe("TTC service alerts", () => {
     const tiers = readFileSync(path.join(root, "TIERS.md"), "utf8");
     expect(tiers).toContain("The schema has no `expires_at` field");
     expect(tiers).toContain("the 30-day status window");
+    expect(tiers).not.toMatch(/\b(?:12|Twelve) of the 32\b/);
     const counting = readFileSync(path.join(root, "docs/counting-rules.md"), "utf8");
     const notCounted = counting.slice(counting.indexOf("Not counted:"), counting.indexOf("## Service alerts"));
     expect(notCounted).not.toContain("TTC service alert");

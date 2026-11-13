@@ -133,7 +133,6 @@ export const en = {
     verifiedClaim: "Verified label. A prototype record cannot carry it.",
   },
   modules: {
-    notConnected: "This part of the App is not connected yet.",
     unavailable: "This part of the App is not available yet. No records are shown.",
     searchUnavailable: "Search stays off until this part is available. A search here cannot return records.",
     detailsSummary: "Technical note",

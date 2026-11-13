@@ -102,7 +102,7 @@ describe("offline cache rules", () => {
   });
 
   it("stubs return no items and live status stays unavailable", () => {
-    const result = emptyModuleResult("places", "modules.notConnected");
+    const result = emptyModuleResult("places", "modules.unavailable");
     expect(result.items).toEqual([]);
     expect(result.availability).toBe("stub");
     expect(result.liveStatus).toBe("unavailable");
