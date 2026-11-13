@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import records from "./fixtures/access-tools-directory-06c9d4b.json" with { type: "json" };
+import records from "./fixtures/access-tools-directory.json" with { type: "json" };
 import { validateCacheEntry, type CacheEntry } from "./cache.ts";
 import { validateDirectoryRecord, type DirectoryRecord } from "./directory.ts";
 
 /**
- * Real directory records from ALENZACODES/access-tools packages/navigator
- * at 06c9d4b9324414543b1569f018e2aa54cbaa1876.
- * That head publishes directory-record-1.0.0 with verificationTier
- * "administrator_page". The shell stores each link with provenance tier E.
+ * The current access-tools navigator directory, copied from main at
+ * 5f893a85ca499dcf025020492fe4217c85d16a65 (`packages/navigator` `DIRECTORY`).
+ * Records are `directory-record-1.0.0` with `verificationTier: "administrator_page"`.
+ * The shell stores each link with provenance tier E.
  */
 const RECORDS = records as DirectoryRecord[];
 
@@ -34,7 +34,7 @@ function stored(record: DirectoryRecord, tier: CacheEntry["provenance"]["tier"] 
 }
 
 describe("access-tools directory records", () => {
-  it("accepts every record from 06c9d4b and stores it as tier E", () => {
+  it("accepts the current access-tools directory and stores it as tier E", () => {
     expect(RECORDS.length).toBeGreaterThan(0);
     expect(new Set(RECORDS.map((record) => record.id)).size).toBe(RECORDS.length);
     for (const record of RECORDS) {

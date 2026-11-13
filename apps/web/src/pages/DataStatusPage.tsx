@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DISPLAY_TIERS, tierMessageKey, type CacheEntry } from "@access/shared";
 import { Button } from "../design/Button.tsx";
@@ -15,7 +15,18 @@ export function DataStatusPage() {
   const [worker, setWorker] = useState<"unknown" | "active" | "inactive" | "unsupported">("unknown");
   const [confirming, setConfirming] = useState(false);
   const [cleared, setCleared] = useState(false);
+  const clearRef = useRef<HTMLButtonElement>(null);
+  const clearedRef = useRef<HTMLParagraphElement>(null);
   useDocumentTitle(t("data.title"));
+
+  useEffect(() => {
+    if (cleared) clearedRef.current?.focus();
+  }, [cleared]);
+
+  const closeClear = () => {
+    setConfirming(false);
+    window.requestAnimationFrame(() => clearRef.current?.focus());
+  };
 
   const load = () => {
     void summarizeStorage().then(setSummary);
@@ -109,10 +120,20 @@ export function DataStatusPage() {
         ) : null}
         <p>{summary ? t("storage.outboxCount", { count: summary.outboxCount }) : null}</p>
         <p>{summary && summary.outboxCount > 0 ? t("data.outboxSome") : t("data.outboxNone")}</p>
-        <Button variant="secondary" onPress={() => setConfirming(true)} isDisabled={!summary || (summary.cacheCount === 0 && summary.outboxCount === 0)}>
+        <Button
+          ref={clearRef}
+          variant="secondary"
+          onPress={() => {
+            setCleared(false);
+            setConfirming(true);
+          }}
+          isDisabled={!summary || (summary.cacheCount === 0 && summary.outboxCount === 0)}
+        >
           {t("data.clear")}
         </Button>
-        {cleared ? <p role="status">{t("data.cleared")}</p> : null}
+        {cleared ? (
+          <p role="status" tabIndex={-1} ref={clearedRef}>{t("data.cleared")}</p>
+        ) : null}
       </section>
       <section className="stack" aria-labelledby="legend-title">
         <h2 id="legend-title">{t("data.legendTitle")}</h2>
@@ -136,7 +157,7 @@ export function DataStatusPage() {
           body={t("data.clearBody")}
           confirmLabel={t("data.clearConfirm")}
           cancelLabel={t("data.clearCancel")}
-          onCancel={() => setConfirming(false)}
+          onCancel={closeClear}
           onConfirm={() => {
             void clearCachedRecords().then(() => {
               setConfirming(false);

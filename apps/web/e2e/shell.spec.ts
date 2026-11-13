@@ -91,6 +91,71 @@ test("module pages do not invent places and axe is clean", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
 });
 
+test("clearing the cache returns focus to the trigger or the status", async ({ page }) => {
+  await page.goto("/data-status");
+  const clear = page.getByRole("button", { name: "Remove cached records" });
+  await expect(clear).toBeDisabled();
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open("access-app");
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction("cacheEntries", "readwrite");
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+        tx.objectStore("cacheEntries").put({
+          id: "rec-e2e",
+          kind: "place",
+          title: "Unverified sample",
+          stored_at: "2026-11-13T12:00:00.000Z",
+          provenance: {
+            source_name: "Example open data",
+            source_url: "https://example.test/data",
+            licence: "Open Government Licence – Toronto",
+            licence_url: null,
+            source_date: "2026-11-01",
+            retrieved_at: "2026-11-13T12:00:00.000Z",
+            tier: 0,
+            prototype_label: "SEEDED-OPEN-DATA",
+            freshness: "unknown",
+          },
+          contains_live_status: false,
+          payload: {},
+        });
+      };
+    });
+  });
+  await page.reload();
+  await expect(clear).toBeEnabled();
+  await clear.click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog.getByRole("heading", { name: "Remove cached records?" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Keep records" })).toBeFocused();
+  const describedBy = await dialog.getAttribute("aria-describedby");
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`[id="${describedBy}"]`)).toContainText("This deletes cached records and waiting reports on this device.");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expect(clear).toBeFocused();
+  await expect(page.getByText("Unverified sample")).toBeVisible();
+
+  await clear.click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Keep records" }).click();
+  await expect(clear).toBeFocused();
+
+  await clear.click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Remove records" }).click();
+  const cleared = page.getByText("Cached records were removed from this device.");
+  await expect(cleared).toBeVisible();
+  await expect(cleared).toBeFocused();
+  await expect(page.getByText("Unverified sample")).toHaveCount(0);
+  await expect(clear).toBeDisabled();
+});
+
 test("narrow and enlarged text do not force horizontal scrolling", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/profile");
