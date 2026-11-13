@@ -55,7 +55,7 @@ Every other import key is stored once under `imported_facts` with that key. It s
 | Empty GTFS `location_type` | a new default | The importer already stored `stop` and the raw code. This step does not redo it. |
 | `source_id` | `agency_name` or `geocode_source` | That would add a piece the import did not have. |
 | `posted_date` | a washroom fact or a measured date | City of Toronto `PostedDate`. Optional on the import record. The value is copied once into `imported_facts`. |
-| GTFS-RT service alert | an `outage` record | The alert stays in the access-maps shape. `migrateImportRecord` does not rewrite it. |
+| GTFS-RT service alert | an `outage` record | The alert stays in the access-maps shape. `migrateImportRecord` returns no records for it. |
 
 OSM rows are ODbL. `odblShareAlikeMissing` is true for the registry fixture until `share_alike` is set true. The import schema does not add that flag, because the stored registry row does not have it yet.
 

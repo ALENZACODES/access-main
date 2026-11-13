@@ -1,3 +1,4 @@
+import { isServiceAlertRecord } from "./validate.js";
 import type { FactLike } from "./values.js";
 import {
   PATH_RENAMES,
@@ -62,6 +63,7 @@ const SEGMENT_TYPES = new Set([
  * Piece count is unchanged because each source field is written once.
  */
 export function migrateImportRecord(record: ImportRecord, sources: readonly SourceName[] = []): Record<string, unknown>[] {
+  if (isServiceAlertRecord(record as unknown as Record<string, unknown>)) return [];
   const names = new Map(sources.map((source) => [source.id, source.name]));
   switch (record.tranche) {
     case "venue":
