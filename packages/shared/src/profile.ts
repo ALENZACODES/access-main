@@ -34,8 +34,9 @@ export interface ConsentRecord {
 
 /**
  * Privacy-minimised preferences. Stored on the device only.
- * Timing fields are whatever the person typed. There is no clinical default.
- * Injury level, diagnosis, and location history are not fields.
+ * The prototype profile is equipment, chair size, transfer, route preference,
+ * and display. It does not store a washroom interval, a travel limit, a
+ * pressure-relief reminder, a diagnosis, or an injury level.
  */
 export interface UserProfile {
   record_type: "user_profile";
@@ -50,9 +51,6 @@ export interface UserProfile {
   chair_length_mm: number | null;
   transfer_side_preference: TransferSide | null;
   attendant_travels: boolean | null;
-  max_time_between_washrooms_min: number | null;
-  max_continuous_travel_min: number | null;
-  pressure_relief_reminder: boolean | null;
   routing_preference: RoutingPreference | null;
   text_size_preference: TextSize;
   reduced_motion_preference: boolean | null;
@@ -75,7 +73,6 @@ export interface UserProfile {
 }
 
 const MAX_MM = 2000;
-const MAX_MINUTES = 24 * 60;
 const MAX_STORAGE_MB = 500;
 const MAX_REGION = 80;
 
@@ -108,9 +105,6 @@ export function createEmptyProfile(nowIso: string, language: "en" | "fr"): UserP
     chair_length_mm: null,
     transfer_side_preference: null,
     attendant_travels: null,
-    max_time_between_washrooms_min: null,
-    max_continuous_travel_min: null,
-    pressure_relief_reminder: null,
     routing_preference: null,
     text_size_preference: "system",
     reduced_motion_preference: null,
@@ -154,12 +148,10 @@ export function validateProfile(profile: UserProfile): FieldIssue[] {
   if (profile.transfer_side_preference !== null && !member(profile.transfer_side_preference, TRANSFER_SIDES)) {
     issues.push({ field: "transfer_side_preference", code: "invalid_enum" });
   }
-  for (const field of ["attendant_travels", "pressure_relief_reminder", "reduced_motion_preference", "high_contrast_preference", "screen_reader_user", "switch_or_voice_user"] as const) {
+  for (const field of ["attendant_travels", "reduced_motion_preference", "high_contrast_preference", "screen_reader_user", "switch_or_voice_user"] as const) {
     const value = profile[field];
     if (value !== null && typeof value !== "boolean") issues.push({ field, code: "invalid_enum" });
   }
-  optionalInt("max_time_between_washrooms_min", profile.max_time_between_washrooms_min, MAX_MINUTES, issues);
-  optionalInt("max_continuous_travel_min", profile.max_continuous_travel_min, MAX_MINUTES, issues);
   if (profile.routing_preference !== null && !member(profile.routing_preference, ROUTING_PREFERENCES)) {
     issues.push({ field: "routing_preference", code: "invalid_enum" });
   }
@@ -177,6 +169,20 @@ export function validateProfile(profile: UserProfile): FieldIssue[] {
   );
   if (profile.saved_places.length > 0) issues.push({ field: "saved_places", code: "places_not_in_profile" });
   if (profile.saved_trips.length > 0) issues.push({ field: "saved_trips", code: "places_not_in_profile" });
+  profile.consent_records.forEach((record, index) => {
+    if (record.purpose !== "store-preferences-on-device") {
+      issues.push({ field: `consent_records[${index}].purpose`, code: "invalid_enum" });
+    }
+    if (record.policy_version !== PRIVACY_POLICY_VERSION) {
+      issues.push({ field: `consent_records[${index}].policy_version`, code: "invalid_enum" });
+    }
+    if (typeof record.granted_at !== "string" || record.granted_at.length === 0) {
+      issues.push({ field: `consent_records[${index}].granted_at`, code: "invalid_date" });
+    }
+    if (record.withdrawn_at !== null && (typeof record.withdrawn_at !== "string" || record.withdrawn_at.length === 0)) {
+      issues.push({ field: `consent_records[${index}].withdrawn_at`, code: "invalid_date" });
+    }
+  });
   issues.push(...findForbiddenKeys(profile));
   return issues;
 }
@@ -210,7 +216,24 @@ export function parseRegion(raw: string): { value: string | null; issues: FieldI
   return { value: trimmed, issues: [] };
 }
 
-export const LIMITS = { MAX_MM, MAX_MINUTES, MAX_STORAGE_MB, MAX_REGION } as const;
+export const LIMITS = { MAX_MM, MAX_STORAGE_MB, MAX_REGION } as const;
+
+export function hasActiveConsent(profile: UserProfile | null): boolean {
+  return Boolean(profile?.consent_records.some((record) => record.withdrawn_at === null));
+}
+
+/** Clears entered preferences and stamps withdrawn_at. Does not invent a grant. */
+export function withdrawConsent(profile: UserProfile, nowIso: string): UserProfile {
+  const cleared = createEmptyProfile(profile.created_at, profile.language_preference);
+  return {
+    ...cleared,
+    updated_at: nowIso,
+    consent_records: profile.consent_records.map((record) => ({
+      ...record,
+      withdrawn_at: record.withdrawn_at ?? nowIso,
+    })),
+  };
+}
 
 export function triState(raw: string): boolean | null {
   if (raw === "yes") return true;

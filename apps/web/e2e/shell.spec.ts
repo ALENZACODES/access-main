@@ -29,7 +29,7 @@ test.beforeEach(async ({ page }) => {
 test("home shows the prototype, the build, and a skip link", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "the App" })).toBeVisible();
-  await expect(page.getByText("Prototype. A record is unverified")).toBeVisible();
+  await expect(page.getByRole("note").filter({ hasText: "Prototype. Every record is unverified" })).toBeVisible();
   await expect(page.getByText("No organisation, including Spinal Cord Injury Ontario, has endorsed the App.").first()).toBeVisible();
   await expect(page.getByText("Build e2e").first()).toBeVisible();
   await page.keyboard.press("Tab");
@@ -44,7 +44,7 @@ test("about is reachable by keyboard and by a link", async ({ page }) => {
   await page.getByRole("link", { name: "About", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/about$/);
-  await expect(page.getByRole("heading", { level: 1, name: "About" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "About" })).toBeFocused();
   await page.goto("/");
   await page.getByRole("link", { name: "About", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "About" })).toBeVisible();
@@ -55,7 +55,11 @@ test("french shell persists and returns to english", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Français" }).click();
   await expect(page.getByRole("link", { name: "Accueil" })).toBeVisible();
-  await expect(page.getByRole("note").filter({ hasText: "Traduction provisoire" })).toBeVisible();
+  const note = page.getByRole("note").filter({ hasText: "Traduction provisoire" });
+  await expect(note).toBeVisible();
+  await expect(note.locator("xpath=ancestor::main")).toHaveCount(1);
+  const frenchResults = await new AxeBuilder({ page }).analyze();
+  expect(frenchResults.violations, JSON.stringify(frenchResults.violations, null, 2)).toEqual([]);
   await page.reload();
   await expect(page.getByRole("link", { name: "Accueil" })).toBeVisible();
   await page.getByRole("button", { name: "English" }).click();

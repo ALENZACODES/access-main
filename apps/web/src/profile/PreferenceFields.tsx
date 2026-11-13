@@ -26,7 +26,7 @@ export function PreferenceFields({
   draft: ProfileDraft;
   onChange: (next: ProfileDraft) => void;
   issues: FieldIssue[];
-  sections: Array<"language" | "mobility" | "timing" | "display" | "offline">;
+  sections: Array<"language" | "mobility" | "display" | "offline">;
   showHeadings?: boolean;
 }) {
   const { t } = useTranslation();
@@ -98,35 +98,6 @@ export function PreferenceFields({
             value={draft.region_preference}
             onChange={(value) => patch({ region_preference: value })}
             error={error("region_preference")}
-          />
-        </section>
-      ) : null}
-      {sections.includes("timing") ? (
-        <section className="stack" aria-labelledby={showHeadings ? "section-timing" : undefined}>
-          {showHeadings ? <h2 id="section-timing">{t("profile.sectionTiming")}</h2> : null}
-          <p className="callout">{t("profile.timingDisclaimer")}</p>
-          <TextInput
-            label={t("profile.washroomGap")}
-            description={t("profile.blankOk")}
-            value={draft.max_time_between_washrooms_min}
-            onChange={(value) => patch({ max_time_between_washrooms_min: value })}
-            error={error("max_time_between_washrooms_min")}
-            inputMode="numeric"
-          />
-          <TextInput
-            label={t("profile.travelTime")}
-            description={t("profile.blankOk")}
-            value={draft.max_continuous_travel_min}
-            onChange={(value) => patch({ max_continuous_travel_min: value })}
-            error={error("max_continuous_travel_min")}
-            inputMode="numeric"
-          />
-          <ChoiceGroup
-            label={t("profile.pressure")}
-            description={t("profile.pressureHelp")}
-            value={draft.pressure_relief_reminder}
-            onChange={(value) => patch({ pressure_relief_reminder: value })}
-            options={choices(t, ON_OFF)}
           />
           <ChoiceGroup
             label={t("profile.routing")}

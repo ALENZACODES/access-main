@@ -58,18 +58,21 @@ export function CheckField({
   description,
   isSelected,
   onChange,
+  error,
 }: {
   label: string;
   description?: string;
   isSelected: boolean;
   onChange: (value: boolean) => void;
+  error?: string;
 }) {
   return (
-    <Checkbox className="check-option" isSelected={isSelected} onChange={onChange}>
+    <Checkbox className="check-option" isSelected={isSelected} onChange={onChange} isInvalid={Boolean(error)}>
       <span className="check-box" aria-hidden="true" />
       <span>
         <span className="check-label">{label}</span>
         {description ? <span className="field-help">{description}</span> : null}
+        {error ? <span className="field-error">{error}</span> : null}
       </span>
     </Checkbox>
   );

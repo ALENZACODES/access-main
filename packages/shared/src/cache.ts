@@ -1,3 +1,4 @@
+import { validateDirectoryRecord } from "./directory.ts";
 import { findForbiddenKeys, validateProvenance, type FieldIssue, type Provenance } from "./provenance.ts";
 
 export const CACHE_KINDS = [
@@ -46,12 +47,9 @@ export function validateCacheEntry(entry: CacheEntry): FieldIssue[] {
     issues.push({ field: "payload", code: "too_large" });
   }
   if (entry.kind === "directory-link") {
-    if (entry.payload.eligibility_advice !== false) {
-      issues.push({ field: "payload.eligibility_advice", code: "eligibility_advice" });
-    }
-    const url = entry.payload.official_url;
-    if (typeof url !== "string" || !url.startsWith("https://")) {
-      issues.push({ field: "payload.official_url", code: "invalid_url" });
+    issues.push(...validateDirectoryRecord(entry.payload));
+    if (entry.provenance?.tier !== "E") {
+      issues.push({ field: "provenance.tier", code: "invalid_tier" });
     }
   }
   if (entry.kind === "activity-pack") {

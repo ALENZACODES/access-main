@@ -1,24 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { tierMessageKey, type CacheEntry, type VerificationTier } from "@access/shared";
+import { DISPLAY_TIERS, tierMessageKey, type CacheEntry } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { clearCachedRecords, listCacheEntries, summarizeStorage, type StorageSummary } from "../storage/repository.ts";
-
-const TIER_ORDER: VerificationTier[] = [
-  "UNKNOWN",
-  "TIER_0",
-  "TIER_1",
-  "TIER_2",
-  "TIER_3",
-  "TIER_4",
-  "PROTOTYPE-UNVERIFIED",
-  "SEEDED-OPEN-DATA",
-  "COMMUNITY-REPORTED",
-  "VERIFIED",
-];
 
 export function DataStatusPage() {
   const { t, i18n } = useTranslation();
@@ -112,9 +99,10 @@ export function DataStatusPage() {
                 </p>
                 <p>
                   {entry.provenance.source_name} · {entry.provenance.licence} · {entry.provenance.source_date} ·{" "}
-                  {entry.provenance.verification_tier}
+                  {String(entry.provenance.tier)}
+                  {entry.provenance.prototype_label ? ` · ${entry.provenance.prototype_label}` : ""}
                 </p>
-                <p>{t(tierMessageKey(entry.provenance.verification_tier))}</p>
+                <p>{t(tierMessageKey(entry.provenance.tier))}</p>
               </li>
             ))}
           </ul>
@@ -129,13 +117,14 @@ export function DataStatusPage() {
       <section className="stack" aria-labelledby="legend-title">
         <h2 id="legend-title">{t("data.legendTitle")}</h2>
         <dl className="review-list">
-          {TIER_ORDER.map((tier) => (
-            <div key={tier}>
-              <dt>{tier}</dt>
+          {DISPLAY_TIERS.map((tier) => (
+            <div key={String(tier)}>
+              <dt>{String(tier)}</dt>
               <dd>{t(tierMessageKey(tier))}</dd>
             </div>
           ))}
         </dl>
+        <p>{t("data.refusedTiers")}</p>
       </section>
       <section className="stack" aria-labelledby="map-title">
         <h2 id="map-title">{t("data.mapTitle")}</h2>

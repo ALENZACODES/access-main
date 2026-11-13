@@ -4,6 +4,7 @@ import {
   validateCacheEntry,
   validateOutboxNote,
   validateProfile,
+  withdrawConsent,
   withinStorageLimit,
   type CacheEntry,
   type CacheKind,
@@ -66,6 +67,7 @@ export async function getProfile(): Promise<UserProfile | null> {
 
 export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
   const issues = validateProfile(profile);
+  if (profile.consent_records.length === 0) issues.push({ field: "consent_records", code: "consent_required" });
   if (issues.length > 0) throw new StorageError(issues);
   const stored: UserProfile = {
     ...profile,
@@ -89,6 +91,16 @@ export async function updateProfileLanguage(language: "en" | "fr", nowIso: strin
 
 export async function deleteProfile(): Promise<void> {
   await db.profiles.delete(LOCAL_USER_ID);
+}
+
+export async function withdrawStoredConsent(nowIso: string): Promise<UserProfile | null> {
+  const existing = await getProfile();
+  if (!existing) return null;
+  const withdrawn = withdrawConsent(existing, nowIso);
+  const issues = validateProfile(withdrawn);
+  if (issues.length > 0) throw new StorageError(issues);
+  await db.profiles.put(withdrawn);
+  return withdrawn;
 }
 
 export async function listCacheEntries(): Promise<CacheEntry[]> {
@@ -153,7 +165,7 @@ export async function summarizeStorage(): Promise<StorageSummary> {
   let verifiedClaimCount = 0;
   for (const entry of entries) {
     byKind[entry.kind] += 1;
-    if (entry.provenance.verification_tier === "VERIFIED") verifiedClaimCount += 1;
+    if (entry.provenance.prototype_label === "VERIFIED" || entry.provenance.tier === 3) verifiedClaimCount += 1;
   }
   return {
     health,
@@ -164,6 +176,41 @@ export async function summarizeStorage(): Promise<StorageSummary> {
     verifiedClaimCount,
     newestStoredAt: entries[0]?.stored_at ?? null,
   };
+}
+
+function enteredLine(label: string, value: string | number | boolean | null | undefined): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  return `${label}: ${String(value)}`;
+}
+
+/** Plain text of fields the person entered. Empty fields and system keys are omitted. */
+export function exportProfileText(profile: UserProfile): string {
+  const lines = ["the App — preferences entered on this device"];
+  const push = (label: string, value: string | number | boolean | null | undefined) => {
+    const line = enteredLine(label, value);
+    if (line) lines.push(line);
+  };
+  push("Language", profile.language_preference);
+  push("Region", profile.region_preference);
+  push("Equipment", profile.equipment_type_general);
+  push("Chair width mm", profile.chair_width_mm);
+  push("Chair length mm", profile.chair_length_mm);
+  push("Transfer side", profile.transfer_side_preference);
+  push("Support person travels", profile.attendant_travels);
+  push("Route preference", profile.routing_preference);
+  if (profile.text_size_preference !== "system") push("Text size", profile.text_size_preference);
+  push("Reduced motion", profile.reduced_motion_preference);
+  push("Higher contrast", profile.high_contrast_preference);
+  push("Screen reader", profile.screen_reader_user);
+  push("Switch or voice", profile.switch_or_voice_user);
+  if (!profile.offline_pack_preferences.wifi_only) push("Wi-Fi only downloads", false);
+  push("Storage cap MB", profile.offline_pack_preferences.storage_limit_mb);
+  for (const record of profile.consent_records) {
+    if (record.withdrawn_at) push("Consent withdrawn", record.withdrawn_at);
+    else push("Consent to store on this device", record.granted_at);
+  }
+  if (lines.length === 1) lines.push("No preferences were entered.");
+  return `${lines.join("\n")}\n`;
 }
 
 export function exportProfileJson(profile: UserProfile): string {

@@ -16,7 +16,6 @@ describe("module stubs", () => {
       {
         originLabel: "home",
         destinationLabel: "clinic",
-        timing: { maxTimeBetweenWashroomsMin: ctx.profile?.max_time_between_washrooms_min ?? null, maxContinuousTravelMin: null },
         routingPreference: null,
         offline: true,
       },

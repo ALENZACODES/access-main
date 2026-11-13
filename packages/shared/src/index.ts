@@ -1,9 +1,18 @@
 export {
-  VERIFICATION_TIERS,
+  CANONICAL_TIER_IDS,
+  DISPLAY_TIERS,
+  PROTOTYPE_CACHE_LABELS,
+  PROTOTYPE_CACHE_TIERS,
+  PROTOTYPE_LABELS,
+  canonicalTierFromForeign,
   isLiveTier,
-  isVerificationTier,
+  isPrototypeLabel,
+  prototypeTierRefusal,
   tierMessageKey,
-  type VerificationTier,
+  type CanonicalTierId,
+  type DisplayTier,
+  type PrototypeCacheTier,
+  type PrototypeLabel,
 } from "./tiers.ts";
 export { findForbiddenKeys, normaliseKey, validateProvenance, type FieldIssue, type Provenance } from "./provenance.ts";
 export {
@@ -21,7 +30,9 @@ export {
   parseRegion,
   triState,
   triStateToDraft,
+  hasActiveConsent,
   validateProfile,
+  withdrawConsent,
   type ConsentRecord,
   type EquipmentType,
   type RoutingPreference,
@@ -29,6 +40,19 @@ export {
   type TransferSide,
   type UserProfile,
 } from "./profile.ts";
+export {
+  DIRECTORY_CATEGORIES,
+  DIRECTORY_CONTEXTS,
+  DIRECTORY_GEOGRAPHIES,
+  DIRECTORY_SCHEMA_VERSION,
+  validateDirectoryRecord,
+  type DirectoryCategory,
+  type DirectoryFigure,
+  type DirectoryGeography,
+  type DirectoryReadingContext,
+  type DirectoryRecord,
+  type DirectoryText,
+} from "./directory.ts";
 export {
   CACHE_KINDS,
   estimateEntryBytes,

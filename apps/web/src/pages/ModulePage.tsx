@@ -38,12 +38,6 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
               {
                 originLabel: null,
                 destinationLabel: null,
-                timing: profile
-                  ? {
-                      maxTimeBetweenWashroomsMin: profile.max_time_between_washrooms_min,
-                      maxContinuousTravelMin: profile.max_continuous_travel_min,
-                    }
-                  : null,
                 routingPreference: profile?.routing_preference ?? null,
                 offline: !online,
               },

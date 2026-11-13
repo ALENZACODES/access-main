@@ -2,22 +2,23 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FieldIssue } from "@access/shared";
 import { Button } from "../design/Button.tsx";
+import { CheckField } from "../design/fields.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
 import { draftFromProfile, emptyDraft, profileFromDraft, type ProfileDraft } from "../profile/draft.ts";
 import { PreferenceFields } from "../profile/PreferenceFields.tsx";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
-import { exportProfileJson } from "../storage/repository.ts";
-import { StorageError } from "../storage/repository.ts";
+import { exportProfileJson, exportProfileText, StorageError } from "../storage/repository.ts";
 
 export function ProfilePage() {
   const { t, i18n } = useTranslation();
-  const { profile, ready, save, remove, setLanguage } = useProfileState();
+  const { profile, ready, save, remove, withdraw, setLanguage } = useProfileState();
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
   const [issues, setIssues] = useState<FieldIssue[]>([]);
-  const [status, setStatus] = useState<"idle" | "saved" | "deleted" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saved" | "deleted" | "withdrawn" | "error">("idle");
   const [confirming, setConfirming] = useState(false);
   const loaded = useRef(false);
+  const statusRef = useRef<HTMLParagraphElement>(null);
   useDocumentTitle(t("profile.title"));
 
   useEffect(() => {
@@ -31,6 +32,10 @@ export function ProfilePage() {
     const language = i18n.language.startsWith("fr") ? "fr" : "en";
     setDraft((current) => (current ? { ...current, language_preference: language } : current));
   }, [i18n.language]);
+
+  useEffect(() => {
+    if (status === "deleted" || status === "withdrawn") statusRef.current?.focus();
+  }, [status]);
 
   if (!draft) return <p role="status">{t("home.checking")}</p>;
 
@@ -58,16 +63,20 @@ export function ProfilePage() {
     }
   };
 
-  const onExport = () => {
-    if (!profile) return;
-    const blob = new Blob([exportProfileJson(profile)], { type: "application/json" });
+  const download = (filename: string, contents: string, type: string) => {
+    const blob = new Blob([contents], { type });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "the-app-preferences.json";
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  const consentError = issues.some((issue) => issue.field === "consent" || issue.field === "consent_records")
+    ? t("errors.consent_required")
+    : undefined;
+  const activeConsent = Boolean(profile?.consent_records.some((record) => record.withdrawn_at === null));
 
   return (
     <div className="stack">
@@ -80,7 +89,12 @@ export function ProfilePage() {
         </div>
       ) : null}
       {status === "saved" ? <p role="status">{t("profile.saved")}</p> : null}
-      {status === "deleted" ? <p role="status">{t("profile.deleted")}</p> : null}
+      {status === "deleted" ? (
+        <p role="status" tabIndex={-1} ref={statusRef}>{t("profile.deleted")}</p>
+      ) : null}
+      {status === "withdrawn" ? (
+        <p role="status" tabIndex={-1} ref={statusRef}>{t("profile.withdrawn")}</p>
+      ) : null}
       {status === "error" && issues.length === 0 ? <p role="alert">{t("profile.couldNotSave")}</p> : null}
       <form
         className="stack"
@@ -93,7 +107,14 @@ export function ProfilePage() {
           draft={draft}
           onChange={onChange}
           issues={issues}
-          sections={["language", "mobility", "timing", "display", "offline"]}
+          sections={["language", "mobility", "display", "offline"]}
+        />
+        <CheckField
+          label={t("profile.consent")}
+          description={t("profile.consentHelp")}
+          isSelected={draft.consent_granted}
+          onChange={(value) => onChange({ ...draft, consent_granted: value })}
+          error={consentError}
         />
         <div className="button-row">
           <Button type="submit">{t("profile.save")}</Button>
@@ -104,7 +125,26 @@ export function ProfilePage() {
         <h3>{t("profile.savedPlaces")}</h3>
         <p>{t("profile.savedPlacesBody")}</p>
         <div className="button-row">
-          <Button variant="secondary" onPress={onExport} isDisabled={!profile}>{t("profile.export")}</Button>
+          <Button variant="secondary" onPress={() => profile && download("the-app-preferences.txt", exportProfileText(profile), "text/plain")} isDisabled={!profile}>
+            {t("profile.export")}
+          </Button>
+          <Button variant="secondary" onPress={() => profile && download("the-app-preferences.json", exportProfileJson(profile), "application/json")} isDisabled={!profile}>
+            {t("profile.exportJson")}
+          </Button>
+          <Button
+            variant="secondary"
+            onPress={() => {
+              void withdraw().then((stored) => {
+                if (!stored) return;
+                setStatus("withdrawn");
+                setIssues([]);
+                setDraft(draftFromProfile(stored));
+              });
+            }}
+            isDisabled={!activeConsent}
+          >
+            {t("profile.withdraw")}
+          </Button>
           <Button variant="secondary" onPress={() => setConfirming(true)} isDisabled={!profile}>{t("profile.delete")}</Button>
         </div>
       </section>

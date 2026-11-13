@@ -3,13 +3,14 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { FieldIssue } from "@access/shared";
 import { Button } from "../design/Button.tsx";
+import { CheckField } from "../design/fields.tsx";
 import { emptyDraft, profileFromDraft, type ProfileDraft } from "../profile/draft.ts";
 import { labelFor, EQUIPMENT_OPTIONS, ROUTING_OPTIONS } from "../profile/options.ts";
 import { PreferenceFields } from "../profile/PreferenceFields.tsx";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 
-const STEPS = ["welcome", "language", "mobility", "timing", "display", "review"] as const;
+const STEPS = ["welcome", "language", "mobility", "display", "review"] as const;
 
 export function OnboardingPage() {
   const { t, i18n } = useTranslation();
@@ -46,7 +47,8 @@ export function OnboardingPage() {
     const built = profileFromDraft(draft, profile, new Date().toISOString());
     if (!built.profile) {
       setIssues(built.issues);
-      setStep(built.issues.some((issue) => issue.field.includes("washroom") || issue.field.includes("travel") || issue.field === "pressure_relief_reminder") ? 3 : 2);
+      const mobility = built.issues.some((issue) => issue.field.startsWith("chair") || issue.field === "region_preference");
+      setStep(mobility ? 2 : STEPS.length - 1);
       return;
     }
     await save(built.profile);
@@ -73,22 +75,21 @@ export function OnboardingPage() {
               <dd>{draft.equipment_type_general ? labelFor(t, EQUIPMENT_OPTIONS, draft.equipment_type_general) : t("onboarding.notSet")}</dd>
             </div>
             <div>
-              <dt>{t("profile.washroomGap")}</dt>
-              <dd>{draft.max_time_between_washrooms_min || t("onboarding.notSet")}</dd>
-            </div>
-            <div>
-              <dt>{t("profile.travelTime")}</dt>
-              <dd>{draft.max_continuous_travel_min || t("onboarding.notSet")}</dd>
-            </div>
-            <div>
               <dt>{t("profile.routing")}</dt>
               <dd>{draft.routing_preference ? labelFor(t, ROUTING_OPTIONS, draft.routing_preference) : t("onboarding.notSet")}</dd>
             </div>
           </dl>
           <p>{t("profile.privacy")}</p>
+          <CheckField
+            label={t("profile.consent")}
+            description={t("profile.consentHelp")}
+            isSelected={draft.consent_granted}
+            onChange={(value) => onChange({ ...draft, consent_granted: value })}
+            error={issues.some((issue) => issue.field === "consent") ? t("errors.consent_required") : undefined}
+          />
         </div>
       ) : null}
-      {current === "language" || current === "mobility" || current === "timing" || current === "display" ? (
+      {current === "language" || current === "mobility" || current === "display" ? (
         <PreferenceFields
           draft={draft}
           onChange={onChange}

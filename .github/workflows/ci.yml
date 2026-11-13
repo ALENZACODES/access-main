@@ -21,5 +21,5 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
-      - run: npm exec -w @access/web -- playwright install --with-deps chromium
+      - run: npm exec -w @access/web -- playwright install chromium
       - run: npm run test:e2e

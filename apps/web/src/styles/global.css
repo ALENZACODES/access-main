@@ -100,8 +100,7 @@ body {
 .header-bar,
 .nav-list,
 .site-main,
-.site-footer,
-.translation-note {
+.site-footer {
   width: min(72rem, calc(100vw - 2rem));
   max-width: calc(100vw - 2rem);
   margin-inline: auto;
@@ -188,11 +187,12 @@ body {
   padding: 0.75rem 1rem;
 }
 
-.translation-note { margin-top: 0.75rem; }
+.translation-note { margin: 0 0 0.75rem; }
 
 .site-main { padding-block: 1.25rem 2.5rem; }
 .site-main:focus { outline: none; }
 .site-main:focus-visible { outline: 3px solid var(--focus); }
+.site-main h1:focus { outline: 3px solid var(--focus); outline-offset: 3px; }
 
 .site-footer {
   padding-block: 1.25rem 2rem;

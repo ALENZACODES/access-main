@@ -7,6 +7,7 @@ import {
   ROUTING_PREFERENCES,
   TEXT_SIZES,
   TRANSFER_SIDES,
+  hasActiveConsent,
   parseOptionalInt,
   parseRegion,
   triState,
@@ -17,6 +18,7 @@ import {
   type RoutingPreference,
   type TextSize,
   type TransferSide,
+  type ConsentRecord,
   type UserProfile,
 } from "@access/shared";
 
@@ -28,9 +30,6 @@ export interface ProfileDraft {
   chair_length_mm: string;
   transfer_side_preference: string;
   attendant_travels: string;
-  max_time_between_washrooms_min: string;
-  max_continuous_travel_min: string;
-  pressure_relief_reminder: string;
   routing_preference: string;
   text_size_preference: TextSize;
   reduced_motion_preference: string;
@@ -39,6 +38,8 @@ export interface ProfileDraft {
   switch_or_voice_user: string;
   wifi_only: boolean;
   storage_limit_mb: string;
+  /** Explicit consent to keep the preferences on this device. Never implied. */
+  consent_granted: boolean;
 }
 
 export function emptyDraft(language: "en" | "fr"): ProfileDraft {
@@ -50,9 +51,6 @@ export function emptyDraft(language: "en" | "fr"): ProfileDraft {
     chair_length_mm: "",
     transfer_side_preference: "",
     attendant_travels: "",
-    max_time_between_washrooms_min: "",
-    max_continuous_travel_min: "",
-    pressure_relief_reminder: "",
     routing_preference: "",
     text_size_preference: "system",
     reduced_motion_preference: "",
@@ -61,6 +59,7 @@ export function emptyDraft(language: "en" | "fr"): ProfileDraft {
     switch_or_voice_user: "",
     wifi_only: true,
     storage_limit_mb: "",
+    consent_granted: false,
   };
 }
 
@@ -89,10 +88,6 @@ export function draftFromProfile(profile: UserProfile): ProfileDraft {
     chair_length_mm: profile.chair_length_mm === null ? "" : String(profile.chair_length_mm),
     transfer_side_preference: profile.transfer_side_preference ?? "",
     attendant_travels: triStateToDraft(profile.attendant_travels),
-    max_time_between_washrooms_min:
-      profile.max_time_between_washrooms_min === null ? "" : String(profile.max_time_between_washrooms_min),
-    max_continuous_travel_min: profile.max_continuous_travel_min === null ? "" : String(profile.max_continuous_travel_min),
-    pressure_relief_reminder: triStateToDraft(profile.pressure_relief_reminder),
     routing_preference: profile.routing_preference ?? "",
     text_size_preference: profile.text_size_preference,
     reduced_motion_preference: motionToDraft(profile.reduced_motion_preference),
@@ -104,6 +99,7 @@ export function draftFromProfile(profile: UserProfile): ProfileDraft {
       profile.offline_pack_preferences.storage_limit_mb === null
         ? ""
         : String(profile.offline_pack_preferences.storage_limit_mb),
+    consent_granted: hasActiveConsent(profile),
   };
 }
 
@@ -116,10 +112,9 @@ export function profileFromDraft(
   const region = parseRegion(draft.region_preference);
   const width = parseOptionalInt("chair_width_mm", draft.chair_width_mm, LIMITS.MAX_MM);
   const length = parseOptionalInt("chair_length_mm", draft.chair_length_mm, LIMITS.MAX_MM);
-  const washroom = parseOptionalInt("max_time_between_washrooms_min", draft.max_time_between_washrooms_min, LIMITS.MAX_MINUTES);
-  const travel = parseOptionalInt("max_continuous_travel_min", draft.max_continuous_travel_min, LIMITS.MAX_MINUTES);
   const storage = parseOptionalInt("storage_limit_mb", draft.storage_limit_mb, LIMITS.MAX_STORAGE_MB);
-  issues.push(...region.issues, ...width.issues, ...length.issues, ...washroom.issues, ...travel.issues, ...storage.issues);
+  issues.push(...region.issues, ...width.issues, ...length.issues, ...storage.issues);
+  if (!draft.consent_granted) issues.push({ field: "consent", code: "consent_required" });
   if (issues.length > 0) return { profile: null, issues };
 
   const equipment = asMember(draft.equipment_type_general, EQUIPMENT_TYPES);
@@ -130,6 +125,20 @@ export function profileFromDraft(
   if (draft.routing_preference && !routing) issues.push({ field: "routing_preference", code: "invalid_enum" });
   const textSize = asMember(draft.text_size_preference, TEXT_SIZES) ?? "system";
   if (issues.length > 0) return { profile: null, issues };
+
+  const previous = existing?.consent_records ?? [];
+  const active = previous.find((record) => record.withdrawn_at === null);
+  const consent_records: ConsentRecord[] = active
+    ? previous
+    : [
+        ...previous,
+        {
+          purpose: "store-preferences-on-device" as const,
+          policy_version: PRIVACY_POLICY_VERSION,
+          granted_at: nowIso,
+          withdrawn_at: null,
+        },
+      ];
 
   const profile: UserProfile = {
     record_type: "user_profile",
@@ -144,9 +153,6 @@ export function profileFromDraft(
     chair_length_mm: length.value,
     transfer_side_preference: transfer as TransferSide | null,
     attendant_travels: triState(draft.attendant_travels),
-    max_time_between_washrooms_min: washroom.value,
-    max_continuous_travel_min: travel.value,
-    pressure_relief_reminder: triState(draft.pressure_relief_reminder),
     routing_preference: routing as RoutingPreference | null,
     text_size_preference: textSize,
     reduced_motion_preference: motionFromDraft(draft.reduced_motion_preference),
@@ -157,14 +163,7 @@ export function profileFromDraft(
     offline_pack_preferences: { wifi_only: draft.wifi_only, storage_limit_mb: storage.value },
     saved_places: [],
     saved_trips: [],
-    consent_records: [
-      {
-        purpose: "store-preferences-on-device",
-        policy_version: PRIVACY_POLICY_VERSION,
-        granted_at: existing?.consent_records[0]?.granted_at ?? nowIso,
-        withdrawn_at: null,
-      },
-    ],
+    consent_records,
     created_at: existing?.created_at ?? nowIso,
     updated_at: nowIso,
   };

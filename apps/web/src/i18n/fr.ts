@@ -4,14 +4,14 @@ export const fr: Messages = {
   appName: "the App",
   skip: "Aller au contenu principal",
   prototypeBanner:
-    "Prototype. Un enregistrement est non vérifié tant qu'il n'affiche pas une source, une licence, une date et un niveau de vérification. L'inconnu reste inconnu.",
+    "Prototype. Chaque enregistrement est non vérifié. Chacun indique sa source, sa licence, sa date et son niveau de vérification. L'inconnu reste inconnu.",
   noEndorsement:
     "Aucune organisation, y compris Spinal Cord Injury Ontario, n'a approuvé the App.",
   noMedical: "the App ne donne pas de conseil médical, d'intervalle clinique, ni de décision d'admissibilité à une prestation.",
   noEligibility:
     "Les entrées du répertoire sont des liens vers des pages officielles. the App ne tranche pas l'admissibilité.",
   footer: {
-    prototype: "Prototype. Non vérifié tant que la source, la licence, la date et le niveau ne sont pas indiqués.",
+    prototype: "Prototype. Chaque enregistrement est non vérifié. La source, la licence, la date et le niveau l'accompagnent.",
     build: "Version {{id}}",
     contract: "Contrat de l'interface {{version}}",
     online: "En ligne",
@@ -26,7 +26,7 @@ export const fr: Messages = {
     journey: "Trajet",
     finders: "Recherche",
     navigator: "Répertoire",
-    games: "Activités",
+    games: "Jeux",
     help: "Aide",
     settings: "Réglages",
     data: "État des données",
@@ -44,7 +44,7 @@ export const fr: Messages = {
     lead: "Prototype d'accessibilité pour l'Ontario, pensé d'abord pour les personnes ayant une lésion médullaire. Projet indépendant.",
     setupTitle: "Préférences sur cet appareil",
     setupBody:
-      "Vous pouvez enregistrer un profil de mobilité et des contraintes de temps sur cet appareil. Aucun compte n'est requis, et l'interface ne les envoie nulle part.",
+      "Vous pouvez enregistrer un profil de mobilité sur cet appareil. Aucun compte n'est requis, et l'interface ne l'envoie nulle part.",
     setupLink: "Configurer sur cet appareil",
     skipSetup: "Continuer sans profil",
     hasProfile: "Les préférences sont enregistrées sur cet appareil.",
@@ -58,7 +58,7 @@ export const fr: Messages = {
     finders:
       "La recherche de toilettes, de stationnement, de recharge et de réparation ne prendra pas un indicateur municipal pour une mesure.",
     navigator: "Un répertoire de liens vers des services. Il ne tranche pas l'admissibilité à un programme.",
-    games: "Activités de bien-être. Pas une thérapie, pas une évaluation, et pas un conseil médical.",
+    games: "Carrefour de jeux. Pas une thérapie, pas une évaluation, et pas un conseil médical.",
     help: "Comment cette interface traite la vie privée, la langue et les enregistrements non vérifiés.",
     data: "Ce qui est stocké sur cet appareil, et ce qui ne l'est pas.",
   },
@@ -66,11 +66,11 @@ export const fr: Messages = {
     title: "À propos",
     lead: "the App est un prototype sans marque pour les déplacements et la vie quotidienne accessibles en Ontario.",
     local:
-      "Les préférences, y compris la mobilité et les durées, restent dans la mémoire de ce navigateur. Cette interface n'a pas de compte et n'envoie rien.",
+      "Les préférences, y compris les choix de mobilité, restent dans la mémoire de ce navigateur. Cette interface n'a pas de compte et n'envoie rien.",
     countsTitle: "Enregistrements dans cette interface",
     countsIntro: "Ces nombres sont lus sur cet appareil. Ils ne décrivent pas une couverture.",
     verified:
-      "Enregistrements marqués vérifiés par un module fournisseur : {{count}}. Cette interface ne vérifie pas les lieux.",
+      "Enregistrements stockés qui disent encore vérifiés : {{count}}. Ce prototype refuse cette étiquette.",
     frenchNote:
       "Le texte français de l'interface est une traduction provisoire. Il doit encore être révisé par une personne qualifiée. Au-delà de l'interface, le contenu est en anglais dans ce prototype.",
     audit:
@@ -125,18 +125,21 @@ export const fr: Messages = {
     limitNone: "aucun plafond",
     asOf: "En date du {{date}}",
     noAsOf: "Pas de date, parce que rien n'est en cache.",
+    refusedTiers:
+      "Le cache de ce prototype refuse le niveau 2, le niveau 3, le niveau 4, une étiquette signalée par la communauté et une étiquette vérifiée.",
   },
   tiers: {
     unknown: "Inconnu. L'enregistrement n'indique pas de niveau.",
     tier0: "Données ouvertes ou autre importation. Non mesuré par the App.",
     tier1: "Déclaré par un lieu ou un exploitant. Non mesuré par the App.",
-    tier2: "Signalement de la communauté. Pas une mesure complète.",
-    tier3: "Enregistrement mesuré, tel que fourni par le module qui l'a stocké.",
-    tier4: "État en direct. Cette interface ne conserve pas l'état en direct hors ligne.",
-    prototypeUnverified: "Donnée de prototype. Non vérifiée.",
-    seededOpenData: "Amorcé à partir de données ouvertes. Non mesuré par the App.",
-    communityReported: "Signalé par la communauté. Pas une mesure complète.",
-    verifiedClaim: "L'enregistrement fournisseur dit vérifié. Cette interface ne contrôle pas cette affirmation.",
+    tier2: "Signalement par un pair. Non stocké sur un enregistrement de prototype.",
+    tier3: "Relevé par une personne formée, avec des preuves. Non stocké sur un enregistrement de prototype.",
+    tier4: "Flux en direct. Cette interface ne conserve pas l'état en direct hors ligne.",
+    tierE: "Vérification au bureau d'une page officielle. Pas une décision d'admissibilité.",
+    prototypeUnverified: "Étiquette de prototype. L'enregistrement reste non vérifié.",
+    seededOpenData: "Amorcé à partir de données ouvertes. Pas une mesure de the App.",
+    communityReported: "Étiquette signalée par la communauté. Non stockée sur un enregistrement de prototype.",
+    verifiedClaim: "Étiquette vérifiée. Un enregistrement de prototype ne peut pas la porter.",
   },
   modules: {
     notConnected: "Cette partie de the App n'est pas encore branchée.",
@@ -147,32 +150,32 @@ export const fr: Messages = {
       "Les fiches de lieux afficheront une source, une licence, une date et un niveau de vérification sur chaque enregistrement. Rien n'est chargé. L'inconnu reste inconnu.",
     journeyTitle: "Trajet",
     journeyBody:
-      "La planification de porte à porte pour les déplacements en Ontario n'est pas branchée. Les contraintes de temps des réglages restent sur cet appareil et ne sont envoyées nulle part. L'état des ascenseurs en direct n'est pas disponible. Un plan hors ligne, quand il existera, affichera une date.",
+      "La planification de porte à porte pour les déplacements en Ontario n'est pas branchée. Les préférences d'itinéraire des réglages restent sur cet appareil et ne sont envoyées nulle part. L'état des ascenseurs en direct n'est pas disponible. Un plan hors ligne, quand il existera, affichera une date.",
     findersTitle: "Recherche",
     findersBody:
       "Les toilettes, le stationnement, la recharge, la réparation et les tables à langer pour adultes ne sont pas listés, parce qu'aucun enregistrement n'est chargé. Un indicateur municipal d'accessibilité n'est pas une mesure de l'espace de rotation, du côté de transfert ou d'un lève-personne.",
     navigatorTitle: "Répertoire de services",
     navigatorBody:
       "Le répertoire mènera vers des pages officielles de programmes et indiquera la date du lien. Il ne tranche pas l'admissibilité. Rien n'est copié ici depuis un site de prestations.",
-    gamesTitle: "Activités",
+    gamesTitle: "Jeux",
     gamesBody:
-      "Les activités de bien-être pour la mémoire, l'attention et l'enchaînement ne sont pas branchées. Elles ne sont pas une thérapie, pas un test de capacité, et pas un conseil médical. Les activités qui clignotent sont hors du cadre.",
+      "Le carrefour de jeux n'est pas branché. Les jeux ne sont pas une thérapie, pas un test de capacité, et pas un conseil médical. Les jeux qui clignotent sont hors du cadre.",
     helpTitle: "Aide",
     helpArticles: "Les articles du centre d'aide ne sont pas encore branchés.",
   },
   help: {
     privacyTitle: "Où vont les préférences",
     privacyBody:
-      "La mobilité et les durées restent dans ce navigateur. Vous pouvez les exporter ou les supprimer dans les réglages. the App ne demande pas votre position quand vous enregistrez les réglages.",
+      "Les préférences de mobilité restent dans ce navigateur. Vous pouvez les exporter ou les supprimer dans les réglages. the App ne demande pas votre position quand vous enregistrez les réglages.",
     tiersTitle: "Ce que signifie non vérifié",
     tiersBody:
-      "Un nom sur une carte n'est pas une promesse. Tant qu'un enregistrement n'affiche pas une source, une licence, une date et un niveau, traitez-le comme inconnu.",
+      "Un nom sur une carte n'est pas une promesse. Chaque enregistrement de prototype est non vérifié. La source, la licence, la date et le niveau disent d'où vient un fait. Ils ne le rendent pas vérifié. L'inconnu reste inconnu.",
     languageTitle: "Langue",
     languageBody:
       "L'anglais et le français sont disponibles pour l'interface. Le texte français est une traduction provisoire en attente de révision. Changez la langue dans l'en-tête. Le choix reste dans ce navigateur.",
     adviceTitle: "Ce que the App ne dira pas",
     adviceBody:
-      "the App ne donne pas de conseil médical et ne décide pas de l'admissibilité aux prestations. Les champs de durée contiennent seulement ce que vous écrivez.",
+      "the App ne donne pas de conseil médical et ne décide pas de l'admissibilité aux prestations.",
   },
   onboarding: {
     title: "Configurer sur cet appareil",
@@ -186,7 +189,6 @@ export const fr: Messages = {
       "Vous pouvez répondre autant ou aussi peu que vous voulez. Un champ vide n'enregistre rien pour ce champ. Il n'y a pas de compte.",
     languageTitle: "Langue",
     mobilityTitle: "Mobilité",
-    timingTitle: "Durées",
     displayTitle: "Affichage",
     reviewTitle: "Revue",
     reviewLead: "Voici ce qui sera enregistré sur cet appareil. Les champs vides restent vides.",
@@ -199,7 +201,12 @@ export const fr: Messages = {
       "the App ne demande pas votre position sur cette page. Il n'enregistre pas de diagnostic, de niveau de lésion, ni d'historique de position.",
     save: "Enregistrer sur cet appareil",
     saved: "Enregistré sur cet appareil. Rien n'a été envoyé.",
-    export: "Exporter les préférences",
+    export: "Exporter les préférences en texte",
+    exportJson: "Exporter les préférences en JSON",
+    consent: "Enregistrer ces préférences sur cet appareil seulement",
+    consentHelp: "Rien n'est envoyé. Vous pouvez retirer ce consentement sur cette page.",
+    withdraw: "Retirer le consentement",
+    withdrawn: "Le consentement a été retiré. Les préférences saisies ont été effacées sur cet appareil. Rien n'a été envoyé.",
     delete: "Supprimer les préférences",
     deleteTitle: "Supprimer les préférences sur cet appareil ?",
     deleteBody:
@@ -210,13 +217,9 @@ export const fr: Messages = {
     couldNotSave: "Les préférences n'ont pas pu être enregistrées sur cet appareil.",
     sectionLanguage: "Langue",
     sectionMobility: "Mobilité",
-    sectionTiming: "Contraintes de temps",
     sectionDisplay: "Affichage",
     sectionOffline: "Téléchargements futurs",
     sectionData: "Vos données sur cet appareil",
-    timingDisclaimer:
-      "Ces durées sont celles que vous indiquez. the App ne propose pas d'intervalle clinique et ne donne pas de conseil médical. Choisissez-les avec un clinicien ou selon votre expérience, ou laissez les champs vides.",
-    pressureHelp: "Un rappel n'est qu'un interrupteur que vous choisissez. the App ne fixe pas d'intervalle de soulagement de pression.",
     equipmentHelp:
       "Facultatif. Utilisé seulement sur cet appareil pour filtrer plus tard. Ce n'est pas une étiquette de ce que vous pouvez faire.",
     dimensionsHelp:
@@ -226,13 +229,10 @@ export const fr: Messages = {
       "Facultatif. Un nom de lieu que vous écrivez, pas votre position en direct. N'entrez pas de numéro de téléphone ni d'adresse courriel.",
     width: "Largeur du fauteuil en millimètres",
     length: "Longueur du fauteuil en millimètres",
-    washroomGap: "Durée maximale entre les toilettes, en minutes",
-    travelTime: "Déplacement continu maximal, en minutes",
     blankOk: "Laissez vide pour ne rien enregistrer.",
     equipment: "Équipement",
     transfer: "Côté du transfert",
     attendant: "Une personne accompagnatrice voyage habituellement avec moi",
-    pressure: "Interrupteur de rappel personnel",
     routing: "Préférence d'itinéraire",
     textSize: "Taille du texte",
     motion: "Mouvement",
@@ -284,6 +284,7 @@ export const fr: Messages = {
     too_long: "Utilisez un nom de municipalité ou de région plus court.",
     looks_like_contact: "Entrez une municipalité ou une région. N'entrez pas de numéro de téléphone, d'adresse courriel ou d'adresse web.",
     generic: "Vérifiez cette valeur.",
+    consent_required: "Le consentement est requis avant d'enregistrer ces préférences. Cochez la case, ou quittez la page sans enregistrer.",
   },
   update: {
     region: "Mise à jour",

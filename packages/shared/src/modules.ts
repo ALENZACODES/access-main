@@ -1,3 +1,4 @@
+import type { DirectoryRecord } from "./directory.ts";
 import type { Provenance } from "./provenance.ts";
 import type { RoutingPreference, UserProfile } from "./profile.ts";
 
@@ -14,7 +15,7 @@ import type { RoutingPreference, UserProfile } from "./profile.ts";
 export const MODULE_IDS = ["places", "journey", "finders", "navigator", "games", "help"] as const;
 export type ModuleId = (typeof MODULE_IDS)[number];
 
-export const SHELL_CONTRACT_VERSION = "1.0.0";
+export const SHELL_CONTRACT_VERSION = "1.1.0";
 
 export interface ModuleContext {
   locale: "en" | "fr";
@@ -61,10 +62,6 @@ export interface PlacesModule {
 export interface JourneyRequest {
   originLabel: string | null;
   destinationLabel: string | null;
-  timing: {
-    maxTimeBetweenWashroomsMin: number | null;
-    maxContinuousTravelMin: number | null;
-  } | null;
   routingPreference: RoutingPreference | null;
   offline: boolean;
 }
@@ -98,13 +95,8 @@ export interface FindersModule {
   search(query: { kind: FinderKind; text: string }, ctx: ModuleContext): Promise<ModuleResult<FinderHit>>;
 }
 
-export interface DirectoryEntry {
-  id: string;
-  title: string;
-  officialUrl: string;
-  provenance: Provenance;
-  eligibilityAdvice: false;
-}
+/** Same object the navigator package stores. Provenance tier for a stored copy is E. */
+export type DirectoryEntry = DirectoryRecord;
 
 export interface NavigatorModule {
   id: "navigator";
@@ -114,7 +106,7 @@ export interface NavigatorModule {
 export interface ActivityDefinition {
   id: string;
   title: string;
-  /** Wellbeing activity. Not therapy and not an assessment. */
+  /** A game in the games hub. Not therapy and not an assessment. */
   clinicalClaim: false;
   seizureRiskFlash: false;
   keyboardOperable: true;

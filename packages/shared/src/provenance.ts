@@ -1,4 +1,10 @@
-import { isLiveTier, isVerificationTier, type VerificationTier } from "./tiers.ts";
+import {
+  canonicalTierFromForeign,
+  isPrototypeLabel,
+  prototypeTierRefusal,
+  type CanonicalTierId,
+  type PrototypeLabel,
+} from "./tiers.ts";
 
 export interface Provenance {
   source_name: string;
@@ -9,7 +15,10 @@ export interface Provenance {
   source_date: string;
   /** ISO date-time when this copy was stored. */
   retrieved_at: string;
-  verification_tier: VerificationTier;
+  /** Canonical tier id from packages/schema/TIERS.md. */
+  tier: CanonicalTierId;
+  /** Display label. Prototype cache allows only PROTOTYPE-UNVERIFIED and SEEDED-OPEN-DATA. */
+  prototype_label: PrototypeLabel | null;
   freshness: "unknown" | "current" | "stale";
 }
 
@@ -18,7 +27,8 @@ export interface FieldIssue {
   code: string;
 }
 
-const FORBIDDEN_KEY = /^(diagnosis|injurylevel|ais|aisgrade|completeness|bladder|bowel|prescription|medication|medications|healthcard|ohip|locationhistory|password|token|apikey|secret)$/;
+const FORBIDDEN_KEY =
+  /^(diagnosis|injurylevel|ais|aisgrade|completeness|bladder|bowel|prescription|medication|medications|healthcard|ohip|locationhistory|password|token|apikey|secret|maxtimebetweenwashroomsmin|maxcontinuoustravelmin|pressurereliefreminder|pressurerelief)$/;
 
 export function normaliseKey(key: string): string {
   return key.toLowerCase().replace(/[_-]/g, "");
@@ -59,10 +69,29 @@ export function validateProvenance(provenance: Provenance | undefined, fieldPref
   if (!provenance.retrieved_at || !isIsoDate(provenance.retrieved_at)) {
     issues.push({ field: `${fieldPrefix}.retrieved_at`, code: "invalid_date" });
   }
-  if (!isVerificationTier(provenance.verification_tier)) {
-    issues.push({ field: `${fieldPrefix}.verification_tier`, code: "invalid_tier" });
-  } else if (isLiveTier(provenance.verification_tier)) {
-    issues.push({ field: `${fieldPrefix}.verification_tier`, code: "live_status_not_cached" });
+  const rawTier = provenance.tier as unknown;
+  if (rawTier === "VERIFIED") {
+    issues.push({ field: `${fieldPrefix}.tier`, code: "verified_not_in_prototype" });
+  } else if (rawTier === "COMMUNITY-REPORTED" || rawTier === "UNKNOWN" || rawTier === "unknown") {
+    issues.push({ field: `${fieldPrefix}.tier`, code: rawTier === "COMMUNITY-REPORTED" ? "tier_not_in_prototype" : "invalid_tier" });
+  }
+  const tier = canonicalTierFromForeign(rawTier);
+  if (tier === null) {
+    if (!issues.some((issue) => issue.field === `${fieldPrefix}.tier`)) {
+      issues.push({ field: `${fieldPrefix}.tier`, code: "invalid_tier" });
+    }
+  }
+  let label: PrototypeLabel | null = null;
+  if (provenance.prototype_label === null) {
+    label = null;
+  } else if (isPrototypeLabel(provenance.prototype_label)) {
+    label = provenance.prototype_label;
+  } else {
+    issues.push({ field: `${fieldPrefix}.prototype_label`, code: "invalid_tier" });
+  }
+  if (tier !== null) {
+    const refusal = prototypeTierRefusal(tier, label);
+    if (refusal) issues.push({ field: `${fieldPrefix}.tier`, code: refusal });
   }
   if (provenance.freshness !== "unknown" && provenance.freshness !== "current" && provenance.freshness !== "stale") {
     issues.push({ field: `${fieldPrefix}.freshness`, code: "invalid_enum" });

@@ -1,4 +1,4 @@
-import { Component, type ReactNode } from "react";
+import { Component, useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { SHELL_CONTRACT_VERSION } from "@access/shared";
@@ -57,7 +57,23 @@ export function AppShell() {
   const online = useOnline();
   const location = useLocation();
   const language = i18n.language.startsWith("fr") ? "fr" : "en";
+  const skipRouteFocus = useRef(true);
   useApplyPreferences(profile, language);
+
+  useEffect(() => {
+    if (skipRouteFocus.current) {
+      skipRouteFocus.current = false;
+      return;
+    }
+    const main = document.getElementById("main");
+    const heading = main?.querySelector("h1");
+    if (heading instanceof HTMLElement) {
+      heading.tabIndex = -1;
+      heading.focus();
+      return;
+    }
+    if (main instanceof HTMLElement) main.focus();
+  }, [location.pathname]);
 
   return (
     <>
@@ -84,8 +100,8 @@ export function AppShell() {
           </ul>
         </nav>
       </header>
-      {language === "fr" ? <p className="translation-note" role="note">{t("language.provisional")}</p> : null}
       <main id="main" tabIndex={-1} className="site-main">
+        {language === "fr" ? <p className="translation-note" role="note">{t("language.provisional")}</p> : null}
         <p className="prototype-banner" role="note">{t("prototypeBanner")}</p>
         <UpdatePrompt />
         <Boundary resetKey={location.pathname}>

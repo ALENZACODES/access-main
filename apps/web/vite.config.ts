@@ -15,7 +15,7 @@ export default defineConfig({
       manifest: {
         name: "the App",
         short_name: "the App",
-        description: "Prototype. Records are unverified unless a source, licence, date, and verification tier are shown.",
+        description: "Prototype. Every record is unverified. Each shows its source, licence, date, and verification tier.",
         theme_color: "#083734",
         background_color: "#f4f1ea",
         display: "standalone",

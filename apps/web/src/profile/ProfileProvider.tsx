@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { UserProfile } from "@access/shared";
 import { applyLanguage, languageWasChosen, type AppLanguage } from "../i18n/index.ts";
-import { deleteProfile, getProfile, saveProfile, storageHealth, updateProfileLanguage } from "../storage/repository.ts";
+import { deleteProfile, getProfile, saveProfile, storageHealth, updateProfileLanguage, withdrawStoredConsent } from "../storage/repository.ts";
 
 interface ProfileState {
   profile: UserProfile | null;
@@ -10,6 +10,7 @@ interface ProfileState {
   refresh: () => Promise<void>;
   save: (profile: UserProfile) => Promise<void>;
   remove: () => Promise<void>;
+  withdraw: () => Promise<UserProfile | null>;
   setLanguage: (language: AppLanguage) => Promise<void>;
 }
 
@@ -45,6 +46,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   }, []);
 
+  const withdraw = useCallback(async () => {
+    const stored = await withdrawStoredConsent(new Date().toISOString());
+    setProfile(stored);
+    return stored;
+  }, []);
+
   const setLanguage = useCallback(async (language: AppLanguage) => {
     await applyLanguage(language, true);
     await updateProfileLanguage(language, new Date().toISOString());
@@ -53,8 +60,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ profile, ready, health, refresh, save, remove, setLanguage }),
-    [profile, ready, health, refresh, save, remove, setLanguage],
+    () => ({ profile, ready, health, refresh, save, remove, withdraw, setLanguage }),
+    [profile, ready, health, refresh, save, remove, withdraw, setLanguage],
   );
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
