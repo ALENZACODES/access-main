@@ -1,0 +1,8 @@
+{
+  "record_type": "game_session",
+  "schema_version": "game-session-1.0.0",
+  "id": "example-session",
+  "game_name": "Grid Recall",
+  "storage": "local_device_only",
+  "score_note": "scores are not a health or cognition measure"
+}

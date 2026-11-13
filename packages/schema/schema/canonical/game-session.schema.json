@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/game-session.schema.json",
+  "title": "Game session",
+  "description": "A local session. Scores are not a health or cognition measure.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "game_name",
+    "storage",
+    "score_note"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "game_session"
+    },
+    "schema_version": {
+      "const": "game-session-1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "game_name": {
+      "enum": [
+        "Grid Recall",
+        "Pair Sequence",
+        "Route Planner",
+        "Pattern Rules",
+        "Word Roots Builder",
+        "Number Compare",
+        "Focus Flankers",
+        "Switch Rules",
+        "Shape Assembly",
+        "Order Keeper"
+      ]
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "timing_mode_used": {
+      "type": "string"
+    },
+    "completed": {
+      "type": "boolean"
+    },
+    "storage": {
+      "const": "local_device_only"
+    },
+    "score_note": {
+      "const": "scores are not a health or cognition measure"
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/game-definition-set.schema.json",
+  "title": "Ten starter games",
+  "type": "array",
+  "minItems": 10,
+  "maxItems": 10,
+  "items": {
+    "$ref": "https://access-main.local/schema/canonical/game-definition.schema.json"
+  },
+  "allOf": [
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Grid Recall"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Pair Sequence"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Route Planner"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Pattern Rules"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Word Roots Builder"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Number Compare"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Focus Flankers"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Switch Rules"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Shape Assembly"
+          }
+        }
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "const": "Order Keeper"
+          }
+        }
+      }
+    }
+  ]
+}

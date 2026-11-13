@@ -1,0 +1,243 @@
+{
+  "id": "osm:way/333112785",
+  "tranche": "path",
+  "region": "n51.0_w090.5",
+  "fields": {
+    "kind": {
+      "value": "path",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0,
+      "source_key": "highway"
+    },
+    "footway": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "foot": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "surface": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "smoothness": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "incline": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "width": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "kerb": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "tactile_paving": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "lit": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "wheelchair": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "wheelchair_description": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "step_count": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "handrail": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "access": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "length_m": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "max_slope": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "min_width": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "stair_count": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "from_ref": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "to_ref": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "geometry": {
+      "value": [
+        [
+          -90.293552,
+          51.453515
+        ],
+        [
+          -90.293391,
+          51.453559
+        ]
+      ],
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0,
+      "source_key": "geometry"
+    },
+    "geometry_type": {
+      "value": "LineString",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0,
+      "source_key": "geometry"
+    },
+    "crossing": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "pathway_mode": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "bidirectional": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "oneway": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "traversal_time_s": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "signposted_as": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "reversed_signposted_as": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "ramp": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "indoor": {
+      "value": "UNKNOWN",
+      "source_id": "osm-ontario",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

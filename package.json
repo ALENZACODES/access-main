@@ -1,0 +1,27 @@
+{
+  "name": "access-main",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "App shell for the unbranded Ontario accessibility app. Shared JSON Schema lives in @access-main/schema.",
+  "workspaces": [
+    "packages/schema"
+  ],
+  "exports": {
+    "./schema": "./packages/schema/dist/index.js"
+  },
+  "scripts": {
+    "test": "npm test --workspace @access-main/schema",
+    "build": "npm run build --workspace @access-main/schema",
+    "validate": "npm run validate --workspace @access-main/schema --",
+    "count": "npm run count --workspace @access-main/schema --"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}

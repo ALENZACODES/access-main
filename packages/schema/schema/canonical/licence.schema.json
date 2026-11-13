@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/licence.schema.json",
+  "title": "Licence",
+  "description": "One licence in the register. Attribution text is stored. This row is provenance, not a data piece.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "url",
+    "attribution",
+    "confirmation_status",
+    "confirmed_on"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "url": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attribution": {
+      "type": "string",
+      "minLength": 1
+    },
+    "share_alike": {
+      "type": "boolean"
+    },
+    "confirmation_status": {
+      "enum": [
+        "confirmed",
+        "pending"
+      ]
+    },
+    "confirmed_on": {
+      "type": "string",
+      "format": "date"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "record_type": "charging",
+  "schema_version": "charging-1.0.0",
+  "id": "example-charging",
+  "place_id": "example-place",
+  "record_status": "draft",
+  "publication_context": "prototype",
+  "example": true,
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  },
+  "facts": {
+    "charging_present": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "connector_type": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "plug_type": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "record_type": "outage",
+  "schema_version": "outage-1.0.0",
+  "id": "example-outage",
+  "asset_id": "example-elevator",
+  "record_status": "draft",
+  "publication_context": "prototype",
+  "example": true,
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  },
+  "facts": {
+    "status": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "reported_at": {
+      "value": "2026-11-13T15:00:00Z",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "received_at": {
+      "value": "2026-11-13T15:01:00Z",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "expires_at": {
+      "value": "2026-11-13T18:00:00Z",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

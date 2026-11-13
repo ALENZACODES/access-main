@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/repair_supply.schema.json",
+  "title": "Repair and supply",
+  "description": "A directory entry for repair, parts, pharmacy, or supply. Linking and hours only. No eligibility, no prescription, and no recommendation. Part 1 section 5.2 repair and supply proximity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "record_status",
+    "publication_context",
+    "provenance"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "repair_supply"
+    },
+    "example": {
+      "type": "boolean",
+      "description": "True on a synthetic fixture. The counter excludes example records from the headline."
+    },
+    "publication_context": {
+      "enum": [
+        "canonical",
+        "prototype"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://access-main.local/schema/common/provenance.schema.json"
+    },
+    "id": {
+      "description": "Stable id. Does not count.",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "repair-supply-1.0.0",
+      "description": "Schema version. Does not count."
+    },
+    "record_status": {
+      "description": "Publication status. Does not count.",
+      "enum": [
+        "draft",
+        "in_review",
+        "published",
+        "stale_flagged",
+        "archived",
+        "disputed"
+      ]
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name_en": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Published name.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "name_fr": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "French name where published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "service_kind": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "What the listing is. pharmacy is a directory category, not a clinical recommendation.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "repair",
+                    "parts",
+                    "pharmacy",
+                    "supply",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hours": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Published hours.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "mobile_service": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether mobile service is published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "out_of_hours": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether out-of-hours availability is published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "phone": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Public phone.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "official_url": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Official page.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "address": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Published address or service area.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "latitude": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Latitude when the source publishes one.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "longitude": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Longitude when the source publishes one.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "Plan fields. Absent means not collected. unknown means collected as unknown."
+    },
+    "imported_facts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+      },
+      "description": "Original access-maps keys that have no safe canonical rename. Counted once. Not a second copy of facts."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publication_context": {
+            "const": "prototype"
+          }
+        },
+        "required": [
+          "publication_context"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "required": [
+              "prototype_label"
+            ],
+            "properties": {
+              "prototype_label": {
+                "enum": [
+                  "PROTOTYPE-UNVERIFIED",
+                  "SEEDED-OPEN-DATA"
+                ]
+              },
+              "tier": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_status": {
+            "const": "published"
+          }
+        },
+        "required": [
+          "record_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": [
+              "name_en",
+              "service_kind"
+            ],
+            "properties": {
+              "name_en": true,
+              "service_kind": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

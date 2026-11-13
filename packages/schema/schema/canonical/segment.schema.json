@@ -1,0 +1,649 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/segment.schema.json",
+  "title": "Segment",
+  "description": "One sidewalk, path, crossing, trail, or indoor route. Winter freshness is not inherited from a summer observation. Computed routing cost does not count. Part 3 section 3.9 segment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "record_status",
+    "publication_context",
+    "provenance"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "segment"
+    },
+    "example": {
+      "type": "boolean",
+      "description": "True on a synthetic fixture. The counter excludes example records from the headline."
+    },
+    "publication_context": {
+      "enum": [
+        "canonical",
+        "prototype"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://access-main.local/schema/common/provenance.schema.json"
+    },
+    "id": {
+      "description": "Stable segment id. Does not count.",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "segment-1.0.0",
+      "description": "Schema version. Does not count."
+    },
+    "record_status": {
+      "description": "Publication status. Does not count.",
+      "enum": [
+        "draft",
+        "in_review",
+        "published",
+        "stale_flagged",
+        "archived",
+        "disputed"
+      ]
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "routing_cost_version": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Cost-function version. Derived product marker. Does not count.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "segment_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Segment type.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "sidewalk",
+                    "path",
+                    "crossing",
+                    "trail",
+                    "indoor_route",
+                    "ramp",
+                    "bridge",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "surface_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Surface type.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "asphalt",
+                    "concrete",
+                    "pavers",
+                    "gravel",
+                    "grass",
+                    "wood",
+                    "tile",
+                    "carpet",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "surface_condition": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Surface condition with a date on the fact.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "good",
+                    "fair",
+                    "poor",
+                    "damaged",
+                    "unknown_recorded",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "width_min_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Minimum clear width, measured or imported with the import method named on the fact.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "gradient_max_percent": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Maximum gradient. Derived slopes stay derived and do not count twice.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "percent"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "gradient_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Gradient profile, rest landings, and steep sections.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kerb_ramp_start": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Kerb ramp at the start of the segment.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "present",
+                    "absent",
+                    "blocked",
+                    "unknown_recorded",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kerb_ramp_end": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Kerb ramp at the end of the segment.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "present",
+                    "absent",
+                    "blocked",
+                    "unknown_recorded",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "kerb_ramp_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Ramp widths, slopes, and tactile paving as observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "obstacles": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Recurring obstacles with dates.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "construction_flag": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Active construction or closure. Needs an expiry and does not outlive it.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "construction_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Detour, dates, source, and expiry.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "snow_status": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Snow status. A summer verification is not a winter status.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "cleared",
+                    "partially_cleared",
+                    "blocked",
+                    "unknown_recorded",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "snow_status_date": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "When the snow status was observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "snow_source": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Who reported the snow status.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "municipal_data",
+                    "user_report",
+                    "verifier",
+                    "unknown_recorded",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "rest_opportunity": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Seating, shelter, or a rest area on the segment.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "shade_shelter_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Shade, shelter, and lighting.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "osm_way_id": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "OSM way id when the geometry comes from OSM. ODbL provenance stays on the fact.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "geometry_geojson": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "LineString coordinates as a JSON string. One piece for the geometry, not one piece per vertex. Routing costs computed from it do not count.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "Plan fields. Absent means not collected. unknown means collected as unknown."
+    },
+    "imported_facts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+      },
+      "description": "Original access-maps keys that have no safe canonical rename. Counted once. Not a second copy of facts."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publication_context": {
+            "const": "prototype"
+          }
+        },
+        "required": [
+          "publication_context"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "required": [
+              "prototype_label"
+            ],
+            "properties": {
+              "prototype_label": {
+                "enum": [
+                  "PROTOTYPE-UNVERIFIED",
+                  "SEEDED-OPEN-DATA"
+                ]
+              },
+              "tier": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "record_type": "elevator_asset",
+  "schema_version": "elevator-asset-1.0.0",
+  "id": "example-elevator",
+  "record_status": "draft",
+  "publication_context": "prototype",
+  "example": true,
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  },
+  "facts": {
+    "asset_kind": {
+      "value": "elevator",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "operator_name": {
+      "value": "Example operator, not a real agency",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "car_width_mm": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "door_clear_width_mm": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "single_point_of_failure": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

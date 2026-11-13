@@ -1,0 +1,2346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/canonical/place.schema.json",
+  "title": "Place",
+  "description": "Parent record for a venue, facility, park, trailhead, or station building. Entrance, washroom, and parking measurements are child records and are not stored here. Part 3 section 3.6, Table T3-16.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "id",
+    "record_status",
+    "publication_context",
+    "provenance"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "place"
+    },
+    "example": {
+      "type": "boolean",
+      "description": "True on a synthetic fixture. The counter excludes example records from the headline."
+    },
+    "publication_context": {
+      "enum": [
+        "canonical",
+        "prototype"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://access-main.local/schema/common/provenance.schema.json"
+    },
+    "id": {
+      "description": "Stable identifier. Never reused. Does not count.",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "place-1.0.0",
+      "description": "Schema version. Does not count."
+    },
+    "protocol_version": {
+      "description": "Measurement protocol version. Does not count.",
+      "type": "string"
+    },
+    "record_version": {
+      "description": "Increments on each published change. Does not count.",
+      "type": "number"
+    },
+    "record_status": {
+      "description": "draft, in_review, published, stale_flagged, archived, or disputed. Does not count.",
+      "enum": [
+        "draft",
+        "in_review",
+        "published",
+        "stale_flagged",
+        "archived",
+        "disputed"
+      ]
+    },
+    "photo_evidence_summary": {
+      "description": "Computed from photograph records. Does not count.",
+      "type": "string"
+    },
+    "linked_entrance_ids": {
+      "description": "Entrance record ids. Does not count.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_washroom_ids": {
+      "description": "Washroom record ids. Does not count.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_parking_ids": {
+      "description": "Parking record ids. Does not count.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_segment_ids": {
+      "description": "Approach segment ids. Does not count.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_transit_stop_ids": {
+      "description": "Transit stop ids. Does not count.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification_tier_summary": {
+      "description": "Optional computed summary. The stored field tiers are authoritative. Does not count.",
+      "type": "string"
+    },
+    "last_verified_date": {
+      "description": "Optional computed date. Does not count.",
+      "type": "string",
+      "format": "date"
+    },
+    "verification_method_summary": {
+      "description": "Optional computed method summary. Does not count.",
+      "type": "string"
+    },
+    "stale_flag": {
+      "description": "Optional computed stale flag. Freshness is evaluated by the counter. Does not count.",
+      "type": "boolean"
+    },
+    "created_at": {
+      "description": "Creation timestamp. Does not count.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "description": "Modification timestamp. Does not count.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by_role": {
+      "description": "Creator role only. No personal identifier. Does not count.",
+      "enum": [
+        "verifier",
+        "moderator",
+        "importer",
+        "administrator",
+        "peer"
+      ]
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name_en": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Official English name as published by the venue or operator.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "name_fr": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Official French name where it exists. A translation of name_en does not add a second piece.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "former_names": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Former names with dates. One piece when the array is populated.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "also_known_as": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Search aliases. One piece when populated.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "category_primary": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Primary category as published. The controlled list is versioned and is not closed in this schema, because the plan does not publish the list and a closed list would force relabelled categories.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "category_secondary": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Secondary categories. One piece when populated.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "place_type": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Place type from the plan. Not inferred from an amenity tag during migration.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "venue",
+                    "facility",
+                    "park",
+                    "trailhead",
+                    "station_building",
+                    "healthcare",
+                    "retail",
+                    "hospitality",
+                    "education",
+                    "government",
+                    "recreation",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "address_street": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Street address, including unit where it is already one published string.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "address_city": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "City, town, or community name.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "municipality_lower_tier": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Lower-tier municipality where applicable.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "municipality_upper_tier": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Upper-tier municipality or region where applicable.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "postal_code": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Postal code as published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "latitude": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Latitude in WGS84 decimal degrees.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "longitude": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Longitude in WGS84 decimal degrees.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "location_accuracy_m": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Estimated accuracy in metres, with method.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "m"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "geocode_source": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "How the coordinate was obtained.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "field_gps",
+                    "osm",
+                    "municipal_open_data",
+                    "operator_data",
+                    "manual",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "geocode_date": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Date the location was determined or last checked.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "phone_main": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Main public phone number.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "phone_accessibility": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Accessibility or assistance phone, where published separately.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "email_public": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Public email address.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "website_url": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Official website.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "accessibility_page_url": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Venue accessibility page, where published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hours_general": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "General opening hours as published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hours_accessibility_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Hours that differ for the accessible entrance or route.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "admission_cost": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Admission cost or free status as published. Not pricing advice.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "booking_required": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether booking or advance notice is required.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "booking_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Booking method and lead time where booking is required.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "general_access_summary": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Factual summary written from measurements. Not a bare accessible label.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "step_free_route_exists": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether a step-free route to the main activity was observed. Never assumed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "step_free_route_description": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Description of the step-free route, including a side or rear entrance where that is the route.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "accessible_entrance_location": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Where the step-free entrance is relative to the street and the main entrance.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "entrance_count_total": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Count of public entrances observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "entrance_count_step_free": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Count of step-free public entrances observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "lift_or_elevator_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether a lift or elevator serves public areas.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "lift_or_elevator_details": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Lift location, floors served, and operator. Elevator assets are separate records.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "platform_lift_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether a platform lift was observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "ramp_present_general": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether a ramp serves the main access route. Ramp measurements live on the entrance.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "interior_path_min_width_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Minimum clear interior path width, measured.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "interior_turning_space_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Clear turning diameter in key interior areas, measured.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "unit"
+                    ],
+                    "properties": {
+                      "unit": {
+                        "const": "mm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "interior_floor_surface": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Primary interior floor surface as observed.",
+              "properties": {
+                "value": {
+                  "enum": [
+                    "tile",
+                    "carpet",
+                    "wood",
+                    "concrete",
+                    "other",
+                    "unknown",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "interior_floor_obstructions": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Recurring obstructions as observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "seating_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether seating is available in public areas.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "seating_types": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Seating types, armrests, back support, and space for a wheelchair alongside.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "wheelchair_spaces_count": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Designated wheelchair spaces as observed or as published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "wheelchair_spaces_location": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Location and sightline note for wheelchair spaces.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "counter_heights_mm": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Service counter heights in millimetres, including a lowered section where present.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "counter_knee_clearance": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Knee clearance at a lowered counter, height and depth, measured.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "till_or_service_desk_access": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Access note for tills, desks, and reception, including the queue.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "changing_facilities_general": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "General changing note. Adult change and hoist fields live on the washroom.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "baby_change_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Baby changing, distinct from an adult change table.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hearing_loop_present": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Hearing loop or assistive listening as observed or published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "hearing_loop_locations": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Where the hearing loop works and how to request it.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "signage_braille_tactile": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Braille or tactile signage observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "signage_visual_contrast": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Visual signage contrast, size, and placement as observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "lighting_general": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Lighting note. No invented lux value.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "noise_level_general": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Noise note. No decibel claim without a measurement.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "quiet_space_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Quiet or low-stimulation space as observed or published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "scent_free_policy": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Scent policy as published, with its own source and date on the fact.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "service_animal_policy": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Service-animal policy as published for this place. Not generalised.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "support_person_policy_place": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Support-person admission or fare policy as published for this place.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "accessible_format_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Accessible formats and how to request them, as published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "asl_lsq_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "ASL or LSQ interpretation as published, including lead time.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "french_service_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "French-language service as published or designated. Not machine-translated.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "staff_assistance_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Staff assistance and how to request it.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "queue_management": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Queue layout, accessible queue route, and seating while waiting.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "emergency_procedure_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Evacuation note as published by the venue. The App does not invent a procedure.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "emergency_exit_access": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Emergency exit access as observed or published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "charging_available_general": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Whether device or power-chair charging is available. Detail lives on a charging record.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "charging_details_general": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Charging location, permission, and hours where charging is available.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "wifi_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Public Wi-Fi as published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "drinking_water_available": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Drinking water or a bottle-filling station as observed.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "outdoor_areas_access": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Outdoor path, seating, shade, and shelter note.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "trail_access_summary": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Trail summary for parks and trailheads. Segment records hold the measured parts.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "construction_or_disruption_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Construction or closure note with its own expiry on the fact.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "winter_access_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Snow, ice, and seasonal entrance changes. A summer note is not a winter verification.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "build_or_renovation_year": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Build or last major renovation year where known. Context only, not a compliance label.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "code_version_context": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Code-version context where known. Never a compliance label.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "rhfac_or_certification_note": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Voluntary certification note where published. Distinct from a code-compliance claim.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "accessibility_plan_url": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Multi-year accessibility plan where the venue publishes one.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "feedback_process": {
+          "allOf": [
+            {
+              "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+            },
+            {
+              "description": "Venue accessibility feedback process as published.",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "enum": [
+                        "unknown",
+                        "UNKNOWN"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "description": "Plan fields. Absent means not collected. unknown means collected as unknown."
+    },
+    "imported_facts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://access-main.local/schema/common/field-fact.schema.json"
+      },
+      "description": "Original access-maps keys that have no safe canonical rename. Counted once. Not a second copy of facts."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publication_context": {
+            "const": "prototype"
+          }
+        },
+        "required": [
+          "publication_context"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "type": "object",
+            "required": [
+              "prototype_label"
+            ],
+            "properties": {
+              "prototype_label": {
+                "enum": [
+                  "PROTOTYPE-UNVERIFIED",
+                  "SEEDED-OPEN-DATA"
+                ]
+              },
+              "tier": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_status": {
+            "const": "published"
+          }
+        },
+        "required": [
+          "record_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": [
+              "name_en",
+              "category_primary",
+              "place_type",
+              "address_street",
+              "address_city",
+              "municipality_lower_tier",
+              "latitude",
+              "longitude",
+              "geocode_source",
+              "geocode_date"
+            ],
+            "properties": {
+              "name_en": true,
+              "category_primary": true,
+              "place_type": true,
+              "address_street": true,
+              "address_city": true,
+              "municipality_lower_tier": true,
+              "latitude": true,
+              "longitude": true,
+              "geocode_source": true,
+              "geocode_date": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

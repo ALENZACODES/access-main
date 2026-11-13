@@ -1,0 +1,84 @@
+{
+  "record_type": "washroom",
+  "schema_version": "washroom-1.0.0",
+  "id": "example-washroom",
+  "place_id": "example-place",
+  "record_status": "draft",
+  "publication_context": "prototype",
+  "example": true,
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  },
+  "facts": {
+    "washroom_name": {
+      "value": "Example universal washroom",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "transfer_side": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "turning_space_diameter_mm": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "adult_change_table_present": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "adult_change_table_load_kg": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "hoist_present": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "hoist_type": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "hoist_sling_policy": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "door_lock_type": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

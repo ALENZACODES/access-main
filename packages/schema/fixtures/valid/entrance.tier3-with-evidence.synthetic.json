@@ -1,0 +1,55 @@
+{
+  "record_type": "entrance",
+  "schema_version": "entrance-1.0.0",
+  "id": "example-entrance",
+  "place_id": "example-place",
+  "record_status": "draft",
+  "publication_context": "canonical",
+  "example": true,
+  "provenance": {
+    "tier": 3,
+    "source_name": "Synthetic survey, not a real entrance",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13",
+    "evidence": {
+      "protocol_version": "measurement-protocol-1.0.0",
+      "verifier_role": "trained_verifier",
+      "method": "tape, door open to 90 degrees, nearest 5 mm",
+      "observed_at": "2026-11-13",
+      "photo_ids": [
+        "example-photo"
+      ]
+    }
+  },
+  "facts": {
+    "door_clear_width_mm": {
+      "value": 820,
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 3,
+      "unit": "mm",
+      "method": "tape, door open to 90 degrees, nearest 5 mm",
+      "observed_at": "2026-11-13",
+      "evidence": {
+        "protocol_version": "measurement-protocol-1.0.0",
+        "verifier_role": "trained_verifier",
+        "method": "tape, door open to 90 degrees, nearest 5 mm",
+        "observed_at": "2026-11-13",
+        "photo_ids": [
+          "example-photo"
+        ]
+      }
+    },
+    "step_free": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

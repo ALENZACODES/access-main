@@ -1,0 +1,41 @@
+{
+  "record_type": "repair_supply",
+  "schema_version": "repair-supply-1.0.0",
+  "id": "example-repair",
+  "record_status": "draft",
+  "publication_context": "prototype",
+  "example": true,
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  },
+  "facts": {
+    "name_en": {
+      "value": "Example Repair Desk",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "service_kind": {
+      "value": "repair",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    },
+    "mobile_service": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 0
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "record_type": "journey",
+  "schema_version": "journey-1.0.0",
+  "id": "example-journey",
+  "publication_context": "prototype",
+  "example": true,
+  "realtime_claimed": false,
+  "explanation": "Scheduled example. The approach distance is unknown. This is not a real trip.",
+  "provenance": {
+    "tier": 0,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  },
+  "legs": [
+    {
+      "leg_id": "approach",
+      "mode": "walk_roll",
+      "step_free_status": "unknown",
+      "distance_m": "unknown",
+      "surface_note": "unknown",
+      "gradient_note": "unknown",
+      "source_name": "Synthetic example, not a real place or programme",
+      "time_label": "scheduled"
+    }
+  ]
+}

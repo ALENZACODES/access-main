@@ -1,0 +1,83 @@
+{
+  "record_type": "benefits_directory",
+  "schema_version": "benefits-directory-1.0.0",
+  "id": "example-benefit",
+  "record_status": "published",
+  "publication_context": "prototype",
+  "example": true,
+  "provenance": {
+    "tier": 1,
+    "prototype_label": "PROTOTYPE-UNVERIFIED",
+    "source_name": "Synthetic example, not a real place or programme",
+    "source_id": "example",
+    "source_date": "2026-11-13",
+    "record_date": "2026-11-13",
+    "licence_id": "not-a-real-dataset",
+    "retrieved_at": "2026-11-13"
+  },
+  "facts": {
+    "name_en": {
+      "value": "Example Benefit, not a real programme",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "administering_body": {
+      "value": "Example department",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "organisation_type": {
+      "value": "government_provincial",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "benefit_type": {
+      "value": "example income support",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "official_url": {
+      "value": "https://example.test/benefit",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "official_url_checked_on": {
+      "value": "2026-11-13",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "desk_verified_date": {
+      "value": "2026-11-13",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "eligibility_general_note": {
+      "value": "See the official page. This record is not an eligibility decision.",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    },
+    "rate_or_amount_text": {
+      "value": "unknown",
+      "source_id": "example",
+      "licence": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13",
+      "tier": 1
+    }
+  }
+}

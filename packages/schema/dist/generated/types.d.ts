@@ -1,0 +1,651 @@
+export type VerificationTier = 0 | 1 | 2 | 3 | 4 | "E";
+export type PrototypeLabel = "PROTOTYPE-UNVERIFIED" | "SEEDED-OPEN-DATA" | "COMMUNITY-REPORTED" | "VERIFIED";
+export interface FieldEvidence {
+    protocol_version: string;
+    verifier_role: "trained_verifier" | "peer" | "operator" | "importer" | "desk_reviewer";
+    method: string;
+    observed_at: string;
+    photo_ids?: string[];
+}
+export type FieldValue = string | number | boolean | string[] | number[][] | "unknown" | "UNKNOWN";
+export interface FieldFact {
+    value: FieldValue;
+    unit?: "mm" | "m" | "kg" | "percent" | "degrees" | "ratio" | null;
+    method?: string | null;
+    observed_at?: string;
+    source_id: string;
+    licence: string;
+    retrieved_at: string;
+    tier: VerificationTier;
+    source_name?: string;
+    source_key?: string;
+    raw?: string | number | null;
+    derived?: boolean;
+    tri_state_observation?: boolean;
+    evidence?: FieldEvidence;
+}
+export interface Provenance {
+    tier: VerificationTier;
+    prototype_label?: PrototypeLabel;
+    source_name: string;
+    source_id: string;
+    source_date: string;
+    record_date: string;
+    licence_id: string;
+    retrieved_at: string;
+    evidence?: FieldEvidence;
+}
+export interface CanonicalRecord {
+    record_type: string;
+    schema_version: string;
+    id: string;
+    record_status: "draft" | "in_review" | "published" | "stale_flagged" | "archived" | "disputed";
+    publication_context: "canonical" | "prototype";
+    example?: boolean;
+    provenance: Provenance;
+    facts?: Record<string, FieldFact>;
+    imported_facts?: Record<string, FieldFact>;
+}
+export interface PlaceFacts {
+    /** Official English name as published by the venue or operator. */
+    name_en: FieldFact;
+    /** Official French name where it exists. A translation of name_en does not add a second piece. */
+    name_fr?: FieldFact;
+    /** Former names with dates. One piece when the array is populated. */
+    former_names?: FieldFact;
+    /** Search aliases. One piece when populated. */
+    also_known_as?: FieldFact;
+    /** Primary category as published. The controlled list is versioned and is not closed in this schema, because the plan does not publish the list and a closed list would force relabelled categories. */
+    category_primary: FieldFact;
+    /** Secondary categories. One piece when populated. */
+    category_secondary?: FieldFact;
+    /** Place type from the plan. Not inferred from an amenity tag during migration. */
+    place_type: FieldFact;
+    /** Street address, including unit where it is already one published string. */
+    address_street: FieldFact;
+    /** City, town, or community name. */
+    address_city: FieldFact;
+    /** Lower-tier municipality where applicable. */
+    municipality_lower_tier: FieldFact;
+    /** Upper-tier municipality or region where applicable. */
+    municipality_upper_tier?: FieldFact;
+    /** Postal code as published. */
+    postal_code?: FieldFact;
+    /** Latitude in WGS84 decimal degrees. */
+    latitude: FieldFact;
+    /** Longitude in WGS84 decimal degrees. */
+    longitude: FieldFact;
+    /** Estimated accuracy in metres, with method. */
+    location_accuracy_m?: FieldFact;
+    /** How the coordinate was obtained. */
+    geocode_source: FieldFact;
+    /** Date the location was determined or last checked. */
+    geocode_date: FieldFact;
+    /** Main public phone number. */
+    phone_main?: FieldFact;
+    /** Accessibility or assistance phone, where published separately. */
+    phone_accessibility?: FieldFact;
+    /** Public email address. */
+    email_public?: FieldFact;
+    /** Official website. */
+    website_url?: FieldFact;
+    /** Venue accessibility page, where published. */
+    accessibility_page_url?: FieldFact;
+    /** General opening hours as published. */
+    hours_general?: FieldFact;
+    /** Hours that differ for the accessible entrance or route. */
+    hours_accessibility_note?: FieldFact;
+    /** Admission cost or free status as published. Not pricing advice. */
+    admission_cost?: FieldFact;
+    /** Whether booking or advance notice is required. */
+    booking_required?: FieldFact;
+    /** Booking method and lead time where booking is required. */
+    booking_details?: FieldFact;
+    /** Factual summary written from measurements. Not a bare accessible label. */
+    general_access_summary?: FieldFact;
+    /** Whether a step-free route to the main activity was observed. Never assumed. */
+    step_free_route_exists?: FieldFact;
+    /** Description of the step-free route, including a side or rear entrance where that is the route. */
+    step_free_route_description?: FieldFact;
+    /** Where the step-free entrance is relative to the street and the main entrance. */
+    accessible_entrance_location?: FieldFact;
+    /** Count of public entrances observed. */
+    entrance_count_total?: FieldFact;
+    /** Count of step-free public entrances observed. */
+    entrance_count_step_free?: FieldFact;
+    /** Whether a lift or elevator serves public areas. */
+    lift_or_elevator_present?: FieldFact;
+    /** Lift location, floors served, and operator. Elevator assets are separate records. */
+    lift_or_elevator_details?: FieldFact;
+    /** Whether a platform lift was observed. */
+    platform_lift_present?: FieldFact;
+    /** Whether a ramp serves the main access route. Ramp measurements live on the entrance. */
+    ramp_present_general?: FieldFact;
+    /** Minimum clear interior path width, measured. */
+    interior_path_min_width_mm?: FieldFact;
+    /** Clear turning diameter in key interior areas, measured. */
+    interior_turning_space_mm?: FieldFact;
+    /** Primary interior floor surface as observed. */
+    interior_floor_surface?: FieldFact;
+    /** Recurring obstructions as observed. */
+    interior_floor_obstructions?: FieldFact;
+    /** Whether seating is available in public areas. */
+    seating_available?: FieldFact;
+    /** Seating types, armrests, back support, and space for a wheelchair alongside. */
+    seating_types?: FieldFact;
+    /** Designated wheelchair spaces as observed or as published. */
+    wheelchair_spaces_count?: FieldFact;
+    /** Location and sightline note for wheelchair spaces. */
+    wheelchair_spaces_location?: FieldFact;
+    /** Service counter heights in millimetres, including a lowered section where present. */
+    counter_heights_mm?: FieldFact;
+    /** Knee clearance at a lowered counter, height and depth, measured. */
+    counter_knee_clearance?: FieldFact;
+    /** Access note for tills, desks, and reception, including the queue. */
+    till_or_service_desk_access?: FieldFact;
+    /** General changing note. Adult change and hoist fields live on the washroom. */
+    changing_facilities_general?: FieldFact;
+    /** Baby changing, distinct from an adult change table. */
+    baby_change_present?: FieldFact;
+    /** Hearing loop or assistive listening as observed or published. */
+    hearing_loop_present?: FieldFact;
+    /** Where the hearing loop works and how to request it. */
+    hearing_loop_locations?: FieldFact;
+    /** Braille or tactile signage observed. */
+    signage_braille_tactile?: FieldFact;
+    /** Visual signage contrast, size, and placement as observed. */
+    signage_visual_contrast?: FieldFact;
+    /** Lighting note. No invented lux value. */
+    lighting_general?: FieldFact;
+    /** Noise note. No decibel claim without a measurement. */
+    noise_level_general?: FieldFact;
+    /** Quiet or low-stimulation space as observed or published. */
+    quiet_space_available?: FieldFact;
+    /** Scent policy as published, with its own source and date on the fact. */
+    scent_free_policy?: FieldFact;
+    /** Service-animal policy as published for this place. Not generalised. */
+    service_animal_policy?: FieldFact;
+    /** Support-person admission or fare policy as published for this place. */
+    support_person_policy_place?: FieldFact;
+    /** Accessible formats and how to request them, as published. */
+    accessible_format_available?: FieldFact;
+    /** ASL or LSQ interpretation as published, including lead time. */
+    asl_lsq_available?: FieldFact;
+    /** French-language service as published or designated. Not machine-translated. */
+    french_service_available?: FieldFact;
+    /** Staff assistance and how to request it. */
+    staff_assistance_available?: FieldFact;
+    /** Queue layout, accessible queue route, and seating while waiting. */
+    queue_management?: FieldFact;
+    /** Evacuation note as published by the venue. The App does not invent a procedure. */
+    emergency_procedure_note?: FieldFact;
+    /** Emergency exit access as observed or published. */
+    emergency_exit_access?: FieldFact;
+    /** Whether device or power-chair charging is available. Detail lives on a charging record. */
+    charging_available_general?: FieldFact;
+    /** Charging location, permission, and hours where charging is available. */
+    charging_details_general?: FieldFact;
+    /** Public Wi-Fi as published. */
+    wifi_available?: FieldFact;
+    /** Drinking water or a bottle-filling station as observed. */
+    drinking_water_available?: FieldFact;
+    /** Outdoor path, seating, shade, and shelter note. */
+    outdoor_areas_access?: FieldFact;
+    /** Trail summary for parks and trailheads. Segment records hold the measured parts. */
+    trail_access_summary?: FieldFact;
+    /** Construction or closure note with its own expiry on the fact. */
+    construction_or_disruption_note?: FieldFact;
+    /** Snow, ice, and seasonal entrance changes. A summer note is not a winter verification. */
+    winter_access_note?: FieldFact;
+    /** Build or last major renovation year where known. Context only, not a compliance label. */
+    build_or_renovation_year?: FieldFact;
+    /** Code-version context where known. Never a compliance label. */
+    code_version_context?: FieldFact;
+    /** Voluntary certification note where published. Distinct from a code-compliance claim. */
+    rhfac_or_certification_note?: FieldFact;
+    /** Multi-year accessibility plan where the venue publishes one. */
+    accessibility_plan_url?: FieldFact;
+    /** Venue accessibility feedback process as published. */
+    feedback_process?: FieldFact;
+}
+export interface EntranceFacts {
+    /** Name such as main, north, rear, or parking level. */
+    entrance_name?: FieldFact;
+    /** Which kind of entrance this is. */
+    entrance_type?: FieldFact;
+    /** Whether this is the primary public entrance. */
+    is_primary_public_entrance?: FieldFact;
+    /** Step-free status as observed. Never assumed from a missing step count. */
+    step_free?: FieldFact;
+    /** Observed step count. Zero is a recorded observation only when method and date are present. */
+    step_count?: FieldFact;
+    /** Largest single step, tread to tread, at the centre. */
+    step_height_max_mm?: FieldFact;
+    /** Highest threshold, including a weather bar. */
+    threshold_height_mm?: FieldFact;
+    /** Clear opening with the door at 90 degrees, excluding door thickness and hardware. */
+    door_clear_width_mm?: FieldFact;
+    /** Door type as observed. */
+    door_type?: FieldFact;
+    /** Power or automatic operator observed. */
+    door_operator_present?: FieldFact;
+    /** Operator working on the verification date. Presence is not working status. */
+    door_operator_working?: FieldFact;
+    /** Observed heavy, moderate, or light, with the method note. No invented Newton value. */
+    door_opening_force_note?: FieldFact;
+    /** Door swing as observed. */
+    door_swing?: FieldFact;
+    /** Ramp present at this entrance. */
+    ramp_present?: FieldFact;
+    /** Ratio computed from recorded rise and run. A ratio alone is not accepted as a measurement. */
+    ramp_gradient_ratio?: FieldFact;
+    /** Total rise, bottom to top, measured. */
+    ramp_rise_mm?: FieldFact;
+    /** Total run, measured. */
+    ramp_run_mm?: FieldFact;
+    /** Total length including landings. */
+    ramp_length_mm?: FieldFact;
+    /** Clear width between handrails at the narrowest point. */
+    ramp_clear_width_mm?: FieldFact;
+    /** Top landing length and width, clear of the door swing. */
+    ramp_landing_top_mm?: FieldFact;
+    /** Bottom landing length and width, clear of obstructions. */
+    ramp_landing_bottom_mm?: FieldFact;
+    /** Handrails as observed. */
+    ramp_handrails?: FieldFact;
+    /** Ramp surface with slip and drainage note. */
+    ramp_surface?: FieldFact;
+    /** Approach surface and condition. */
+    approach_surface?: FieldFact;
+    /** Narrowest clear approach width, excluding obstructions at the time of verification. */
+    approach_width_min_mm?: FieldFact;
+    /** Gradient observations on the approach. Not a computed slope from a map. */
+    approach_gradient_note?: FieldFact;
+    /** Lighting at the entrance as observed. */
+    lighting_note?: FieldFact;
+    /** Directions from the street and accessible-entrance signage. */
+    signage_note?: FieldFact;
+}
+export interface WashroomFacts {
+    /** Name as published by the source. A washroom that is its own open-data record may have no parent place. */
+    name_en?: FieldFact;
+    /** Latitude in WGS84 when the source publishes a point. */
+    latitude?: FieldFact;
+    /** Longitude in WGS84 when the source publishes a point. */
+    longitude?: FieldFact;
+    /** Name such as universal washroom, ground floor, near lobby. */
+    washroom_name?: FieldFact;
+    /** Washroom type. Standard means no accessibility features were observed, which is a fact, not a gap. */
+    washroom_type?: FieldFact;
+    /** Floor, wing, and directions from the entrance. */
+    location_description?: FieldFact;
+    /** Floor, with a lift-access note where one was observed. */
+    floor_level?: FieldFact;
+    /** Step-free route, including stairs, lifts, or narrow points that were observed. */
+    route_to_washroom_note?: FieldFact;
+    /** Washroom door clear width. Counted on the washroom, not on the entrance. */
+    door_clear_width_mm?: FieldFact;
+    /** Door operator present. */
+    door_operator_present?: FieldFact;
+    /** Door operator working on the verification date. */
+    door_operator_working?: FieldFact;
+    /** Door swing. */
+    door_swing?: FieldFact;
+    /** Lock type. A lock without the access process is not a usable access fact on its own. */
+    door_lock_type?: FieldFact;
+    /** Where the key is, how the code is published, staff-assist method, and hours when locked. */
+    door_lock_details?: FieldFact;
+    /** Clear turning diameter excluding the door swing and fixtures. */
+    turning_space_diameter_mm?: FieldFact;
+    /** Shape, obstructions, and door-swing intrusion. */
+    turning_space_shape_note?: FieldFact;
+    /** Transfer side. unknown_recorded counts only as a tri-state observation with method and date. none means no clear transfer space. */
+    transfer_side?: FieldFact;
+    /** Clear transfer-space width beside the toilet. */
+    transfer_space_width_mm?: FieldFact;
+    /** Clear transfer-space depth. */
+    transfer_space_depth_mm?: FieldFact;
+    /** Floor to top of seat. */
+    toilet_seat_height_mm?: FieldFact;
+    /** Toilet type as observed. */
+    toilet_type?: FieldFact;
+    /** Left grab bar present. */
+    grab_bar_left?: FieldFact;
+    /** Right grab bar present. */
+    grab_bar_right?: FieldFact;
+    /** Rear grab bar present. */
+    grab_bar_rear?: FieldFact;
+    /** Lengths, heights, diameters, folding or fixed, as observed. No invented dimensions. */
+    grab_bar_details?: FieldFact;
+    /** Sink rim height. */
+    sink_height_mm?: FieldFact;
+    /** Clearance height under the sink. */
+    sink_knee_clearance_mm?: FieldFact;
+    /** Tap operation. */
+    sink_tap_type?: FieldFact;
+    /** Mirror bottom height and whether it is usable from a seated position. */
+    mirror_height_note?: FieldFact;
+    /** Shelf and hook for bags and supplies. */
+    shelf_and_hook_present?: FieldFact;
+    /** Shelf and hook heights and locations. */
+    shelf_and_hook_details?: FieldFact;
+    /** Emergency cord or button present. Do not test emergency systems without permission. */
+    emergency_call_present?: FieldFact;
+    /** Cord length and reach from the floor and from the toilet, as observed. */
+    emergency_call_reach_note?: FieldFact;
+    /** Door privacy, gaps, and attendant space. */
+    privacy_note?: FieldFact;
+    /** Space for an attendant inside the washroom. */
+    attendant_space_present?: FieldFact;
+    /** Adult change table. Distinct from baby changing. */
+    adult_change_table_present?: FieldFact;
+    /** Length, width, and height range, measured or read from a label. Do not invent a size. */
+    adult_change_table_dimensions?: FieldFact;
+    /** Rated load as labelled or published. Do not guess a load. */
+    adult_change_table_load_kg?: FieldFact;
+    /** Adult change table type. */
+    adult_change_table_type?: FieldFact;
+    /** Hoist present. Presence is not a claim that it is working or that a sling is provided. */
+    hoist_present?: FieldFact;
+    /** Hoist type. none is a recorded absence, not an unknown. */
+    hoist_type?: FieldFact;
+    /** Bring-your-own sling, sling provided, and sling type, as published or observed. Quoted, not paraphrased into advice. */
+    hoist_sling_policy?: FieldFact;
+    /** Track coverage, labelled load, operation, and whether staff assistance is required. */
+    hoist_details?: FieldFact;
+    /** Lighting as observed. */
+    lighting_note?: FieldFact;
+    /** Surface, slip, and drainage as observed. */
+    flooring_note?: FieldFact;
+    /** Condition on the verification date. */
+    cleanliness_and_maintenance_note?: FieldFact;
+    /** Known outages, storage use, or blockages, with dates. */
+    reliability_note?: FieldFact;
+    /** Hours the washroom is available when they differ from the place hours. */
+    hours_available?: FieldFact;
+    /** Customers only, key, staff only, or fee, with source and date. */
+    access_restriction_note?: FieldFact;
+}
+export interface ParkingFacts {
+    /** Lot, bay, or bay group. Usability claims need bay-level records. */
+    record_level: FieldFact;
+    /** Lot or garage name as published. */
+    lot_name?: FieldFact;
+    /** Operator. Required in practice for a private-lot privilege claim. */
+    operator_name?: FieldFact;
+    /** Whether the lot is municipal or private. A private rule is not stated as a municipal bylaw. */
+    lot_access?: FieldFact;
+    /** Bay number or label where it exists. */
+    bay_identifier?: FieldFact;
+    /** Bay type. Type A is van-accessible. unknown_recorded is not a van-accessible claim. */
+    bay_type?: FieldFact;
+    /** Bay width measured. */
+    bay_width_mm?: FieldFact;
+    /** Bay length measured. */
+    bay_length_mm?: FieldFact;
+    /** Access aisle width. Zero only when the absence of an aisle was observed and recorded with method and date. */
+    access_aisle_width_mm?: FieldFact;
+    /** Which side the access aisle is on. */
+    access_aisle_side?: FieldFact;
+    /** Surface type and condition. */
+    surface_type?: FieldFact;
+    /** Gradient observations. Not a guessed percent. */
+    surface_gradient_note?: FieldFact;
+    /** International Symbol of Access signage observed. */
+    signage_present?: FieldFact;
+    /** Step-free route distance to the accessible entrance, when measured. */
+    distance_to_entrance_m?: FieldFact;
+    /** Kerb ramps, crossings, and gradients on the route to the entrance. */
+    route_to_entrance_note?: FieldFact;
+    /** Kerb ramp on the route to the entrance. */
+    kerb_ramp_present?: FieldFact;
+    /** Payment method as observed or published. */
+    payment_method?: FieldFact;
+    /** App name, attendant hours, and cash acceptance. */
+    payment_details?: FieldFact;
+    /** Whether a reservation is required. */
+    reservation_required?: FieldFact;
+    /** Cutoff, phone, and permit rules as published. */
+    reservation_details?: FieldFact;
+    /** Municipality that sets the privilege. Required when privilege_details is populated. */
+    privilege_municipality?: FieldFact;
+    /** Bylaw or page, with URL and date. Required when privilege_details is populated. */
+    privilege_source?: FieldFact;
+    /** Fee, time limit, and exemptions as sourced. Never a province-wide rule. */
+    privilege_details?: FieldFact;
+    /** Snow clearance observation, dated. Seasonal. */
+    snow_clearance_note?: FieldFact;
+}
+export interface SegmentFacts {
+    /** Cost-function version. Derived product marker. Does not count. */
+    routing_cost_version?: FieldFact;
+    /** Segment type. */
+    segment_type?: FieldFact;
+    /** Surface type. */
+    surface_type?: FieldFact;
+    /** Surface condition with a date on the fact. */
+    surface_condition?: FieldFact;
+    /** Minimum clear width, measured or imported with the import method named on the fact. */
+    width_min_mm?: FieldFact;
+    /** Maximum gradient. Derived slopes stay derived and do not count twice. */
+    gradient_max_percent?: FieldFact;
+    /** Gradient profile, rest landings, and steep sections. */
+    gradient_note?: FieldFact;
+    /** Kerb ramp at the start of the segment. */
+    kerb_ramp_start?: FieldFact;
+    /** Kerb ramp at the end of the segment. */
+    kerb_ramp_end?: FieldFact;
+    /** Ramp widths, slopes, and tactile paving as observed. */
+    kerb_ramp_details?: FieldFact;
+    /** Recurring obstacles with dates. */
+    obstacles?: FieldFact;
+    /** Active construction or closure. Needs an expiry and does not outlive it. */
+    construction_flag?: FieldFact;
+    /** Detour, dates, source, and expiry. */
+    construction_details?: FieldFact;
+    /** Snow status. A summer verification is not a winter status. */
+    snow_status?: FieldFact;
+    /** When the snow status was observed. */
+    snow_status_date?: FieldFact;
+    /** Who reported the snow status. */
+    snow_source?: FieldFact;
+    /** Seating, shelter, or a rest area on the segment. */
+    rest_opportunity?: FieldFact;
+    /** Shade, shelter, and lighting. */
+    shade_shelter_note?: FieldFact;
+    /** OSM way id when the geometry comes from OSM. ODbL provenance stays on the fact. */
+    osm_way_id?: FieldFact;
+    /** LineString coordinates as a JSON string. One piece for the geometry, not one piece per vertex. Routing costs computed from it do not count. */
+    geometry_geojson?: FieldFact;
+}
+export interface TransitStopFacts {
+    /** Agency GTFS stop id. Empty location_type in GTFS is already normalised by the importer; this schema does not redo that default. */
+    gtfs_stop_id?: FieldFact;
+    /** Operator id. */
+    agency_id: FieldFact;
+    /** Operator name as published. Not an endorsement. */
+    agency_name: FieldFact;
+    /** Stop name as published by the operator. */
+    stop_name: FieldFact;
+    /** French stop name where published. Does not add a piece when stop_name is populated. */
+    stop_name_fr?: FieldFact;
+    /** Stop type. entrance_exit, boarding_area, and generic_node are the access-maps GTFS normalisations and are not relabelled. */
+    stop_type?: FieldFact;
+    /** Parent station id where the operator publishes one. */
+    parent_station_id?: FieldFact;
+    /** Latitude in WGS84. */
+    latitude?: FieldFact;
+    /** Longitude in WGS84. */
+    longitude?: FieldFact;
+    /** Location accuracy when known. */
+    location_accuracy_m?: FieldFact;
+    /** Operator-reported GTFS wheelchair_boarding. some_vehicles_accessible is GTFS code 1. It is not an App verification that the station is step-free. Code 0 stays unknown and does not count. */
+    gtfs_wheelchair_boarding?: FieldFact;
+    /** Feed version or effective dates. */
+    gtfs_feed_version?: FieldFact;
+    /** Feed publication or effective date. */
+    gtfs_feed_date?: FieldFact;
+    /** App verification of step-free access. Supersedes the GTFS value only for display of this fact, and only when evidence is present. Never copied from wheelchair_boarding. */
+    app_verified_step_free?: FieldFact;
+    /** Date of the App step-free verification. */
+    app_verification_date?: FieldFact;
+    /** Level boarding, mini-platform, ramp, or lift, as verified or as published and labelled. */
+    platform_access_note?: FieldFact;
+    /** Shelter observed. */
+    shelter_present?: FieldFact;
+    /** Seating observed. */
+    seating_present?: FieldFact;
+    /** Lighting note. */
+    lighting_note?: FieldFact;
+    /** Approach path. Measured approach segments are separate records. */
+    approach_note?: FieldFact;
+    /** Fare media as published for this operator. Not generalised across operators. */
+    fare_media_note?: FieldFact;
+    /** Support-person policy summary with a link or source. Not eligibility advice. */
+    support_person_note?: FieldFact;
+}
+export interface ElevatorAssetFacts {
+    /** Asset kind. */
+    asset_kind: FieldFact;
+    /** Operator's name or code for this asset. */
+    asset_name?: FieldFact;
+    /** Who operates the asset. Displayed with the help number. Not an endorsement. */
+    operator_name: FieldFact;
+    /** Help number published for this asset, such as an elevator status line. */
+    help_number?: FieldFact;
+    /** Floors served as published or observed. */
+    floors_served?: FieldFact;
+    /** Car width measured or taken from an operator sheet that states the dimension. */
+    car_width_mm?: FieldFact;
+    /** Car depth measured or taken from an operator sheet that states the dimension. */
+    car_depth_mm?: FieldFact;
+    /** Door clear width. */
+    door_clear_width_mm?: FieldFact;
+    /** Control heights as measured or published. */
+    control_height_note?: FieldFact;
+    /** Audible and visible signals as observed. */
+    signals_note?: FieldFact;
+    /** True when this asset is the only step-free path. Unknown stays unknown. */
+    single_point_of_failure?: FieldFact;
+    /** Alternate step-free route when one has been verified. Absence of text is not an alternate. */
+    alternate_route_note?: FieldFact;
+}
+export interface OutageFacts {
+    /** Status from the feed or report. There is no default. */
+    status: FieldFact;
+    /** When the operator or reporter said the status was observed. */
+    reported_at: FieldFact;
+    /** When the App received the status. */
+    received_at: FieldFact;
+    /** When this observation must no longer be shown as current. */
+    expires_at: FieldFact;
+    /** Age of the feed at receipt, when the feed provides it. */
+    feed_age_seconds?: FieldFact;
+    /** Whether a verified alternate was known at this time. Unknown is not an alternate. */
+    alternate_available?: FieldFact;
+    /** What the outage blocks, in the operator's words or a verifier's observation. Not a guessed reroute. */
+    effect_note?: FieldFact;
+}
+export interface ChargingFacts {
+    /** Whether a charging point was observed or published. */
+    charging_present: FieldFact;
+    /** Where the outlet is. */
+    location_description?: FieldFact;
+    /** Connector as labelled. Do not guess a plug from a photo that does not show it. */
+    connector_type?: FieldFact;
+    /** Plug type as labelled. */
+    plug_type?: FieldFact;
+    /** Hours charging is available. */
+    hours?: FieldFact;
+    /** Who can use it and how, as published or observed. */
+    access_note?: FieldFact;
+    /** Cost or free status as published. Not pricing advice. */
+    cost_note?: FieldFact;
+    /** Seating while charging. */
+    seating_while_charging?: FieldFact;
+}
+export interface RepairSupplyFacts {
+    /** Published name. */
+    name_en: FieldFact;
+    /** French name where published. */
+    name_fr?: FieldFact;
+    /** What the listing is. pharmacy is a directory category, not a clinical recommendation. */
+    service_kind: FieldFact;
+    /** Published hours. */
+    hours?: FieldFact;
+    /** Whether mobile service is published. */
+    mobile_service?: FieldFact;
+    /** Whether out-of-hours availability is published. */
+    out_of_hours?: FieldFact;
+    /** Public phone. */
+    phone?: FieldFact;
+    /** Official page. */
+    official_url?: FieldFact;
+    /** Published address or service area. */
+    address?: FieldFact;
+    /** Latitude when the source publishes one. */
+    latitude?: FieldFact;
+    /** Longitude when the source publishes one. */
+    longitude?: FieldFact;
+}
+export interface BenefitsDirectoryFacts {
+    /** Programme name in English as published. */
+    name_en: FieldFact;
+    /** French programme name where the official source publishes one. */
+    name_fr?: FieldFact;
+    /** Body that administers the programme, as named on the official page. */
+    administering_body: FieldFact;
+    /** Which government publishes the page. Not a partnership. */
+    organisation_type: FieldFact;
+    /** Benefit type in the programme's own words. */
+    benefit_type: FieldFact;
+    /** Short general description. Not eligibility advice. */
+    description_general?: FieldFact;
+    /** General note pointing at the official eligibility page. Not an assessment. */
+    eligibility_general_note?: FieldFact;
+    /** How to apply, with the official link and phone. */
+    application_route?: FieldFact;
+    /** Appeal or review route as published. */
+    appeal_or_review_route?: FieldFact;
+    /** Official programme page. */
+    official_url: FieldFact;
+    /** Date the official page was checked. */
+    official_url_checked_on: FieldFact;
+    /** Rate or amount copied from the official page, as text, with the source date on the fact. Not a calculated entitlement. */
+    rate_or_amount_text?: FieldFact;
+    /** Date the published rate took effect, as stated by the programme. */
+    rate_effective_date?: FieldFact;
+    /** Indexation note as published. */
+    indexation_note?: FieldFact;
+    /** Related programme names as published. One piece for the array. */
+    related_programmes?: FieldFact;
+    /** Public phone on the official page. */
+    phone?: FieldFact;
+    /** Languages of service as published. */
+    languages_offered?: FieldFact;
+    /** Geography the official page says the programme covers. */
+    geography?: FieldFact;
+    /** Date of desk verification against the official page. */
+    desk_verified_date: FieldFact;
+    /** Next scheduled check. Quarterly or on indexation. */
+    review_due_date?: FieldFact;
+    /** Whether the official page says a referral is required. */
+    referral_required?: FieldFact;
+}
+export type GameName = "Grid Recall" | "Pair Sequence" | "Route Planner" | "Pattern Rules" | "Word Roots Builder" | "Number Compare" | "Focus Flankers" | "Switch Rules" | "Shape Assembly" | "Order Keeper";
+export interface ImportFieldValue {
+    value: string | number | number[][];
+    source_id: string;
+    licence: string;
+    retrieved_at: string;
+    tier: 0 | 1 | 2 | 3 | 4;
+    source_key?: string;
+    raw?: string | number | null;
+    derived?: boolean;
+}
+export interface ImportRecord {
+    id: string;
+    tranche: "venue" | "washroom" | "path" | "transit";
+    region: string;
+    fields: Record<string, ImportFieldValue>;
+}

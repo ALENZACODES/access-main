@@ -1,0 +1,9 @@
+{
+  "id": "not-a-real-dataset",
+  "name": "Synthetic licence placeholder",
+  "url": "https://example.test/licence",
+  "attribution": "Synthetic example. Not an open-data licence.",
+  "share_alike": false,
+  "confirmation_status": "pending",
+  "confirmed_on": "2026-11-13"
+}

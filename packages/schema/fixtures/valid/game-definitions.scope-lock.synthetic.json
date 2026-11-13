@@ -1,0 +1,252 @@
+[
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-1",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Grid Recall",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-2",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Pair Sequence",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-3",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Route Planner",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-4",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Pattern Rules",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-5",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Word Roots Builder",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-6",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Number Compare",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-7",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Focus Flankers",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-8",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Switch Rules",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-9",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Shape Assembly",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  },
+  {
+    "record_type": "game_definition",
+    "schema_version": "game-definition-1.0.0",
+    "id": "example-game-10",
+    "publication_context": "prototype",
+    "example": true,
+    "name": "Order Keeper",
+    "timing_mode": "untimed",
+    "input_modes": [
+      "keyboard",
+      "tap"
+    ],
+    "colour_independence_note": "Shape and text labels carry the meaning. Colour is not the only signal.",
+    "no_medical_claims_notice_id": "notice.games.no-medical-or-cognitive-claims.v1",
+    "provenance": {
+      "tier": 0,
+      "prototype_label": "PROTOTYPE-UNVERIFIED",
+      "source_name": "Synthetic example, not a real place or programme",
+      "source_id": "example",
+      "source_date": "2026-11-13",
+      "record_date": "2026-11-13",
+      "licence_id": "not-a-real-dataset",
+      "retrieved_at": "2026-11-13"
+    }
+  }
+]

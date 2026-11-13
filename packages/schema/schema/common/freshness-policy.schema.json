@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schema/common/freshness-policy.schema.json",
+  "title": "Freshness policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "headline_max_age_days",
+    "status_snapshot_days",
+    "winter_months",
+    "layers"
+  ],
+  "properties": {
+    "headline_max_age_days": {
+      "const": 730
+    },
+    "status_snapshot_days": {
+      "const": 30
+    },
+    "winter_months": {
+      "const": [
+        11,
+        12,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1
+    }
+  }
+}
