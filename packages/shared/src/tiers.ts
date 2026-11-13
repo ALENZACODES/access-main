@@ -29,11 +29,10 @@ export const DISPLAY_TIERS = [...PROTOTYPE_CACHE_TIERS, ...PROTOTYPE_CACHE_LABEL
 export type DisplayTier = (typeof DISPLAY_TIERS)[number];
 
 /**
- * Shell inputs that are not canonical ids. `administrator_page` is the directory
- * desk-check token (cache provenance stores E). TIER_N is an older spelling.
+ * Older spellings that are not access-tools labels and not canonical ids.
+ * `administrator_page` is mapped by the schema package.
  */
 const SHELL_ONLY_TIERS: Record<string, CanonicalTierId> = {
-  administrator_page: "E",
   TIER_0: 0,
   TIER_1: 1,
   TIER_2: 2,

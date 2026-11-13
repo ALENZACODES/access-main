@@ -18,7 +18,7 @@
 
 9. **Ajv `strictTypes` is off.** `strict` stays on, including the check that a `required` list names properties on that same schema. `if`/`then` branches narrow an object the parent schema already types, and Ajv's strictTypes rule rejects that pattern. The validator sets `strictTypes: false` for that reason only.
 
-10. **This package is the tier source of truth.** Canonical ids are `0`, `1`, `2`, `3`, `4`, and `E`, plus the four prototype labels. access-maps numbers and access-tools `tier-N-*` strings map into that list. The map is `TIERS.md`. In French the product is called l'application. The ids are not translated. The shell imports `CANONICAL_TIER_IDS` and `PROTOTYPE_LABELS` from `@access-main/schema/tiers`.
+10. **This package is the tier source of truth.** Canonical ids are `0`, `1`, `2`, `3`, `4`, and `E`, plus the four prototype labels. access-maps numbers, access-tools `tier-N-*` strings, and `administrator_page` map into that list. `administrator_page` is tier `E`. The map is `TIERS.md`. In French the product is called l'application. The ids are not translated. The shell imports `CANONICAL_TIER_IDS` and `PROTOTYPE_LABELS` from `@access-main/schema/tiers`.
 
 11. **`dist/` is not committed.** `prepare` runs `tsc`. A git install builds it. The profile has no pressure-relief reminder, washroom interval, or continuous-travel limit. Those are health-aware timing, and the prototype does not include them.
 

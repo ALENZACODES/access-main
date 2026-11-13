@@ -559,5 +559,6 @@ describe("tier vocabulary", () => {
     expect(canonicalTierFromForeign("1")).toBe(1);
     expect(canonicalTierFromForeign("UNKNOWN")).toBeNull();
     expect(canonicalTierFromForeign("E")).toBe("E");
+    expect(canonicalTierFromForeign("administrator_page")).toBe("E");
   });
 });
