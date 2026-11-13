@@ -91,10 +91,7 @@ test("module pages do not invent places and axe is clean", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
 });
 
-test("clearing the cache returns focus to the trigger or the status", async ({ page }) => {
-  await page.goto("/data-status");
-  const clear = page.getByRole("button", { name: "Remove cached records" });
-  await expect(clear).toBeDisabled();
+async function seedCachedRecord(page: Page) {
   await page.evaluate(async () => {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open("access-app");
@@ -129,31 +126,67 @@ test("clearing the cache returns focus to the trigger or the status", async ({ p
       };
     });
   });
+}
+
+async function expectClearCacheFocus(
+  page: Page,
+  copy: { clear: string; title: string; body: string; cancel: string; confirm: string; cleared: string },
+) {
+  await page.goto("/data-status");
+  const clear = page.getByRole("button", { name: copy.clear, exact: true });
+  await expect(clear).toBeDisabled();
+  await seedCachedRecord(page);
   await page.reload();
   await expect(clear).toBeEnabled();
   await clear.click();
   const dialog = page.getByRole("alertdialog");
-  await expect(dialog.getByRole("heading", { name: "Remove cached records?" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Keep records" })).toBeFocused();
+  await expect(dialog.getByRole("heading", { name: copy.title })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: copy.cancel, exact: true })).toBeFocused();
   const describedBy = await dialog.getAttribute("aria-describedby");
   expect(describedBy).toBeTruthy();
-  await expect(page.locator(`[id="${describedBy}"]`)).toContainText("This deletes cached records and waiting reports on this device.");
+  await expect(page.locator(`[id="${describedBy}"]`)).toContainText(copy.body);
   await page.keyboard.press("Escape");
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(clear).toBeFocused();
   await expect(page.getByText("Unverified sample")).toBeVisible();
 
   await clear.click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "Keep records" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: copy.cancel, exact: true }).click();
   await expect(clear).toBeFocused();
 
   await clear.click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "Remove records" }).click();
-  const cleared = page.getByText("Cached records were removed from this device.");
+  await page.getByRole("alertdialog").getByRole("button", { name: copy.confirm, exact: true }).click();
+  const cleared = page.getByText(copy.cleared);
   await expect(cleared).toBeVisible();
   await expect(cleared).toBeFocused();
   await expect(page.getByText("Unverified sample")).toHaveCount(0);
   await expect(clear).toBeDisabled();
+}
+
+test("clearing the cache returns focus to the trigger or the status", async ({ page }) => {
+  await expectClearCacheFocus(page, {
+    clear: "Remove cached records",
+    title: "Remove cached records?",
+    body: "This deletes cached records and waiting reports on this device.",
+    cancel: "Keep records",
+    confirm: "Remove records",
+    cleared: "Cached records were removed from this device.",
+  });
+});
+
+test("French clear-cache dialog returns focus to the trigger or the status", async ({ page }) => {
+  await page.goto("/data-status");
+  await page.getByRole("button", { name: "Français" }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await expectClearCacheFocus(page, {
+    clear: "Retirer les enregistrements en cache",
+    title: "Retirer les enregistrements en cache ?",
+    body: "Cela supprime les enregistrements en cache et les signalements en attente sur cet appareil.",
+    cancel: "Garder les enregistrements",
+    confirm: "Retirer les enregistrements",
+    cleared: "Les enregistrements en cache ont été retirés de cet appareil.",
+  });
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 });
 
 test("narrow and enlarged text do not force horizontal scrolling", async ({ page }) => {
