@@ -1,6 +1,6 @@
 # Verification tiers
 
-The App keeps two vocabularies. They are not the same list, and a record may not collapse them into one colour.
+l'application keeps two vocabularies. They are not the same list, and a record may not collapse them into one colour. The ids and the map from access-maps and access-tools are in [TIERS.md](../TIERS.md). Tier E is the desk tier in Part 3 Table T3-14.
 
 ## Canonical tiers
 

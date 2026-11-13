@@ -1,9 +1,11 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
+import { gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { RECONCILIATION_LINES, RECONCILIATION_TARGET, RECORDS, ILLUSTRATIVE_TOTAL, canonicalSchemaId } from "../src/catalog/index.js";
-import { countRecords } from "../src/count.js";
+import { countRecords, isFixturePath, isFixtureRecord } from "../src/count.js";
 import { GAME_NAMES } from "../src/flat-schemas.js";
 import { judgeFreshness } from "../src/freshness.js";
 import {
@@ -15,6 +17,7 @@ import { loadFieldsFile } from "../src/count.js";
 import { schemaDir } from "../src/paths.js";
 import { detectSchemaId, getValidator } from "../src/validate.js";
 import { runCli } from "../src/cli.js";
+import { ACCESS_TOOLS_TIER_LABELS, canonicalTierFromForeign } from "../src/tiers.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtures = path.join(root, "fixtures");
@@ -130,9 +133,31 @@ describe("validator", () => {
     const profileSchema = JSON.parse(readFileSync(path.join(schemaDir(), "canonical/user-profile.schema.json"), "utf8")) as {
       properties: Record<string, unknown>;
     };
-    for (const forbidden of ["diagnosis", "medication", "injury_level", "bladder_routine", "bowel_routine", "asia_score"]) {
-      expect(profileSchema.properties[forbidden]).toBeUndefined();
+    const clinicalFields = [
+      "diagnosis",
+      "medication",
+      "prescription",
+      "injury_level",
+      "completeness",
+      "asia_score",
+      "bladder_routine",
+      "bowel_routine",
+      "health_condition",
+      "clinical_notes",
+      "icd_code",
+      "pressure_relief",
+      "pressure_relief_reminder",
+      "pressure_relief_timer",
+    ];
+    for (const forbidden of clinicalFields) {
+      expect(profileSchema.properties[forbidden], forbidden).toBeUndefined();
     }
+    const reminder = {
+      ...(readJson("valid/user-profile.local.synthetic.json") as Record<string, unknown>),
+      pressure_relief_reminder: true,
+    };
+    const rejected = validator.validateDetected(reminder);
+    expect(rejected.ok).toBe(false);
   });
 
   it("validates unmodified access-maps records, including the source registry row", () => {
@@ -167,8 +192,8 @@ describe("counting", () => {
 
   it("does not count unknown, derived copies, translations, or profiles, and drops status outside 30 days", () => {
     const base = {
-      source_id: "example",
-      licence: "not-a-real-dataset",
+      source_id: "count-check",
+      licence: "count-check-licence",
       retrieved_at: "2026-11-13",
       tier: 3,
       method: "tape",
@@ -189,11 +214,11 @@ describe("counting", () => {
       publication_context: "canonical",
       provenance: {
         tier: 3,
-        source_name: "Synthetic example",
-        source_id: "example",
+        source_name: "Count check, not a published dataset",
+        source_id: "count-check",
         source_date: "2026-11-13",
         record_date: "2026-11-13",
-        licence_id: "not-a-real-dataset",
+        licence_id: "count-check-licence",
         retrieved_at: "2026-11-13",
         evidence: base.evidence,
       },
@@ -357,5 +382,117 @@ describe("cli", () => {
     expect(text).toContain("FAIL");
     expect(text).toContain("place.missing-tier.synthetic.json");
     expect(text).toContain("place.verified-without-evidence.synthetic.json");
+  });
+
+  it("keeps U+2028 and U+2029 inside an NDJSON record, including a gzipped file", async () => {
+    const place = readJson("valid/place.prototype-unverified.synthetic.json") as {
+      id: string;
+      facts: { name_en: { value: string } };
+    };
+    place.facts.name_en.value = `8${"\u2028"}444${"\u2029"}B`;
+    const second = { ...place, id: "example-unicode-second" };
+    const dir = mkdtempSync(path.join(tmpdir(), "schema-unicode-"));
+    const ndjson = path.join(dir, "housenumber.ndjson");
+    const rawLine = (record: unknown) =>
+      JSON.stringify(record).replaceAll("\\u2028", "\u2028").replaceAll("\\u2029", "\u2029");
+    const payload = `\uFEFF${rawLine(place)}\n${rawLine(second)}\n`;
+    expect(payload).toContain("\u2028");
+    expect(payload).toContain("\u2029");
+    writeFileSync(ndjson, payload, "utf8");
+    writeFileSync(`${ndjson}.gz`, gzipSync(Buffer.from(payload, "utf8")));
+    const broken = path.join(dir, "broken.ndjson");
+    writeFileSync(broken, `{"id":"8${"\u2028"}444"\n`, "utf8");
+
+    const logs: string[] = [];
+    const original = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+      logs.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    let ok = 1;
+    let bad = 0;
+    try {
+      ok = await runCli(["validate", ndjson, `${ndjson}.gz`]);
+      bad = await runCli(["validate", broken]);
+    } finally {
+      process.stdout.write = original;
+    }
+    expect(ok).toBe(0);
+    expect(bad).toBe(1);
+    const text = logs.join("");
+    expect(text).toContain(`${ndjson}#1`);
+    expect(text).toContain(`${ndjson}#2`);
+    expect(text).toContain("PASS");
+    expect(text).toContain(`FAIL ${broken}#1`);
+  });
+});
+
+describe("fixture identity", () => {
+  it("keeps a copied access-maps row out of the headline when the path is under fixtures", () => {
+    const venue = readJson("import/real/venue.osm-node-238726675.json");
+    const direct = countRecords([venue], "2026-11-13");
+    expect(direct.headline_pieces).toBe(16);
+    const fromFixtureDir = countRecords([venue], "2026-11-13", {
+      sourcePath: "packages/schema/fixtures/import/real/venue.osm-node-238726675.json",
+    });
+    expect(fromFixtureDir.headline_pieces).toBe(0);
+    expect(fromFixtureDir.examples_excluded_records).toBe(1);
+    expect(isFixturePath("data/ontario/venues.ndjson")).toBe(false);
+    expect(isFixturePath("notes.synthetic.json")).toBe(true);
+  });
+
+  it("treats an example- id and an example source as fixtures when example is false", () => {
+    const fact = {
+      value: "Not counted",
+      source_id: "count-check",
+      licence: "count-check-licence",
+      retrieved_at: "2026-11-13",
+      tier: 0,
+    };
+    const provenance = {
+      tier: 0,
+      source_name: "Count check",
+      source_id: "count-check",
+      source_date: "2026-11-13",
+      record_date: "2026-11-13",
+      licence_id: "count-check-licence",
+      retrieved_at: "2026-11-13",
+    };
+    const prefixed = {
+      record_type: "place",
+      schema_version: "place-1.0.0",
+      id: "example-sneaky",
+      record_status: "draft",
+      publication_context: "canonical",
+      example: false,
+      provenance,
+      facts: { name_en: fact },
+    };
+    const markedSource = {
+      ...prefixed,
+      id: "osm:node/1",
+      provenance: { ...provenance, source_id: "example" },
+    };
+    expect(isFixtureRecord(prefixed)).toBe(true);
+    expect(isFixtureRecord(markedSource)).toBe(true);
+    const report = countRecords([prefixed, markedSource], "2026-11-13");
+    expect(report.headline_pieces).toBe(0);
+    expect(report.examples_excluded_records).toBe(2);
+  });
+});
+
+describe("tier vocabulary", () => {
+  it("lists the canonical ids and the access-maps and access-tools labels in TIERS.md", () => {
+    const text = readFileSync(path.join(root, "TIERS.md"), "utf8");
+    expect(text).toContain("l'application");
+    for (const id of [0, 1, 2, 3, 4, "E"]) expect(text).toContain(String(id));
+    for (const label of Object.keys(ACCESS_TOOLS_TIER_LABELS)) {
+      expect(text).toContain(label);
+      expect(canonicalTierFromForeign(label)).toBe(ACCESS_TOOLS_TIER_LABELS[label as keyof typeof ACCESS_TOOLS_TIER_LABELS]);
+    }
+    expect(canonicalTierFromForeign(0)).toBe(0);
+    expect(canonicalTierFromForeign("1")).toBe(1);
+    expect(canonicalTierFromForeign("UNKNOWN")).toBeNull();
+    expect(canonicalTierFromForeign("E")).toBe("E");
   });
 });

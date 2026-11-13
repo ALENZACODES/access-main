@@ -1,5 +1,6 @@
 import { FIELD_FACT_ID, PROVENANCE_ID, canonicalSchemaId } from "./catalog/index.js";
 import { UNKNOWN_TOKENS, type FieldDef, type RecordDef, type ValueKind } from "./catalog/types.js";
+import { PROTOTYPE_LABELS } from "./tiers.js";
 
 export function fieldFactSchema(): Record<string, unknown> {
   return {
@@ -121,7 +122,7 @@ export function provenanceSchema(): Record<string, unknown> {
     properties: {
       tier: { enum: [0, 1, 2, 3, 4, "E"] },
       prototype_label: {
-        enum: ["PROTOTYPE-UNVERIFIED", "SEEDED-OPEN-DATA", "COMMUNITY-REPORTED", "VERIFIED"],
+        enum: [...PROTOTYPE_LABELS],
       },
       source_name: { type: "string", minLength: 1 },
       source_id: { type: "string", minLength: 1 },

@@ -98,10 +98,10 @@ export class RecordCounter {
     this.asOf = asOf;
   }
 
-  add(record: unknown): void {
+  add(record: unknown, sourcePath?: string): void {
     if (!record || typeof record !== "object") throw new Error("record is not an object");
     const row = record as Record<string, unknown>;
-    if (row.example === true) {
+    if (isFixtureRecord(row, sourcePath)) {
       this.examplesExcluded += 1;
       return;
     }
@@ -412,10 +412,60 @@ function stringOrUndefined(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-export function countRecords(records: unknown[], asOf: string): CountReport {
+export function countRecords(records: unknown[], asOf: string, options?: { sourcePath?: string }): CountReport {
   const counter = new RecordCounter(asOf);
-  for (const record of records) counter.add(record);
+  for (const record of records) counter.add(record, options?.sourcePath);
   return counter.finish();
+}
+
+const FIXTURE_ID_PREFIXES = ["example-", "synthetic-"];
+const FIXTURE_SOURCE_IDS = new Set(["example"]);
+const FIXTURE_LICENCE_IDS = new Set(["not-a-real-dataset"]);
+
+/** A path is a fixture when a directory is named fixtures, or the file name contains .synthetic. */
+export function isFixturePath(sourcePath: string): boolean {
+  const parts = sourcePath.split(/[/\\]/).filter((part) => part.length > 0);
+  if (parts.includes("fixtures")) return true;
+  const base = parts[parts.length - 1] ?? "";
+  return base.includes(".synthetic.");
+}
+
+/**
+ * Fixtures stay out of the headline even when example is false or absent.
+ * A self-declared example flag is one signal. The file path and the id or source prefix are the others.
+ */
+export function isFixtureRecord(record: Record<string, unknown>, sourcePath?: string): boolean {
+  if (record.example === true) return true;
+  if (sourcePath && isFixturePath(sourcePath)) return true;
+  const id = record.id;
+  if (typeof id === "string" && FIXTURE_ID_PREFIXES.some((prefix) => id.startsWith(prefix))) return true;
+  return hasFixtureMarker(record);
+}
+
+function hasFixtureMarker(record: Record<string, unknown>): boolean {
+  if (isMarker(record.source_id, record.licence_id) || isMarker(undefined, record.licence)) return true;
+  const provenance = record.provenance;
+  if (provenance && typeof provenance === "object") {
+    const row = provenance as Record<string, unknown>;
+    if (isMarker(row.source_id, row.licence_id)) return true;
+  }
+  for (const key of ["facts", "imported_facts", "fields"]) {
+    const bucket = record[key];
+    if (!bucket || typeof bucket !== "object") continue;
+    for (const field of Object.values(bucket as Record<string, unknown>)) {
+      if (!field || typeof field !== "object") continue;
+      const fact = field as Record<string, unknown>;
+      if (isMarker(fact.source_id, fact.licence)) return true;
+    }
+  }
+  return false;
+}
+
+function isMarker(sourceId: unknown, licence: unknown): boolean {
+  return (
+    (typeof sourceId === "string" && FIXTURE_SOURCE_IDS.has(sourceId)) ||
+    (typeof licence === "string" && FIXTURE_LICENCE_IDS.has(licence))
+  );
 }
 
 export function loadFieldsFile(): { venue: string[]; washroom: string[]; path: string[]; transit: string[] } {

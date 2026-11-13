@@ -1,6 +1,6 @@
 # @access-main/schema
 
-JSON Schema 2020-12, an Ajv validator, and the field-value counter for the App. The package does not invent accessibility facts. Unknown stays unknown. Every fact can carry a source, a licence, a date, and a verification tier.
+JSON Schema 2020-12, an Ajv validator, and the field-value counter. The package does not invent accessibility facts. Unknown stays unknown. Every fact can carry a source, a licence, a date, and a verification tier. In French the product is called l'application. Tier ids are listed in [TIERS.md](TIERS.md). `dist/` is built by `prepare` and is not committed.
 
 ## Install from git
 
@@ -34,7 +34,7 @@ pnpm add github:ALENZACODES/access-main#cursor/schema-package-61db&path:packages
 ```bash
 access-schema validate fixtures/valid fixtures/import/real
 access-schema validate fixtures/invalid
-access-schema count --as-of 2026-11-13 fixtures/import/real
+access-schema count --as-of 2026-11-13 path/outside/fixtures
 access-schema migrate fixtures/import/real/venue.osm-node-238726675.json
 ```
 

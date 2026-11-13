@@ -30,13 +30,14 @@
     "schema",
     "src",
     "docs",
-    "README.md"
+    "README.md",
+    "TIERS.md"
   ],
   "scripts": {
     "emit": "tsx scripts/emit-schemas.ts",
     "generate-types": "tsx scripts/generate-types.ts",
     "build": "tsc -p tsconfig.json",
-    "prepare": "node -e \"const {existsSync}=require('node:fs'); if(!existsSync('node_modules/typescript') && !existsSync('../../node_modules/typescript')){console.log('schema: using committed dist'); process.exit(0)}\" && tsc -p tsconfig.json",
+    "prepare": "tsc -p tsconfig.json",
     "test": "vitest run",
     "validate": "node dist/cli.js validate",
     "count": "node dist/cli.js count"

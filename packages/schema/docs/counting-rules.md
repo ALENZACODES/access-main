@@ -21,6 +21,7 @@ Not counted:
 - Source and licence registry rows. They are provenance.
 - Journeys. Legs repeat other records, so the journey is a derived product.
 - Records with `example: true`.
+- Records identified as fixtures without that flag: a path with a `fixtures` directory or a `.synthetic.` file name, an id that starts with `example-` or `synthetic-`, or source id `example` or licence id `not-a-real-dataset`. The flag alone is not the only signal.
 - Values older than 730 days.
 - Status observations outside the 30-day window.
 - Values with no date.

@@ -9,7 +9,7 @@ export {
   recordByType,
 } from "./catalog/index.js";
 export type { FactClass, FieldDef, RecordDef } from "./catalog/types.js";
-export { PIECE_DEFINITION, RecordCounter, accessibilityFactFieldDefinitions, countRecords } from "./count.js";
+export { PIECE_DEFINITION, RecordCounter, accessibilityFactFieldDefinitions, countRecords, isFixturePath, isFixtureRecord } from "./count.js";
 export type { CountReport, TypeSlice } from "./count.js";
 export { HEADLINE_MAX_AGE_DAYS, STATUS_SNAPSHOT_DAYS, judgeFreshness } from "./freshness.js";
 export { GAME_NAMES, NO_MEDICAL_CLAIMS_NOTICE } from "./flat-schemas.js";
@@ -26,6 +26,8 @@ export type { ImportRecord, SourceName } from "./migrate.js";
 export { SchemaValidator, detectSchemaId, getValidator } from "./validate.js";
 export type { ValidationIssue, ValidationResult } from "./validate.js";
 export { runCli } from "./cli.js";
+export { ACCESS_TOOLS_TIER_LABELS, CANONICAL_TIER_IDS, PROTOTYPE_LABELS, canonicalTierFromForeign } from "./tiers.js";
+export type { CanonicalTierId, PrototypeLabelId } from "./tiers.js";
 export type {
   CanonicalRecord,
   FieldEvidence,

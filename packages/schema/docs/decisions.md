@@ -17,3 +17,7 @@
 8. **Schema version `1.0.0` on each record type.** A later change bumps that record's `schema_version` and notes the reason here.
 
 9. **Ajv `strictTypes` is off.** `strict` stays on, including the check that a `required` list names properties on that same schema. `if`/`then` branches narrow an object the parent schema already types, and Ajv's strictTypes rule rejects that pattern. The validator sets `strictTypes: false` for that reason only.
+
+10. **This package is the tier source of truth.** Canonical ids are `0`, `1`, `2`, `3`, `4`, and `E`, plus the four prototype labels. access-maps numbers and access-tools `tier-N-*` strings map into that list. The map is `TIERS.md`. In French the product is called l'application. The ids are not translated.
+
+11. **`dist/` is not committed.** `prepare` runs `tsc`. A git install builds it. The profile has no pressure-relief reminder. That would be a clinical timer, and this package does not ship one.
