@@ -15,8 +15,8 @@ The pins, including the commit each binding was checked against, live in `packag
 
 Every stored record goes through `validateCacheEntry`. Required provenance is `source_name`, `licence` (the word `UNKNOWN` is allowed; a blank is not), `source_date`, `retrieved_at`, and canonical `tier`. Tier ids are `0`, `1`, `2`, `3`, `4`, and `E`. A prototype cache may store `0`, `1`, and `E`, with labels `PROTOTYPE-UNVERIFIED` or `SEEDED-OPEN-DATA`. It refuses tier `2`, tier `3`, tier `4`, `COMMUNITY-REPORTED`, and `VERIFIED`. `UNKNOWN` is not a tier.
 
-TODO(schema): access-main pull request #1 is still open. When `packages/schema` is on main, import the tier ids from `@access-main/schema/tiers` instead of the local copy in `packages/shared/src/tiers.ts`.
+Tier ids and the access-tools string map, including `administrator_page` → `E`, are imported from `@access-main/schema/tiers`. `packages/shared` does not keep a second copy of those lists.
 
-The directory payload matches access-tools pull request 2 (`DirectoryRecord` in `packages/navigator`). `administrator_page` is tier `E`, a desk check of an official page, not an eligibility decision.
+The directory payload matches access-tools pull request 2 (`DirectoryRecord` in `packages/navigator`). `packages/schema/TIERS.md` maps `administrator_page` to tier `E`: a desk check of an official page, not an eligibility decision. `canonicalTierFromForeign` applies that mapping.
 
 `SHELL_CONTRACT_VERSION` is `1.1.0`. Bump it when a field changes meaning.
