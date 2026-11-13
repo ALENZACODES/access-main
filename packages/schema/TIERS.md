@@ -63,8 +63,9 @@ Source: `ALENZACODES/access-tools` pull request 1, `packages/place/src/types.ts`
 | `tier-2-peer` | `2` |
 | `tier-3-surveyor` | `3` |
 | `tier-4-live-feed` | `4` |
+| `administrator_page` | `E` |
 
-access-tools has no tier `E`. Add `E` only when a desk check of an official page is recorded with its link and date.
+Place records from pull request 1 have no tier `E`. Directory records from pull request 2 store `verificationTier: "administrator_page"`. That token is tier `E`: an administrator or official-page desk check, not field-verified, and not an eligibility decision. `canonicalTierFromForeign("administrator_page")` returns `E`. The stored canonical id is `E`, not the string.
 
 These access-tools fields are not tiers:
 
@@ -74,4 +75,4 @@ These access-tools fields are not tiers:
 | `verifierType` | Maps to evidence `verifier_role` when evidence is required. It does not set the tier by itself. |
 | `value: null` | Canonical unknown. Do not coerce null to `0` or to `false`. |
 
-`canonicalTierFromForeign("tier-0-open-data")` returns `0`, and the same for the other four strings. The canonical schema still rejects those strings until a record is rewritten with the numeric id.
+`canonicalTierFromForeign("tier-0-open-data")` returns `0`, and the same for the other four `tier-N-*` strings. `canonicalTierFromForeign("administrator_page")` returns `E`. The canonical schema still rejects those strings until a record is rewritten with the canonical id.
