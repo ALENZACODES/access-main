@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("the shell opens again with the network off", async ({ page, context }) => {
+test("the shell opens again with the network off", { annotation: { type: "check", description: "G2-offline-shell" } }, async ({ page, context }) => {
   await page.goto("/");
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;

@@ -26,12 +26,12 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("home shows the prototype, the build, and a skip link", async ({ page }) => {
+test("home shows the prototype, the build, and a skip link", { annotation: { type: "check", description: "D25-build" } }, async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "the App" })).toBeVisible();
   await expect(page.getByRole("note").filter({ hasText: "Prototype. Every record is unverified" })).toBeVisible();
   await expect(page.getByText("No organisation, including Spinal Cord Injury Ontario, has endorsed the App.").first()).toBeVisible();
-  await expect(page.getByText("Build e2e").first()).toBeVisible();
+  await expect(page.getByText(`Build ${process.env.VITE_BUILD_ID || "e2e"}`).first()).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
   await page.keyboard.press("Enter");
@@ -39,7 +39,7 @@ test("home shows the prototype, the build, and a skip link", async ({ page }) =>
   await expectOneHeading(page);
 });
 
-test("about is reachable by keyboard and by a link", async ({ page }) => {
+test("about is reachable by keyboard and by a link", { annotation: { type: "check", description: "D25-about" } }, async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "About", exact: true }).focus();
   await page.keyboard.press("Enter");
@@ -51,7 +51,7 @@ test("about is reachable by keyboard and by a link", async ({ page }) => {
   await expect(page.getByText("0 records stored on this device")).toBeVisible();
 });
 
-test("french shell persists and returns to english", async ({ page }) => {
+test("french shell persists and returns to english", { annotation: { type: "check", description: "D25-french-shell" } }, async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Français" }).click();
   await expect(page.getByRole("link", { name: "Accueil" })).toBeVisible();
@@ -67,7 +67,7 @@ test("french shell persists and returns to english", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
 });
 
-test("module pages do not invent places and axe is clean", async ({ page }) => {
+test("module pages do not invent places and axe is clean", { annotation: [{ type: "check", description: "G1-place-honesty" }, { type: "check", description: "G3-accessibility-routes" }] }, async ({ page }) => {
   for (const route of ROUTES) {
     await page.goto(route);
     await expectOneHeading(page);
@@ -163,7 +163,7 @@ async function expectClearCacheFocus(
   await expect(clear).toBeDisabled();
 }
 
-test("clearing the cache returns focus to the trigger or the status", async ({ page }) => {
+test("clearing the cache returns focus to the trigger or the status", { annotation: { type: "check", description: "D25-data-status" } }, async ({ page }) => {
   await expectClearCacheFocus(page, {
     clear: "Remove cached records",
     title: "Remove cached records?",
@@ -189,7 +189,7 @@ test("French clear-cache dialog returns focus to the trigger or the status", asy
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 });
 
-test("narrow and enlarged text do not force horizontal scrolling", async ({ page }) => {
+test("narrow and enlarged text do not force horizontal scrolling", { annotation: { type: "check", description: "G3-reflow" } }, async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/profile");
   await page.evaluate(() => {

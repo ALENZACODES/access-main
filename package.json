@@ -19,12 +19,13 @@
     "build": "npm run build -w @access-main/schema && npm run build -w @access/web",
     "preview": "npm run preview -w @access/web",
     "prepare": "tsc -p packages/schema/tsconfig.json",
-    "typecheck": "tsc -p packages/schema/tsconfig.json && tsc -p packages/shared/tsconfig.json && tsc -p apps/web/tsconfig.json",
+    "typecheck": "tsc -p packages/schema/tsconfig.json && tsc -p packages/shared/tsconfig.json && tsc -p apps/web/tsconfig.json && tsc -p apps/web/tsconfig.scripts.json",
     "lint": "eslint .",
     "test": "vitest run && npm test -w @access-main/schema",
     "test:e2e": "npm run test:e2e -w @access/web",
     "validate": "npm run validate -w @access-main/schema --",
-    "count": "npm run count -w @access-main/schema --"
+    "count": "npm run count -w @access-main/schema --",
+    "postdemo": "node apps/web/scripts/postdemo.ts"
   },
   "dependencies": {
     "ajv": "^8.17.1",

@@ -31,7 +31,7 @@ In French the product is called l'application. Tier ids are not translated. The 
 2. Run `npm run lint` for ESLint, including `eslint-plugin-jsx-a11y`.
 3. Run `npm test` for Vitest: shell and shared tests, then the schema package.
 4. Run `npx playwright install --with-deps chromium` once, from the repository root, if the browser is not installed.
-5. Run `npm run test:e2e` for Playwright. That command builds the app and checks routes with axe, keyboard, English and French, settings, and an offline reload.
+5. Run `npm run test:e2e` for Playwright. That command builds the app and checks routes with axe, keyboard, English and French, settings, and an offline reload. It also writes the Day 28 regression table to `apps/web/test-results/regression-run.md`. See `docs/post-demo.md`.
 
 ## Production build
 
