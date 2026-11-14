@@ -28,8 +28,8 @@ export interface NotRunCheck {
   reason: string;
 }
 
-/** Build identifiers that name a test or local build, not a deployed one. */
-export const PLACEHOLDER_BUILD = /^(?:dev|e2e|unknown|unidentified|)$/i;
+/** Build identifiers that name a test or local build, or a commit with uncommitted changes. */
+export const PLACEHOLDER_BUILD = /^(?:dev|e2e|unknown|unidentified|)$|-dirty$/i;
 
 export interface RunProblem {
   ref: string;
