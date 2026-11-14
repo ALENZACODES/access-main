@@ -349,3 +349,12 @@ dd { margin: 0; }
   padding: 0.75rem;
   background: var(--surface);
 }
+
+/* Lane records: name first, then source, licence, date, and tier as a description list. */
+.result-items { list-style: none; padding: 0; }
+.result-items > li { border-inline-start: 0.25rem solid currentColor; padding-inline-start: 0.75rem; }
+.result-name { font-weight: 600; }
+.result-meta { display: grid; gap: 0.25rem; margin: 0.25rem 0 0; }
+.result-meta > div { display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
+.result-meta dt { font-weight: 600; }
+.result-meta dd { margin: 0; overflow-wrap: anywhere; }
