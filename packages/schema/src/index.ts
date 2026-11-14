@@ -11,6 +11,8 @@ export {
 export type { FactClass, FieldDef, RecordDef } from "./catalog/types.js";
 export { PIECE_DEFINITION, RecordCounter, accessibilityFactFieldDefinitions, countRecords, isFixturePath, isFixtureRecord } from "./count.js";
 export type { CountReport, TypeSlice } from "./count.js";
+export { DEEP_SAMPLE_SIZE, DeepSampler, NOT_CHECKED, deepSampleMarkdown } from "./deep-sample.js";
+export type { DeepDefect, DeepDefectCode, DeepSampleOptions, DeepSampleReport, FileCount, SampleRow, SampledRecord } from "./deep-sample.js";
 export { HEADLINE_MAX_AGE_DAYS, STATUS_SNAPSHOT_DAYS, judgeFreshness } from "./freshness.js";
 export { GAME_NAMES, NO_MEDICAL_CLAIMS_NOTICE } from "./flat-schemas.js";
 export {
