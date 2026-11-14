@@ -36,9 +36,14 @@ access-schema validate fixtures/valid fixtures/import/real
 access-schema validate fixtures/invalid
 access-schema count --as-of 2026-11-13 path/outside/fixtures
 access-schema migrate fixtures/import/real/venue.osm-node-238726675.json
+access-schema deep-sample --seed day-30 --as-of 2026-11-14 --counts counts.json --format md path/to/seed/files
 ```
 
 `validate` prints `PASS` or `FAIL` and the file name. Invalid examples are supposed to fail.
+
+`deep-sample` is the seed-data deep sample (master plan Day 30, extended prompt 29). It counts every record in each file itself and, with `--counts`, compares that number to the seed-count report (a JSON object of file path to count). It lists defects a program can see: duplicate ids within and across files, a missing id, source, licence, date, or tier, an empty-string value, a 0 with no method and observation date, a number that reads as a measurement with no method or source key, and any tier above `SEEDED-OPEN-DATA` or `PROTOTYPE-UNVERIFIED`. It then draws up to 20 records per file (`--size`) with a seeded hash, so the same seed and files give the same sample. `--format md` prints a worksheet.
+
+The command never reports `PASS`. The columns for the stated source, the second approved source, and agreement are left as `not checked` for a person to fill in. Exit code 1 means a defect or a count mismatch was found. Exit code 0 means only that no automatic defect was found.
 
 ## What is in the schemas
 

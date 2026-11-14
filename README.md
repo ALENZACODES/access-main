@@ -25,6 +25,10 @@ In French the product is called l'application. Tier ids are not translated. The 
 3. The dev server binds to `0.0.0.0` so a platform can reach it.
 4. Service-worker offline behaviour is part of the production build, not the dev server. Use the steps under “Production build” to try that.
 
+## Build card
+
+`/build-card` is a printable page for a demonstration (master plan Day 25). It reads the build identifier, the shell contract, cached records by kind, tier, and source, the verified-claim count, whether each part of the App answers as connected, and whether a service worker controls the page. It lists the honesty statements to deliver. It does not show seed-file counts, because the shell does not hold seed files. It is linked from About, not from the primary navigation. Printing uses the browser's own dialog.
+
 ## Test
 
 1. Run `npm run typecheck` for TypeScript (schema, shared contracts, and the web app).

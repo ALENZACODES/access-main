@@ -44,7 +44,8 @@
     "prepare": "tsc -p tsconfig.json",
     "test": "vitest run --config vitest.config.ts",
     "validate": "node dist/cli.js validate",
-    "count": "node dist/cli.js count"
+    "count": "node dist/cli.js count",
+    "deep-sample": "node dist/cli.js deep-sample"
   },
   "dependencies": {
     "ajv": "^8.17.1",
