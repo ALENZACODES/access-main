@@ -2,69 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   assembleRun,
   compareSnapshots,
-  renderBuildCard,
   renderRun,
   sessionBuildVerdict,
-  validateBuildCard,
   validateRun,
-  type BuildCardInput,
   type BuildSnapshot,
 } from "./index.ts";
-
-/** Synthetic card. The file names and counts are test values, not seed counts. */
-function card(): BuildCardInput {
-  return {
-    buildId: "synthetic-build-7",
-    checkedOn: "2000-01-03",
-    seedCounts: [
-      { file: "synthetic-places.json", tier: "SEEDED-OPEN-DATA", records: 12, basis: "counted" },
-      { file: "synthetic-outages.json", tier: "PROTOTYPE-UNVERIFIED", records: 3, basis: "counted" },
-    ],
-    sources: [{ name: "Synthetic source", licence: "UNKNOWN", retrievedOn: "2000-01-01" }],
-    demoJourneys: [
-      { name: "Synthetic journey 1", status: "in-build" },
-      { name: "Synthetic journey 2", status: "not-in-build", note: "Planner not wired into this build." },
-    ],
-    fallback: { ready: true, where: "Printed slides beside the device" },
-  };
-}
-
-describe("build card", () => {
-  it("accepts counted actuals and renders English and French", () => {
-    expect(validateBuildCard(card())).toEqual([]);
-    const english = renderBuildCard(card(), "en");
-    expect(english).toContain("Build identifier: **synthetic-build-7**");
-    expect(english).toContain("| **Total** | | **15** |");
-    expect(english).toContain("no record in this build is verified");
-    expect(english).toContain("Synthetic journey 2: not in this build. Planner not wired into this build.");
-    expect(english).not.toContain("incomplete");
-    const french = renderBuildCard(card(), "fr");
-    expect(french).toContain("Identifiant de version : **synthetic-build-7**");
-    expect(french).toContain("aucune fiche de cette version n'est vérifiée");
-  });
-
-  it("refuses an estimate, a verified tier, a blank licence, a placeholder build, and an unready fallback", () => {
-    const value = card();
-    value.buildId = "dev";
-    value.seedCounts[0]!.basis = "estimate";
-    value.seedCounts[1]!.tier = "VERIFIED";
-    value.sources[0]!.licence = " ";
-    value.demoJourneys[1]!.note = "";
-    value.fallback = { ready: false, where: "" };
-    expect(validateBuildCard(value).map((problem) => problem.rule)).toEqual([
-      "build-id",
-      "not-counted",
-      "tier",
-      "licence",
-      "journey-note",
-      "fallback-not-ready",
-      "fallback-where",
-    ]);
-    const rendered = renderBuildCard(value);
-    expect(rendered.indexOf("**This card is incomplete:**")).toBeLessThan(rendered.indexOf("## Seed records"));
-    expect(rendered).toContain("NOT READY");
-  });
-});
 
 describe("session build lock", () => {
   const before: BuildSnapshot = { format: "build-snapshot-1.0.0", buildId: "b1", takenAt: "t0", files: { "index.html": "a", "sw.js": "b" } };

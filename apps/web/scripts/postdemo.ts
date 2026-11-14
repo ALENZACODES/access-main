@@ -3,23 +3,19 @@ import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import {
   compareSnapshots,
-  renderBuildCard,
   sessionBuildVerdict,
-  validateBuildCard,
-  type BuildCardInput,
   type BuildSnapshot,
   type SessionChangeRecord,
 } from "../../../packages/shared/src/postdemo/index.ts";
 
 /**
- * Day 25 tools for the presenter and the reviewer.
+ * Day 25 acceptance test 6: was the build unchanged during the session?
  *
  *   node apps/web/scripts/postdemo.ts snapshot apps/web/dist --build <id> --out before.json
  *   node apps/web/scripts/postdemo.ts compare before.json after.json [--record change.json]
- *   node apps/web/scripts/postdemo.ts card card.json [--lang en|fr]
  *
  * snapshot hashes every built file. compare exits 1 when the build changed
- * without a recorded fallback change. card exits 1 when the card is incomplete.
+ * without a recorded fallback change.
  */
 export function snapshotDirectory(dir: string, buildId: string, takenAt = new Date().toISOString()): BuildSnapshot {
   const root = resolve(dir);
@@ -69,14 +65,7 @@ export function run(args: string[], write: (text: string) => void = (text) => pr
     }
     return verdict.pass ? 0 : 1;
   }
-  if (command === "card" && first) {
-    const language = flag(args, "lang") ?? "en";
-    if (language !== "en" && language !== "fr") throw new Error("--lang is en or fr.");
-    const input = readJson<BuildCardInput>(first);
-    write(renderBuildCard(input, language));
-    return validateBuildCard(input).length === 0 ? 0 : 1;
-  }
-  throw new Error("Usage: postdemo.ts snapshot <dist> --build <id> [--out file] | compare <before> <after> [--record change.json] | card <card.json> [--lang en|fr]");
+  throw new Error("Usage: postdemo.ts snapshot <dist> --build <id> [--out file] | compare <before> <after> [--record change.json]");
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(import.meta.filename)) {

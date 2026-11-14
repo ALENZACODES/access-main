@@ -1,37 +1,6 @@
-# Post-demo checks (master plan Days 25 to 30)
+# Post-demo checks (master plan Days 25 and 28)
 
-These tools support the demonstration day and the first week after it. They read the build and files a person supplies. They do not create counts, journeys, or answers.
-
-## Day 25: build card
-
-The presenter keeps a one-page card beside the device. Write the card input as JSON and render it:
-
-```bash
-npm run postdemo -- card card.json            # English
-npm run postdemo -- card card.json --lang fr  # French
-```
-
-```json
-{
-  "buildId": "the identifier the final build shows",
-  "checkedOn": "YYYY-MM-DD",
-  "seedCounts": [{ "file": "seed file name", "tier": "SEEDED-OPEN-DATA", "records": 0, "basis": "counted" }],
-  "sources": [{ "name": "source name", "licence": "licence id, or UNKNOWN", "retrievedOn": "YYYY-MM-DD" }],
-  "demoJourneys": [{ "name": "journey name", "status": "in-build" }],
-  "fallback": { "ready": true, "where": "where the fallback materials are" }
-}
-```
-
-The command exits with 1, and the card says it is incomplete, when:
-
-- the build identifier is a placeholder (`dev`, `e2e`)
-- a count is an estimate
-- a tier is above the prototype tiers (0, 1, E, `SEEDED-OPEN-DATA`, `PROTOTYPE-UNVERIFIED`)
-- a source has no licence or date
-- a journey that is not in the build gives no reason
-- the fallback is not ready
-
-The card states the verification position and the opening honesty statements in English and French.
+Two checks for demo day and the regression audit after it. They read the build and the test results. They do not create counts, journeys, or answers.
 
 ## Day 25: build unchanged during the session
 

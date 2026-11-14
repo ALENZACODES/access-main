@@ -45,26 +45,7 @@ describe("postdemo script", () => {
     expect(run(["compare", before, after, "--record", record], () => undefined)).toBe(0);
   });
 
-  it("renders a card and exits 1 when it is incomplete", () => {
-    const work = mkdtempSync(join(tmpdir(), "card-"));
-    const path = join(work, "card.json");
-    writeFileSync(
-      path,
-      JSON.stringify({
-        buildId: "synthetic-build",
-        checkedOn: "2000-01-03",
-        seedCounts: [{ file: "synthetic.json", tier: "1", records: 4, basis: "counted" }],
-        sources: [{ name: "Synthetic", licence: "UNKNOWN", retrievedOn: "2000-01-01" }],
-        demoJourneys: [],
-        fallback: { ready: true, where: "Synthetic folder" },
-      }),
-    );
-    const output: string[] = [];
-    expect(run(["card", path, "--lang", "fr"], (text) => output.push(text))).toBe(0);
-    expect(output.join("")).toContain("# Fiche de version");
-    writeFileSync(path, JSON.stringify({ buildId: "", checkedOn: "", seedCounts: [], sources: [], demoJourneys: [], fallback: { ready: false, where: "" } }));
-    expect(run(["card", path], () => undefined)).toBe(1);
-    expect(() => run(["card", path, "--lang", "de"])).toThrow("--lang is en or fr.");
-    expect(() => run(["snapshot", work])).toThrow("needs --build");
+  it("needs a build identifier for a snapshot", () => {
+    expect(() => run(["snapshot", tempBuild()])).toThrow("needs --build");
   });
 });
