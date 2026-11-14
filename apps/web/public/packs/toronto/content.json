@@ -1,0 +1,714 @@
+{
+  "schema_version": "offline-pack-1.0.0",
+  "pack_id": "toronto",
+  "places": [
+    {
+      "id": "osm:way/1105575638",
+      "name": "Sankofa Square",
+      "category": "attraction",
+      "wheelchair": "yes",
+      "wheelchair_description": "Washrooms that are closest and are accessible on the second floor of 10 Dundas Street across the street.",
+      "address": "1 Dundas Street East",
+      "lat": 43.656157,
+      "lon": -79.380186,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/way/1105575638",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/293309447",
+      "name": "Sankofa Square Entrance",
+      "category": "yes",
+      "wheelchair": "no",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656229,
+      "lon": -79.38056,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/293309447",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/13298086132",
+      "name": "Sankofa Square Elevator",
+      "category": "yes",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656338,
+      "lon": -79.380456,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/13298086132",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/85058607",
+      "name": "Sankofa Square Underground Parking",
+      "category": "parking",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "20 Dundas Square",
+      "lat": 43.656018,
+      "lon": -79.379794,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/85058607",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/394499199",
+      "name": "Hop on-hop off Toronto bus tours tickets and first stop",
+      "category": "ticket",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.655849,
+      "lon": -79.380446,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/394499199",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/13529609066",
+      "name": "Dundas Square Canada Post",
+      "category": "post_office",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "279 Yonge St",
+      "lat": 43.655659,
+      "lon": -79.380368,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/13529609066",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/6678059486",
+      "name": "Shoppers Drug Mart",
+      "category": "pharmacy",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "279 Yonge Street",
+      "lat": 43.655673,
+      "lon": -79.380437,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/6678059486",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/412680271",
+      "name": "Spring Sushi",
+      "category": "restaurant",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656542,
+      "lon": -79.380457,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/412680271",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/773005588",
+      "name": "The Tenor",
+      "category": "main",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656509,
+      "lon": -79.380546,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/773005588",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/2684486340",
+      "name": "Jewellery & Diamond Center",
+      "category": "jewelry",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.655852,
+      "lon": -79.379585,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/2684486340",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/400943529",
+      "name": "Starbucks",
+      "category": "cafe",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656563,
+      "lon": -79.380495,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/400943529",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/412680270",
+      "name": "Jack Astor's",
+      "category": "restaurant",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656598,
+      "lon": -79.380406,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/412680270",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/1114068278",
+      "name": "CF Toronto Eaton Centre",
+      "category": "main",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.655942,
+      "lon": -79.380893,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/1114068278",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/3708490352",
+      "name": "Entrance from The Tenor (via PATH)",
+      "category": "yes",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656435,
+      "lon": -79.38076,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/3708490352",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/2523425212",
+      "name": "Shark Club Sports Bar Grill",
+      "category": "bar",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "10 Dundas Street East",
+      "lat": 43.656544,
+      "lon": -79.380594,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/2523425212",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/399440803",
+      "name": "Milestones",
+      "category": "restaurant",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "10 Dundas Street East",
+      "lat": 43.656585,
+      "lon": -79.380539,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/399440803",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/1561892696",
+      "name": "Jugo Juice",
+      "category": "fast_food",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656556,
+      "lon": -79.380628,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/1561892696",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/2806439320",
+      "name": "Jack Astor's",
+      "category": "restaurant",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.65659,
+      "lon": -79.379843,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/2806439320",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/1288925503",
+      "name": "Toronto Eaton Centre (Yonge St) - SMART",
+      "category": "bicycle_rental",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.6557,
+      "lon": -79.380746,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/1288925503",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/11267842958",
+      "name": "The Tenor (PATH)",
+      "category": "yes",
+      "wheelchair": "yes",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656529,
+      "lon": -79.380709,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/11267842958",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/1561891124",
+      "name": "Bagel Stop",
+      "category": "cafe",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656617,
+      "lon": -79.380529,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/1561891124",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/11983196951",
+      "name": "Shake Shack",
+      "category": "fast_food",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "10 Dundas Street East",
+      "lat": 43.656483,
+      "lon": -79.380808,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/11983196951",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/519920787",
+      "name": "Pumpernickel's",
+      "category": "fast_food",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.656563,
+      "lon": -79.380709,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/519920787",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "osm:node/6712372288",
+      "name": "Nutrition House",
+      "category": "health_food",
+      "wheelchair": "UNKNOWN",
+      "wheelchair_description": "UNKNOWN",
+      "address": "UNKNOWN",
+      "lat": 43.655868,
+      "lon": -79.380967,
+      "provenance": {
+        "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+        "source_url": "https://www.openstreetmap.org/node/6712372288",
+        "licence": "ODbL-1.0",
+        "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": 0,
+        "prototype_label": "SEEDED-OPEN-DATA",
+        "freshness": "unknown"
+      }
+    }
+  ],
+  "help_numbers": [
+    {
+      "id": "emergency-911",
+      "name": {
+        "en": "Emergency services",
+        "fr": "Services d'urgence"
+      },
+      "contact": "911",
+      "how": {
+        "en": "Call 911 if you or someone else is in immediate danger, is badly hurt, or needs an ambulance.",
+        "fr": "Composez le 911 si vous ou une autre personne êtes en danger immédiat, gravement blessé, ou avez besoin d'une ambulance."
+      },
+      "url": null,
+      "provenance": {
+        "source_name": "Ontario emergency number, desk check",
+        "source_url": null,
+        "licence": "UNKNOWN",
+        "licence_url": null,
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": "E",
+        "prototype_label": null,
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "suicide-crisis-988",
+      "name": {
+        "en": "9-8-8 Suicide Crisis Helpline",
+        "fr": "Ligne d'aide en cas de crise de suicide 9-8-8"
+      },
+      "contact": "9-8-8",
+      "how": {
+        "en": "Call or text 9-8-8, any time, in English or French.",
+        "fr": "Appelez ou textez le 9-8-8, en tout temps, en français ou en anglais."
+      },
+      "url": "https://988.ca/",
+      "provenance": {
+        "source_name": "Official page, desk check",
+        "source_url": "https://988.ca/",
+        "licence": "UNKNOWN",
+        "licence_url": null,
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": "E",
+        "prototype_label": null,
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "health811",
+      "name": {
+        "en": "Health811",
+        "fr": "Health811"
+      },
+      "contact": "811",
+      "how": {
+        "en": "Call 811 for non-urgent health information from a registered nurse, 24 hours a day. TTY: 711. The App does not give health advice.",
+        "fr": "Composez le 811 pour de l'information de santé non urgente d'une infirmière ou d'un infirmier, 24 heures sur 24. ATS : 711. L'application ne donne pas de conseil de santé."
+      },
+      "url": "https://health811.ontario.ca/static/guest/help-centre/calling-health811-help-centre",
+      "provenance": {
+        "source_name": "Official page, desk check",
+        "source_url": "https://health811.ontario.ca/static/guest/help-centre/calling-health811-help-centre",
+        "licence": "UNKNOWN",
+        "licence_url": null,
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": "E",
+        "prototype_label": null,
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "connexontario",
+      "name": {
+        "en": "ConnexOntario",
+        "fr": "ConnexOntario"
+      },
+      "contact": "1-866-531-2600",
+      "how": {
+        "en": "Information about mental health, addiction, and problem gambling services in Ontario, 24 hours a day.",
+        "fr": "Information sur les services de santé mentale, de dépendance et de jeu en Ontario, 24 heures sur 24."
+      },
+      "url": "https://connexontario.ca/contact-us/",
+      "provenance": {
+        "source_name": "Official page, desk check",
+        "source_url": "https://connexontario.ca/contact-us/",
+        "licence": "UNKNOWN",
+        "licence_url": null,
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": "E",
+        "prototype_label": null,
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "poison-centre",
+      "name": {
+        "en": "Ontario Poison Centre",
+        "fr": "Centre antipoison de l'Ontario"
+      },
+      "contact": "1-800-268-9017",
+      "how": {
+        "en": "For suspected poisoning, as listed on the Health811 calling page.",
+        "fr": "En cas d'empoisonnement soupçonné, selon la page d'appel de Health811."
+      },
+      "url": "https://health811.ontario.ca/static/guest/help-centre/calling-health811-help-centre",
+      "provenance": {
+        "source_name": "Official page, desk check",
+        "source_url": "https://health811.ontario.ca/static/guest/help-centre/calling-health811-help-centre",
+        "licence": "UNKNOWN",
+        "licence_url": null,
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": "E",
+        "prototype_label": null,
+        "freshness": "unknown"
+      }
+    },
+    {
+      "id": "two-one-one",
+      "name": {
+        "en": "211 Ontario",
+        "fr": "211 Ontario"
+      },
+      "contact": "211",
+      "how": {
+        "en": "A directory of community and social services. The App does not decide whether you qualify.",
+        "fr": "Un répertoire de services communautaires et sociaux. L'application ne décide pas si vous êtes admissible."
+      },
+      "url": "https://211ontario.ca/",
+      "provenance": {
+        "source_name": "Official page, desk check",
+        "source_url": "https://211ontario.ca/",
+        "licence": "UNKNOWN",
+        "licence_url": null,
+        "source_date": "2026-11-13",
+        "retrieved_at": "2026-11-13",
+        "tier": "E",
+        "prototype_label": null,
+        "freshness": "unknown"
+      }
+    }
+  ],
+  "elevator_status": [
+    {
+      "id": "gtfs-rt-ttc-accessibility:80207",
+      "station": "Cedarvale",
+      "operator_text": "Cedarvale: Elevator ELV02-B out of service between Line 5 platform, Line 1 northbound platform/east concourse, and upper concourse while we perform maintenance.",
+      "operator_text_language": "en",
+      "stop_ids": [
+        "16069",
+        "13832",
+        "13831",
+        "16070"
+      ],
+      "checked_at": "2026-11-13T19:48:29.000Z",
+      "label": "last-checked",
+      "source_name": "TTC GTFS-Realtime accessibility alerts",
+      "source_url": null,
+      "licence": "OGL-Toronto-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 4
+    },
+    {
+      "id": "gtfs-rt-ttc-accessibility:80094",
+      "station": "Pape",
+      "operator_text": "Pape: Elevator 8D1L out of service between Pape Ave entrance, concourse and Line 2 westbound platform while we perform maintenance.",
+      "operator_text_language": "en",
+      "stop_ids": [
+        "13746",
+        "13745"
+      ],
+      "checked_at": "2026-11-13T19:48:29.000Z",
+      "label": "last-checked",
+      "source_name": "TTC GTFS-Realtime accessibility alerts",
+      "source_url": null,
+      "licence": "OGL-Toronto-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 4
+    },
+    {
+      "id": "gtfs-rt-ttc-accessibility:79729",
+      "station": "Finch",
+      "operator_text": "Finch: Elevator out of service between GO and YRT bus platform and fares concourse while we perform maintenance.",
+      "operator_text_language": "en",
+      "stop_ids": [
+        "14111",
+        "14944",
+        "16315",
+        "16316"
+      ],
+      "checked_at": "2026-11-13T19:48:29.000Z",
+      "label": "last-checked",
+      "source_name": "TTC GTFS-Realtime accessibility alerts",
+      "source_url": null,
+      "licence": "OGL-Toronto-1.0",
+      "retrieved_at": "2026-11-13",
+      "tier": 4
+    }
+  ],
+  "journeys": []
+}

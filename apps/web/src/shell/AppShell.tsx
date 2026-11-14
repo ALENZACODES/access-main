@@ -17,6 +17,7 @@ const LINKS = [
   ["/games", "nav.games", false],
   ["/help", "nav.help", false],
   ["/profile", "nav.settings", false],
+  ["/offline", "nav.offline", false],
   ["/data-status", "nav.data", false],
   ["/about", "nav.about", false],
 ] as const;

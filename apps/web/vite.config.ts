@@ -31,12 +31,15 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
         navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/packs\//],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false,
         runtimeCaching: [
           {
-            urlPattern: ({ sameOrigin }) => sameOrigin,
+            // Offline packs are stored in IndexedDB on purpose. They are not kept in the page cache,
+            // so deleting a pack removes it.
+            urlPattern: ({ sameOrigin, url }) => sameOrigin && !url.pathname.startsWith("/packs/"),
             handler: "NetworkFirst",
             options: {
               cacheName: "shell-pages",

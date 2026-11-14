@@ -15,4 +15,14 @@ The shell depends on these libraries. Their names are credits, not endorsements.
 | eslint-plugin-jsx-a11y | MIT | See the package licence |
 | React and React Router | MIT | See the package licences |
 
-Map data is not shipped. When a map is added, OpenStreetMap attribution and the ODbL share-alike duty stay with that layer.
+Map tiles are not shipped. When a map is added, OpenStreetMap attribution and the ODbL share-alike duty stay with that layer.
+
+## Offline pack data
+
+`apps/web/public/packs/toronto/content.json` is built by `apps/web/scripts/build-toronto-pack.ts`. It is downloaded only when the person asks for it.
+
+| Part | Source | Licence |
+| --- | --- | --- |
+| 24 places | OpenStreetMap, Geofabrik Ontario extract, as imported by access-maps pull request 1 (retrieved 2026-11-13) | ODbL-1.0. © OpenStreetMap contributors. The pack is a derived database under the same licence. |
+| 3 elevator status copies | TTC GTFS-Realtime accessibility alerts snapshot (retrieved 2026-11-13) | Open Government Licence – Toronto |
+| 6 help numbers | access-help `packages/help/src/signposts.ts`, desk-checked against official pages on 2026-11-13 | Facts from official pages. No licence stated, recorded as UNKNOWN. |

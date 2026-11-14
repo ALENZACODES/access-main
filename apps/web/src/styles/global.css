@@ -268,7 +268,9 @@ p, dd, li { max-width: 68ch; overflow-wrap: anywhere; }
 .field [slot="description"], .field-help { color: var(--muted); max-width: 68ch; }
 html[data-contrast="more"] .field-help { color: var(--ink); }
 
-.field input {
+.field input,
+.field select,
+.field textarea {
   font: inherit;
   color: var(--ink);
   background: var(--surface);
@@ -348,4 +350,22 @@ dd { margin: 0; }
   border: 2px solid var(--line);
   padding: 0.75rem;
   background: var(--surface);
+}
+
+.offline-banner {
+  border: 3px solid var(--ink);
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.field select:focus-visible,
+.field textarea:focus-visible,
+.field input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+progress {
+  width: min(100%, 28rem);
+  height: 1.25rem;
 }
