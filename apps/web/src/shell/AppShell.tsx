@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { SHELL_CONTRACT_VERSION } from "@access/shared";
 import { BUILD_ID } from "../buildInfo.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
+import { ErrorActions } from "./ErrorActions.tsx";
 import { UpdatePrompt } from "./UpdatePrompt.tsx";
 import { useApplyPreferences } from "./useApplyPreferences.ts";
 import { useOnline } from "./useOnline.ts";
@@ -27,7 +28,7 @@ function ShellError({ reset }: { reset: () => void }) {
     <div className="stack">
       <h1>{t("error.title")}</h1>
       <p>{t("error.body")}</p>
-      <Link className="text-link" to="/" onClick={reset}>{t("error.home")}</Link>
+      <ErrorActions state="renderFailed" onRetry={reset} onNavigate={reset} />
     </div>
   );
 }

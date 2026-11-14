@@ -109,6 +109,10 @@ export const en = {
       "No map tiles are stored. When a map is added, OpenStreetMap data stays in its own layer, with its own licence and attribution.",
     legendTitle: "How tiers are read",
     storageUnavailable: "This browser did not allow on-device storage.",
+    storageNext:
+      "Preferences and cached records cannot be kept in this browser right now. Private browsing or a full disk can cause this. You can still read help, or try again.",
+    storageRetry: "Check storage again",
+    storageHelp: "Read where preferences go",
     wifi: "Wi-Fi preference for future downloads: {{value}}.",
     wifiOn: "Wi-Fi only",
     wifiOff: "any network",
@@ -231,7 +235,9 @@ export const en = {
     deleteConfirm: "Delete preferences",
     deleteCancel: "Keep preferences",
     deleted: "Preferences were deleted from this device.",
-    couldNotSave: "The preferences could not be saved on this device.",
+    couldNotSave:
+      "The preferences could not be saved on this device. Your entries are still on this page. Try saving again. The data status page says whether this browser allows storage.",
+    dataStatusLink: "Open data status",
     sectionLanguage: "Language",
     sectionMobility: "Mobility",
     sectionDisplay: "Display",
@@ -309,13 +315,15 @@ export const en = {
   },
   notFound: {
     title: "Page not found",
-    body: "That address is not part of this shell.",
+    body: "That address is not part of the App. Check the address, or use one of these links.",
     home: "Go to the home page",
+    help: "Open help",
   },
   error: {
     title: "This page did not load",
-    body: "You can return to the home page. Nothing was uploaded.",
+    body: "Something went wrong while showing this page. Nothing was uploaded. You can try this page again or return to the home page.",
     home: "Go to the home page",
+    retry: "Try this page again",
   },
 };
 

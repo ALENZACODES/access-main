@@ -9,6 +9,7 @@ import { exportPhrases } from "../profile/exportCopy.ts";
 import { PreferenceFields } from "../profile/PreferenceFields.tsx";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { ErrorActions } from "../shell/ErrorActions.tsx";
 import { exportProfileJson, exportProfileText, StorageError } from "../storage/repository.ts";
 
 export function ProfilePage() {
@@ -105,7 +106,12 @@ export function ProfilePage() {
       {status === "withdrawn" ? (
         <p role="status" tabIndex={-1} ref={statusRef}>{t("profile.withdrawn")}</p>
       ) : null}
-      {status === "error" && issues.length === 0 ? <p role="alert">{t("profile.couldNotSave")}</p> : null}
+      {status === "error" && issues.length === 0 ? (
+        <div className="stack">
+          <p role="alert">{t("profile.couldNotSave")}</p>
+          <ErrorActions state="profileSaveFailed" />
+        </div>
+      ) : null}
       <form
         className="stack"
         onSubmit={(event) => {
