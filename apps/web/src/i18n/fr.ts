@@ -118,6 +118,10 @@ export const fr: Messages = {
       "Aucune tuile de carte n'est stockée. Quand une carte sera ajoutée, les données OpenStreetMap resteront dans leur propre couche, avec leur licence et leur attribution.",
     legendTitle: "Comment lire les niveaux",
     storageUnavailable: "Ce navigateur n'a pas autorisé le stockage sur l'appareil.",
+    storageNext:
+      "Les préférences et les enregistrements en cache ne peuvent pas être gardés dans ce navigateur pour le moment. La navigation privée ou un disque plein peuvent en être la cause. Vous pouvez quand même lire l'aide, ou réessayer.",
+    storageRetry: "Vérifier le stockage de nouveau",
+    storageHelp: "Lire où vont les préférences",
     wifi: "Préférence Wi-Fi pour les futurs téléchargements\u202f: {{value}}.",
     wifiOn: "Wi-Fi seulement",
     wifiOff: "n'importe quel réseau",
@@ -241,7 +245,9 @@ export const fr: Messages = {
     deleteConfirm: "Supprimer les préférences",
     deleteCancel: "Garder les préférences",
     deleted: "Les préférences ont été supprimées de cet appareil.",
-    couldNotSave: "Les préférences n'ont pas pu être enregistrées sur cet appareil.",
+    couldNotSave:
+      "Les préférences n'ont pas pu être enregistrées sur cet appareil. Vos entrées sont toujours sur cette page. Essayez d'enregistrer de nouveau. La page sur l'état des données indique si ce navigateur permet le stockage.",
+    dataStatusLink: "Ouvrir l'état des données",
     sectionLanguage: "Langue",
     sectionMobility: "Mobilité",
     sectionDisplay: "Affichage",
@@ -323,12 +329,14 @@ export const fr: Messages = {
   },
   notFound: {
     title: "Page introuvable",
-    body: "Cette adresse ne fait pas partie de l'interface.",
+    body: "Cette adresse ne fait pas partie de the App. Vérifiez l'adresse, ou utilisez l'un de ces liens.",
     home: "Aller à l'accueil",
+    help: "Ouvrir l'aide",
   },
   error: {
     title: "Cette page n'a pas chargé",
-    body: "Vous pouvez revenir à l'accueil. Rien n'a été envoyé.",
+    body: "Un problème est survenu pendant l'affichage de cette page. Rien n'a été envoyé. Vous pouvez réessayer cette page ou revenir à l'accueil.",
     home: "Aller à l'accueil",
+    retry: "Réessayer cette page",
   },
 };

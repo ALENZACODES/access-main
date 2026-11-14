@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { DISPLAY_TIERS, tierMessageKey, type CacheEntry } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
+import { ErrorActions } from "../shell/ErrorActions.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { clearCachedRecords, listCacheEntries, summarizeStorage, type StorageSummary } from "../storage/repository.ts";
@@ -66,7 +67,13 @@ export function DataStatusPage() {
       </section>
       <section className="stack" aria-labelledby="profile-status-title">
         <h2 id="profile-status-title">{t("data.profileTitle")}</h2>
-        {summary?.health === "unavailable" ? <p role="status">{t("data.storageUnavailable")}</p> : null}
+        {summary?.health === "unavailable" ? (
+          <div className="stack">
+            <p role="status">{t("data.storageUnavailable")}</p>
+            <p>{t("data.storageNext")}</p>
+            <ErrorActions state="storageUnavailable" onRetry={load} />
+          </div>
+        ) : null}
         {summary && !summary.profile ? <p>{t("data.profileMissing")}</p> : null}
         {summary?.profile ? (
           <p>
