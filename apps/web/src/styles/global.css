@@ -349,3 +349,10 @@ dd { margin: 0; }
   padding: 0.75rem;
   background: var(--surface);
 }
+
+/* Day 17 audit: footer links met only 21px. WCAG 2.2 SC 2.5.8 needs 24 by 24 CSS pixels. */
+.site-footer .text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}

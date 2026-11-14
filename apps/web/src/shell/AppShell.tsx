@@ -111,7 +111,7 @@ export function AppShell() {
       <footer className="site-footer">
         <p>{t("footer.prototype")}</p>
         <p>
-          <span>{t("footer.build", { id: BUILD_ID })}</span>
+          <span data-build-id={BUILD_ID}>{t("footer.build", { id: BUILD_ID })}</span>
           {" · "}
           <span>{t("footer.contract", { version: SHELL_CONTRACT_VERSION })}</span>
           {" · "}
