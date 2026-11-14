@@ -20,3 +20,16 @@ Tier ids and the access-tools string map, including `administrator_page` → `E`
 The directory payload matches access-tools pull request 2 (`DirectoryRecord` in `packages/navigator`). Unknown keys are rejected, including a key named `eligibility`. `packages/schema/TIERS.md` maps `administrator_page` to tier `E`: a desk check of an official page, not an eligibility decision. A stored directory link uses that mapping: `canonicalTierFromForeign` reads `verificationTier` and the provenance tier must match. It is not a hard-coded `E`.
 
 `SHELL_CONTRACT_VERSION` is `1.1.0`. Bump it when a field changes meaning.
+
+## Contract check before display
+
+`packages/shared/src/conformance.ts` checks every route's result before the shell shows it. `createModules` wraps all six routes with `guardModules`.
+
+- Result: `moduleId` matches the route, `availability` is `stub`, `ready`, or `error`, `liveStatus` is `unavailable`, `asOf` is `null` or an ISO date-time, and only a `ready` result lists items. Item ids are unique.
+- Places, journey, finders, and help items need a provenance that passes `validateProvenance`: source, licence (`UNKNOWN` allowed, blank refused), source date, retrieval time, and a prototype-cache tier.
+- A finder hit keeps `detail: "unknown"`. A journey plan keeps `liveStatus: "unavailable"`. A directory record passes `validateDirectoryRecord` and maps to tier `E`. A game keeps `clinicalClaim: false`, `seizureRiskFlash: false`, and `keyboardOperable: true`. A help article states `en` or `fr`.
+- Health and credential keys are refused anywhere in an item.
+
+A result that fails is replaced by an empty `error` result with `modules.contractError`. A module that throws gives `modules.error`. The checker does not repair or fill in a record. Lane repositories can copy `checkModuleItem` and `checkModuleResult` into their own tests.
+
+Each listed item shows its source, licence, date, and tier in a description list, in English or French. A licence of `UNKNOWN` is shown as Unknown. A help article in the other language carries a `lang` attribute and a note saying which language it is in. Lane message keys are not shell strings, so the shell picks its own sentence for each state.
