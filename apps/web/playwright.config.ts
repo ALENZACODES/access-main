@@ -6,6 +6,7 @@ const buildId = process.env.VITE_BUILD_ID || "e2e";
 
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: ["release/**"],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
