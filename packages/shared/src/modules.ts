@@ -15,7 +15,7 @@ import type { RoutingPreference, UserProfile } from "./profile.ts";
 export const MODULE_IDS = ["places", "journey", "finders", "navigator", "games", "help"] as const;
 export type ModuleId = (typeof MODULE_IDS)[number];
 
-export const SHELL_CONTRACT_VERSION = "1.1.0";
+export const SHELL_CONTRACT_VERSION = "1.2.0";
 
 export interface ModuleContext {
   locale: "en" | "fr";
@@ -56,9 +56,54 @@ export interface PlacesQuery {
   text: string;
 }
 
+/**
+ * Data pack shapes behind a place page. `@access-main/data-client` owns these
+ * types. This is the contract copy until that package is the single source.
+ * A field's value is the string "UNKNOWN" when the source gives nothing.
+ */
+export interface PackFieldValue {
+  value: string | number | Array<[number, number]>;
+  source_id: string;
+  licence: string;
+  retrieved_at: string;
+  tier: 0 | 1 | 2 | 3 | 4;
+  source_key?: string;
+  raw?: string | number | null;
+  derived?: boolean;
+}
+
+export interface PackRecord {
+  id: string;
+  tranche: "venue" | "washroom" | "transit" | "path";
+  region: string;
+  fields: Record<string, PackFieldValue>;
+}
+
+export interface PackSourceEntry {
+  sourceId: string;
+  name: string;
+  licence: string;
+  licenceUrl: string;
+  attribution: string;
+  retrieved: string;
+  shareAlike: boolean;
+  inWebPack: boolean;
+  heldReason: string | null;
+}
+
+export interface PlaceDetail {
+  id: string;
+  /** "UNKNOWN" when the record has no known name. */
+  name: string;
+  record: PackRecord;
+  sources: PackSourceEntry[];
+}
+
 export interface PlacesModule {
   id: "places";
   search(query: PlacesQuery, ctx: ModuleContext): Promise<ModuleResult<PlaceHit>>;
+  /** One record from the data pack, with the sources behind it. An empty result means no such record. */
+  get(id: string, ctx: ModuleContext): Promise<ModuleResult<PlaceDetail>>;
 }
 
 export interface JourneyRequest {

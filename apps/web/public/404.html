@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>the App</title>
+<script>
+(function () {
+  var base = "/";
+  var path = location.pathname;
+  var rest = path.indexOf(base) === 0 ? path.slice(base.length) : "";
+  var target = base;
+  if (rest) target += "?spa-path=" + encodeURIComponent(rest + location.search);
+  location.replace(target + location.hash);
+})();
+</script>
+</head>
+<body>
+<p lang="en">Opening the App. <a href="/">Continue</a></p>
+<p lang="fr">Ouverture de l’application. <a href="/">Continuer</a></p>
+</body>
+</html>

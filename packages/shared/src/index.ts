@@ -57,6 +57,7 @@ export {
   CACHE_KINDS,
   estimateEntryBytes,
   validateCacheEntry,
+  validateObservedAt,
   validateOutboxNote,
   withinStorageLimit,
   type CacheEntry,
@@ -85,8 +86,25 @@ export {
   type ModuleRegistry,
   type ModuleResult,
   type NavigatorModule,
+  type PackFieldValue,
+  type PackRecord,
+  type PackSourceEntry,
+  type PlaceDetail,
   type PlaceHit,
   type PlacesModule,
   type PlacesQuery,
 } from "./modules.ts";
+export {
+  PACK_SCHEMA_VERSION,
+  validateManifest,
+  validatePackContent,
+  type PackContent,
+  type PackCounts,
+  type PackElevatorStatus,
+  type PackHelpNumber,
+  type PackManifest,
+  type PackPlace,
+  type PackSourceDate,
+  type StoredPack,
+} from "./pack.ts";
 export { checkModuleItem, checkModuleResult, guardModules, lastContractIssues } from "./conformance.ts";

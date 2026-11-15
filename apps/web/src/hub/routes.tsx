@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { Outlet, type RouteObject } from "react-router-dom";
+import { type RouteObject } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./i18n";
 
@@ -18,18 +18,14 @@ function Pending({ children }: { children: ReactNode }) {
   return <Suspense fallback={<p role="status">{t("loading")}</p>}>{children}</Suspense>;
 }
 
-export const hubRoutes: RouteObject[] = [{
-  path: "more",
-  element: <Outlet />,
-  children: [
-    { index: true, element: <Pending><HubIndex /></Pending> },
-    { path: "employment", element: <Pending><EmploymentPage /></Pending> },
-    { path: "housing", element: <Pending><HousingPage /></Pending> },
-    { path: "safety", element: <Pending><SafetyPage /></Pending> },
-    { path: "diary", element: <Pending><DiaryPage /></Pending> },
-    { path: "auditors", element: <Pending><AuditorsPage /></Pending> },
-    { path: "handoff", element: <Pending><HandoffPage /></Pending> },
-    { path: "peers", element: <Pending><PeersPage /></Pending> },
-    { path: "events", element: <Pending><EventsPage /></Pending> },
-  ],
-}];
+export const hubRoutes: RouteObject[] = [
+  { index: true, element: <Pending><HubIndex /></Pending> },
+  { path: "employment", element: <Pending><EmploymentPage /></Pending> },
+  { path: "housing", element: <Pending><HousingPage /></Pending> },
+  { path: "safety", element: <Pending><SafetyPage /></Pending> },
+  { path: "diary", element: <Pending><DiaryPage /></Pending> },
+  { path: "auditors", element: <Pending><AuditorsPage /></Pending> },
+  { path: "handoff", element: <Pending><HandoffPage /></Pending> },
+  { path: "peers", element: <Pending><PeersPage /></Pending> },
+  { path: "events", element: <Pending><EventsPage /></Pending> },
+];

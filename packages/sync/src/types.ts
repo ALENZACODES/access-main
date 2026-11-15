@@ -1,4 +1,6 @@
-import type { CacheEntry, OutboxItem, Provenance } from "@access/shared";
+import type { CacheEntry, Provenance } from "@access/shared";
+import type { OutboxItem } from "./outbox.ts";
+
 
 /** A field override is used when individual facts come from different sources. */
 export interface SyncEntry extends CacheEntry {

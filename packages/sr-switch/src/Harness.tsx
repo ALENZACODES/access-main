@@ -9,7 +9,7 @@ type Catalog = typeof en;
 type Key = keyof Catalog;
 const catalogs: Record<Language, Catalog> = { en, fr };
 
-const pageTargets = ["language-en", "language-fr", "request-label", "submit-request", "view-summary", "view-details", "open-dialog"];
+const pageTargets = ["skip-link", "language-en", "language-fr", "request-label", "submit-request", "view-summary", "view-details", "open-dialog"];
 const modalTargets = ["cancel-dialog", "confirm-dialog"];
 
 export function Harness() {
@@ -104,7 +104,7 @@ export function Harness() {
 
   return (
     <>
-      <a className="skip" href="#main">{t.skip}</a>
+      <a className="skip" id="skip-link" href="#main">{t.skip}</a>
       <header>
         <h1>{t.appTitle}</h1>
         <fieldset className="language-picker" role="radiogroup">

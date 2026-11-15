@@ -25,7 +25,7 @@ function ready<T>(id: ModuleResult<T>["moduleId"], items: T[]): ModuleResult<T> 
 
 function stubRegistry(): ModuleRegistry {
   return {
-    places: { id: "places", search: () => Promise.resolve(emptyModuleResult("places", "modules.unavailable")) },
+    places: { id: "places", search: () => Promise.resolve(emptyModuleResult("places", "modules.unavailable")), get: () => Promise.resolve(emptyModuleResult("places", "modules.unavailable")) },
     journey: { id: "journey", plan: () => Promise.resolve(emptyModuleResult("journey", "modules.unavailable")) },
     finders: { id: "finders", search: () => Promise.resolve(emptyModuleResult("finders", "modules.unavailable")) },
     navigator: { id: "navigator", list: () => Promise.resolve(emptyModuleResult("navigator", "modules.unavailable")) },
@@ -100,7 +100,7 @@ describe("guardModules", () => {
   it("passes a conforming result through unchanged", async () => {
     const registry = stubRegistry();
     const result = ready("places", [{ id: "p1", name: "Synthetic place", provenance: PROVENANCE }]);
-    registry.places = { id: "places", search: () => Promise.resolve(result) };
+    registry.places = { id: "places", search: () => Promise.resolve(result), get: () => Promise.resolve(emptyModuleResult("places", "modules.unavailable")) };
     const guarded = guardModules(registry);
     await expect(guarded.places.search({ text: "x" }, ctx)).resolves.toBe(result);
     expect(lastContractIssues.get("places")).toEqual([]);
@@ -111,6 +111,7 @@ describe("guardModules", () => {
     registry.places = {
       id: "places",
       search: () => Promise.resolve(ready("places", [{ id: "p1", name: "No provenance" } as never])),
+      get: () => Promise.resolve(emptyModuleResult("places", "modules.unavailable")),
     };
     const result = await guardModules(registry).places.search({ text: "x" }, ctx);
     expect(result).toMatchObject({ availability: "error", items: [], messageKey: "modules.contractError", liveStatus: "unavailable" });
