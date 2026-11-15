@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { MAX_DWELL_MS, MIN_DWELL_MS, DWELL_STEP_MS, GazeSimulatorAdapter } from "./adapters/gaze.ts";
+import { DEFAULT_DWELL_MS, DWELL_OFF_MS, MAX_DWELL_MS, DWELL_STEP_MS, GazeSimulatorAdapter } from "./adapters/gaze.ts";
 import { KeyboardAdapter } from "./adapters/keyboard.ts";
 import { SwitchAdapter, switchInputFromKey } from "./adapters/switch.ts";
 import { VoiceAdapter } from "./adapters/voice.ts";
@@ -260,7 +260,9 @@ function GazePanel({ lang, adapter, deliver }: { lang: Lang; adapter: GazeSimula
     [stop, adapter],
   );
 
+  const off = dwellMs === DWELL_OFF_MS;
   const seconds = new Intl.NumberFormat(lang).format(dwellMs / 1000);
+  const valueText = off ? t(lang, "gaze.dwellOff") : t(lang, "gaze.dwellValue", { milliseconds: dwellMs });
   const onDwellChange = (value: string) => {
     const next = adapter.setDwellMs(Number(value));
     setDwellMs(next);
@@ -269,25 +271,34 @@ function GazePanel({ lang, adapter, deliver }: { lang: Lang; adapter: GazeSimula
   return (
     <>
       <p>{t(lang, "gaze.intro")}</p>
-      <p>{t(lang, "gaze.dwellInfo", { seconds })}</p>
+      <p>{off ? t(lang, "gaze.dwellInfoOff") : t(lang, "gaze.dwellInfo", { seconds })}</p>
       <div className="dwell-control">
         <label htmlFor="gaze-dwell">{t(lang, "gaze.dwellLabel")}</label>
         <input
           id="gaze-dwell"
           type="range"
-          min={MIN_DWELL_MS}
+          min={DWELL_OFF_MS}
           max={MAX_DWELL_MS}
           step={DWELL_STEP_MS}
           value={dwellMs}
           data-testid="gaze-dwell"
-          aria-valuemin={MIN_DWELL_MS}
+          aria-valuemin={DWELL_OFF_MS}
           aria-valuemax={MAX_DWELL_MS}
           aria-valuenow={dwellMs}
-          aria-valuetext={t(lang, "gaze.dwellValue", { milliseconds: dwellMs })}
+          aria-valuetext={valueText}
           onChange={(event) => onDwellChange(event.target.value)}
         />
+        <label className="dwell-off">
+          <input
+            type="checkbox"
+            checked={off}
+            data-testid="gaze-dwell-off"
+            onChange={(event) => onDwellChange(event.target.checked ? String(DWELL_OFF_MS) : String(DEFAULT_DWELL_MS))}
+          />
+          {t(lang, "gaze.dwellOff")}
+        </label>
         <output htmlFor="gaze-dwell" data-testid="gaze-dwell-value">
-          {t(lang, "gaze.dwellValue", { milliseconds: dwellMs })}
+          {valueText}
         </output>
       </div>
       <div className="button-row">

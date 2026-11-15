@@ -50,6 +50,8 @@
   "gaze.dwellInfo": "Maintenez le pointeur sur une cible pendant {seconds} secondes pour la sélectionner. Appuyer sur une cible au clavier ou la toucher vaut pour une fixation terminée.",
   "gaze.dwellLabel": "Durée de fixation",
   "gaze.dwellValue": "{milliseconds} millisecondes",
+  "gaze.dwellOff": "Désactivé",
+  "gaze.dwellInfoOff": "La sélection par fixation est désactivée. Appuyez sur une cible ou touchez-la pour la sélectionner. Le pointeur ne sélectionne pas en attendant.",
   "gaze.idle": "Aucune cible sous le pointeur.",
   "gaze.progress": "Fixation sur {label} : {percent} %",
   "widget.title": "Choisir une option",

@@ -144,6 +144,11 @@ describe("gaze simulator", () => {
     expect(g.dwellMs).toBe(1200);
     expect(g.progress(400)).toBeNull();
     expect(g.setDwellMs(50)).toBe(200);
-    expect(g.setDwellMs(4000)).toBe(2000);
+    expect(g.setDwellMs(4000)).toBe(4000);
+    expect(g.setDwellMs(9000)).toBe(8000);
+    expect(g.setDwellMs(0)).toBe(0);
+    g.handle({ type: "gaze-at", target: "confirm", timeMs: 0 });
+    expect(g.handle({ type: "gaze-at", target: "confirm", timeMs: 20_000 }).kind).toBe("ignored");
+    expect(g.progress(20_000)).toBeNull();
   });
 });

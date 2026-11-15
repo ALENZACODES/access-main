@@ -95,17 +95,25 @@ describe("shell", () => {
     expect(widget().dataset.confirmed).toBe("true");
   });
 
-  it("gaze dwell time defaults to 800 milliseconds and can be adjusted", () => {
+  it("gaze dwell time defaults to 800 milliseconds and can be adjusted, turned off, or raised to 8000 milliseconds", () => {
     render(<App initialMode="gaze" />);
     const control = screen.getByLabelText("Dwell time");
     expect((control as HTMLInputElement).value).toBe("800");
+    expect((control as HTMLInputElement).max).toBe("8000");
     expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("800 milliseconds");
     fireEvent.change(control, { target: { value: "1200" } });
     expect((control as HTMLInputElement).value).toBe("1200");
     expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("1200 milliseconds");
+    fireEvent.change(control, { target: { value: "8000" } });
+    expect((control as HTMLInputElement).value).toBe("8000");
+    expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("8000 milliseconds");
+    fireEvent.click(screen.getByTestId("gaze-dwell-off"));
+    expect((control as HTMLInputElement).value).toBe("0");
+    expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("Off");
+    expect(screen.getByText(/Dwell selection is off/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Français" }));
     expect(screen.getByLabelText("Durée de fixation")).toBeTruthy();
-    expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("1200 millisecondes");
+    expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("Désactivé");
   });
 
   it("the widget works in every mode without using the mode's own input", () => {

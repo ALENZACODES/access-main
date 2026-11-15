@@ -2,12 +2,14 @@ import type { ActionId, AdapterResult, ControlAdapter } from "../types.ts";
 
 export const DEFAULT_DWELL_MS = 800;
 export const MIN_DWELL_MS = 200;
-export const MAX_DWELL_MS = 2000;
+export const MAX_DWELL_MS = 8000;
 export const DWELL_STEP_MS = 100;
+export const DWELL_OFF_MS = 0;
 
-/** Snap a requested dwell time to the adjustable range used in the UI. */
+/** Snap a requested dwell time to the adjustable range used in the UI. 0 turns dwell off. */
 export function normalizeDwellMs(value: number): number {
   if (!Number.isFinite(value)) throw new RangeError("dwellMs must be a finite number");
+  if (value <= DWELL_OFF_MS) return DWELL_OFF_MS;
   const snapped = Math.round(value / DWELL_STEP_MS) * DWELL_STEP_MS;
   return Math.min(MAX_DWELL_MS, Math.max(MIN_DWELL_MS, snapped));
 }
@@ -48,6 +50,7 @@ export class GazeSimulatorAdapter implements ControlAdapter<GazeInput> {
       return { kind: "ignored" };
     }
     if (input.type !== "gaze-at") return { kind: "ignored" };
+    if (this.dwellMs === DWELL_OFF_MS) return { kind: "ignored" };
     if (this.target !== input.target || input.timeMs < this.startMs) {
       this.target = input.target;
       this.startMs = input.timeMs;
@@ -62,7 +65,7 @@ export class GazeSimulatorAdapter implements ControlAdapter<GazeInput> {
 
   /** Fraction of the dwell completed (0 to 1) for the current target, or null. */
   progress(nowMs: number): { target: ActionId; fraction: number } | null {
-    if (this.target === null) return null;
+    if (this.dwellMs === DWELL_OFF_MS || this.target === null) return null;
     if (this.fired) return { target: this.target, fraction: 1 };
     return { target: this.target, fraction: Math.min(1, Math.max(0, (nowMs - this.startMs) / this.dwellMs)) };
   }

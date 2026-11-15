@@ -50,6 +50,8 @@
   "gaze.dwellInfo": "Rest the pointer on a target for {seconds} seconds to select it. Pressing a target with the keyboard or a tap counts as a finished dwell.",
   "gaze.dwellLabel": "Dwell time",
   "gaze.dwellValue": "{milliseconds} milliseconds",
+  "gaze.dwellOff": "Off",
+  "gaze.dwellInfoOff": "Dwell selection is off. Press or tap a target to select it. The pointer does not select by waiting.",
   "gaze.idle": "No target under the pointer.",
   "gaze.progress": "Dwelling on {label}: {percent}%",
   "widget.title": "Choose an option",
