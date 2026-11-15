@@ -36,14 +36,12 @@ const cacheEntry = {
 } as const;
 const outbox = {
   type: "object", additionalProperties: false,
-  required: ["id", "created_at", "kind", "based_on_record_id", "note", "observed_at", "made_offline", "status"],
+  required: ["id", "created_at", "kind", "based_on_record_id", "note", "status"],
   properties: {
     id: { type: "string", minLength: 1 }, created_at: { type: "string", format: "date-time" },
     kind: { const: "correction-report" },
     based_on_record_id: { type: ["string", "null"] },
     note: { type: "string", minLength: 1, maxLength: 500 },
-    observed_at: { type: "string", format: "date-time" },
-    made_offline: { type: "boolean" },
     status: { const: "queued-on-device" },
   },
 } as const;

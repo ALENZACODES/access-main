@@ -11,7 +11,6 @@ import {
   deleteProfile,
   enqueueReport,
   getPack,
-  listOutbox,
   savePack,
   exportProfileText,
   putCacheEntry,
@@ -114,13 +113,5 @@ describe("offline pack storage", () => {
     expect(await getPack("toronto")).toBeNull();
   });
 
-  it("labels a report with the time it was observed, not the time it was queued", async () => {
-    const item = await enqueueReport("Ramp blocked by a sign", "osm:node/1", NOW, { observedAt: "2026-11-13T09:15:00.000Z", madeOffline: true });
-    expect(item.observed_at).toBe("2026-11-13T09:15:00.000Z");
-    expect(item.created_at).toBe(NOW);
-    expect(item.made_offline).toBe(true);
-    expect((await listOutbox())[0]?.observed_at).toBe("2026-11-13T09:15:00.000Z");
-    await expect(enqueueReport("later", null, NOW, { observedAt: "2026-11-14T12:00:00.000Z" })).rejects.toThrow(/in_future/);
-  });
 });
 

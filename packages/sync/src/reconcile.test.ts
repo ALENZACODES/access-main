@@ -100,7 +100,7 @@ describe("offline reconciliation — demonstration data only", () => {
   it("keeps on-device queued notes without inventing any upload", () => {
     const [a, b] = pair();
     a.outbox.push({ id: "demo-note", created_at: "2026-01-01T00:00:00Z", kind: "correction-report",
-      based_on_record_id: "demo-record", note: "Demonstration correction only", observed_at: "2026-01-01T00:00:00Z", made_offline: true, status: "queued-on-device" });
+      based_on_record_id: "demo-record", note: "Demonstration correction only", status: "queued-on-device" });
     b.outbox = copy(a.outbox);
     const report = reconcile(a, b);
     expect(report.merged.outbox).toEqual(a.outbox);

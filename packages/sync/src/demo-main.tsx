@@ -10,7 +10,9 @@ function Demo() {
   document.documentElement.lang = locale;
   const [report, setReport] = useState<ReconcileReport | null>(location.search.includes("empty=1") ? null : demonstrationReport);
   return <>
-    <p style={{ padding: "1rem", fontFamily: "system-ui" }}>{catalogs[locale].demo}</p>
+    <header>
+      <p style={{ padding: "1rem", fontFamily: "system-ui", margin: 0 }}>{catalogs[locale].demo}</p>
+    </header>
     <ReviewScreen report={report} locale={locale} onResolved={setReport} />
   </>;
 }

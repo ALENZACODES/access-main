@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AboutPage } from "./pages/AboutPage.tsx";
+import { BuildCardPage } from "./pages/BuildCardPage.tsx";
 import { DataStatusPage } from "./pages/DataStatusPage.tsx";
 import { HelpPage } from "./pages/HelpPage.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: "profile", element: <ProfilePage /> },
       { path: "data-status", element: <DataStatusPage /> },
       { path: "offline", element: <OfflinePackPage /> },
+      { path: "build-card", element: <BuildCardPage /> },
       { path: "places", element: <ModulePage id="places" /> },
       { path: "journey", element: <ModulePage id="journey" /> },
       { path: "finders", element: <ModulePage id="finders" /> },

@@ -124,10 +124,7 @@ export function LegacyOfflinePackPage() {
       return;
     }
     try {
-      await enqueueReport(note, reportPlace || null, new Date().toISOString(), {
-        observedAt: observedDate.toISOString(),
-        madeOffline: !online,
-      });
+      await enqueueReport(note, reportPlace || null, new Date().toISOString());
       setNote("");
       setReportState("queued");
       setOutbox(await listOutbox());
@@ -321,8 +318,8 @@ export function LegacyOfflinePackPage() {
                   <li key={item.id}>
                     <p>{item.note}</p>
                     <p>
-                      {t(item.made_offline ? "offline.reportItemOffline" : "offline.reportItem", {
-                        date: formatDate(item.observed_at ?? item.created_at),
+                      {t("offline.reportItem", {
+                        date: formatDate(item.created_at),
                       })}
                     </p>
                   </li>

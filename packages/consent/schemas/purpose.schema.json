@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:access-main:consent:purpose:1.0.0",
+  "title": "Consent purpose",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_type", "schema_version", "id", "version", "title", "description", "data_categories", "leaves_device", "prototype_label"],
+  "properties": {
+    "record_type": { "const": "consent_purpose" },
+    "schema_version": { "const": "consent-purpose-1.0.0" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "title": { "$ref": "#/$defs/localizedShort" },
+    "description": { "$ref": "#/$defs/localizedLong" },
+    "data_categories": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["display_settings", "route_preferences", "equipment_size", "language", "offline_map_cache", "local_usage_counts"] }
+    },
+    "leaves_device": { "const": false },
+    "prototype_label": { "enum": ["PROTOTYPE-UNVERIFIED", "SEEDED-OPEN-DATA"] }
+  },
+  "$defs": {
+    "localizedShort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "fr"],
+      "properties": {
+        "en": { "type": "string", "pattern": "\\S", "maxLength": 160 },
+        "fr": { "type": "string", "pattern": "\\S", "maxLength": 160 }
+      }
+    },
+    "localizedLong": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "fr"],
+      "properties": {
+        "en": { "type": "string", "pattern": "\\S", "maxLength": 1200 },
+        "fr": { "type": "string", "pattern": "\\S", "maxLength": 1200 }
+      }
+    }
+  }
+}
