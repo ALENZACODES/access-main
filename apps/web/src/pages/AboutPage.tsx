@@ -30,7 +30,7 @@ export function AboutPage() {
         <p>{t("footer.build", { id: BUILD_ID })}</p>
         <p>{t("footer.contract", { version: CONTRACT_VERSION })}</p>
         <p>
-          <Link to="/build-card">{t("buildCard.link")}</Link>
+          <Link className="text-link" to="/build-card">{t("buildCard.link")}</Link>
         </p>
       </section>
       <p>{t("about.frenchNote")}</p>
