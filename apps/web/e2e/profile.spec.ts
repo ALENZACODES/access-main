@@ -7,7 +7,7 @@ async function grantConsent(page: import("@playwright/test").Page) {
   await expect(consent).toBeChecked();
 }
 
-test("onboarding saves a profile only after consent", async ({ page }) => {
+test("onboarding saves a profile only after consent", { annotation: { type: "check", description: "P-profile-consent" } }, async ({ page }) => {
   await page.goto("/onboarding");
   for (let step = 0; step < 4; step += 1) {
     await page.getByRole("button", { name: "Continue" }).click();
@@ -26,7 +26,7 @@ test("onboarding saves a profile only after consent", async ({ page }) => {
   await expect(page.getByRole("checkbox", { name: "Store these preferences on this device only" })).toBeChecked();
 });
 
-test("invalid width is refused and higher contrast persists", async ({ page }) => {
+test("invalid width is refused and higher contrast persists", { annotation: { type: "check", description: "P-profile-validation" } }, async ({ page }) => {
   await page.goto("/profile");
   await page.getByLabel("Chair width in millimetres").fill("0");
   await page.getByRole("button", { name: "Save on this device" }).click();
@@ -59,7 +59,7 @@ test("invalid width is refused and higher contrast persists", async ({ page }) =
   await expect(page.getByText("Live elevator and disruption status is unavailable")).toBeVisible();
 });
 
-test("withdraw clears preferences and delete moves focus to the status", async ({ page }) => {
+test("withdraw clears preferences and delete moves focus to the status", { annotation: { type: "check", description: "P-profile-delete" } }, async ({ page }) => {
   await page.goto("/profile");
   await grantConsent(page);
   await page.getByRole("button", { name: "Save on this device" }).click();
@@ -107,7 +107,7 @@ test("withdraw clears preferences and delete moves focus to the status", async (
   await expect(page.getByText("No preferences record is stored.")).toBeVisible();
 });
 
-test("French withdraw dialog returns focus when cancelled", async ({ page }) => {
+test("French withdraw dialog returns focus when cancelled", { annotation: { type: "check", description: "P-profile-french" } }, async ({ page }) => {
   await page.goto("/profile");
   await page.getByRole("button", { name: "Français" }).click();
   const consent = page.getByRole("checkbox", { name: "Enregistrer ces préférences sur cet appareil seulement" });
