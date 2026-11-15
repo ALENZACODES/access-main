@@ -37,22 +37,27 @@ const source = fs.readFileSync(swPath, "utf8");
 const match = source.match(/precacheAndRoute\(\s*(\[[\s\S]*?\])\s*(?:,|\))/);
 if (!match) fail(`Could not find precacheAndRoute([...]) in ${path.relative(repoRoot, swPath)}.`);
 
+// Workbox emits a JS array literal ({url:"...",revision:...}), not JSON.
 let entries;
 try {
-  entries = JSON.parse(match[1]);
+  const literal = match[1].replace(/\b(url|revision)\s*:/g, '"$1":');
+  entries = JSON.parse(literal);
 } catch (error) {
-  fail(`Precache manifest in ${path.relative(repoRoot, swPath)} is not valid JSON: ${error instanceof Error ? error.message : error}`);
+  fail(`Could not parse precache manifest in ${path.relative(repoRoot, swPath)}: ${error instanceof Error ? error.message : error}`);
 }
 
 if (!Array.isArray(entries) || entries.length === 0) {
   fail("The built precache manifest is empty. Refusing to treat this as a passing install.");
 }
 
+const seen = new Set();
 const assets = [];
 for (const entry of entries) {
   const url = typeof entry === "string" ? entry : entry?.url;
   if (typeof url !== "string" || !url) fail(`Precache entry is missing a url: ${JSON.stringify(entry)}`);
   const relative = url.replace(/^\//, "");
+  if (seen.has(relative)) continue;
+  seen.add(relative);
   const filePath = path.join(distDir, relative);
   if (!fs.existsSync(filePath)) fail(`Precached file is missing on disk: ${relative}`);
   const bytes = fs.statSync(filePath).size;
