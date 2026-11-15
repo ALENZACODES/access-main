@@ -20,7 +20,7 @@ function localInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function OfflinePackPage() {
+export function LegacyOfflinePackPage() {
   const { t, i18n } = useTranslation();
   const online = useOnline();
   const language = i18n.language.startsWith("fr") ? "fr" : "en";
@@ -124,10 +124,7 @@ export function OfflinePackPage() {
       return;
     }
     try {
-      await enqueueReport(note, reportPlace || null, new Date().toISOString(), {
-        observedAt: observedDate.toISOString(),
-        madeOffline: !online,
-      });
+      await enqueueReport(note, reportPlace || null, new Date().toISOString());
       setNote("");
       setReportState("queued");
       setOutbox(await listOutbox());
@@ -321,8 +318,8 @@ export function OfflinePackPage() {
                   <li key={item.id}>
                     <p>{item.note}</p>
                     <p>
-                      {t(item.made_offline ? "offline.reportItemOffline" : "offline.reportItem", {
-                        date: formatDate(item.observed_at ?? item.created_at),
+                      {t("offline.reportItem", {
+                        date: formatDate(item.created_at),
                       })}
                     </p>
                   </li>
@@ -355,3 +352,4 @@ export function OfflinePackPage() {
     </div>
   );
 }
+export { OfflineRegionPage as OfflinePackPage } from "../offline/RegionPackPage.tsx";
