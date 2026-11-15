@@ -97,8 +97,9 @@ test.skip("Day 11: legacy Toronto pack page French render is no longer mounted a
 for (const language of ["en", "fr"] as const) {
   test(`offline regions keyboard and accessibility (${language})`, async ({ page, context }) => {
     await page.goto("/offline");
-    await page.evaluate((lang) => localStorage.setItem("i18nextLng", lang), language);
-    await page.reload();
+    if (language === "fr") {
+      await page.getByRole("button", { name: "Français" }).click();
+    }
     const heading = language === "en" ? "Offline regions" : "Régions hors ligne";
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
     await page.addScriptTag({ content: axe.source });
