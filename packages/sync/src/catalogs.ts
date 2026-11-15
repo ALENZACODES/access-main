@@ -12,6 +12,7 @@ export const catalogs = {
     apply: "Apply choices locally", chosen: "Selected", selectionRequired: "Choose a resolution for each field.",
     demo: "Demonstration data only — not real accessibility observations.",
     labels: "Copies", queue: "On-device queued reports", unresolved: "Unresolved; this field remains Unknown.",
+    labelSeparator: ": ",
   },
   fr: {
     heading: "Examen hors ligne", subtitle: "Comparez deux copies stockées sur cet appareil. Aucun envoi n’est effectué.",
@@ -24,6 +25,7 @@ export const catalogs = {
     chooseLeft: "Choisir gauche", chooseRight: "Choisir droite", keepUnknown: "Garder Inconnu",
     apply: "Appliquer les choix localement", chosen: "Sélection", selectionRequired: "Choisissez une résolution pour chaque champ.",
     demo: "Données de démonstration uniquement — aucune observation réelle sur l’accessibilité.",
-    labels: "Copies", queue: "Signalements en attente sur l’appareil", unresolved: "Non résolu ; ce champ reste Inconnu.",
+    labels: "Copies", queue: "Signalements en attente sur l’appareil", unresolved: "Non résolu ; ce champ reste Inconnu.",
+    labelSeparator: " : ",
   },
 } as const;
