@@ -2,6 +2,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import type { ValidateFunction } from "ajv";
 import { CACHE_KINDS } from "@access/shared";
+import { outboxItemSchema } from "./outbox.ts";
 import type { Conflict, ReconcileReport, Snapshot } from "./types.ts";
 
 // Every schema is draft 2020-12 and closed at its defined boundaries.
@@ -34,17 +35,7 @@ const cacheEntry = {
     field_provenance: { type: "object", additionalProperties: provenance },
   },
 } as const;
-const outbox = {
-  type: "object", additionalProperties: false,
-  required: ["id", "created_at", "kind", "based_on_record_id", "note", "status"],
-  properties: {
-    id: { type: "string", minLength: 1 }, created_at: { type: "string", format: "date-time" },
-    kind: { const: "correction-report" },
-    based_on_record_id: { type: ["string", "null"] },
-    note: { type: "string", minLength: 1, maxLength: 500 },
-    status: { const: "queued-on-device" },
-  },
-} as const;
+const outbox = outboxItemSchema;
 const snapshotCore = {
   type: "object", additionalProperties: false,
   required: ["label", "as_of", "records", "outbox"],

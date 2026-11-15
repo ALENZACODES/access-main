@@ -2,6 +2,7 @@ import {
   LOCAL_USER_ID,
   estimateEntryBytes,
   validateCacheEntry,
+  validateObservedAt,
   validateOutboxNote,
   validateProfile,
   withdrawConsent,
@@ -121,8 +122,14 @@ export async function putCacheEntry(entry: CacheEntry): Promise<void> {
   await db.cacheEntries.put(entry);
 }
 
-export async function enqueueReport(note: string, basedOnRecordId: string | null, nowIso: string): Promise<OutboxItem> {
-  const issues = validateOutboxNote(note);
+export async function enqueueReport(
+  note: string,
+  basedOnRecordId: string | null,
+  nowIso: string,
+  options: { observedAt?: string; madeOffline?: boolean } = {},
+): Promise<OutboxItem> {
+  const observedAt = options.observedAt ?? nowIso;
+  const issues = [...validateOutboxNote(note), ...validateObservedAt(observedAt, nowIso)];
   if (issues.length > 0) throw new StorageError(issues);
   const item: OutboxItem = {
     id: crypto.randomUUID(),
@@ -130,6 +137,8 @@ export async function enqueueReport(note: string, basedOnRecordId: string | null
     kind: "correction-report",
     based_on_record_id: basedOnRecordId,
     note: note.trim(),
+    observed_at: new Date(observedAt).toISOString(),
+    made_offline: options.madeOffline ?? false,
     status: "queued-on-device",
   };
   await db.outbox.put(item);
