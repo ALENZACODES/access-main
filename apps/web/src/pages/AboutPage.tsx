@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { BUILD_ID, CONTRACT_VERSION } from "../buildInfo.ts";
 import { summarizeStorage, type StorageSummary } from "../storage/repository.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
@@ -28,6 +29,9 @@ export function AboutPage() {
         <p>{t("about.verified", { count: summary?.verifiedClaimCount ?? 0 })}</p>
         <p>{t("footer.build", { id: BUILD_ID })}</p>
         <p>{t("footer.contract", { version: CONTRACT_VERSION })}</p>
+        <p>
+          <Link to="/build-card">{t("buildCard.link")}</Link>
+        </p>
       </section>
       <p>{t("about.frenchNote")}</p>
       <p>{t("about.audit")}</p>
