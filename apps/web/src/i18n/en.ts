@@ -4,7 +4,7 @@ export const en = {
   prototypeBanner:
     "Prototype. Every record is unverified. Each shows its source, licence, date, and verification tier. Unknown stays unknown.",
   noEndorsement:
-    "No organisation, including Spinal Cord Injury Ontario, has endorsed the App.",
+    "No organisation has endorsed the App.",
   noMedical: "the App does not give medical advice, clinical intervals, or benefits eligibility decisions.",
   noEligibility: "Directory entries are links to official pages. the App does not decide whether you qualify.",
   footer: {
