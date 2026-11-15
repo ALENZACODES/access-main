@@ -1,0 +1,17 @@
+{
+  "name": "@access-main/caregiver",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Caregiver mode and scoped sharing. The owner grants, narrows and revokes what a caregiver sees. Data stays on the device.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "vite --config vitest.config.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "license": "MIT"
+}
