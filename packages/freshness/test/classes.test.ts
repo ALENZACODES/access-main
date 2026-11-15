@@ -34,10 +34,6 @@ function hoursAgo(hours: number): string {
   return new Date(NOW.getTime() - hours * HOUR).toISOString();
 }
 
-function daysAgo(days: number): string {
-  return new Date(NOW.getTime() - days * DAY).toISOString();
-}
-
 describe("expiry classes", () => {
   const cases: Array<{
     classId: ClassId;
