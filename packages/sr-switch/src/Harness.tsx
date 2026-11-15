@@ -105,7 +105,7 @@ export function Harness() {
       <a className="skip" href="#main">{t.skip}</a>
       <header>
         <h1>{t.appTitle}</h1>
-        <fieldset className="language-picker">
+        <fieldset className="language-picker" role="radiogroup">
           <legend>{t.language}</legend>
           <label htmlFor="language-en"><input data-scan id="language-en" type="radio" name="language" value="en" checked={lang === "en"} onChange={() => { setLang("en"); setScanIndex(0); }} />{t.english}</label>
           <label htmlFor="language-fr"><input data-scan id="language-fr" type="radio" name="language" value="fr" checked={lang === "fr"} onChange={() => { setLang("fr"); setScanIndex(0); }} />{t.french}</label>
@@ -146,7 +146,7 @@ export function Harness() {
         </section>
         <section aria-labelledby="options-title">
           <h2 id="options-title">{t.optionsHeading}</h2>
-          <fieldset>
+          <fieldset role="radiogroup">
             <legend>{t.optionLegend}</legend>
             <label htmlFor="view-summary"><input data-scan id="view-summary" type="radio" name="view" checked={view === "summary"} onChange={() => setView("summary")} />{t.optionOne}</label>
             <label htmlFor="view-details"><input data-scan id="view-details" type="radio" name="view" checked={view === "details"} onChange={() => setView("details")} />{t.optionTwo}</label>

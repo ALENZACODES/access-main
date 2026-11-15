@@ -6,7 +6,7 @@ for (const locale of ["en", "fr"] as const) {
     test(`${locale} report is accessible at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await page.goto("/");
-      await page.getByLabel(locale === "en" ? "Language" : "Langue").selectOption(locale);
+      await page.locator("#locale").selectOption(locale);
       await expect(page.locator("main")).toHaveAttribute("lang", locale);
       await expect(page.getByRole("table")).toBeVisible();
       await expect(page.getByRole("status")).toBeVisible();

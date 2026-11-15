@@ -5,6 +5,11 @@ async function chooseLanguage(page: Page, lang: "en" | "fr") {
   await page.goto("/");
   if (lang === "fr") await page.locator("#language-fr").check();
   await expect(page.locator("html")).toHaveAttribute("lang", lang);
+  // Return focus to the document start so the skip link is the first Tab stop.
+  await page.evaluate(() => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+  });
 }
 
 for (const lang of ["en", "fr"] as const) {
@@ -103,6 +108,7 @@ test("step/select scanner reaches each advertised action and cannot trap switch 
   await dialogSelect.click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.locator("main > p[role=status]")).toContainText("confirmed");
+  await page.locator("#open-dialog").focus();
   await page.keyboard.press("Tab");
   await expect(page.locator(":focus")).toHaveCount(1);
 });
