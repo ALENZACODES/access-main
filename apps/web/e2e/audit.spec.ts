@@ -13,7 +13,7 @@ import { expect, test, type Page } from "@playwright/test";
  * These checks do not prove WCAG 2.2 AA.
  */
 
-const ROUTES = ["/", "/about", "/onboarding", "/profile", "/data-status", "/build-card", "/offline", "/places", "/journey", "/finders", "/navigator", "/games", "/more", "/help"];
+const ROUTES = ["/", "/about", "/onboarding", "/profile", "/data-status", "/build-card", "/offline", "/places", "/map", "/journey", "/finders", "/navigator", "/games", "/settings", "/more", "/help"];
 const TARGET_MIN_PX = 24;
 const LIMITATION = "Automated checks find some failures. They do not prove WCAG 2.2 AA.";
 
