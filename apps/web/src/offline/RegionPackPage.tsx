@@ -52,7 +52,7 @@ export function OfflineRegionPage() {
     catch (cause) { setError(cause instanceof Error ? cause.message : c.error); }
     finally { setBusy(null); requestAnimationFrame(() => deleteRef.current?.focus()); }
   }
-  return <main className="stack">
+  return <div className="stack">
     <h1>{c.title}</h1>
     <p>{c.intro}</p>
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
@@ -85,5 +85,5 @@ export function OfflineRegionPage() {
         <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => void remove()}>{c.delete}</button>
       </div>
     </dialog>}
-  </main>;
+  </div>;
 }
