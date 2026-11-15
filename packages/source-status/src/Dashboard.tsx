@@ -24,8 +24,8 @@ export function Dashboard({ register, initialLanguage = "en" }: DashboardProps) 
     other: copy.kindOther,
   };
   const tiers = (items: readonly TierCount[]) => items.length === 0 ? copy.emptyTier : items.map((item) =>
-    `${item.tier} (${item.prototype_label}): ${fmt(item.count)}`,
-  ).join("; ");
+    `${item.tier} (${item.prototype_label})${copy.tierCountSeparator}${fmt(item.count)}`,
+  ).join(copy.listSeparator);
 
   return (
     <main className="source-dashboard" lang={language}>

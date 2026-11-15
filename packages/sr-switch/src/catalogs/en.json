@@ -42,5 +42,6 @@
   "next": "Next target",
   "select": "Select target",
   "scanTarget": "Current scan target",
+  "labelSeparator": ": ",
   "none": "None"
 }

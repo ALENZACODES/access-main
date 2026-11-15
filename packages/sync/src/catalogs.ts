@@ -24,6 +24,6 @@ export const catalogs = {
     chooseLeft: "Choisir gauche", chooseRight: "Choisir droite", keepUnknown: "Garder Inconnu",
     apply: "Appliquer les choix localement", chosen: "Sélection", selectionRequired: "Choisissez une résolution pour chaque champ.",
     demo: "Données de démonstration uniquement — aucune observation réelle sur l’accessibilité.",
-    labels: "Copies", queue: "Signalements en attente sur l’appareil", unresolved: "Non résolu ; ce champ reste Inconnu.",
+    labels: "Copies", queue: "Signalements en attente sur l’appareil", unresolved: "Non résolu ; ce champ reste Inconnu.",
   },
 } as const;

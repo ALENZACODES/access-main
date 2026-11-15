@@ -3,7 +3,7 @@
   "language": "Langue",
   "en": "English",
   "fr": "Français",
-  "fixture": "Jeu de démonstration : tailles inventées, non mesurées à partir d'une version de production.",
+  "fixture": "Jeu de démonstration : tailles inventées, non mesurées à partir d'une version de production.",
   "pass": "RÉUSSITE — limites respectées",
   "fail": "ÉCHEC — limite dépassée",
   "metric": "Mesure",
@@ -21,8 +21,8 @@
   "largest_js_entry": "Plus grand fichier JavaScript d'entrée",
   "total_js": "Total JavaScript",
   "total_css": "Total CSS",
-  "notice": "Le respect des limites de taille ne garantit pas que l'application est rapide sur tous les appareils. Un dépassement ne justifie pas la suppression de ressources d'accessibilité ; il faut optimiser sans réduire l'accessibilité.",
-  "scope": "Ces limites couvrent l'application et les fichiers précachés. Elles excluent les données cartographiques hors ligne : les tuiles ne sont pas stockées dans l'application actuelle.",
+  "notice": "Le respect des limites de taille ne garantit pas que l'application est rapide sur tous les appareils. Un dépassement ne justifie pas la suppression de ressources d'accessibilité ; il faut optimiser sans réduire l'accessibilité.",
+  "scope": "Ces limites couvrent l'application et les fichiers précachés. Elles excluent les données cartographiques hors ligne : les tuiles ne sont pas stockées dans l'application actuelle.",
   "credit": "Workbox et vite-plugin-pwa sont mentionnés comme outils, sans cautionner l'application.",
   "bytes": "octets"
 }

@@ -95,7 +95,7 @@ export function Harness() {
       <div className="scan-controls">
         <button type="button" onClick={next}>{t.next}</button>
         <button type="button" onClick={activate}>{t.select}</button>
-        <p role="status" aria-live="polite">{t.scanTarget}: <strong data-testid="scan-name">{targetName}</strong></p>
+        <p role="status" aria-live="polite">{t.scanTarget}{t.labelSeparator}<strong data-testid="scan-name">{targetName}</strong></p>
       </div>
     );
   }

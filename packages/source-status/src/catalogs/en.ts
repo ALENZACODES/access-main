@@ -40,5 +40,7 @@ export const en = {
   seeded: "SEEDED-OPEN-DATA — Label for an illustrative open-data seed; not verification.",
   prototype: "PROTOTYPE-UNVERIFIED — Label for unverified prototype metadata.",
   emptyTier: "No tiered records",
+  tierCountSeparator: ": ",
+  listSeparator: "; ",
   footer: "This standalone package does not read or change device cache or outbox data.",
 } as const;
