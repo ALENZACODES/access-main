@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { FINDER_KINDS, type FinderKind, type ModuleId, type ModuleResult } from "@access/shared";
+import { Link } from "react-router-dom";
+import { FINDER_KINDS, type FinderKind, type ModuleId, type ModuleResult, type PlaceHit } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { ResultItems, statusKey } from "../modules/ResultItems.tsx";
 import { StubNote } from "../modules/StubNote.tsx";
-import { modules } from "../modules/stubs.ts";
+import { getModules } from "../modules/linked.ts";
+import { useLaneStrings } from "../modules/strings.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
@@ -29,7 +30,7 @@ const KIND_KEY: Record<FinderKind, string> = {
 
 
 export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useLaneStrings();
   const { profile } = useProfileState();
   const online = useOnline();
   const [text, setText] = useState("");
@@ -42,6 +43,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   useDocumentTitle(t(copy.title));
 
   useEffect(() => {
+    const modules = getModules();
     const ctx = {
       locale: i18n.language.startsWith("fr") ? "fr" as const : "en" as const,
       offline: !online,
@@ -127,6 +129,15 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
       ) : null}
       <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
       {result ? <ResultItems id={id} items={result.items} /> : null}
+      {id === "places" && result && result.items.length > 0 ? (
+        <ul className="stack">
+          {(result.items as PlaceHit[]).map((item) => (
+            <li key={item.id}>
+              <Link to={`/places/${encodeURIComponent(item.id)}`}>{t("lanes.openPlace", { name: item.name })}</Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <p>{t("data.liveBody")}</p>
     </div>
   );

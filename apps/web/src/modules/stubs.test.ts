@@ -36,6 +36,7 @@ describe("module stubs", () => {
   it("uses a linked places module and leaves the other routes empty", async () => {
     const places: PlacesModule = {
       id: "places",
+      get: () => Promise.resolve(emptyModuleResult("places", "modules.unavailable")),
       search: () =>
         Promise.resolve({
           ...emptyModuleResult("places", "modules.resultCount"),

@@ -30,6 +30,10 @@ export interface OutboxItem {
   kind: "correction-report";
   based_on_record_id: string | null;
   note: string;
+  /** When the person saw the problem. Shown instead of any upload time. Reports are not uploaded in this prototype. */
+  observed_at: string;
+  /** True when the report was written while the device was offline. */
+  made_offline: boolean;
   status: "queued-on-device";
 }
 
@@ -83,5 +87,14 @@ export function validateOutboxNote(note: string): FieldIssue[] {
   const trimmed = note.trim();
   if (!trimmed) return [{ field: "note", code: "empty_title" }];
   if (trimmed.length > MAX_NOTE) return [{ field: "note", code: "too_long" }];
+  return [];
+}
+
+/** An observation time must be a real time and not in the future (one minute of clock skew allowed). */
+export function validateObservedAt(observedAt: string, nowIso: string): FieldIssue[] {
+  const observed = Date.parse(observedAt);
+  const now = Date.parse(nowIso);
+  if (Number.isNaN(observed)) return [{ field: "observed_at", code: "invalid_date" }];
+  if (!Number.isNaN(now) && observed > now + 60_000) return [{ field: "observed_at", code: "in_future" }];
   return [];
 }
