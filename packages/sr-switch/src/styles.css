@@ -1,0 +1,31 @@
+:root { font-family: system-ui, sans-serif; color: #192c39; background: #fff; line-height: 1.5; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header, main { width: min(100%, 58rem); margin: auto; padding: 1rem; }
+h1 { font-size: clamp(1.5rem, 4vw, 2rem); }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem; }
+section { margin: 1.5rem 0; }
+fieldset { border: 1px solid #667783; padding: .7rem; }
+label { display: block; margin-block: .25rem; }
+input[type="text"] { display: block; width: min(100%, 32rem); padding: .75rem; border: 2px solid #405c6c; min-height: 44px; font: inherit; }
+input[type="radio"] { width: 44px; height: 44px; margin: 0 10px 0 0; accent-color: #123e65; }
+fieldset label { display: inline-flex; align-items: center; min-height: 44px; margin-right: 1rem; }
+button { font: inherit; font-weight: 600; min-width: 44px; min-height: 44px; padding: .6rem .85rem; border: 2px solid #184557; background: #e8f4f8; color: #123142; cursor: pointer; border-radius: .25rem; }
+button:hover { background: #d1eaf3; }
+:focus-visible, [data-current-scan="true"] { outline: 4px solid #c15c00 !important; outline-offset: 3px; }
+.skip { position: absolute; top: -100px; left: 1rem; background: white; padding: .75rem; z-index: 5; }
+.skip:focus { top: .5rem; }
+.error { color: #941f19; font-weight: 700; min-height: 1.5rem; }
+.records { list-style: disc; padding-left: 1.5rem; }
+.records li { padding: .5rem 0; overflow-wrap: anywhere; }
+dl > div { display: flex; flex-wrap: wrap; gap: .2rem .6rem; }
+dt { font-weight: 700; }
+dt::after { content: ":"; }
+dd { margin: 0; }
+.scan-controls { margin-top: .75rem; }
+.scan-controls button { margin: .25rem .5rem .25rem 0; }
+dialog { width: min(90vw, 33rem); max-height: 90vh; overflow: auto; border: 3px solid #184557; padding: 1.2rem; color: inherit; }
+dialog::backdrop { background: rgb(0 0 0 / .65); }
+.dialog-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

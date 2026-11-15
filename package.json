@@ -22,7 +22,7 @@
     "typecheck": "tsc -p packages/schema/tsconfig.json && tsc -p packages/shared/tsconfig.json && tsc -p apps/web/tsconfig.json && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "test": "vitest run && npm test --workspaces --if-present",
-    "test:e2e": "npm run test:e2e -w @access/web",
+    "test:e2e": "npm run test:e2e --workspaces --if-present",
     "validate": "npm run validate -w @access-main/schema --",
     "count": "npm run count -w @access-main/schema --"
   },

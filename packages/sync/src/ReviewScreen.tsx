@@ -54,13 +54,13 @@ export function ReviewScreen({ report, locale, onResolved }: {
       {!report ? <p role="status">{t.empty}</p> : <>
         <section aria-labelledby="summary-heading" style={styles.section}>
           <h2 id="summary-heading">{t.summary}</h2>
-          <p>{t.labels}: {report.left_label} / {report.right_label}</p>
+          <p>{t.labels}{t.labelSeparator}{report.left_label} / {report.right_label}</p>
           <ul>
-            <li>{t.records}: {report.merged.records.length}</li>
-            <li>{t.conflicts}: {report.conflicts.length}</li>
-            <li>{t.unknowns}: {report.unknown_observations.length}</li>
-            <li>{t.timestamps}: {report.metadata_lww.length}</li>
-            <li>{t.queue}: {report.merged.outbox.length}</li>
+            <li>{t.records}{t.labelSeparator}{report.merged.records.length}</li>
+            <li>{t.conflicts}{t.labelSeparator}{report.conflicts.length}</li>
+            <li>{t.unknowns}{t.labelSeparator}{report.unknown_observations.length}</li>
+            <li>{t.timestamps}{t.labelSeparator}{report.metadata_lww.length}</li>
+            <li>{t.queue}{t.labelSeparator}{report.merged.outbox.length}</li>
           </ul>
         </section>
         <section aria-labelledby="conflicts-heading" style={styles.section}>
@@ -69,7 +69,7 @@ export function ReviewScreen({ report, locale, onResolved }: {
             {unresolved.map((conflict) => {
               const key = keyFor(conflict.record_id, conflict.field);
               return <fieldset key={key} style={styles.section}>
-                <legend>{t.record}: {conflict.record_id} — {t.field}: {conflict.field}</legend>
+                <legend>{t.record}{t.labelSeparator}{conflict.record_id} — {t.field}{t.labelSeparator}{conflict.field}</legend>
                 <p>{t.unresolved}</p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 230px), 1fr))", gap: "1rem" }}>
                   <div><h3>{t.left}</h3><Fact fact={conflict.left} locale={locale} /></div>
