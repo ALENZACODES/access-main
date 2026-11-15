@@ -1,0 +1,19 @@
+{
+  "name": "@access-main/advocacy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "On-device aggregation, small-community suppression and campaign evidence-pack export. Works from labelled demonstration inputs only.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json",
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "license": "MIT"
+}
