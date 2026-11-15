@@ -89,4 +89,3 @@ export {
   type PlacesModule,
   type PlacesQuery,
 } from "./modules.ts";
-export * from "./forbiddenOrg.ts";
