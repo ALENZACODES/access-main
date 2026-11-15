@@ -103,4 +103,3 @@ export {
   type PackSourceDate,
   type StoredPack,
 } from "./pack.ts";
-export * from "./forbiddenOrg.ts";
