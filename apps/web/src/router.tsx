@@ -6,6 +6,7 @@ import { HelpPage } from "./pages/HelpPage.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
 import { ModulePage } from "./pages/ModulePage.tsx";
 import { NotFoundPage } from "./pages/NotFoundPage.tsx";
+import { OfflinePackPage } from "./pages/OfflinePackPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { ProfilePage } from "./pages/ProfilePage.tsx";
 import { AppShell } from "./shell/AppShell.tsx";
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: "profile", element: <ProfilePage /> },
       { path: "data-status", element: <DataStatusPage /> },
       { path: "build-card", element: <BuildCardPage /> },
+      { path: "offline", element: <OfflinePackPage /> },
       { path: "places", element: <ModulePage id="places" /> },
       { path: "journey", element: <ModulePage id="journey" /> },
       { path: "finders", element: <ModulePage id="finders" /> },

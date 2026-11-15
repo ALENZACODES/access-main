@@ -2,8 +2,10 @@ import {
   LOCAL_USER_ID,
   estimateEntryBytes,
   validateCacheEntry,
+  validateManifest,
   validateObservedAt,
   validateOutboxNote,
+  validatePackContent,
   validateProfile,
   withdrawConsent,
   withinStorageLimit,
@@ -11,6 +13,7 @@ import {
   type CacheKind,
   type FieldIssue,
   type OutboxItem,
+  type StoredPack,
   type UserProfile,
 } from "@access/shared";
 import { db } from "./db.ts";
@@ -143,6 +146,25 @@ export async function enqueueReport(
   };
   await db.outbox.put(item);
   return item;
+}
+
+export async function listOutbox(): Promise<OutboxItem[]> {
+  return safe(async () => db.outbox.orderBy("created_at").reverse().toArray(), []);
+}
+
+/** Stores a pack only when the manifest and every record check out. */
+export async function savePack(pack: StoredPack): Promise<void> {
+  const issues = [...validateManifest(pack.manifest), ...validatePackContent(pack.content, pack.manifest)];
+  if (issues.length > 0) throw new StorageError(issues);
+  await db.packs.put(pack);
+}
+
+export async function getPack(packId: string): Promise<StoredPack | null> {
+  return safe(async () => (await db.packs.get(packId)) ?? null, null);
+}
+
+export async function deletePack(packId: string): Promise<void> {
+  await db.packs.delete(packId);
 }
 
 export async function clearCachedRecords(): Promise<void> {

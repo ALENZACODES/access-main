@@ -1,0 +1,35 @@
+{
+  "schema_version": "offline-pack-1.0.0",
+  "pack_id": "toronto",
+  "title": {
+    "en": "Toronto pack",
+    "fr": "Données de Toronto"
+  },
+  "built_at": "2026-11-14",
+  "content_path": "/packs/toronto/content.json",
+  "size_bytes": 24278,
+  "sha256": "07d47e2105bf112d7badbc2b2cff603b816f2fbf5e348f5aa78e751368b796e5",
+  "source_dates": [
+    {
+      "source_name": "OpenStreetMap, Geofabrik Ontario extract",
+      "licence": "ODbL-1.0",
+      "retrieved_at": "2026-11-13"
+    },
+    {
+      "source_name": "TTC GTFS-Realtime accessibility alerts",
+      "licence": "OGL-Toronto-1.0",
+      "retrieved_at": "2026-11-13"
+    },
+    {
+      "source_name": "Official help pages, desk check",
+      "licence": "UNKNOWN",
+      "retrieved_at": "2026-11-13"
+    }
+  ],
+  "counts": {
+    "places": 24,
+    "help_numbers": 6,
+    "elevator_status": 3,
+    "journeys": 0
+  }
+}
