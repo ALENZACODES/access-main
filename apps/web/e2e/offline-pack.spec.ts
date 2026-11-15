@@ -48,7 +48,11 @@ test("Day 11: download, use offline, report offline, and delete the Toronto pack
   await expect(page.getByText("Wheelchair tag: Unknown. A tag is not a measurement.").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "911" })).toHaveAttribute("href", "tel:911");
   await expect(page.getByText(/No journey is in this pack\./)).toBeVisible();
-  await expect(page.getByText("Cedarvale. Last checked Nov 13, 2026, 14:48.")).toBeVisible();
+  const elevators = (await (await page.request.get("/packs/toronto/content.json")).json()).elevator_status as { station: string; checked_at: string }[];
+  const cedarvale = elevators.find((item) => item.station === "Cedarvale");
+  if (!cedarvale) throw new Error("The Toronto pack is missing the Cedarvale elevator copy.");
+  const checked = new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }).format(new Date(cedarvale.checked_at));
+  await expect(page.getByText(`Cedarvale. Last checked ${checked}.`)).toBeVisible();
   await expect(page.getByText(/They are not live and may be out of date\./)).toBeVisible();
   await axeClean(page, "offline");
 
