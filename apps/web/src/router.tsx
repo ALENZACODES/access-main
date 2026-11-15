@@ -14,6 +14,7 @@ const ModulePage = lazy(() => import("./pages/ModulePage.tsx").then((module) => 
 const PlaceDetailPage = lazy(() => import("./pages/PlaceDetailPage.tsx").then((module) => ({ default: module.PlaceDetailPage })));
 const HelpPage = lazy(() => import("./pages/HelpPage.tsx").then((module) => ({ default: module.HelpPage })));
 const DataStatusPage = lazy(() => import("./pages/DataStatusPage.tsx").then((module) => ({ default: module.DataStatusPage })));
+const BuildCardPage = lazy(() => import("./pages/BuildCardPage.tsx").then((module) => ({ default: module.BuildCardPage })));
 
 // Entry files owned by other lanes. A missing file renders a "being connected" page, not a build error.
 const MapPage = optionalPage("map");
@@ -33,6 +34,7 @@ export const routes: RouteObject[] = [
       { path: "profile", element: <ProfilePage /> },
       { path: "data-status", element: <Section><DataStatusPage /></Section> },
       { path: "offline", element: <Section><OfflinePage /></Section> },
+      { path: "build-card", element: <Section><BuildCardPage /></Section> },
       { path: "places", element: <Section><ModulePage id="places" /></Section> },
       { path: "places/:id", element: <Section><PlaceDetailPage /></Section> },
       { path: "map", element: <Section><MapPage /></Section> },

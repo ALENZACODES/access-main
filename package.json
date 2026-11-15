@@ -28,7 +28,7 @@
     "pretest": "npm run lanes:ensure",
     "test": "vitest run && npm test --workspaces --if-present && npm run test:scripts",
     "test:scripts": "node --test scripts/sync-lanes.test.mjs",
-    "test:e2e": "npm run test:e2e -w @access/web",
+    "test:e2e": "npm run test:e2e --workspaces --if-present",
     "validate": "npm run validate -w @access-main/schema --",
     "count": "npm run count -w @access-main/schema --"
   },
