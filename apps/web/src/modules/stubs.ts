@@ -24,7 +24,7 @@ function unlinked<T>(id: ModuleId): Promise<ModuleResult<T>> {
  * source, licence, date, and tier is replaced by an empty error result.
  */
 export function createModules(linked: Partial<ModuleRegistry> = {}): ModuleRegistry {
-  const places: PlacesModule = linked.places ?? { id: "places", search: () => unlinked("places") };
+  const places: PlacesModule = linked.places ?? { id: "places", search: () => unlinked("places"), get: () => unlinked("places") };
   const journey: JourneyModule = linked.journey ?? { id: "journey", plan: () => unlinked("journey") };
   const finders: FindersModule = linked.finders ?? { id: "finders", search: () => unlinked("finders") };
   const navigatorModule: NavigatorModule = linked.navigator ?? { id: "navigator", list: () => unlinked("navigator") };

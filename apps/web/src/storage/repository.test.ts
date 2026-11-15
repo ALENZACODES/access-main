@@ -1,12 +1,17 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createEmptyProfile, type CacheEntry, type UserProfile } from "@access/shared";
+import { createEmptyProfile, type CacheEntry, type PackContent, type PackManifest, type UserProfile } from "@access/shared";
+import contentText from "../../public/packs/toronto/content.json?raw";
+import manifestText from "../../public/packs/toronto/manifest.json?raw";
 import { db } from "./db.ts";
 import { exportPhrases } from "../profile/exportCopy.ts";
 import {
   clearCachedRecords,
+  deletePack,
   deleteProfile,
   enqueueReport,
+  getPack,
+  savePack,
   exportProfileText,
   putCacheEntry,
   saveProfile,
@@ -87,10 +92,36 @@ describe("device storage", () => {
   it("keeps queued reports on the device and lists them before a clear", async () => {
     const queued = await enqueueReport("The doorway was narrower than the record said.", null, NOW);
     expect(queued.status).toBe("queued-on-device");
+    expect(queued.kind).toBe("correction-report");
+    expect(queued.based_on_record_id).toBeNull();
+    expect(queued.observed_at).toBe(NOW);
+    expect(queued.made_offline).toBe(false);
     expect((await summarizeStorage()).outboxCount).toBe(1);
+    const dated = await enqueueReport("Ramp blocked by a sign", "demo-record", NOW, { observedAt: "2026-11-13T09:15:00.000Z", madeOffline: true });
+    expect(dated.observed_at).toBe("2026-11-13T09:15:00.000Z");
+    expect(dated.created_at).toBe(NOW);
+    expect(dated.made_offline).toBe(true);
+    expect(dated.based_on_record_id).toBe("demo-record");
+    await expect(enqueueReport("later", null, NOW, { observedAt: "2026-11-14T12:00:00.000Z" })).rejects.toThrow(/in_future/);
     await clearCachedRecords();
     const after = await summarizeStorage();
     expect(after.outboxCount).toBe(0);
     expect(after.cacheCount).toBe(0);
   });
 });
+
+describe("offline pack storage", () => {
+  it("stores a checked pack, reads it back, and deletes it", async () => {
+    const manifest = JSON.parse(manifestText) as PackManifest;
+    const content = JSON.parse(contentText) as PackContent;
+    await savePack({ pack_id: "toronto", manifest, content, stored_at: NOW });
+    expect((await getPack("toronto"))?.content.places).toHaveLength(manifest.counts.places);
+    await expect(
+      savePack({ pack_id: "toronto", manifest, content: { ...content, places: content.places.slice(1) }, stored_at: NOW }),
+    ).rejects.toThrow(/count_mismatch/);
+    await deletePack("toronto");
+    expect(await getPack("toronto")).toBeNull();
+  });
+
+});
+
