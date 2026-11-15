@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:access-main:caregiver:view:1.0.0",
+  "title": "Caregiver view model",
+  "description": "Everything a caregiver screen may show. With no active grant the view is empty and says so. It never carries the full profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_type", "schema_version", "caregiver_label", "generated_at", "empty", "empty_reason", "items"],
+  "properties": {
+    "record_type": { "const": "caregiver_view" },
+    "schema_version": { "const": "caregiver-view-1.0.0" },
+    "caregiver_label": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "empty": { "type": "boolean" },
+    "empty_reason": { "enum": [null, "no_active_grants"] },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["grant_id", "expires_at", "scope"],
+        "properties": {
+          "grant_id": { "type": "string", "pattern": "^g-[a-z0-9]{8,32}$" },
+          "expires_at": { "type": ["string", "null"], "format": "date-time" },
+          "scope": { "$ref": "urn:access-main:caregiver:scope:1.0.0" }
+        }
+      }
+    }
+  },
+  "if": { "required": ["empty"], "properties": { "empty": { "const": true } } },
+  "then": { "properties": { "items": { "type": "array", "maxItems": 0 }, "empty_reason": { "const": "no_active_grants" } } },
+  "else": { "properties": { "items": { "type": "array", "minItems": 1 }, "empty_reason": { "type": "null" } } }
+}

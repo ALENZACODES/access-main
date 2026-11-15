@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/access-main/budgets/report.schema.json",
+  "title": "Shell install-size report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "status", "fixture", "budget", "totals", "violations"],
+  "properties": {
+    "version": { "const": 1 },
+    "status": { "enum": ["pass", "fail"] },
+    "fixture": { "type": "boolean" },
+    "budget": { "$ref": "budget.schema.json" },
+    "totals": {
+      "type": "object", "additionalProperties": false,
+      "required": ["precacheBytes", "largestJsEntryBytes", "totalJsBytes", "totalCssBytes", "assetCount"],
+      "properties": {
+        "precacheBytes": { "$ref": "#/$defs/nonnegative" },
+        "largestJsEntryBytes": { "$ref": "#/$defs/nonnegative" },
+        "totalJsBytes": { "$ref": "#/$defs/nonnegative" },
+        "totalCssBytes": { "$ref": "#/$defs/nonnegative" },
+        "assetCount": { "$ref": "#/$defs/nonnegative" }
+      }
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["dimension", "actualBytes", "limitBytes", "paths"],
+        "properties": {
+          "dimension": { "enum": ["empty_manifest", "precache", "largest_js_entry", "total_js", "total_css", "asset"] },
+          "actualBytes": { "$ref": "#/$defs/nonnegative" },
+          "limitBytes": { "$ref": "#/$defs/nonnegative" },
+          "paths": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    }
+  },
+  "$defs": { "nonnegative": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } }
+}

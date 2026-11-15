@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/access-main/budgets/budget.schema.json",
+  "title": "Shell install-size budget",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maxPrecacheBytes", "maxLargestJsEntryBytes", "maxTotalJsBytes", "maxTotalCssBytes", "maxAssetBytes"],
+  "properties": {
+    "version": { "const": 1 },
+    "maxPrecacheBytes": { "$ref": "#/$defs/bytes" },
+    "maxLargestJsEntryBytes": { "$ref": "#/$defs/bytes" },
+    "maxTotalJsBytes": { "$ref": "#/$defs/bytes" },
+    "maxTotalCssBytes": { "$ref": "#/$defs/bytes" },
+    "maxAssetBytes": { "$ref": "#/$defs/bytes" }
+  },
+  "$defs": { "bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 } }
+}
