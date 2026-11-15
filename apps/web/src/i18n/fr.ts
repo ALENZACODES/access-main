@@ -218,7 +218,7 @@ export const fr: Messages = {
     elevatorLead:
       "Ce sont des copies des avis de panne de l'exploitant au moment où les données ont été préparées. Elles ne sont pas en direct et peuvent être périmées. Vérifiez auprès de l'exploitant avant de compter sur un ascenseur.",
     elevatorItem: "{{station}}. Dernière vérification le {{date}}.",
-    elevatorSource: "Source\u202f: {{name}}. Licence\u202f: {{licence}}. Récupéré le {{date}}. Niveau 4, copie enregistrée.",
+    elevatorSource: "Source\u202f: {{name}}. Licence\u202f: {{licence}}. Récupéré le {{date}}. Niveau 0, copie enregistrée.",
     reportTitle: "Signaler un problème pour un lieu enregistré",
     reportPlace: "Lieu",
     reportNoPlace: "Aucun lieu précis",

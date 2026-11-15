@@ -7,8 +7,8 @@
   },
   "built_at": "2026-11-14",
   "content_path": "/packs/toronto/content.json",
-  "size_bytes": 24277,
-  "sha256": "32340332afefc42db4fb855706288d0cd2ef5bd43f5a9fa010c2e708c7a32072",
+  "size_bytes": 24278,
+  "sha256": "07d47e2105bf112d7badbc2b2cff603b816f2fbf5e348f5aa78e751368b796e5",
   "source_dates": [
     {
       "source_name": "OpenStreetMap, Geofabrik Ontario extract",

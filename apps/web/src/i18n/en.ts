@@ -207,7 +207,7 @@ export const en = {
     elevatorLead:
       "These are copies of the operator's outage notices from when the pack was built. They are not live and may be out of date. Check with the operator before you rely on an elevator.",
     elevatorItem: "{{station}}. Last checked {{date}}.",
-    elevatorSource: "Source: {{name}}. Licence: {{licence}}. Retrieved {{date}}. Tier 4, saved copy.",
+    elevatorSource: "Source: {{name}}. Licence: {{licence}}. Retrieved {{date}}. Tier 0, saved copy.",
     reportTitle: "Report a problem with a saved place",
     reportPlace: "Place",
     reportNoPlace: "No specific place",

@@ -37,10 +37,10 @@ describe("Toronto pack files", () => {
     expect(content.places.some((place) => place.address === "UNKNOWN")).toBe(true);
   });
 
-  it("elevator status is a dated tier 4 copy labelled last-checked", () => {
+  it("elevator status is a dated tier 0 open-data copy labelled last-checked", () => {
     for (const item of content.elevator_status) {
       expect(item.label).toBe("last-checked");
-      expect(item.tier).toBe(4);
+      expect(item.tier).toBe(0);
       expect(item.checked_at).toBe("2026-11-13T19:48:29.000Z");
       expect(item.licence).toBe("OGL-Toronto-1.0");
     }

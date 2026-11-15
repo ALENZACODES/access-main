@@ -5,9 +5,9 @@ import { findForbiddenKeys, validateProvenance, type FieldIssue, type Provenance
  * that states size, dates, and counts before the download starts.
  *
  * Places and help numbers are prototype records (tier 0, 1, or E). Elevator status is a separate,
- * dated copy of an operator feed (tier 4). It is never shown as current: the screen labels it
- * last-checked with the feed time. A pack has no journey unless a planner produced one; an empty
- * list is stated, not filled.
+ * dated copy of an operator open-data feed (tier 0). It is never stored as a live tier 4 snapshot
+ * and is never shown as current: the screen labels it last-checked with the feed time. A pack has
+ * no journey unless a planner produced one; an empty list is stated, not filled.
  */
 export const PACK_SCHEMA_VERSION = "offline-pack-1.0.0";
 
@@ -76,7 +76,7 @@ export interface PackElevatorStatus {
   source_url: string | null;
   licence: string;
   retrieved_at: string;
-  tier: 4;
+  tier: 0;
 }
 
 export interface PackContent {
@@ -177,7 +177,7 @@ export function validatePackContent(content: PackContent, manifest: PackManifest
     if (!text(item.operator_text)) issues.push({ field: `${at}.operator_text`, code: "missing_text" });
     if (!isoTime(item.checked_at)) issues.push({ field: `${at}.checked_at`, code: "invalid_date" });
     if (item.label !== "last-checked") issues.push({ field: `${at}.label`, code: "must_be_last_checked" });
-    if (item.tier !== 4) issues.push({ field: `${at}.tier`, code: "invalid_tier" });
+    if (item.tier !== 0) issues.push({ field: `${at}.tier`, code: "invalid_tier" });
     if (!text(item.source_name)) issues.push({ field: `${at}.source_name`, code: "missing_source" });
     if (!text(item.licence)) issues.push({ field: `${at}.licence`, code: "missing_licence" });
     if (!DATE.test(item.retrieved_at ?? "")) issues.push({ field: `${at}.retrieved_at`, code: "invalid_date" });

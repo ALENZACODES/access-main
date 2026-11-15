@@ -124,7 +124,7 @@ const SIGNPOSTS = [
     contact: "811",
     how: {
       en: "Call 811 for non-urgent health information from a registered nurse, 24 hours a day. TTY: 711. The App does not give health advice.",
-      fr: "Composez le 811 pour de l'information de santé non urgente d'une infirmière ou d'un infirmier, 24 heures sur 24. ATS : 711. L'application ne donne pas de conseil de santé.",
+      fr: "Composez le 811 pour de l'information de santé non urgente d'une infirmière ou d'un infirmier, 24 heures sur 24. ATS\u00A0: 711. L'application ne donne pas de conseil de santé.",
     },
     url: "https://health811.ontario.ca/static/guest/help-centre/calling-health811-help-centre",
   },
@@ -207,7 +207,7 @@ const elevator_status = alerts
       source_url: null,
       licence: alert.licence,
       retrieved_at: alert.retrieved_at,
-      tier: 4,
+      tier: 0,
     };
   });
 
