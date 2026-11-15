@@ -57,6 +57,7 @@ export {
   CACHE_KINDS,
   estimateEntryBytes,
   validateCacheEntry,
+  validateObservedAt,
   validateOutboxNote,
   withinStorageLimit,
   type CacheEntry,
@@ -92,7 +93,6 @@ export {
 export {
   PACK_SCHEMA_VERSION,
   validateManifest,
-  validateObservedAt,
   validatePackContent,
   type PackContent,
   type PackCounts,

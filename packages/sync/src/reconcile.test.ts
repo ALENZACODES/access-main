@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { demonstrationLeft, demonstrationRight } from "./demo.ts";
 import { applyResolutions, checkSnapshot, reconcile } from "./reconcile.ts";
 import { assertConflict, assertReport, assertSnapshot } from "./schema.ts";
+import { outboxItem } from "./outbox.ts";
 
 const copy = <T>(x: T): T => structuredClone(x);
 const pair = () => [copy(demonstrationLeft), copy(demonstrationRight)] as const;
@@ -99,8 +100,12 @@ describe("offline reconciliation — demonstration data only", () => {
 
   it("keeps on-device queued notes without inventing any upload", () => {
     const [a, b] = pair();
-    a.outbox.push({ id: "demo-note", created_at: "2026-01-01T00:00:00Z", kind: "correction-report",
-      based_on_record_id: "demo-record", note: "Demonstration correction only", observed_at: "2026-01-01T00:00:00Z", made_offline: false, status: "queued-on-device" });
+    a.outbox.push(outboxItem({
+      id: "demo-note",
+      created_at: "2026-01-01T00:00:00Z",
+      based_on_record_id: "demo-record",
+      note: "Demonstration correction only",
+    }));
     b.outbox = copy(a.outbox);
     const report = reconcile(a, b);
     expect(report.merged.outbox).toEqual(a.outbox);

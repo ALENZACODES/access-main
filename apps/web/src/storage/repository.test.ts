@@ -93,7 +93,17 @@ describe("device storage", () => {
   it("keeps queued reports on the device and lists them before a clear", async () => {
     const queued = await enqueueReport("The doorway was narrower than the record said.", null, NOW);
     expect(queued.status).toBe("queued-on-device");
+    expect(queued.kind).toBe("correction-report");
+    expect(queued.based_on_record_id).toBeNull();
+    expect(queued.observed_at).toBe(NOW);
+    expect(queued.made_offline).toBe(false);
     expect((await summarizeStorage()).outboxCount).toBe(1);
+    const dated = await enqueueReport("Ramp blocked by a sign", "demo-record", NOW, { observedAt: "2026-11-13T09:15:00.000Z", madeOffline: true });
+    expect(dated.observed_at).toBe("2026-11-13T09:15:00.000Z");
+    expect(dated.created_at).toBe(NOW);
+    expect(dated.made_offline).toBe(true);
+    expect(dated.based_on_record_id).toBe("demo-record");
+    await expect(enqueueReport("later", null, NOW, { observedAt: "2026-11-14T12:00:00.000Z" })).rejects.toThrow(/in_future/);
     await clearCachedRecords();
     const after = await summarizeStorage();
     expect(after.outboxCount).toBe(0);
