@@ -57,6 +57,7 @@ export {
   CACHE_KINDS,
   estimateEntryBytes,
   validateCacheEntry,
+  validateObservedAt,
   validateOutboxNote,
   withinStorageLimit,
   type CacheEntry,
