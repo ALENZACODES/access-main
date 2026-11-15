@@ -1,0 +1,16 @@
+{
+  "demonstration": true,
+  "description": "Invented shell-plus-assets sizes, not measured build output",
+  "assets": [
+    { "path": "index.html", "bytes": 3400, "kind": "html" },
+    { "path": "assets/main-a1.js", "bytes": 412000, "kind": "js" },
+    { "path": "assets/vendor-b2.js", "bytes": 385000, "kind": "js" },
+    { "path": "assets/main-c3.css", "bytes": 94000, "kind": "css" },
+    { "path": "icons/icon-192.png", "bytes": 17000, "kind": "image" },
+    { "path": "icons/icon-512.png", "bytes": 78000, "kind": "image" },
+    { "path": "assets/illustration.svg", "bytes": 22300, "kind": "image" },
+    { "path": "sw.js", "bytes": 12500, "kind": "workbox" },
+    { "path": "workbox-abc.js", "bytes": 36500, "kind": "workbox" },
+    { "path": "manifest.webmanifest", "bytes": 1300, "kind": "manifest" }
+  ]
+}
