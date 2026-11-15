@@ -91,9 +91,6 @@ test.skip("Day 11: legacy Toronto pack page French render is no longer mounted a
   await axeClean(page, "french");
 });
 
-import { expect, test } from "@playwright/test";
-import axe from "axe-core";
-
 // The fixture is served by the same-origin test server at data/pack/v1/.
 // Tests do not label demonstration data as verified real-world accessibility facts.
 for (const language of ["en", "fr"] as const) {
