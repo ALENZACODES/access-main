@@ -385,6 +385,13 @@ progress {
   height: 1.25rem;
 }
 
+/* Day 17 audit: text links met only 21px. WCAG 2.2 SC 2.5.8 needs 24 by 24 CSS pixels. */
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
 /* Lane records: name first, then source, licence, date, and tier as a description list. */
 .result-items { list-style: none; padding: 0; }
 .result-items > li { border-inline-start: 0.25rem solid currentColor; padding-inline-start: 0.75rem; }
@@ -423,3 +430,4 @@ progress {
   .card-table th,
   .card-table td { border-color: #000; }
 }
+

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://access-main.local/schemas/unverified-draft.json",
+  "title": "UnverifiedDraft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "target",
+    "field",
+    "suggestedValue",
+    "evidence",
+    "tier",
+    "createdAt",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "const": "existing" },
+            "id": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "localId", "name"],
+          "properties": {
+            "kind": { "const": "new" },
+            "localId": { "type": "string", "minLength": 1 },
+            "name": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "field": {
+      "type": "string",
+      "minLength": 1
+    },
+    "suggestedValue": {
+      "type": ["string", "number", "boolean"]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "photoId"],
+            "properties": {
+              "kind": { "const": "photo" },
+              "photoId": { "type": "string", "minLength": 1 }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "text"],
+            "properties": {
+              "kind": { "const": "note" },
+              "text": { "type": "string", "minLength": 1 }
+            }
+          }
+        ]
+      }
+    },
+    "tier": {
+      "const": 0
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "enum": ["pending", "accepted", "rejected"]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "licence", "retrieved_at"],
+      "properties": {
+        "source_id": { "type": "string", "minLength": 1 },
+        "licence": {
+          "enum": [
+            "ODbL",
+            "OGL-Ontario",
+            "OGL-Canada",
+            "CC-BY",
+            "CC0"
+          ]
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_key": { "type": "string" }
+      }
+    },
+    "personNote": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rejectionReason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
