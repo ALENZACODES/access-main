@@ -127,5 +127,5 @@ test("scanner keyboard alternatives and 44px targets with visible focus", async 
     }),
   );
   for (const rect of metrics) { expect(rect.width).toBeGreaterThanOrEqual(44); expect(rect.height).toBeGreaterThanOrEqual(44); }
-  await expect(page.locator("#language-en")).toHaveCSS("outline-style", "solid");
+  await expect(page.locator("#skip-link")).toHaveCSS("outline-style", "solid");
 });
