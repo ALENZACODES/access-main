@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { createGunzip } from "node:zlib";
 import { Readable } from "node:stream";
 import { RecordCounter } from "./count.js";
+import { DeepSampler, deepSampleMarkdown } from "./deep-sample.js";
 import { migrateImportRecord, type ImportRecord } from "./migrate.js";
 import { getValidator, isServiceAlertRecord } from "./validate.js";
 
@@ -28,7 +29,8 @@ export async function runCli(argv: string[]): Promise<number> {
   if (command === "validate") return validateCommand(rest);
   if (command === "count") return countCommand(rest);
   if (command === "migrate") return migrateCommand(rest);
-  process.stderr.write("usage: access-schema validate|count|migrate <files...>\n");
+  if (command === "deep-sample") return deepSampleCommand(rest);
+  process.stderr.write("usage: access-schema validate|count|migrate|deep-sample <files...>\n");
   return 2;
 }
 
@@ -87,6 +89,57 @@ async function countCommand(args: string[]): Promise<number> {
   }
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   return failed === 0 ? 0 : 1;
+}
+
+/**
+ * Day 30 deep sample. Exit 1 when a program-visible defect or a count mismatch
+ * is found. Exit 0 is not a pass: the cross-check columns still need a person.
+ */
+async function deepSampleCommand(args: string[]): Promise<number> {
+  let asOf = "";
+  let seed = "";
+  let size: number | undefined;
+  let format = "json";
+  let countsFile = "";
+  const paths: string[] = [];
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    const next = args[i + 1] ?? "";
+    if (arg === "--as-of") { asOf = next; i += 1; }
+    else if (arg === "--seed") { seed = next; i += 1; }
+    else if (arg === "--size") { size = Number(next); i += 1; }
+    else if (arg === "--format") { format = next; i += 1; }
+    else if (arg === "--counts") { countsFile = next; i += 1; }
+    else if (arg) paths.push(arg);
+  }
+  if (!seed || !/^\d{4}-\d{2}-\d{2}$/.test(asOf) || paths.length === 0 || (format !== "json" && format !== "md")) {
+    process.stderr.write(
+      "usage: access-schema deep-sample --seed <text> --as-of <YYYY-MM-DD> [--size 20] [--counts counts.json] [--format json|md] <files...>\n",
+    );
+    return 2;
+  }
+  let expectedCounts: Record<string, number> | undefined;
+  if (countsFile) {
+    const parsed = JSON.parse(stripBom(readFileSync(countsFile, "utf8"))) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || Object.values(parsed).some((value) => !Number.isInteger(value))) {
+      process.stderr.write("--counts must be a JSON object of file path to whole-number count\n");
+      return 2;
+    }
+    expectedCounts = parsed as Record<string, number>;
+  }
+  const sampler = new DeepSampler({ seed, asOf, sampleSize: size, expectedCounts });
+  let unreadable = 0;
+  for await (const item of eachRecord(paths)) {
+    if (item.parseError || item.value === undefined || typeof item.value !== "object" || item.value === null || Array.isArray(item.value)) {
+      unreadable += 1;
+      process.stderr.write(`FAIL ${label(item)}\n  / ${item.parseError ?? "not a record object"}\n`);
+      continue;
+    }
+    sampler.add(item.value, item.file);
+  }
+  const report = sampler.finish();
+  process.stdout.write(format === "md" ? deepSampleMarkdown(report) : `${JSON.stringify(report, null, 2)}\n`);
+  return unreadable === 0 && report.automatic_result !== "BLOCK" ? 0 : 1;
 }
 
 async function migrateCommand(args: string[]): Promise<number> {

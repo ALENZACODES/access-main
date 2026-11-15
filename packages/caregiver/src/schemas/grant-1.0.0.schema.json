@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:access-main:caregiver:grant:1.0.0",
+  "title": "Caregiver grant",
+  "description": "One permission the owner gave to one caregiver. Stored on the device only. Revoked grants are kept so the audit log stays readable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_type", "schema_version", "grant_id", "caregiver_label", "scope", "created_at", "expires_at", "revoked_at"],
+  "properties": {
+    "record_type": { "const": "caregiver_grant" },
+    "schema_version": { "const": "caregiver-grant-1.0.0" },
+    "grant_id": { "type": "string", "pattern": "^g-[a-z0-9]{8,32}$" },
+    "caregiver_label": { "type": "string", "minLength": 1, "maxLength": 60, "pattern": "\\S" },
+    "scope": { "$ref": "urn:access-main:caregiver:scope:1.0.0" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": ["string", "null"], "format": "date-time" },
+    "revoked_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}
