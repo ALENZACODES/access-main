@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { GazeSimulatorAdapter } from "./adapters/gaze.ts";
+import { MAX_DWELL_MS, MIN_DWELL_MS, DWELL_STEP_MS, GazeSimulatorAdapter } from "./adapters/gaze.ts";
 import { KeyboardAdapter } from "./adapters/keyboard.ts";
 import { SwitchAdapter, switchInputFromKey } from "./adapters/switch.ts";
 import { VoiceAdapter } from "./adapters/voice.ts";
@@ -214,6 +214,7 @@ function VoicePanel(props: { lang: Lang; adapter: VoiceAdapter; onAction: (a: Ac
 
 function GazePanel({ lang, adapter, deliver }: { lang: Lang; adapter: GazeSimulatorAdapter; deliver: Deliver }) {
   const [view, setView] = useState<{ target: ActionId; percent: number } | null>(null);
+  const [dwellMs, setDwellMs] = useState(adapter.dwellMs);
   const hovered = useRef<ActionId | null>(null);
   const timer = useRef<number | null>(null);
 
@@ -259,11 +260,36 @@ function GazePanel({ lang, adapter, deliver }: { lang: Lang; adapter: GazeSimula
     [stop, adapter],
   );
 
-  const seconds = new Intl.NumberFormat(lang).format(adapter.dwellMs / 1000);
+  const seconds = new Intl.NumberFormat(lang).format(dwellMs / 1000);
+  const onDwellChange = (value: string) => {
+    const next = adapter.setDwellMs(Number(value));
+    setDwellMs(next);
+    setView(null);
+  };
   return (
     <>
       <p>{t(lang, "gaze.intro")}</p>
       <p>{t(lang, "gaze.dwellInfo", { seconds })}</p>
+      <div className="dwell-control">
+        <label htmlFor="gaze-dwell">{t(lang, "gaze.dwellLabel")}</label>
+        <input
+          id="gaze-dwell"
+          type="range"
+          min={MIN_DWELL_MS}
+          max={MAX_DWELL_MS}
+          step={DWELL_STEP_MS}
+          value={dwellMs}
+          data-testid="gaze-dwell"
+          aria-valuemin={MIN_DWELL_MS}
+          aria-valuemax={MAX_DWELL_MS}
+          aria-valuenow={dwellMs}
+          aria-valuetext={t(lang, "gaze.dwellValue", { milliseconds: dwellMs })}
+          onChange={(event) => onDwellChange(event.target.value)}
+        />
+        <output htmlFor="gaze-dwell" data-testid="gaze-dwell-value">
+          {t(lang, "gaze.dwellValue", { milliseconds: dwellMs })}
+        </output>
+      </div>
       <div className="button-row">
         {ACTION_IDS.map((action) => (
           <button

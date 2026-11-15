@@ -136,4 +136,14 @@ describe("gaze simulator", () => {
     expect(g.progress(250)).toEqual({ target: "confirm", fraction: 0.25 });
     expect(() => new GazeSimulatorAdapter(0)).toThrow(RangeError);
   });
+  it("defaults to 800 ms and lets the dwell be adjusted within the UI range", () => {
+    const g = new GazeSimulatorAdapter();
+    expect(g.dwellMs).toBe(800);
+    g.handle({ type: "gaze-at", target: "next", timeMs: 0 });
+    expect(g.setDwellMs(1200)).toBe(1200);
+    expect(g.dwellMs).toBe(1200);
+    expect(g.progress(400)).toBeNull();
+    expect(g.setDwellMs(50)).toBe(200);
+    expect(g.setDwellMs(4000)).toBe(2000);
+  });
 });

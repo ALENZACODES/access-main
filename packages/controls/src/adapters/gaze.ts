@@ -1,6 +1,16 @@
 import type { ActionId, AdapterResult, ControlAdapter } from "../types.ts";
 
 export const DEFAULT_DWELL_MS = 800;
+export const MIN_DWELL_MS = 200;
+export const MAX_DWELL_MS = 2000;
+export const DWELL_STEP_MS = 100;
+
+/** Snap a requested dwell time to the adjustable range used in the UI. */
+export function normalizeDwellMs(value: number): number {
+  if (!Number.isFinite(value)) throw new RangeError("dwellMs must be a finite number");
+  const snapped = Math.round(value / DWELL_STEP_MS) * DWELL_STEP_MS;
+  return Math.min(MAX_DWELL_MS, Math.max(MIN_DWELL_MS, snapped));
+}
 
 /** Events are supplied by the caller (tests, or the pointer in the demo). No eye-tracking data is read. */
 export type GazeInput =
@@ -18,8 +28,18 @@ export class GazeSimulatorAdapter implements ControlAdapter<GazeInput> {
   private startMs = 0;
   private fired = false;
 
-  constructor(readonly dwellMs: number = DEFAULT_DWELL_MS) {
+  dwellMs: number;
+
+  constructor(dwellMs: number = DEFAULT_DWELL_MS) {
     if (!Number.isFinite(dwellMs) || dwellMs <= 0) throw new RangeError("dwellMs must be a positive number");
+    this.dwellMs = dwellMs;
+  }
+
+  /** Updates the dwell and restarts any dwell in progress. */
+  setDwellMs(value: number): number {
+    this.dwellMs = normalizeDwellMs(value);
+    this.reset();
+    return this.dwellMs;
   }
 
   handle(input: GazeInput): AdapterResult {

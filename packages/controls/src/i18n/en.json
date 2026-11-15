@@ -48,6 +48,8 @@
   "voice.help": "Commands: {list}.",
   "gaze.intro": "Simulated gaze. The pointer stands in for eye tracking. No eye-tracking hardware or software is used.",
   "gaze.dwellInfo": "Rest the pointer on a target for {seconds} seconds to select it. Pressing a target with the keyboard or a tap counts as a finished dwell.",
+  "gaze.dwellLabel": "Dwell time",
+  "gaze.dwellValue": "{milliseconds} milliseconds",
   "gaze.idle": "No target under the pointer.",
   "gaze.progress": "Dwelling on {label}: {percent}%",
   "widget.title": "Choose an option",

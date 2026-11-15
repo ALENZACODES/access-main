@@ -95,6 +95,19 @@ describe("shell", () => {
     expect(widget().dataset.confirmed).toBe("true");
   });
 
+  it("gaze dwell time defaults to 800 milliseconds and can be adjusted", () => {
+    render(<App initialMode="gaze" />);
+    const control = screen.getByLabelText("Dwell time");
+    expect((control as HTMLInputElement).value).toBe("800");
+    expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("800 milliseconds");
+    fireEvent.change(control, { target: { value: "1200" } });
+    expect((control as HTMLInputElement).value).toBe("1200");
+    expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("1200 milliseconds");
+    fireEvent.click(screen.getByRole("button", { name: "Français" }));
+    expect(screen.getByLabelText("Durée de fixation")).toBeTruthy();
+    expect(screen.getByTestId("gaze-dwell-value").textContent).toBe("1200 millisecondes");
+  });
+
   it("the widget works in every mode without using the mode's own input", () => {
     for (const mode of CONTROL_MODES) {
       render(<App initialMode={mode} />);

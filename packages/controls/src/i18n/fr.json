@@ -48,6 +48,8 @@
   "voice.help": "Commandes : {list}.",
   "gaze.intro": "Regard simulé. Le pointeur remplace le suivi du regard. Aucun matériel ni logiciel de suivi oculaire n'est utilisé.",
   "gaze.dwellInfo": "Maintenez le pointeur sur une cible pendant {seconds} secondes pour la sélectionner. Appuyer sur une cible au clavier ou la toucher vaut pour une fixation terminée.",
+  "gaze.dwellLabel": "Durée de fixation",
+  "gaze.dwellValue": "{milliseconds} millisecondes",
   "gaze.idle": "Aucune cible sous le pointeur.",
   "gaze.progress": "Fixation sur {label} : {percent} %",
   "widget.title": "Choisir une option",
