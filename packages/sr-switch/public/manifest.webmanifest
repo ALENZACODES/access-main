@@ -1,0 +1,10 @@
+{
+  "name": "the App – accessibility test harness",
+  "short_name": "the App",
+  "lang": "en",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#163e50",
+  "icons": []
+}
