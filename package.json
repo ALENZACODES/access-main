@@ -19,7 +19,7 @@
     "build": "npm run build -w @access-main/schema && npm run build -w @access/web",
     "preview": "npm run preview -w @access/web",
     "prepare": "tsc -p packages/schema/tsconfig.json",
-    "typecheck": "tsc -p packages/schema/tsconfig.json && tsc -p packages/shared/tsconfig.json && tsc -p apps/web/tsconfig.json && tsc -p apps/web/tsconfig.scripts.json && npm run typecheck --workspaces --if-present",
+    "typecheck": "tsc -p packages/schema/tsconfig.json && tsc -p packages/shared/tsconfig.json && tsc -p apps/web/tsconfig.json && tsc -p apps/web/tsconfig.scripts.json && tsc -p apps/web/tsconfig.node.json && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "test": "vitest run && npm test --workspaces --if-present",
     "test:e2e": "npm run test:e2e --workspaces --if-present",

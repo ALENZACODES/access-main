@@ -1,14 +1,33 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { SHELL_CONTRACT_VERSION } from "../../packages/shared/src/modules.ts";
+import { BUILD_MANIFEST_FILE, createBuildManifest } from "./src/release/manifest.ts";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+
+/** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
+function buildManifest(): Plugin {
+  return {
+    name: "access-build-manifest",
+    apply: "build",
+    generateBundle() {
+      const manifest = createBuildManifest({
+        buildId: process.env.VITE_BUILD_ID,
+        commit: process.env.VITE_BUILD_COMMIT,
+        contractVersion: SHELL_CONTRACT_VERSION,
+      });
+      this.emitFile({ type: "asset", fileName: BUILD_MANIFEST_FILE, source: `${JSON.stringify(manifest, null, 2)}\n` });
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
+    buildManifest(),
     VitePWA({
       registerType: "prompt",
       includeAssets: ["favicon.svg", "icons/icon-192.png", "icons/icon-512.png"],
