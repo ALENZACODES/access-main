@@ -109,6 +109,7 @@ export function MapPage() {
   const [selectedNeeds, setSelectedNeeds] = useState<Need[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [libraryError, setLibraryError] = useState(false);
   const listId = "map-place-list";
 
   const visible = useMemo(() => places.filter((place) => enabled.includes(place.category) &&
@@ -202,7 +203,7 @@ export function MapPage() {
         window.addEventListener("access:region-downloaded", onRegion);
         cleanupRegion = () => window.removeEventListener("access:region-downloaded", onRegion);
       } catch {
-        if (!disposed) { setLoading(false); setError(true); }
+        if (!disposed) { setLoading(false); setLibraryError(true); }
       }
     };
     let cleanupRegion = () => {};
@@ -273,6 +274,7 @@ export function MapPage() {
         <div ref={canvas} className="map-viewport" aria-hidden="true" data-testid="map-viewport" />
         <section className="map-results" aria-label={t("map.list")}>
           <p role="status">{loading ? t("map.loading") : `${visible.length} ${t("map.records")}`}</p>
+          {libraryError && <p role="alert">{t("map.libraryUnavailable")}</p>}
           {error && <p role="alert">{t("map.unavailable")}</p>}
           {visible.length ? <FeatureList features={listFeatures as React.ComponentProps<typeof FeatureList>["features"]} locale={locale} selectedId={selectedId} onSelect={select} listId={listId} />
             : <p id={listId} tabIndex={-1}>{t("map.empty")}</p>}
