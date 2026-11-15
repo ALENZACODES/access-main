@@ -2,6 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { en } from "./en.ts";
 import { fr } from "./fr.ts";
+import { mapMessages } from "../map/i18n.ts";
 
 export const LANGUAGE_STORAGE_KEY = "access.language";
 export const LANGUAGE_SET_KEY = "access.language.set";
@@ -39,8 +40,8 @@ export function initI18n(): typeof i18n {
   const lng = detectLanguage();
   void i18n.use(initReactI18next).init({
     resources: {
-      en: { translation: en },
-      fr: { translation: fr },
+      en: { translation: { ...en, map: mapMessages.en.map } },
+      fr: { translation: { ...fr, map: mapMessages.fr.map } },
     },
     lng,
     fallbackLng: "en",

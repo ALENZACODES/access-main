@@ -4,6 +4,7 @@ import { BuildCardPage } from "./pages/BuildCardPage.tsx";
 import { DataStatusPage } from "./pages/DataStatusPage.tsx";
 import { HelpPage } from "./pages/HelpPage.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
+import { MapPage } from "./map/MapPage.tsx";
 import { ModulePage } from "./pages/ModulePage.tsx";
 import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
       { path: "data-status", element: <DataStatusPage /> },
       { path: "build-card", element: <BuildCardPage /> },
       { path: "places", element: <ModulePage id="places" /> },
+      { path: "map", element: <MapPage /> },
       { path: "journey", element: <ModulePage id="journey" /> },
       { path: "finders", element: <ModulePage id="finders" /> },
       { path: "navigator", element: <ModulePage id="navigator" /> },
