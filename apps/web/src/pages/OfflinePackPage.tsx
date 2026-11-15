@@ -20,7 +20,7 @@ function localInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function OfflinePackPage() {
+export function LegacyOfflinePackPage() {
   const { t, i18n } = useTranslation();
   const online = useOnline();
   const language = i18n.language.startsWith("fr") ? "fr" : "en";
@@ -355,3 +355,4 @@ export function OfflinePackPage() {
     </div>
   );
 }
+export { OfflineRegionPage as OfflinePackPage } from "../offline/RegionPackPage.tsx";
