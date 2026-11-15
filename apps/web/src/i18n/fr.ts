@@ -6,7 +6,7 @@ export const fr: Messages = {
   prototypeBanner:
     "Prototype. Chaque enregistrement est non vérifié. Chacun indique sa source, sa licence, sa date et son niveau de vérification. L'inconnu reste inconnu.",
   noEndorsement:
-    "Aucune organisation, y compris Spinal Cord Injury Ontario, n'a approuvé the App.",
+    "Aucune organisation n'a approuvé the App.",
   noMedical: "the App ne donne pas de conseil médical, d'intervalle clinique, ni de décision d'admissibilité à une prestation.",
   noEligibility:
     "Les entrées du répertoire sont des liens vers des pages officielles. the App ne tranche pas l'admissibilité.",
