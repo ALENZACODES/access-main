@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/access-main/source-register.schema.json",
+  "title": "Prototype source register entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "display_name", "official_url", "licence", "as_of", "record_count", "unknown_field_count", "tier_histogram", "geography", "kind", "demonstration", "provenance"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "display_name": { "type": "string", "minLength": 1 },
+    "official_url": { "$ref": "#/$defs/urlOrUnknown" },
+    "licence": { "type": "string", "minLength": 1 },
+    "retrieved_on": {
+      "$ref": "#/$defs/dateOrUnknown",
+      "description": "UTC calendar date (YYYY-MM-DD) when this source was fetched, or Unknown. This is a date, not a time-of-day instant."
+    },
+    "as_of": {
+      "$ref": "#/$defs/dateOrUnknown",
+      "description": "UTC calendar date (YYYY-MM-DD) the registered data applies to, or Unknown. This is a date, not a time-of-day instant."
+    },
+    "record_count": { "$ref": "#/$defs/countOrUnknown" },
+    "unknown_field_count": { "$ref": "#/$defs/countOrUnknown" },
+    "tier_histogram": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tier", "prototype_label", "count"],
+        "properties": {
+          "tier": { "enum": [0, 1] },
+          "prototype_label": { "enum": ["PROTOTYPE-UNVERIFIED", "SEEDED-OPEN-DATA"] },
+          "count": { "type": "integer", "minimum": 0 }
+        },
+        "allOf": [
+          { "if": { "properties": { "prototype_label": { "const": "SEEDED-OPEN-DATA" } }, "required": ["prototype_label"] }, "then": { "properties": { "tier": { "const": 0 } } } }
+        ]
+      }
+    },
+    "geography": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["places", "directory links", "help", "tiles", "other"] },
+    "demonstration": { "type": "boolean" },
+    "example": { "type": "boolean" },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "licence", "source_date", "tier", "prototype_label"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "licence": { "type": "string", "minLength": 1 },
+        "source_date": { "$ref": "#/$defs/dateOrUnknown" },
+        "tier": { "enum": [0, 1] },
+        "prototype_label": { "enum": ["PROTOTYPE-UNVERIFIED", "SEEDED-OPEN-DATA"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "prototype_label": { "const": "SEEDED-OPEN-DATA" } }, "required": ["prototype_label"] }, "then": { "properties": { "tier": { "const": 0 } } } }
+      ]
+    }
+  },
+  "$defs": {
+    "dateOrUnknown": {
+      "description": "Unknown, or a UTC calendar date in YYYY-MM-DD form. Do not use a local date or a date-time instant.",
+      "oneOf": [{ "const": "Unknown" }, { "type": "string", "format": "date" }]
+    },
+    "countOrUnknown": { "oneOf": [{ "const": "Unknown" }, { "type": "integer", "minimum": 0 }] },
+    "urlOrUnknown": { "oneOf": [{ "const": "Unknown" }, { "type": "string", "format": "uri", "pattern": "^https://" }] }
+  }
+}

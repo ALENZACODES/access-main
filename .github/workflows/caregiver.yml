@@ -1,0 +1,29 @@
+name: caregiver
+
+on:
+  pull_request:
+    paths:
+      - "packages/caregiver/**"
+      - "packages/shared/**"
+      - ".github/workflows/caregiver.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: caregiver-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck -w @access-main/caregiver
+      - run: npm test -w @access-main/caregiver
