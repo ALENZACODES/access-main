@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "packages": [
+    { "repo": "ALENZACODES/access-maps", "path": "packages/places-shell", "alias": "@access-maps/places-shell", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-maps", "path": "packages/journey", "alias": "@access-maps/journey", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-maps", "path": "packages/map-ui", "alias": "@access-maps/map-ui", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-maps", "path": "packages/journey-data", "alias": "@access-maps/journey-data", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-tools", "path": "packages/finders", "alias": "@access-tools/finders", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-tools", "path": "packages/place", "alias": "@access-tools/place", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-tools", "path": "packages/navigator", "alias": "@access-tools/navigator", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-tools", "path": "packages/games", "alias": "@access-tools/games", "commit": "PIN-AFTER-MERGE" },
+    { "repo": "ALENZACODES/access-help", "path": "packages/help", "alias": "@access/help", "commit": "PIN-AFTER-MERGE" }
+  ]
+}

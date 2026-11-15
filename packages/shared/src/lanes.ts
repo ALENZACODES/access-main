@@ -3,15 +3,17 @@ import { MODULE_IDS, type ModuleId } from "./modules.ts";
 /**
  * Which package each shell route calls.
  *
- * The packages are not installed in this app. They are unpublished workspace
- * packages on open pull requests. access-maps also carries open-data files
- * this shell must not bundle, and its map UI loads MapLibre. This shell does
- * not mount that canvas and does not show a map attribution, because it does
- * not load map tiles. Finder fixtures are not copied. The timing package is
- * not part of the shell profile.
+ * The packages are not npm dependencies. `scripts/sync-lanes.mjs` pulls the
+ * folders listed in `lanes.lock.json` into `.lanes/` at build time, from the
+ * commits pinned there, and Vite aliases resolve them. access-maps also
+ * carries open-data files this shell must not bundle, so only the listed
+ * package folders are checked out. This shell does not mount the map canvas
+ * from the map UI package here. Finder fixtures are not copied. The timing
+ * package is not part of the shell profile.
  *
- * `createModules` in the web app is the seam. Pass a real module there when
- * the package can be imported without those files.
+ * `createModules` in the web app is the seam, and `modules/linked.ts` passes
+ * the real adapters to it. The `ref` and `commit` below record what each
+ * binding was last checked against. `lanes.lock.json` decides what is built.
  */
 export interface LaneBinding {
   id: ModuleId;

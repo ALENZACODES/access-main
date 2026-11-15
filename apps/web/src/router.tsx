@@ -1,15 +1,28 @@
-import { createBrowserRouter } from "react-router-dom";
+import { lazy } from "react";
+import { createBrowserRouter, type RouteObject } from "react-router-dom";
+import { Section } from "./modules/Section.tsx";
+import { optionalPage, optionalRoutes } from "./modules/optionalRoutes.ts";
 import { AboutPage } from "./pages/AboutPage.tsx";
-import { DataStatusPage } from "./pages/DataStatusPage.tsx";
-import { HelpPage } from "./pages/HelpPage.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
-import { ModulePage } from "./pages/ModulePage.tsx";
 import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { ProfilePage } from "./pages/ProfilePage.tsx";
 import { AppShell } from "./shell/AppShell.tsx";
 
-export const router = createBrowserRouter([
+// Every route in the integration contract is lazy, so none is on the first-install path.
+const ModulePage = lazy(() => import("./pages/ModulePage.tsx").then((module) => ({ default: module.ModulePage })));
+const PlaceDetailPage = lazy(() => import("./pages/PlaceDetailPage.tsx").then((module) => ({ default: module.PlaceDetailPage })));
+const HelpPage = lazy(() => import("./pages/HelpPage.tsx").then((module) => ({ default: module.HelpPage })));
+const DataStatusPage = lazy(() => import("./pages/DataStatusPage.tsx").then((module) => ({ default: module.DataStatusPage })));
+
+// Entry files owned by other lanes. A missing file renders a "being connected" page, not a build error.
+const MapPage = optionalPage("map");
+const ContributePage = optionalPage("contribute");
+const OfflinePage = optionalPage("offline");
+const SettingsRoutes = optionalRoutes("settings");
+const MoreRoutes = optionalRoutes("more");
+
+export const routes: RouteObject[] = [
   {
     path: "/",
     element: <AppShell />,
@@ -18,14 +31,23 @@ export const router = createBrowserRouter([
       { path: "about", element: <AboutPage /> },
       { path: "onboarding", element: <OnboardingPage /> },
       { path: "profile", element: <ProfilePage /> },
-      { path: "data-status", element: <DataStatusPage /> },
-      { path: "places", element: <ModulePage id="places" /> },
-      { path: "journey", element: <ModulePage id="journey" /> },
-      { path: "finders", element: <ModulePage id="finders" /> },
-      { path: "navigator", element: <ModulePage id="navigator" /> },
-      { path: "games", element: <ModulePage id="games" /> },
-      { path: "help", element: <HelpPage /> },
+      { path: "data-status", element: <Section><DataStatusPage /></Section> },
+      { path: "offline", element: <Section><OfflinePage /></Section> },
+      { path: "places", element: <Section><ModulePage id="places" /></Section> },
+      { path: "places/:id", element: <Section><PlaceDetailPage /></Section> },
+      { path: "map", element: <Section><MapPage /></Section> },
+      { path: "journey", element: <Section><ModulePage id="journey" /></Section> },
+      { path: "finders", element: <Section><ModulePage id="finders" /></Section> },
+      { path: "navigator", element: <Section><ModulePage id="navigator" /></Section> },
+      { path: "games", element: <Section><ModulePage id="games" /></Section> },
+      { path: "help", element: <Section><HelpPage /></Section> },
+      { path: "help/:id", element: <Section><HelpPage /></Section> },
+      { path: "contribute", element: <Section><ContributePage /></Section> },
+      { path: "settings/*", element: <Section><SettingsRoutes /></Section> },
+      { path: "more/*", element: <Section><MoreRoutes /></Section> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
-]);
+];
+
+export const router = createBrowserRouter(routes, { basename: import.meta.env.BASE_URL });
