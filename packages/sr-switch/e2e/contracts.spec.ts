@@ -59,7 +59,7 @@ for (const lang of ["en", "fr"] as const) {
 
 test("step/select scanner reaches each advertised action and cannot trap switch navigation", async ({ page }) => {
   await chooseLanguage(page, "en");
-  const expected = ["language-en", "language-fr", "request-label", "submit-request", "view-summary", "view-details", "open-dialog"];
+  const expected = ["skip-link", "language-en", "language-fr", "request-label", "submit-request", "view-summary", "view-details", "open-dialog"];
   const next = page.locator("main .scan-controls button").first();
   const select = page.locator("main .scan-controls button").nth(1);
   for (const [index, id] of expected.entries()) {
@@ -113,6 +113,8 @@ test("step/select scanner reaches each advertised action and cannot trap switch 
 
 test("scanner keyboard alternatives and 44px targets with visible focus", async ({ page }) => {
   await chooseLanguage(page, "en");
+  await page.keyboard.press("n");
+  await expect(page.locator("#language-en")).toHaveAttribute("data-current-scan", "true");
   await page.keyboard.press("n");
   await expect(page.locator("#language-fr")).toHaveAttribute("data-current-scan", "true");
   await page.keyboard.press("s");

@@ -54,6 +54,31 @@ export default defineConfig({
       "@access/shared": path.resolve(root, "../../packages/shared/src/index.ts"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (
+            id.includes("/react-aria-components/") ||
+            id.includes("/@react-aria/") ||
+            id.includes("/@react-stately/") ||
+            id.includes("/@react-types/") ||
+            id.includes("/@internationalized/")
+          ) {
+            return "react-aria";
+          }
+          if (id.includes("/react-dom/")) return "react-dom";
+          if (id.includes("/react-router") || id.includes("/@remix-run/")) return "router";
+          if (id.includes("/i18next") || id.includes("/react-i18next/")) return "i18n";
+          if (id.includes("/dexie")) return "dexie";
+          if (id.includes("/workbox-")) return "workbox";
+          if (id.includes("/react/")) return "react";
+          return "vendor";
+        },
+      },
+    },
+  },
   server: {
     host: true,
     port: Number(process.env.PORT) || 5173,
