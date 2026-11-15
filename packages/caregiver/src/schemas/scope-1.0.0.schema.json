@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:access-main:caregiver:scope:1.0.0",
+  "title": "Caregiver scope",
+  "description": "What one grant lets a caregiver see. The list of scopes is closed. There is no scope for the whole profile. Equipment field names match packages/shared/src/profile.ts. The profile has no health or diagnosis fields and this schema adds none.",
+  "$defs": {
+    "ref": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$" },
+    "label": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "equipment_type_general": {
+          "enum": ["power_chair", "manual_chair", "scooter", "walker", "walking_with_chair_in_car", "other", "prefer_not_to_say", null]
+        },
+        "chair_width_mm": { "type": ["integer", "null"], "minimum": 1, "maximum": 2000 },
+        "chair_length_mm": { "type": ["integer", "null"], "minimum": 1, "maximum": 2000 },
+        "transfer_side_preference": { "enum": ["left", "right", "both", "front", "prefer_not_to_say", null] },
+        "attendant_travels": { "type": ["boolean", "null"] }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "journey_ref", "label"],
+      "properties": {
+        "kind": { "const": "journey_reference" },
+        "journey_ref": { "$ref": "#/$defs/ref" },
+        "label": { "$ref": "#/$defs/label" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "receipt_id", "label", "recorded_at"],
+      "properties": {
+        "kind": { "const": "check_in_receipt" },
+        "receipt_id": { "$ref": "#/$defs/ref" },
+        "label": { "$ref": "#/$defs/label" },
+        "recorded_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "snapshot"],
+      "properties": {
+        "kind": { "const": "equipment_snapshot" },
+        "snapshot": { "$ref": "#/$defs/snapshot" }
+      }
+    }
+  ]
+}
