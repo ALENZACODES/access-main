@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { TextInput } from "../design/fields.tsx";
+import { ResultItems, statusKey } from "../modules/ResultItems.tsx";
 import { StubNote } from "../modules/StubNote.tsx";
 import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
@@ -66,7 +67,11 @@ export function HelpPage() {
             <Button type="submit" isDisabled={result?.availability !== "ready"}>{t("modules.searchAction")}</Button>
           </div>
         </form>
+        {result && result.availability !== "stub" ? (
+          <p>{t(statusKey(result))}</p>
+        ) : null}
         <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
+        {result ? <ResultItems id="help" items={result.items} /> : null}
       </section>
     </div>
   );

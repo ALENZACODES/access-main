@@ -89,4 +89,4 @@ export {
   type PlacesModule,
   type PlacesQuery,
 } from "./modules.ts";
-export * from "./forbiddenOrg.ts";
+export { checkModuleItem, checkModuleResult, guardModules, lastContractIssues } from "./conformance.ts";

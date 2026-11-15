@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { FINDER_KINDS, type FinderKind, type ModuleId, type ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
+import { ResultItems, statusKey } from "../modules/ResultItems.tsx";
 import { StubNote } from "../modules/StubNote.tsx";
 import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
@@ -26,15 +27,6 @@ const KIND_KEY: Record<FinderKind, string> = {
   "adult-change": "modules.kindChange",
 };
 
-function itemText(item: unknown): string | null {
-  if (!item || typeof item !== "object") return null;
-  const record = item as Record<string, unknown>;
-  for (const key of ["name", "title", "summary"]) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) return value;
-  }
-  return null;
-}
 
 export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   const { t, i18n } = useTranslation();
@@ -78,7 +70,6 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
     void pending.then((value) => setResult(value as ModuleResult<unknown>));
   }, [id, i18n.language, online, profile, submitted]);
 
-  const items = (result?.items ?? []).map(itemText).filter((label): label is string => Boolean(label));
   const canSearch = result?.availability === "ready";
   const hasSearch = id === "places" || id === "finders" || id === "journey";
 
@@ -88,7 +79,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
       <p className="lead">{t(copy.body)}</p>
       {id === "places" || id === "journey" ? <p>{t("modules.noMap")}</p> : null}
       {result?.availability === "stub" ? <StubNote id={id} search={hasSearch} /> : (
-        <p>{result ? t(result.messageKey) : t("home.checking")}</p>
+        <p>{result ? t(statusKey(result)) : t("home.checking")}</p>
       )}
       {id === "places" || id === "finders" ? (
         <form
@@ -135,13 +126,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
         </form>
       ) : null}
       <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
-      {items.length > 0 ? (
-        <ul>
-          {items.map((label) => (
-            <li key={label}>{label}</li>
-          ))}
-        </ul>
-      ) : null}
+      {result ? <ResultItems id={id} items={result.items} /> : null}
       <p>{t("data.liveBody")}</p>
     </div>
   );
