@@ -1,0 +1,29 @@
+export type Locale = "en" | "fr";
+export const catalogs = {
+  en: {
+    heading: "Offline review", subtitle: "Compare two copies stored on this device. Nothing is uploaded.",
+    empty: "Nothing to reconcile. Import or select two local snapshots to compare.",
+    summary: "Merge report", records: "Merged records", conflicts: "Unresolved conflicts",
+    unknowns: "Unknown observations", timestamps: "Metadata timestamp decisions",
+    noConflicts: "No conflicts found.", conflictHeading: "Fields needing a decision",
+    record: "Record", field: "Field", left: "Left", right: "Right",
+    source: "Source", licence: "Licence", date: "Source date", tier: "Tier",
+    chooseLeft: "Use left", chooseRight: "Use right", keepUnknown: "Keep Unknown",
+    apply: "Apply choices locally", chosen: "Selected", selectionRequired: "Choose a resolution for each field.",
+    demo: "Demonstration data only — not real accessibility observations.",
+    labels: "Copies", queue: "On-device queued reports", unresolved: "Unresolved; this field remains Unknown.",
+  },
+  fr: {
+    heading: "Examen hors ligne", subtitle: "Comparez deux copies stockées sur cet appareil. Aucun envoi n’est effectué.",
+    empty: "Rien à rapprocher. Importez ou sélectionnez deux instantanés locaux à comparer.",
+    summary: "Rapport de fusion", records: "Fiches fusionnées", conflicts: "Conflits non résolus",
+    unknowns: "Observations inconnues", timestamps: "Décisions sur les horodatages des métadonnées",
+    noConflicts: "Aucun conflit trouvé.", conflictHeading: "Champs nécessitant une décision",
+    record: "Fiche", field: "Champ", left: "Gauche", right: "Droite",
+    source: "Source", licence: "Licence", date: "Date de la source", tier: "Niveau",
+    chooseLeft: "Choisir gauche", chooseRight: "Choisir droite", keepUnknown: "Garder Inconnu",
+    apply: "Appliquer les choix localement", chosen: "Sélection", selectionRequired: "Choisissez une résolution pour chaque champ.",
+    demo: "Données de démonstration uniquement — aucune observation réelle sur l’accessibilité.",
+    labels: "Copies", queue: "Signalements en attente sur l’appareil", unresolved: "Non résolu ; ce champ reste Inconnu.",
+  },
+} as const;

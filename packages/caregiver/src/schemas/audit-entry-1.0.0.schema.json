@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:access-main:caregiver:audit-entry:1.0.0",
+  "title": "Caregiver audit-log entry",
+  "description": "One line of the owner's activity log. Entries are only ever appended.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_type", "schema_version", "entry_id", "seq", "at", "action", "outcome", "reason", "grant_id", "caregiver_label", "scope_kind", "fields_removed", "expires_at"],
+  "properties": {
+    "record_type": { "const": "caregiver_audit_entry" },
+    "schema_version": { "const": "caregiver-audit-1.0.0" },
+    "entry_id": { "type": "string", "pattern": "^a-[0-9]{8}$" },
+    "seq": { "type": "integer", "minimum": 1 },
+    "at": { "type": "string", "format": "date-time" },
+    "action": { "enum": ["grant_created", "grant_narrowed", "grant_revoked", "grant_viewed", "access_denied"] },
+    "outcome": { "enum": ["allowed", "denied"] },
+    "reason": { "enum": [null, "revoked", "expired", "unknown_grant", "wrong_caregiver"] },
+    "grant_id": { "type": ["string", "null"], "pattern": "^g-[a-z0-9]{8,32}$" },
+    "caregiver_label": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "scope_kind": { "enum": [null, "journey_reference", "check_in_receipt", "equipment_snapshot"] },
+    "fields_removed": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["equipment_type_general", "chair_width_mm", "chair_length_mm", "transfer_side_preference", "attendant_travels"] }
+    },
+    "expires_at": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "required": ["outcome"], "properties": { "outcome": { "const": "denied" } } },
+      "then": { "properties": { "reason": { "type": "string" } } },
+      "else": { "properties": { "reason": { "type": "null" } } }
+    }
+  ]
+}
