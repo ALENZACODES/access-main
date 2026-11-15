@@ -16,8 +16,8 @@ export const PURPOSES: readonly Purpose[] = [
       fr: "Garder mes préférences sur cet appareil",
     },
     description: {
-      en: "The App saves your display settings, route preferences and general equipment size choices in this device's storage so you do not have to enter them again. They are never sent to a server, a partner or another person. You can revoke this at any time.",
-      fr: "L'application enregistre vos réglages d'affichage, vos préférences d'itinéraire et les dimensions générales de votre équipement dans la mémoire de cet appareil, pour que vous n'ayez pas à les saisir de nouveau. Ces données ne sont jamais envoyées à un serveur, à un partenaire ni à une autre personne. Vous pouvez révoquer ce choix en tout temps.",
+      en: "The App saves your display settings, route preferences and general equipment size choices in this device's storage so you do not have to enter them again. They are never sent to a server or another person. You can revoke this at any time.",
+      fr: "L'application enregistre vos réglages d'affichage, vos préférences d'itinéraire et les dimensions générales de votre équipement dans la mémoire de cet appareil, pour que vous n'ayez pas à les saisir de nouveau. Ces données ne sont jamais envoyées à un serveur ni à une autre personne. Vous pouvez révoquer ce choix en tout temps.",
     },
     data_categories: ["display_settings", "route_preferences", "equipment_size", "language"],
     leaves_device: false,
