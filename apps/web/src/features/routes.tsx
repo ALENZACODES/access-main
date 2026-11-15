@@ -17,13 +17,13 @@ function Message({ name }: { name: "pending" | "unavailable" }): ReactNode {
 
 function SettingsIndex(): ReactNode {
   const { t } = useTranslation();
-  return <main><h1>{t("features.title")}</h1><p>{t("features.description")}</p>
+  return <><h1>{t("features.title")}</h1><p>{t("features.description")}</p>
     <nav aria-label={t("features.title")}><ul>{entries.map((entry) => <li key={entry}>
       <Link style={{ display: "inline-block", minHeight: 44, padding: 8 }} to={`/settings/${entry}`}>
         {t(`features.${entry}`)}
       </Link><p>{t(`features.${entry}Desc`)}</p>
     </li>)}</ul></nav>
-  </main>;
+  </>;
 }
 
 function PackageView({ moduleName, exportName, props = {} }: {
@@ -214,8 +214,8 @@ function SourcesScreen(): ReactNode {
 
 function FeaturePage({ entry, children }: { entry: Entry; children: ReactNode }): ReactNode {
   const { t } = useTranslation();
-  return <main><h1>{t(`features.${entry}`)}</h1><p>{t(`features.${entry}Desc`)}</p>
-    {children}<p><Link to="/settings">{t("features.back")}</Link></p></main>;
+  return <><h1>{t(`features.${entry}`)}</h1><p>{t(`features.${entry}Desc`)}</p>
+    {children}<p><Link to="/settings">{t("features.back")}</Link></p></>;
 }
 
 function ControlsPage(): ReactNode { return <FeaturePage entry="controls"><ControlsScreen /></FeaturePage>; }

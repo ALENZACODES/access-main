@@ -17,7 +17,7 @@ for (const locale of ["en", "fr"] as const) {
       for (const path of paths) {
         test(`settings${path} is accessible`, async ({ page }) => {
           await page.goto(`settings${path}`);
-          await expect(page.locator("main h1")).toBeVisible();
+          await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
           await page.addScriptTag({ content: axe.source });
           const findings = await page.evaluate(async () => {
             const api = (window as unknown as { axe: typeof axe }).axe;
