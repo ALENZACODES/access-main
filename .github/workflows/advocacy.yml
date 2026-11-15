@@ -1,0 +1,25 @@
+name: advocacy
+
+# Light check for packages/advocacy. Pull requests only; no schedule.
+on:
+  pull_request:
+    paths:
+      - "packages/advocacy/**"
+      - ".github/workflows/advocacy.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  advocacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck -w @access-main/advocacy
+      - run: npm test -w @access-main/advocacy
