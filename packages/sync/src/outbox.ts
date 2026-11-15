@@ -44,7 +44,7 @@ type SchemaPropType<P> = P extends { const: infer C }
 
 /** Derived from `outboxItemSchema`, including kind, based_on_record_id, and queued-on-device status. */
 export type OutboxItem = {
-  [K in keyof OutboxProperties]: SchemaPropType<OutboxProperties[K]>;
+  -readonly [K in keyof OutboxProperties]: SchemaPropType<OutboxProperties[K]>;
 };
 
 type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
