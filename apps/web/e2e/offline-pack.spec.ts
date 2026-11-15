@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import axe from "axe-core";
 
 async function axeClean(page: Page, label: string) {
   const results = await new AxeBuilder({ page }).analyze();
