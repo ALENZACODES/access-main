@@ -79,7 +79,8 @@ test("step/select scanner reaches each advertised action and cannot trap switch 
       await select.click();
       await expect(page.locator("html")).toHaveAttribute("lang", "fr");
       await page.locator("#language-en").check();
-      // The language control deliberately restarts scanning; advance back to this point.
+      // Language changes restart scanning at the skip link. Advance back to this target, then to the next one.
+      await next.click();
       await next.click();
       await next.click();
     } else if (id === "open-dialog") {
