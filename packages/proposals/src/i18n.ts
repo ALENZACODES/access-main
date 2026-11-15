@@ -1,0 +1,61 @@
+export const en = {
+  heading: "Unverified drafts",
+  empty: "No unverified drafts to review.",
+  unknown: "Unknown",
+  target: "Place",
+  field: "Field",
+  value: "Suggested value",
+  evidence: "Evidence",
+  photo: "Photo reference",
+  note: "Note",
+  source: "Source",
+  licence: "Licence",
+  retrieved: "Retrieved",
+  tier: "Tier",
+  verificationNote: "Verification note",
+  rejectionReason: "Rejection reason",
+  accept: "Mark verified",
+  reject: "Reject draft",
+  export: "Export verified contributions",
+  exportEmpty: "No verified contributions to export.",
+  exportHelp: "Only verified contributions are included in the file.",
+  accepted: "Marked verified. Not published.",
+  rejected: "Draft rejected.",
+  error: "The change could not be saved.",
+  reviewRequired: "Enter a note before continuing.",
+  osmCredit: "\u00A9 OpenStreetMap contributors, ODbL",
+} as const;
+
+export const fr: Record<keyof typeof en, string> = {
+  heading: "Brouillons non v\u00e9rifi\u00e9s",
+  empty: "Aucun brouillon non v\u00e9rifi\u00e9 \u00e0 examiner.",
+  unknown: "Inconnu",
+  target: "Lieu",
+  field: "Champ",
+  value: "Valeur propos\u00e9e",
+  evidence: "Justificatifs",
+  photo: "R\u00e9f\u00e9rence de photo",
+  note: "Note",
+  source: "Source",
+  licence: "Licence",
+  retrieved: "Date de r\u00e9cup\u00e9ration",
+  tier: "Niveau",
+  verificationNote: "Note de v\u00e9rification",
+  rejectionReason: "Motif du rejet",
+  accept: "Marquer comme vérifié",
+  reject: "Rejeter le brouillon",
+  export: "Exporter les contributions v\u00e9rifi\u00e9es",
+  exportEmpty: "Aucune contribution v\u00e9rifi\u00e9e \u00e0 exporter.",
+  exportHelp: "Seules les contributions v\u00e9rifi\u00e9es figurent dans le fichier.",
+  accepted: "V\u00e9rification enregistr\u00e9e. Non publi\u00e9.",
+  rejected: "Brouillon rejet\u00e9.",
+  error: "La modification n'a pas pu \u00eatre enregistr\u00e9e.",
+  reviewRequired: "Saisissez une note avant de continuer.",
+  osmCredit: "\u00A9 OpenStreetMap contributors, ODbL",
+};
+
+export type Locale = "en" | "fr";
+
+export function strings(locale: Locale): Record<keyof typeof en, string> {
+  return locale === "fr" ? fr : en;
+}

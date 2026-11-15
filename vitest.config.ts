@@ -15,5 +15,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["packages/shared/src/**/*.test.ts", "packages/shared/test/**/*.test.ts", "packages/*/test/**/*.test.ts", "packages/*/test/**/*.test.tsx", "apps/web/src/**/*.test.ts", "apps/web/src/**/*.test.tsx", "apps/web/scripts/**/*.test.ts"],
+    exclude: ["**/*.spec.tsx", "**/node_modules/**", "**/.git/**"],
   },
 });
