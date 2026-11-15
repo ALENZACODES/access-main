@@ -1,3 +1,4 @@
+import { endorsedByForbiddenOrgSample } from "@access/shared";
 import { describe, expect, it } from "vitest";
 import indexHtml from "../../index.html?raw";
 import viteConfig from "../../vite.config.ts?raw";
@@ -67,7 +68,8 @@ describe("endorsement and overclaim sweep", () => {
 
   it("catches the overclaims it is meant to catch", () => {
     const samples = [
-      "Endorsed by Spinal Cord Injury Ontario",
+      endorsedByForbiddenOrgSample(),
+      endorsedByForbiddenOrgSample("fr"),
       "Approuvé par un partenaire",
       "Verified accessible entrance",
       "Données vérifiées",
