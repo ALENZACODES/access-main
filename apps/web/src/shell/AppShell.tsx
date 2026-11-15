@@ -68,13 +68,26 @@ export function AppShell() {
       return;
     }
     const main = document.getElementById("main");
-    const heading = main?.querySelector("h1");
-    if (heading instanceof HTMLElement) {
-      heading.tabIndex = -1;
-      heading.focus();
-      return;
-    }
-    if (main instanceof HTMLElement) main.focus();
+    if (!(main instanceof HTMLElement)) return;
+
+    const focusHeading = (): boolean => {
+      const heading = main.querySelector("h1");
+      if (heading instanceof HTMLElement) {
+        heading.tabIndex = -1;
+        heading.focus();
+        return true;
+      }
+      return false;
+    };
+
+    // Lazy routes first render a Suspense status with no h1. Wait for the
+    // heading, then move focus, so keyboard users land on the new page title.
+    if (focusHeading()) return;
+    const observer = new MutationObserver(() => {
+      if (focusHeading()) observer.disconnect();
+    });
+    observer.observe(main, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [location.pathname]);
 
   return (
