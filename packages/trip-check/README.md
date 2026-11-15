@@ -15,9 +15,13 @@ person answers Yes, No, or "I could not check" (written as `UNKNOWN`).
 - "I could not check" writes `UNKNOWN`. Unanswered prompts render as
   "Not answered". Neither is shown as "no".
 - Wording has no medical terms and no advice. A Vitest test scans EN and FR copy.
-- Prompt `field_id` values are intended to match the sci-fields set. That set was
-  not available when this was written, so confirm the ids on merge.
-- Contribution licence on drafts is recorded as `CC0`. Confirm with I9 before use.
+- Prompt `field_id` values match I9 contribute-export keys (`^[a-z][a-z0-9_]{0,79}$`).
+  I9 does not ship a closed field list. The open J1 sci-fields catalog (access-tools
+  #45) does not include these one-tap ids; `curb_snowbank` and `staff_will_help` are
+  close in topic but use different value types, so the ids here are left unchanged.
+- Contribution licence on drafts is `CC0`. That is a valid provenance licence on
+  the J11/J1 fact shape used for the I9 export hand-off. I9 photo licences are
+  only CC BY 4.0 and CC BY-SA 4.0; this package does not attach photos.
 
 ## API
 

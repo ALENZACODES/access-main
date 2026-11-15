@@ -35,16 +35,16 @@ export const STRINGS: Record<Lang, UiStrings> = {
   fr: {
     title: "V\u00e9rifications rapides pour ce trajet",
     intro:
-      "Un geste par question. Les r\u00e9ponses restent sur cet appareil comme brouillons non v\u00e9rifi\u00e9s jusqu'\u00e0 l'exportation d'un fichier. Rien n'est envoy\u00e9 ni publi\u00e9.",
+      "Un geste par question. Les r\u00e9ponses restent sur cet appareil comme brouillons non v\u00e9rifi\u00e9s jusqu’\u00e0 l’exportation d’un fichier. Rien n’est envoy\u00e9 ni publi\u00e9.",
     yes: "Oui",
     no: "Non",
-    unknown: "Je n'ai pas pu v\u00e9rifier",
+    unknown: "Je n’ai pas pu v\u00e9rifier",
     draftLabel: "Brouillon non v\u00e9rifi\u00e9",
     saved: "Enregistr\u00e9 sur cet appareil. Non partag\u00e9.",
     notChecked: "Sans r\u00e9ponse",
     exportButton: "Exporter les brouillons en fichier",
-    exportDone: "Fichier cr\u00e9\u00e9. Vous choisissez o\u00f9 l'envoyer.",
-    nothingToExport: "Aucun brouillon \u00e0 exporter pour l'instant.",
+    exportDone: "Fichier cr\u00e9\u00e9. Vous choisissez o\u00f9 l’envoyer.",
+    nothingToExport: "Aucun brouillon \u00e0 exporter pour l’instant.",
     localCount: "{n} brouillons non v\u00e9rifi\u00e9s sur cet appareil",
   },
 };

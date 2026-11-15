@@ -30,7 +30,7 @@ export interface TripDraft {
 
 export interface Prompt {
   id: string;
-  /** Intended to match a sci-fields field id; confirm when that set lands. */
+  /** Contribute-export key (I9). See catalog.ts for why these are not J1 sci-fields ids. */
   field_id: string;
   observed: boolean;
   text: Record<Lang, string>;
