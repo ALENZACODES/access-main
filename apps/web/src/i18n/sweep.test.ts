@@ -1,4 +1,4 @@
-import { endorsedByForbiddenOrgSample } from "@access/shared";
+import { endorsedByForbiddenOrgSample } from "../../../../packages/shared/test/forbiddenOrg.ts";
 import { describe, expect, it } from "vitest";
 import indexHtml from "../../index.html?raw";
 import viteConfig from "../../vite.config.ts?raw";
