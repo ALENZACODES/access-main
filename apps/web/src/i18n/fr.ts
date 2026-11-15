@@ -322,6 +322,7 @@ export const fr: Messages = {
       "L'interface est enregistrée sur cet appareil. Les lieux, trajets et résultats de recherche n'y sont pas inclus, sauf si l'état des données les liste.",
   },
   buildCard: {
+    sampleLabel: "Données d'exemple. Cette fiche présentateur sert à une séance de démonstration, pas à un service en direct.",
     title: "Fiche de version",
     lead: "Une page à garder près de l'appareil de démonstration. Chaque ligne est lue dans cette version ou sur cet appareil. Rien n'est saisi à la main.",
     print: "Imprimer cette fiche",

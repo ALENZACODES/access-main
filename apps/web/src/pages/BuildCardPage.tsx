@@ -64,6 +64,7 @@ export function BuildCardPage() {
   return (
     <div className="stack build-card">
       <h1>{t("buildCard.title")}</h1>
+      <p role="note">{t("buildCard.sampleLabel")}</p>
       <p className="lead">{t("buildCard.lead")}</p>
       <div className="no-print stack">
         <Button variant="secondary" onPress={() => window.print()}>

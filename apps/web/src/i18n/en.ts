@@ -308,6 +308,7 @@ export const en = {
       "The shell is saved on this device. Place, journey, and finder records are not included unless data status lists them.",
   },
   buildCard: {
+    sampleLabel: "Sample data. This presenter card is for a demonstration session, not a live service.",
     title: "Build card",
     lead: "One page to keep beside the demonstration device. Every line is read from this build or this device. Nothing here is typed in by hand.",
     print: "Print this card",
