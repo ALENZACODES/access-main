@@ -86,6 +86,10 @@ export {
   type ModuleRegistry,
   type ModuleResult,
   type NavigatorModule,
+  type PackFieldValue,
+  type PackRecord,
+  type PackSourceEntry,
+  type PlaceDetail,
   type PlaceHit,
   type PlacesModule,
   type PlacesQuery,
@@ -103,3 +107,4 @@ export {
   type PackSourceDate,
   type StoredPack,
 } from "./pack.ts";
+export { checkModuleItem, checkModuleResult, guardModules, lastContractIssues } from "./conformance.ts";

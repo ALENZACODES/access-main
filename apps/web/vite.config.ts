@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
@@ -7,6 +8,40 @@ import { SHELL_CONTRACT_VERSION } from "../../packages/shared/src/modules.ts";
 import { BUILD_MANIFEST_FILE, createBuildManifest } from "./src/release/manifest.ts";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(root, "../..");
+
+/** "/" for a root deploy, "/access-main/" for GitHub Pages. Always starts and ends with a slash. */
+function normaliseBase(value: string | undefined): string {
+  const raw = (value ?? "/").trim() || "/";
+  const lead = raw.startsWith("/") ? raw : `/${raw}`;
+  return lead.endsWith("/") ? lead : `${lead}/`;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const base = normaliseBase(process.env.VITE_BASE ?? "/");
+const dataPath = new RegExp(`${escapeRegExp(base)}data/`);
+
+interface LanePackage {
+  repo: string;
+  path: string;
+  alias: string;
+}
+
+/** Each pulled package is compiled from source in .lanes/<repo>/<path>/src/index.ts. */
+const lock = JSON.parse(readFileSync(path.join(repoRoot, "lanes.lock.json"), "utf8")) as { packages: LanePackage[] };
+const fallbacks = path.join(root, "src/modules/lane-fallbacks.ts");
+const laneAliases = lock.packages.map((pkg) => {
+  const real = path.join(repoRoot, ".lanes", pkg.repo.split("/")[1], ...pkg.path.split("/"), "src", "index.ts");
+  return { find: new RegExp(`^${escapeRegExp(pkg.alias)}$`), replacement: existsSync(real) ? real : fallbacks };
+});
+const dataClientReal = path.join(repoRoot, "packages/data-client/src/index.ts");
+const dataClientAlias = {
+  find: /^@access-main\/data-client$/,
+  replacement: existsSync(dataClientReal) ? dataClientReal : path.join(root, "src/modules/data-client-fallback.ts"),
+};
 
 /** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
 function buildManifest(): Plugin {
@@ -25,6 +60,7 @@ function buildManifest(): Plugin {
 }
 
 export default defineConfig({
+  base,
   plugins: [
     react(),
     buildManifest(),
@@ -39,8 +75,8 @@ export default defineConfig({
         background_color: "#f4f1ea",
         display: "standalone",
         lang: "en",
-        start_url: "/",
-        scope: "/",
+        start_url: base,
+        scope: base,
         icons: [
           { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
           { src: "icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
@@ -49,12 +85,15 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
+        globIgnores: ["data/**", "**/*.pmtiles"],
         navigateFallback: "index.html",
-        navigateFallbackDenylist: [/^\/packs\//],
+        navigateFallbackDenylist: [/^\/packs\//, dataPath],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false,
         runtimeCaching: [
+          // Data pack files are never cached here. The data client keeps its own copy in IndexedDB.
+          { urlPattern: dataPath, handler: "NetworkOnly" },
           {
             // Offline packs are stored in IndexedDB on purpose. They are not kept in the page cache,
             // so deleting a pack removes it.
@@ -72,9 +111,12 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: {
-      "@access/shared": path.resolve(root, "../../packages/shared/src/index.ts"),
-    },
+    dedupe: ["react", "react-dom"],
+    alias: [
+      { find: "@access/shared", replacement: path.resolve(root, "../../packages/shared/src/index.ts") },
+      ...laneAliases,
+      dataClientAlias,
+    ],
   },
   build: {
     rollupOptions: {
