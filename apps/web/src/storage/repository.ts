@@ -3,7 +3,8 @@ import {
   estimateEntryBytes,
   validateCacheEntry,
   validateManifest,
-    validateOutboxNote,
+  validateObservedAt,
+  validateOutboxNote,
   validatePackContent,
   validateProfile,
   withdrawConsent,
@@ -128,8 +129,10 @@ export async function enqueueReport(
   note: string,
   basedOnRecordId: string | null,
   nowIso: string,
+  options: { observedAt?: string; madeOffline?: boolean } = {},
 ): Promise<OutboxItem> {
-  const issues = validateOutboxNote(note);
+  const observedAt = options.observedAt ?? nowIso;
+  const issues = [...validateOutboxNote(note), ...validateObservedAt(observedAt, nowIso)];
   if (issues.length > 0) throw new StorageError(issues);
   const item: OutboxItem = {
     id: crypto.randomUUID(),
@@ -137,6 +140,8 @@ export async function enqueueReport(
     kind: "correction-report",
     based_on_record_id: basedOnRecordId,
     note: note.trim(),
+    observed_at: new Date(observedAt).toISOString(),
+    made_offline: options.madeOffline ?? false,
     status: "queued-on-device",
   };
   await db.outbox.put(item);

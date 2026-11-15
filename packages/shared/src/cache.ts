@@ -30,6 +30,10 @@ export interface OutboxItem {
   kind: "correction-report";
   based_on_record_id: string | null;
   note: string;
+  /** When the person saw the problem. Shown instead of any upload time. Reports are not uploaded in this prototype. */
+  observed_at: string;
+  /** True when the report was written while the device was offline. */
+  made_offline: boolean;
   status: "queued-on-device";
 }
 
