@@ -1,21 +1,13 @@
-/** Local stand-in for @access-main/data-client until that package is on this branch. */
-export type PackSourceEntry = {
-  sourceId: string;
-  name: string;
-  licence: string;
-  retrieved: string;
-  inWebPack: boolean;
-  licenceUrl?: string;
-  attribution?: string;
-  shareAlike?: boolean;
-  heldReason?: string | null;
-};
-export type PackRecord = { id: string; tranche: string; region?: string; fields: Record<string, { value: unknown; source_id: string; licence: string; retrieved_at: string; tier: number } | undefined> };
+import type { PackRecord, PackSourceEntry } from "@access/shared";
+
+export type { PackRecord, PackSourceEntry };
+
+/** Local stand-in for @access-main/data-client until that package is pinned on this branch. */
 export type PackSource = {
   manifest: () => Promise<unknown>;
   cellsFor: (area: unknown) => Promise<string[]>;
   records: (tranche: string, cell: string) => AsyncGenerator<PackRecord>;
-  search: (text: string, opts: Record<string, unknown>) => Promise<unknown[]>;
+  search: (text: string, opts?: Record<string, unknown>) => Promise<Array<{ id: string }>>;
   get: (id: string) => Promise<PackRecord | null>;
   sourcesFor: (record: PackRecord) => PackSourceEntry[];
   regions: () => Promise<unknown[]>;
@@ -27,7 +19,8 @@ export function fieldValue(record: PackRecord, key: string) {
   return record.fields[key];
 }
 
-export function createPackSource(): PackSource {
+export function createPackSource(options: { baseUrl?: string } = {}): PackSource {
+  void options;
   return {
     manifest: async () => ({ version: 1, regions: [], sources: [], search: {}, tranches: {}, tiles: {}, counts: { records: 0 } }),
     cellsFor: async () => [],
@@ -36,7 +29,9 @@ export function createPackSource(): PackSource {
     get: async () => null,
     sourcesFor: () => [],
     regions: async () => [],
-    downloadRegion: async () => { throw new Error("data-client is not pinned on this branch"); },
+    downloadRegion: async () => {
+      throw new Error("data-client is not pinned on this branch");
+    },
     deleteRegion: async () => {},
   };
 }
@@ -46,8 +41,13 @@ export function createFixtureSource(records: PackRecord[], sources: PackSourceEn
   return {
     ...pack,
     get: async (id) => records.find((record) => record.id === id) ?? null,
-    search: async (text) => records.filter((record) => String(record.fields.name?.value ?? "").toLowerCase().includes(text.toLowerCase())).map((record) => ({ id: record.id })),
+    search: async (text) =>
+      records
+        .filter((record) => String(record.fields.name?.value ?? "").toLowerCase().includes(text.toLowerCase()))
+        .map((record) => ({ id: record.id })),
     sourcesFor: (record) => sources.filter((source) => Object.values(record.fields).some((field) => field?.source_id === source.sourceId)),
-    async *records(tranche) { yield* records.filter((record) => record.tranche === tranche); },
+    async *records(tranche) {
+      yield* records.filter((record) => record.tranche === tranche);
+    },
   };
 }

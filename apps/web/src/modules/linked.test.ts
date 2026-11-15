@@ -1,8 +1,9 @@
-import { readdirSync, readFileSync } from "node:fs";
+/// <reference types="node" />
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createFixtureSource } from "@access-main/data-client";
 import type { ModuleContext, ModuleResult } from "@access/shared";
-import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createLinkedModules, getPlaceDetail } from "./linked.ts";
 import type { PackRecord, PackSourceEntry } from "./types.ts";
@@ -12,7 +13,7 @@ import type { PackRecord, PackSourceEntry } from "./types.ts";
  * read at run time, not copied, so no place fact is written in this file.
  * Their sources carry the ODbL attribution the data requires.
  */
-const REAL_DIR = path.resolve(import.meta.dirname, "../../../../packages/schema/fixtures/import/real");
+const REAL_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../packages/schema/fixtures/import/real");
 
 function readRecords(dir: string): PackRecord[] {
   const found: unknown[] = [];
@@ -36,6 +37,7 @@ function hasKnownName(record: PackRecord): boolean {
 
 function sourceFor(record: PackRecord): PackSourceEntry {
   const field = record.fields.name;
+  if (!field) throw new Error(`record ${record.id} has no name field`);
   const osm = /osm|openstreetmap/i.test(field.source_id);
   return {
     sourceId: field.source_id,
@@ -50,10 +52,13 @@ function sourceFor(record: PackRecord): PackSourceEntry {
   };
 }
 
-const real = readRecords(REAL_DIR).filter(hasKnownName);
+const real = existsSync(REAL_DIR) ? readRecords(REAL_DIR).filter(hasKnownName) : [];
 const records = real.slice(0, 2);
-const sources = [...new Map(records.map((record) => [record.fields.name.source_id, sourceFor(record)])).values()];
-const firstName = String(records[0]?.fields.name.value ?? "");
+const sources = [...new Map(records.flatMap((record) => {
+  const field = record.fields.name;
+  return field ? [[field.source_id, sourceFor(record)] as const] : [];
+})).values()];
+const firstName = String(records[0]?.fields.name?.value ?? "");
 
 const ctx: ModuleContext = { locale: "en", offline: false, profile: null, nowIso: "2026-11-15T12:00:00.000Z", query: firstName };
 
@@ -65,7 +70,7 @@ function expectProvenance(result: ModuleResult<unknown>) {
   }
 }
 
-const lanesReady = existsSync(path.resolve(import.meta.dirname, "../../../../.lanes/access-maps/packages/places-shell/src/index.ts"));
+const lanesReady = existsSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../.lanes/access-maps/packages/places-shell/src/index.ts"));
 
 describe.skipIf(!lanesReady)("linked registry over two real ODbL records", () => {
   it("found two real records in the schema fixtures", () => {
@@ -106,19 +111,25 @@ describe.skipIf(!lanesReady)("linked registry over two real ODbL records", () =>
 
   it("places.get returns the record with its sources, and nothing for an unknown id", async () => {
     const modules = registry();
-    const found = await modules.places.get(records[0].id, ctx);
+    const first = records[0];
+    expect(first).toBeDefined();
+    const found = await modules.places.get(first!.id, ctx);
     expect(found.availability).toBe("ready");
     expect(found.items).toHaveLength(1);
-    expect(found.items[0].record.id).toBe(records[0].id);
-    expect(found.items[0].sources.length).toBeGreaterThan(0);
+    expect(found.items[0]?.record.id).toBe(first!.id);
+    expect(found.items[0]?.sources.length).toBeGreaterThan(0);
     expect(found.asOf).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     const missing = await modules.places.get("no-such-record", ctx);
     expect(missing).toMatchObject({ availability: "ready", items: [], messageKey: "placeDetail.notFound" });
   });
 
   it("places.get shows nothing for a record whose fact has no licence", async () => {
-    const broken = structuredClone(records[0]);
-    broken.fields.name.licence = "";
+    const first = records[0];
+    expect(first).toBeDefined();
+    const broken = structuredClone(first) as PackRecord;
+    const name = broken.fields.name;
+    expect(name).toBeDefined();
+    name!.licence = "";
     const result = await getPlaceDetail(createFixtureSource([broken], sources), broken.id);
     expect(result).toMatchObject({ availability: "error", items: [] });
   });

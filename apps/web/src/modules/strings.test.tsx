@@ -26,7 +26,7 @@ describe("lane strings", () => {
   it("uses a non-breaking space before : ; ? ! in French", () => {
     for (const text of strings(LANE_STRINGS.fr)) {
       expect(text).not.toMatch(/ [:;?!]/);
-      expect(text).not.toMatch(/[^ \s][:;?!]/);
+      expect(text).not.toMatch(/[^\u00A0\u202F\s][:;?!]/);
     }
   });
 });

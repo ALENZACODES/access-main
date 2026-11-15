@@ -134,7 +134,7 @@ async function guarded<T>(id: ModuleId, call: () => Promise<ModuleResult<T>>): P
 /** Wraps every route so a failing or nonconforming lane module returns an empty error result. */
 export function guardModules(registry: ModuleRegistry): ModuleRegistry {
   return {
-    places: { id: "places", search: (query, ctx) => guarded("places", () => registry.places.search(query, ctx)) },
+    places: { id: "places", search: (query, ctx) => guarded("places", () => registry.places.search(query, ctx)), get: (id, ctx) => guarded("places", () => registry.places.get(id, ctx)) },
     journey: { id: "journey", plan: (request, ctx) => guarded("journey", () => registry.journey.plan(request, ctx)) },
     finders: { id: "finders", search: (query, ctx) => guarded("finders", () => registry.finders.search(query, ctx)) },
     navigator: { id: "navigator", list: (ctx: ModuleContext) => guarded("navigator", () => registry.navigator.list(ctx)) },

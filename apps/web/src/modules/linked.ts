@@ -13,7 +13,7 @@ const UNKNOWN = "UNKNOWN";
 
 function latestRetrieved(record: PackRecord): string | null {
   const dates = Object.values(record.fields)
-    .map((field) => field.retrieved_at)
+    .flatMap((field) => (field?.retrieved_at ? [field.retrieved_at] : []))
     .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date))
     .sort();
   return dates.at(-1) ?? null;
