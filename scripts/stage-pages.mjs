@@ -283,7 +283,8 @@ export async function checkPrecache(distDir, budgetBytes = LIMITS.precacheBytes)
 // package can only tighten the budget, never loosen it.
 export async function loadPrecacheBudget() {
   try {
-    const mod = await import("@access-main/budgets");
+    const specifier = "@access-main/budgets";
+    const mod = await import(/* @vite-ignore */ specifier);
     const budgets = mod.budgets ?? mod.default ?? mod;
     const value = budgets?.precacheBytes;
     if (Number.isInteger(value) && value > 0) {

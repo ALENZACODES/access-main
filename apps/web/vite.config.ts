@@ -34,7 +34,9 @@ interface LanePackage {
 const lock = JSON.parse(readFileSync(path.join(repoRoot, "lanes.lock.json"), "utf8")) as { packages: LanePackage[] };
 const fallbacks = path.join(root, "src/modules/lane-fallbacks.ts");
 const laneAliases = lock.packages.map((pkg) => {
-  const real = path.join(repoRoot, ".lanes", pkg.repo.split("/")[1], ...pkg.path.split("/"), "src", "index.ts");
+  const repo = pkg.repo.split("/")[1];
+  if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
+  const real = path.join(repoRoot, ".lanes", repo, ...pkg.path.split("/"), "src", "index.ts");
   return { find: new RegExp(`^${escapeRegExp(pkg.alias)}$`), replacement: existsSync(real) ? real : fallbacks };
 });
 const dataClientReal = path.join(repoRoot, "packages/data-client/src/index.ts");
