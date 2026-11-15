@@ -24,6 +24,7 @@ export const en = {
     finders: "Finders",
     navigator: "Directory",
     games: "Games",
+    more: "More",
     help: "Help",
     settings: "Settings",
     data: "Data status",

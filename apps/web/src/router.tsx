@@ -8,6 +8,7 @@ import { ModulePage } from "./pages/ModulePage.tsx";
 import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { ProfilePage } from "./pages/ProfilePage.tsx";
+import { hubRoutes } from "./hub/routes.tsx";
 import { AppShell } from "./shell/AppShell.tsx";
 
 export const router = createBrowserRouter([
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "navigator", element: <ModulePage id="navigator" /> },
       { path: "games", element: <ModulePage id="games" /> },
       { path: "help", element: <HelpPage /> },
+      ...hubRoutes,
       { path: "*", element: <NotFoundPage /> },
     ],
   },

@@ -6,10 +6,10 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/dev-dist/**", "**/node_modules/**", "playwright-report/**", "test-results/**"],
+    ignores: ["**/dist/**", "**/dev-dist/**", "**/node_modules/**", "playwright-report/**", "test-results/**", "**/.lanes/**", "**/.lanes-tmp/**"],
   },
   {
-    files: ["packages/budgets/scripts/**/*.mjs"],
+    files: ["packages/budgets/scripts/**/*.mjs", "scripts/**/*.mjs"],
     languageOptions: {
       globals: globals.node,
     },

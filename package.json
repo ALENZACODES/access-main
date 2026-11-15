@@ -25,7 +25,10 @@
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "validate": "npm run validate -w @access-main/schema --",
     "count": "npm run count -w @access-main/schema --",
-    "postdemo": "node apps/web/scripts/postdemo.ts"
+    "postdemo": "node apps/web/scripts/postdemo.ts",
+    "hub:sync": "node scripts/sync-hub.mjs",
+    "pretypecheck": "npm run hub:sync",
+    "prebuild": "npm run hub:sync"
   },
   "dependencies": {
     "ajv": "^8.17.1",

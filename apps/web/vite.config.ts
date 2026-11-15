@@ -5,6 +5,12 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const lanesRoot = path.resolve(root, "../../.lanes");
+
+function hubAlias(repo: string, pkg: string, entry = "src/index.ts"): string {
+  return path.join(lanesRoot, repo, "packages", pkg, entry);
+}
+
 
 export default defineConfig({
   plugins: [
@@ -52,7 +58,17 @@ export default defineConfig({
   resolve: {
     alias: {
       "@access/shared": path.resolve(root, "../../packages/shared/src/index.ts"),
+      "@access-tools/employment": hubAlias("access-tools", "employment"),
+      "@access-tools/housing": hubAlias("access-tools", "housing"),
+      "@access-tools/safety": hubAlias("access-tools", "safety"),
+      "@access-tools/diary": hubAlias("access-tools", "diary"),
+      "@access-tools/auditors": hubAlias("access-tools", "auditors"),
+      "@access-tools/handoff": hubAlias("access-tools", "handoff"),
+      "@hub/handoff-fixtures": hubAlias("access-tools", "handoff", "src/fixtures.ts"),
+      "@access/peers": hubAlias("access-help", "peers"),
+      "@access/event-access": hubAlias("access-help", "event-access"),
     },
+    dedupe: ["react", "react-dom"],
   },
   server: {
     host: true,

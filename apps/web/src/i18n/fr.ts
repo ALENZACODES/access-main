@@ -27,6 +27,7 @@ export const fr: Messages = {
     finders: "Recherche",
     navigator: "Répertoire",
     games: "Jeux",
+    more: "Plus",
     help: "Aide",
     settings: "Réglages",
     data: "État des données",

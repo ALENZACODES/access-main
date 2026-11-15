@@ -11,3 +11,5 @@ blob-report/
 .env.*
 !.env.example
 *.tsbuildinfo
+.lanes/
+.lanes-tmp/
