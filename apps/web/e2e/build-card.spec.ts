@@ -24,7 +24,7 @@ test("the build card opens from About by keyboard and states only what it can re
 
   const statements = page.getByRole("region", { name: "Statements to deliver" }).getByRole("listitem");
   await expect(statements).toHaveCount(6);
-  await expect(statements.nth(3)).toHaveText("No organisation, including Spinal Cord Injury Ontario, has endorsed the App.");
+  await expect(statements.nth(3)).toHaveText("No organisation has endorsed the App.");
 
   const parts = page.getByRole("table", { name: "Whether each part answered as connected" });
   await expect(parts.getByRole("row")).toHaveCount(7);

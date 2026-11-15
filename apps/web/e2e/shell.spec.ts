@@ -30,7 +30,7 @@ test("home shows the prototype, the build, and a skip link", async ({ page }) =>
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "the App" })).toBeVisible();
   await expect(page.getByRole("note").filter({ hasText: "Prototype. Every record is unverified" })).toBeVisible();
-  await expect(page.getByText("No organisation, including Spinal Cord Injury Ontario, has endorsed the App.").first()).toBeVisible();
+  await expect(page.getByText("No organisation has endorsed the App.").first()).toBeVisible();
   await expect(page.getByText("Build e2e").first()).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
