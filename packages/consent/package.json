@@ -1,0 +1,20 @@
+{
+  "name": "@access-main/consent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "On-device consent engine. Purpose-limited grants, explicit accept or refuse, revoke, and a local audit log. Nothing leaves the device.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1"
+  }
+}
