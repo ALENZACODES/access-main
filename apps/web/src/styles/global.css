@@ -350,8 +350,8 @@ dd { margin: 0; }
   background: var(--surface);
 }
 
-/* Day 17 audit: footer links met only 21px. WCAG 2.2 SC 2.5.8 needs 24 by 24 CSS pixels. */
-.site-footer .text-link {
+/* Day 17 audit: text links met only 21px. WCAG 2.2 SC 2.5.8 needs 24 by 24 CSS pixels. */
+.text-link {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
