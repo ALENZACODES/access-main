@@ -13,7 +13,9 @@ const pageTargets = ["language-en", "language-fr", "request-label", "submit-requ
 const modalTargets = ["cancel-dialog", "confirm-dialog"];
 
 export function Harness() {
-  const [lang, setLang] = useState<Language>("en");
+  const [lang, setLang] = useState<Language>(() =>
+    new URLSearchParams(window.location.search).get("lang") === "fr" ? "fr" : "en",
+  );
   const [value, setValue] = useState("");
   const [error, setError] = useState(false);
   const [notice, setNotice] = useState<Key | null>(null);
