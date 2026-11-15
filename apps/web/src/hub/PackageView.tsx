@@ -27,7 +27,7 @@ export function PackageView({ page, component, props }: {
   const language = i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en";
   const demo = page === "employment" || page === "housing" || page === "handoff";
   return (
-    <HubLayout>
+    <HubLayout title={t(page)}>
       {demo && <p>{t("demonstration")}</p>}
       {page === "safety" && <p>{t("journeyNote")} <Link to="/journey">{t("journey")}</Link></p>}
       <ToolBoundary fallback={<p role="alert">{t("error")}</p>}>

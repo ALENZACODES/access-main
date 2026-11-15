@@ -15,7 +15,7 @@ const ALIAS = /^@[a-z0-9][a-z0-9_.-]*\/[a-z0-9][a-z0-9_.-]*$/;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Idea packages ship as standalone apps with their own <main>. The shell already has one. */
+/** Idea packages ship as standalone apps with their own <main> and <h1>. The shell already has both. */
 function demoteNestedMains(dir) {
   for (const name of readdirSync(dir)) {
     const full = path.join(dir, name);
@@ -25,7 +25,11 @@ function demoteNestedMains(dir) {
     }
     if (!/\.(tsx|jsx)$/.test(name)) continue;
     const text = readFileSync(full, "utf8");
-    const next = text.replaceAll("<main", "<div").replaceAll("</main>", "</div>");
+    const next = text
+      .replaceAll("<main", "<div")
+      .replaceAll("</main>", "</div>")
+      .replaceAll("<h1", "<h2")
+      .replaceAll("</h1>", "</h2>");
     if (next !== text) writeFileSync(full, next);
   }
 }
