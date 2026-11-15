@@ -72,7 +72,7 @@ describe("module states", () => {
     const registry: ModuleRegistry = createModules({
       games: {
         id: "games",
-        list: () => Promise.resolve({ moduleId: "games", availability: "ready", items: [], messageKey: "modules.resultCount", asOf: null, liveStatus: "unavailable" }),
+        list: () => Promise.resolve({ moduleId: "games", availability: "ready", items: [], messageKey: "modules.ready", asOf: null, liveStatus: "unavailable" }),
       },
       journey: { id: "journey", plan: () => Promise.reject(new Error("offline")) },
     });
