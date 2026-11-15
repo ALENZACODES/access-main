@@ -15,7 +15,9 @@ export interface SourceEntry {
   display_name: string;
   official_url: string | UnknownValue;
   licence: string;
+  /** UTC calendar date (YYYY-MM-DD) when the source was fetched, or Unknown. */
   retrieved_on?: string | UnknownValue;
+  /** UTC calendar date (YYYY-MM-DD) the data applies to, or Unknown. */
   as_of: string | UnknownValue;
   record_count: Count;
   unknown_field_count: Count;

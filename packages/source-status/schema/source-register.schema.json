@@ -10,8 +10,14 @@
     "display_name": { "type": "string", "minLength": 1 },
     "official_url": { "$ref": "#/$defs/urlOrUnknown" },
     "licence": { "type": "string", "minLength": 1 },
-    "retrieved_on": { "$ref": "#/$defs/dateOrUnknown" },
-    "as_of": { "$ref": "#/$defs/dateOrUnknown" },
+    "retrieved_on": {
+      "$ref": "#/$defs/dateOrUnknown",
+      "description": "UTC calendar date (YYYY-MM-DD) when this source was fetched, or Unknown. This is a date, not a time-of-day instant."
+    },
+    "as_of": {
+      "$ref": "#/$defs/dateOrUnknown",
+      "description": "UTC calendar date (YYYY-MM-DD) the registered data applies to, or Unknown. This is a date, not a time-of-day instant."
+    },
     "record_count": { "$ref": "#/$defs/countOrUnknown" },
     "unknown_field_count": { "$ref": "#/$defs/countOrUnknown" },
     "tier_histogram": {
@@ -51,7 +57,10 @@
     }
   },
   "$defs": {
-    "dateOrUnknown": { "oneOf": [{ "const": "Unknown" }, { "type": "string", "format": "date" }] },
+    "dateOrUnknown": {
+      "description": "Unknown, or a UTC calendar date in YYYY-MM-DD form. Do not use a local date or a date-time instant.",
+      "oneOf": [{ "const": "Unknown" }, { "type": "string", "format": "date" }]
+    },
     "countOrUnknown": { "oneOf": [{ "const": "Unknown" }, { "type": "integer", "minimum": 0 }] },
     "urlOrUnknown": { "oneOf": [{ "const": "Unknown" }, { "type": "string", "format": "uri", "pattern": "^https://" }] }
   }
