@@ -113,9 +113,7 @@ export function AppShell() {
           <ul className="nav-list">
             {LINKS.map(([to, key, end]) => (
               <li key={to}>
-                {/* Keyboard focus must not trigger asynchronous route chunk work.
-                    Keep preloading for pointer intent; focus alone only moves focus. */}
-                <NavLink to={to} end={end} className="nav-link" onPointerEnter={() => preloadRoute(to)}>{t(key)}</NavLink>
+                <NavLink to={to} end={end} className="nav-link" onFocus={() => preloadRoute(to)} onPointerEnter={() => preloadRoute(to)}>{t(key)}</NavLink>
               </li>
             ))}
           </ul>

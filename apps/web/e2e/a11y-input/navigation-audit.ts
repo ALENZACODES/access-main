@@ -79,8 +79,6 @@ export async function observeFocus(page: Page): Promise<FocusSnapshot | null> {
     const href = node.getAttribute("href") ?? "";
     const parentId = node.parentElement?.id ? `#${node.parentElement.id}` : "";
     return {
-      // IDs are complete stable identifiers. Do not append href metadata to
-      // them: link focus snapshots must match the actual DOM identifier.
       selector: node.id ? selector : (href || parentId ? `${selector}@${href}${parentId}` : selector),
       tag: node.tagName.toLowerCase(),
       role: node.getAttribute("role"),
