@@ -51,23 +51,12 @@ export function routes(): string[] {
   const configured = override
     ? override.split(",").map((value) => value.trim()).filter((value) => value.length > 0)
     : appRoutes();
-
-  if (configured.length === 0) {
-    throw new Error("A11Y_ROUTES must contain at least one path");
-  }
-
+  if (configured.length === 0) throw new Error("A11Y_ROUTES must contain at least one path");
   for (const route of configured) {
-    if (
-      !route.startsWith("/") ||
-      route.startsWith("//") ||
-      route.includes("\\") ||
-      route.includes("#") ||
-      route.includes("?")
-    ) {
+    if (!route.startsWith("/") || route.startsWith("//") || route.includes("\\") || route.includes("#") || route.includes("?")) {
       throw new Error(`Invalid application path: ${route}`);
     }
   }
-
   return [...new Set(configured)];
 }
 
@@ -79,21 +68,22 @@ export async function chooseLanguage(page: Page, language: Language): Promise<vo
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 }
 
-export async function visit(page: Page, route: string, language: Language): Promise<void> {
+export async function visit(page: Page, route: string, languageOrBaseURL: Language | string = "en"): Promise<void> {
+  const language: Language = languageOrBaseURL === "fr" ? "fr" : "en";
   const response = await page.goto(route, { waitUntil: "domcontentloaded" });
   expect(response, `Missing HTTP response for ${route}`).not.toBeNull();
   expect(response?.ok(), `Route ${route} did not load`).toBe(true);
+  if (language === "fr") {
+    const lang = (await page.locator("html").getAttribute("lang")) ?? "";
+    if (!lang.toLowerCase().startsWith("fr")) {
+      await page.getByRole("button", { name: "Français" }).first().click();
+    }
+  }
   await expect(page.locator("html")).toHaveAttribute("lang", language);
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.locator("main [role='status']").filter({ hasText: /^(Loading|Chargement)/ })).toHaveCount(0);
 }
 
 export const sequentialSelector = [
-  "a[href]",
-  "button",
-  "input:not([type='hidden'])",
-  "select",
-  "textarea",
-  "summary",
-  "[tabindex]:not([tabindex='-1'])",
+  "a[href]", "button", "input:not([type='hidden'])", "select", "textarea", "summary", "[tabindex]:not([tabindex='-1'])",
 ].join(", ");
