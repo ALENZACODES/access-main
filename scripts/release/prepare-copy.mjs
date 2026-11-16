@@ -238,7 +238,7 @@ export function rewriteModuleDisplayStrings(source) {
     // assuming the quoted text is a shipped display string.
     if (current === '/' && next !== '=' && next !== '*' && next !== '/') {
       const preceding = source.slice(0, index).trimEnd();
-      if (preceding.length === 0 || /(?:[=(:,!\[?]|\breturn|\bcase)$/.test(preceding)) {
+      if (preceding.length === 0 || /(?:[=(:,!?]|\breturn|\bcase|\[)$/.test(preceding)) {
         let end = index + 1;
         let charClass = false;
         for (; end < source.length; end++) {
