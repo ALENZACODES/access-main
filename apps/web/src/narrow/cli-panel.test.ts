@@ -29,8 +29,25 @@ describe('parseArgs', () => {
         offline: true,
         strictUnknown: true,
         help: false,
+        profiles: null,
+        htmlFiles: [],
+        dataFile: null,
+        allowLicences: [],
+        requireFacts: [],
+        keyboardMax: null,
       },
     });
+  });
+  it('reads the file, profile and keyboard options', () => {
+    const p = parseArgs(['--html', 'a.html', '--html', 'b.html', '--data', 'd.json', '--allow-licence', 'CC0-1.0', '--require-fact', 'ramp', '--profiles', 'all', '--keyboard-max', '12']);
+    expect(p).toMatchObject({
+      ok: true,
+      args: { htmlFiles: ['a.html', 'b.html'], dataFile: 'd.json', allowLicences: ['CC0-1.0'], requireFacts: ['ramp'], profiles: 'all', keyboardMax: 12 },
+    });
+  });
+  it('rejects a bad keyboard limit or profile list', () => {
+    expect(parseArgs(['--html', 'a.html', '--keyboard-max', 'x']).ok).toBe(false);
+    expect(parseArgs(['--html', 'a.html', '--profiles', 'nope']).ok).toBe(false);
   });
   it('explains mistakes in both languages', () => {
     for (const argv of [[], ['--base-url', 'x'], ['--base-url', 'x', '--route', '/', '--en', 'e'], ['--lang', 'de'], ['--nope'], ['--route']]) {
@@ -129,6 +146,41 @@ describe('runCli', () => {
     const code = await runCli(['--base-url', 'http://x', '--route', '/', '--en', 'nope.json', '--fr', 'nope2.json'], d.deps);
     expect(code).toBe(2);
     expect(d.logs.join('\n')).toContain('no such file');
+  });
+});
+
+describe('runCli with files only', () => {
+  const GOOD = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>T</title></head><body><main><h1>Hi</h1></main></body></html>';
+  async function noBrowser(): Promise<never> {
+    throw new Error('browser launched');
+  }
+  it('lints an HTML file without launching a browser', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('good.html', GOOD);
+    expect(await runCli(['--html', 'good.html'], d.deps)).toBe(0);
+  });
+  it('fails on an HTML file with violations and on banned copy', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('bad.html', '<html><body><img src="a.png"><p>Our verified data</p></body></html>');
+    expect(await runCli(['--html', 'bad.html', '--out', 'o'], d.deps)).toBe(1);
+    const json = d.files.get('o/narrow-audit.json') ?? '';
+    expect(json).toContain('img-alt');
+    expect(json).toContain('claim-checked');
+  });
+  it('fails a data file with a missing source and passes a sourced one', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('bad.json', JSON.stringify([{ id: 'x', facts: { ramp: 'yes' } }]));
+    expect(await runCli(['--data', 'bad.json'], d.deps)).toBe(1);
+    const e = deps({ launch: noBrowser });
+    e.files.set(
+      'ok.json',
+      JSON.stringify([{ id: 'x', source: { name: 'City', url: 'https://example.org/d', licence: 'CC0-1.0', retrieved: '2026-11-01' }, facts: { ramp: 'unknown' } }]),
+    );
+    expect(await runCli(['--data', 'ok.json'], e.deps)).toBe(0);
+  });
+  it('reports an unreadable file as an error', async () => {
+    const d = deps({ launch: noBrowser });
+    expect(await runCli(['--html', 'missing.html'], d.deps)).toBe(2);
   });
 });
 

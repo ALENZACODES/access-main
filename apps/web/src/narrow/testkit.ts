@@ -11,6 +11,15 @@ export interface Style {
   position: string;
   overflowX: string;
   overflowY: string;
+  outlineStyle: string;
+  outlineWidth: string;
+  outlineColor: string;
+  outlineOffset: string;
+  boxShadow: string;
+  borderTopColor: string;
+  borderTopWidth: string;
+  textDecorationLine: string;
+  content: string;
 }
 
 export interface Scroll {
@@ -38,6 +47,12 @@ export interface Spec {
   /** Used instead of scroll while the text spacing style is attached. */
   scrollAfter?: Scroll;
   noFocus?: boolean;
+  /** Style while this element has focus. */
+  focusStyle?: Partial<Style>;
+  /** Style of an ancestor while a descendant has focus. */
+  focusWithinStyle?: Partial<Style>;
+  /** Style of the ::after pseudo element while this element has focus. */
+  afterFocusStyle?: Partial<Style>;
 }
 
 const DEFAULT_STYLE: Style = {
@@ -51,6 +66,15 @@ const DEFAULT_STYLE: Style = {
   position: 'static',
   overflowX: 'visible',
   overflowY: 'visible',
+  outlineStyle: 'none',
+  outlineWidth: '0px',
+  outlineColor: 'rgb(0, 0, 0)',
+  outlineOffset: '0px',
+  boxShadow: 'none',
+  borderTopColor: 'rgb(0, 0, 0)',
+  borderTopWidth: '0px',
+  textDecorationLine: 'none',
+  content: 'normal',
 };
 
 export interface World {
@@ -117,8 +141,18 @@ export class FakeEl {
   get clientHeight(): number {
     return this.scroll().ch;
   }
-  style(): Style {
-    return { ...DEFAULT_STYLE, ...this.spec.style };
+  get tabIndex(): number {
+    const t = this.spec.attrs?.['tabindex'];
+    if (t !== undefined) return Number(t);
+    return this.spec.interactive ? 0 : -1;
+  }
+  style(pseudo?: string): Style {
+    const active = this.world.active;
+    if (pseudo) {
+      return { ...DEFAULT_STYLE, ...(active === this ? this.spec.afterFocusStyle : undefined) };
+    }
+    const within = active && active !== this && this.contains(active) ? this.spec.focusWithinStyle : undefined;
+    return { ...DEFAULT_STYLE, ...this.spec.style, ...(active === this ? this.spec.focusStyle : undefined), ...within };
   }
 }
 
@@ -128,6 +162,9 @@ export interface DomOptions {
   scrollWidth?: number;
   clientWidth?: number;
   innerWidth?: number;
+  html?: string;
+  doctype?: boolean;
+  animations?: Array<{ iterations: number; target?: string }>;
 }
 
 export interface Installed {
@@ -171,7 +208,15 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
       scrollWidth: opts.scrollWidth ?? 320,
       clientWidth: opts.clientWidth ?? 320,
       getAttribute: (n: string) => (n === 'lang' ? (opts.lang ?? 'en') : null),
+      outerHTML:
+        opts.html ?? '<html lang="en"><head><title>t</title></head><body><main><h1>x</h1></main></body></html>',
     },
+    doctype: opts.doctype === false ? null : {},
+    getAnimations: () =>
+      (opts.animations ?? []).map((a) => ({
+        playState: 'running',
+        effect: { target: a.target ? { tagName: 'DIV', id: a.target } : null, getComputedTiming: () => ({ iterations: a.iterations }) },
+      })),
     head: {
       appendChild: () => {
         world.spacingOn = true;
@@ -186,7 +231,7 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
       },
     }),
   };
-  g['getComputedStyle'] = (e: FakeEl) => e.style();
+  g['getComputedStyle'] = (e: FakeEl, pseudo?: string) => e.style(pseudo);
   g['innerWidth'] = opts.innerWidth ?? 320;
   g['scrollX'] = 0;
   g['scrollY'] = 40;
@@ -203,4 +248,17 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
       }
     },
   };
+}
+
+/**
+ * Moves focus like the Tab key does: to the next tabbable control in document
+ * order, or off the page after the last one. A control with trap set keeps focus.
+ */
+export function tabNext(dom: Installed): void {
+  const order = dom.all.filter((e) => e.tabIndex >= 0 && e.spec.interactive && !e.spec.noFocus && e.spec.attrs?.['disabled'] === undefined);
+  const cur = dom.world.active;
+  if (cur && cur.spec.attrs?.['data-trap'] !== undefined) return;
+  const at = cur ? order.indexOf(cur) : -1;
+  const next = order[at + 1];
+  dom.world.active = next ?? null;
 }

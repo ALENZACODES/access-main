@@ -14,3 +14,8 @@ export * from './report.ts';
 export * from './run.ts';
 export * from './cli.ts';
 export * from './panel.ts';
+export * from './htmllint.ts';
+export * from './copylint.ts';
+export * from './provenance.ts';
+export * from './keyboard.ts';
+export * from './profiles.ts';

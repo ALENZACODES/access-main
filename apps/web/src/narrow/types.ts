@@ -16,7 +16,13 @@ export type CheckId =
   | 'focus-obscured'
   | 'text-spacing'
   | 'i18n'
-  | 'offline';
+  | 'offline'
+  | 'keyboard'
+  | 'focus-visible'
+  | 'motion'
+  | 'static-html'
+  | 'copy'
+  | 'provenance';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -31,6 +37,12 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   'text-spacing': '1.4.12',
   i18n: null,
   offline: null,
+  keyboard: '2.1.1',
+  'focus-visible': '2.4.7',
+  motion: null,
+  'static-html': null,
+  copy: null,
+  provenance: null,
 };
 
 export const CHECK_ORDER: readonly CheckId[] = [
@@ -45,6 +57,12 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'text-spacing',
   'i18n',
   'offline',
+  'keyboard',
+  'focus-visible',
+  'motion',
+  'static-html',
+  'copy',
+  'provenance',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -59,6 +77,12 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   'text-spacing': { en: 'Text spacing', fr: 'Espacement du texte' },
   i18n: { en: 'EN and FR strings', fr: 'Chaînes EN et FR' },
   offline: { en: 'Offline reload', fr: 'Rechargement hors ligne' },
+  keyboard: { en: 'Keyboard access', fr: 'Accès au clavier' },
+  'focus-visible': { en: 'Focus visible', fr: 'Focus visible' },
+  motion: { en: 'Motion', fr: 'Animations' },
+  'static-html': { en: 'Page markup', fr: 'Balisage de la page' },
+  copy: { en: 'Wording rules', fr: 'Règles de rédaction' },
+  provenance: { en: 'Data sources and licences', fr: 'Sources et licences des données' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */
@@ -69,6 +93,8 @@ export interface Entry {
   readonly id: string;
   readonly status: EntryStatus;
   readonly message: LocalizedText;
+  /** Short code of the rule that produced the entry, for filtering in CI. */
+  readonly rule?: string;
 }
 
 export interface CheckResult {

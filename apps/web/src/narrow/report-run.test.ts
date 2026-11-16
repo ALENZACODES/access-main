@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { auditContrast } from './contrast.js';
-import { auditFocusObscured } from './focus.js';
-import { auditI18n, frTypographyIssues } from './i18n.js';
+import { frTypographyIssues } from './i18n.js';
 import { snapshotInPage } from './inpage.js';
-import { auditLanguage, auditNames } from './names.js';
-import { offlineCheckResult } from './offline.js';
 import { INTERACTIVE_SELECTOR } from './page.js';
 import {
   addCheck,
@@ -21,8 +17,7 @@ import {
   SCOPE_NOTE,
 } from './index.js';
 import { auditSnapshot, runAudit, selfAudit, type AuditPage } from './run.js';
-import { auditTargetSpacing } from './spacing.js';
-import { auditTextSpacing } from './textspacing.js';
+import { sampleEntries } from './samples.js';
 import { installDom, type Installed, type Spec } from './testkit.js';
 import { auditReflow, auditTargets, describeFinding, type Box } from './audit.js';
 
@@ -150,41 +145,8 @@ describe('rendering', () => {
 
 describe('every French message follows the typography rules', () => {
   it('covers each audit and each check label', () => {
-    const entries = [
-      ...entriesFromFindings([
-        { kind: 'target-too-small', id: 'a', width: 30, height: 30, overflowPx: 0 },
-        { kind: 'horizontal-overflow', id: 'a', width: 30, height: 30, overflowPx: 9 },
-        { kind: 'page-scrolls-sideways', id: 'page', width: 400, height: 0, overflowPx: 80 },
-      ]).reflow,
-      ...auditTargetSpacing([
-        { id: 'a', left: 0, top: 0, right: 10, bottom: 10 },
-        { id: 'b', left: 12, top: 0, right: 22, bottom: 10 },
-      ]).entries,
-      ...auditContrast([
-        { id: 'a', text: 'x', fg: '#777', bgLayers: ['rgb(255, 255, 255)'], bgImage: false, fontSizePx: 16, fontWeight: 400 },
-        { id: 'b', text: 'x', fg: '#777', bgLayers: [], bgImage: true, fontSizePx: 16, fontWeight: 400 },
-      ]).entries,
-      ...auditNames([
-        { id: 'a', tag: 'a', role: null, rect: { left: 0, top: 0, right: 1, bottom: 1 }, name: '', text: '' },
-        { id: 'b', tag: 'a', role: null, rect: { left: 0, top: 0, right: 1, bottom: 1 }, name: 'Menu', text: 'Home' },
-      ]).names.entries,
-      ...auditNames([{ id: 'b', tag: 'a', role: null, rect: { left: 0, top: 0, right: 1, bottom: 1 }, name: 'Menu', text: 'Home' }]).labels.entries,
-      ...auditLanguage({ lang: '' }).entries,
-      ...auditLanguage({ lang: '!!' }).entries,
-      ...auditFocusObscured([
-        { id: 'a', rect: { left: 0, top: 0, right: 1, bottom: 1 }, covers: [{ left: 0, top: 0, right: 1, bottom: 1 }], focused: true },
-        { id: 'b', rect: { left: 0, top: 0, right: 1, bottom: 1 }, covers: [], focused: false },
-      ]).entries,
-      ...auditTextSpacing({ checked: 1, newlyClipped: [{ id: 'a', scrollWidth: 1, clientWidth: 1, scrollHeight: 2, clientHeight: 1 }] }).entries,
-      ...auditI18n(
-        { a: 'x', b: 'y', c: 'z {n}', d: 'Same text that is long enough', e: 'e' },
-        { b: ' ', c: 'z', d: 'Same text that is long enough', f: 'f', e: "l'e" },
-      ).entries,
-      ...(['unsupported', 'no-service-worker', 'error-page', 'empty-page', 'exception'] as const).flatMap(
-        (reason) => offlineCheckResult('/', { status: reason === 'unsupported' ? 'unknown' : 'fail', reason }).entries,
-      ),
-    ];
-    expect(entries.length).toBeGreaterThan(20);
+    const entries = sampleEntries();
+    expect(entries.length).toBeGreaterThan(40);
     for (const e of entries) {
       expect(e.message.en.length).toBeGreaterThan(0);
       expect(frTypographyIssues(e.message.fr), e.message.fr).toEqual([]);

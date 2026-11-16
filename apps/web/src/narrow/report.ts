@@ -160,6 +160,10 @@ function checkTitle(check: CheckId, lang: Lang): string {
   return sc ? `${CHECK_LABELS[check][lang]} (${L.criterion[lang]} ${sc})` : CHECK_LABELS[check][lang];
 }
 
+function ruleTag(e: Entry): string {
+  return e.rule ? ` [${e.rule}]` : '';
+}
+
 function routeHeading(r: RouteAudit, lang: Lang): string {
   return r.viewportWidth === null ? `${r.route}` : `${r.route} (${r.viewportWidth}${lang === 'fr' ? NBSP : ''}px)`;
 }
@@ -180,7 +184,7 @@ export function renderText(report: AuditReport, lang: Lang): string {
     if (r.truncated) lines.push(`  ${L.truncated[lang]}`);
     if (r.entries.length === 0) lines.push(`  ${L.none[lang]}`);
     for (const e of r.entries) {
-      lines.push(`  [${L[e.status][lang]}] ${checkTitle(e.check, lang)} ${e.id}${colon(lang)} ${e.message[lang]}`);
+      lines.push(`  [${L[e.status][lang]}] ${checkTitle(e.check, lang)}${ruleTag(e)} ${e.id}${colon(lang)} ${e.message[lang]}`);
     }
   }
   lines.push('');
@@ -219,7 +223,7 @@ export function renderBody(report: AuditReport, lang: Lang): string {
       for (const e of r.entries) {
         out.push(
           `<li class="${e.status}"><strong>${escapeHtml(L[e.status][lang])}</strong> ` +
-            `${escapeHtml(checkTitle(e.check, lang))} <code>${escapeHtml(e.id)}</code>${colon(lang)} ` +
+            `${escapeHtml(checkTitle(e.check, lang))}${escapeHtml(ruleTag(e))} <code>${escapeHtml(e.id)}</code>${colon(lang)} ` +
             `${escapeHtml(e.message[lang])}</li>`,
         );
       }
@@ -229,7 +233,7 @@ export function renderBody(report: AuditReport, lang: Lang): string {
   });
   out.push(`<h2>${escapeHtml(L.sources[lang])}</h2><ul>`);
   for (const ref of report.references) {
-    out.push(`<li>${escapeHtml(ref.title)}, ${escapeHtml(ref.date)}, <a href="${escapeHtml(ref.url)}">${escapeHtml(ref.url)}</a></li>`);
+    out.push(`<li>${escapeHtml(ref.title)}, ${escapeHtml(ref.date)}, <a href="${escapeHtml(ref.url)}" style="display:inline-block;min-height:44px;line-height:44px">${escapeHtml(ref.url)}</a></li>`);
   }
   out.push('</ul>');
   return out.join('\n');

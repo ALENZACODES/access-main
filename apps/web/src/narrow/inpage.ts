@@ -381,3 +381,10 @@ export function textSpacingProbeInPage(args: { readonly css: string; readonly ma
 export const TEXT_SPACING_CSS =
   '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }' +
   ' p { margin-bottom: 2em !important; }';
+
+/** Runs in the page. The live markup, with a doctype line when the page has one. */
+export function htmlInPage(_arg: null): string {
+  void _arg;
+  const d = (globalThis as unknown as { document: { doctype: unknown; documentElement: { outerHTML: string } } }).document;
+  return (d.doctype ? '<!doctype html>' : '') + d.documentElement.outerHTML;
+}
