@@ -9,6 +9,7 @@ import {
   createPackCellStore,
   downloadRegion as downloadRegionCells,
   downloadResultText,
+  mountStoragePressurePanel,
   OFFLINE_STRINGS,
   regionCellReport,
   regionManifestFor,
@@ -40,6 +41,45 @@ async function cellReports(pack: PackManifest, statuses: RegionStatus[]): Promis
 }
 
 const formatBytes = (bytes: number, language: string) => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bytes / 1024) + " KiB";
+
+
+/** Inventory and storage-headroom dashboard for one region, mounted on the live /offline page. */
+function RegionInventoryDashboard({ pack, regionId, language }: { pack: PackManifest; regionId: string; language: "en" | "fr" }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    let cancelled = false;
+    let unmount: (() => void) | undefined;
+    void (async () => {
+      try {
+        const status = (await source.regions()).find((region) => region.id === regionId);
+        const manifest = regionManifestFor(pack, regionId);
+        const store = createPackCellStore({
+          manifest,
+          ledger,
+          missingCells: new Set(status?.missingCells ?? manifest.cells.map((cell) => cell.id)),
+        });
+        if (cancelled) return;
+        unmount = mountStoragePressurePanel(root, manifest, {
+          store,
+          estimateStorage,
+          fetchCell: async (rid, cell) => {
+            if (!source.downloadCell) throw new PackClientError("missing", rid);
+            return source.downloadCell(rid, cell.id);
+          },
+        }, language);
+      } catch {
+        // Existing region controls stay usable if the inventory panel cannot mount.
+      }
+    })();
+    return () => {
+      cancelled = true;
+      unmount?.();
+    };
+  }, [pack, regionId, language]);
+  return <div ref={rootRef} className="offline-inventory" data-testid={`offline-inventory-${regionId}`} />;
+}
 
 export function OfflineRegionPage() {
   const { i18n } = useTranslation();
@@ -192,6 +232,7 @@ export function OfflineRegionPage() {
         </div>
         {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
         {busy === region.id && progress && <div className="stack"><label id={progressTitle}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={progressTitle} value={progress.done} max={progress.total || 1}/></div>}
+        {manifest && <RegionInventoryDashboard pack={manifest} regionId={region.id} language={language} />}
       </li>; })}</ul>
     </>}
     {confirmation && <dialog open aria-labelledby={dialogTitle} className="panel stack" onKeyDown={(event) => {
