@@ -58,13 +58,24 @@ describe("ResultItems", () => {
     await noViolations(screen.container);
   });
 
-  it("reads a directory record in the screen language with tier E", async () => {
+  it("reads a directory record in the screen language and shows Unknown when it has no tier", async () => {
     const record = (records as DirectoryRecord[])[0]!;
     const screen = await view("fr", <ResultItems id="navigator" items={[record]} />);
     expect(screen.getByText(record.name.fr)).toBeTruthy();
     expect(screen.getByText(record.retrievedOn)).toBeTruthy();
-    expect(screen.getByText("Niveau E")).toBeTruthy();
+    expect(screen.getByText("Inconnu")).toBeTruthy();
+    expect(screen.queryByText("Niveau E")).toBeNull();
     await noViolations(screen.container);
+  });
+
+  it("uses a navigator record's own tier, and Unknown when that field is absent", () => {
+    const record = (records as DirectoryRecord[])[0]!;
+    expect(toItemView("navigator", record, "en", 0)).toMatchObject({ tier: "UNKNOWN" });
+    expect(toItemView("navigator", { ...record, tier: "E" }, "en", 0)).toMatchObject({ tier: "E" });
+    expect(toItemView("navigator", { ...record, tier: 0 }, "en", 0)).toMatchObject({ tier: "0" });
+    expect(toItemView("navigator", { ...record, provenance: { ...PROVENANCE, tier: 1 } }, "en", 0)).toMatchObject({
+      tier: "1",
+    });
   });
 
   it("lists a game title with no source line, because a game is not a data record", () => {
