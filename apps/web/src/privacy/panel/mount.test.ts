@@ -104,3 +104,46 @@ describe("mountPrivacyPanel", () => {
     expect(controller.getState().status).toBeNull();
   });
 });
+
+import type { Purpose } from "./consent";
+
+describe("mountPrivacyPanel consent buttons", () => {
+  const purposes: readonly Purpose[] = [
+    {
+      id: "saved-places",
+      label: { en: "Saved places", fr: "Lieux enregistrés" },
+      description: { en: "Remember places on this device", fr: "Garder des lieux sur cet appareil" },
+      wordingVersion: 1,
+    },
+  ];
+  function withPurposes() {
+    const storage = createMemoryStorage();
+    const controller = createPrivacyController({
+      storage,
+      prefix: PREFIX,
+      inventory: FIXTURE,
+      purposes,
+      now: () => new Date(2026, 10, 15),
+    });
+    const root = new FakeRoot();
+    mountPrivacyPanel(root, controller);
+    return { root, controller };
+  }
+  it("allow records the choice, announces it and keeps focus on the same button", () => {
+    const { root, controller } = withPurposes();
+    root.fire("click", { "data-action": "consent-grant", "data-purpose": "saved-places" });
+    expect(controller.getState().consent["saved-places"]?.value).toBe("granted");
+    expect(root.innerHTML).toContain("Saved: allowed for");
+    expect(root.focused.at(-1)).toBe('[data-action="consent-grant"][data-purpose="saved-places"]');
+  });
+  it("do not allow records a refusal", () => {
+    const { root, controller } = withPurposes();
+    root.fire("click", { "data-action": "consent-decline", "data-purpose": "saved-places" });
+    expect(controller.getState().consent["saved-places"]?.value).toBe("declined");
+  });
+  it("ignores a consent click with no purpose", () => {
+    const { root, controller } = withPurposes();
+    root.fire("click", { "data-action": "consent-grant" });
+    expect(controller.getState().consent).toEqual({});
+  });
+});

@@ -98,3 +98,40 @@ test("Data status in French: masculine « inconnu » for the rate, NBSP before c
   await expect(page.locator("li", { hasText: "Old transit stop" })).toContainText("Récupéré il y a 200\u00a0jours. Possiblement périmé.");
   await expect(page.locator("li", { hasText: "Undated place" })).toContainText("Date de récupération\u00a0: Inconnue");
 });
+
+test("Data status: a source shared by several records is Unknown when any record has no usable date", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "s-new", title: "Recent stop", licence: "Open Government Licence – Toronto", retrieved_at: daysAgo(3) },
+    { id: "s-bad", title: "Placeholder stop", licence: "Open Government Licence – Toronto", retrieved_at: "N/A" },
+  ]);
+  await page.reload();
+  const table = page.getByRole("table", { name: "Data sources" });
+  await expect(table.getByRole("row")).toHaveCount(2);
+  await expect(table.getByRole("row").nth(1)).toContainText("Retrieval date unknown");
+  await expect(table.getByRole("row").nth(1)).not.toContainText(/Retrieved \d+ days? ago/);
+  await expect(page.getByTestId("source-basis")).toContainText("Records without a usable retrieved date: 1 of 2.");
+});
+
+test("Data status: every record states why it has its status, and UNKNOWN rates are shown", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, RECORDS);
+  await page.reload();
+  const old = page.locator("li", { hasText: "Old transit stop" });
+  await expect(old.getByTestId("status-basis")).toContainText("200 days ago. Past the 180 days limit.");
+  const undated = page.locator("li", { hasText: "Undated place" });
+  await expect(undated.getByTestId("status-basis")).toHaveText("No retrieved date is recorded, so the status is unknown.");
+  const table = page.getByRole("table", { name: "Completeness by field" });
+  await expect(table.getByRole("row").filter({ hasText: "Retrieved date" })).toContainText("33.3%");
+  await expect(page.getByTestId("unknown-date-rate")).toHaveText("33.3%");
+});
+
+test("Data status in French: the reasons and the rates are French", async ({ page }) => {
+  await page.goto("/data-status");
+  await page.getByRole("button", { name: "Français" }).click();
+  await seed(page, RECORDS);
+  await page.reload();
+  await expect(page.locator("li", { hasText: "Old transit stop" }).getByTestId("status-basis")).toContainText("Au-delà de la limite de 180 jours.");
+  await expect(page.getByRole("table", { name: "Complétude par champ" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sources et licences" })).toBeVisible();
+});
