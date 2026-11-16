@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NBSP, distanceMetres, formatDistance, isPoint, parseCoordinate, parsePointInput } from "./index";
+import { NBSP, distanceMetres, formatPackDistance, isPoint, parseCoordinate, parsePointInput } from "./index";
 
 describe("parseCoordinate", () => {
   it.each([
@@ -63,7 +63,7 @@ describe("distanceMetres", () => {
   });
 });
 
-describe("formatDistance", () => {
+describe("formatPackDistance", () => {
   it.each([
     [0, "en", `0${NBSP}m`],
     [42.4, "en", `42${NBSP}m`],
@@ -73,10 +73,10 @@ describe("formatDistance", () => {
     [1249, "en", `1.2${NBSP}km`],
     [1250, "fr", `1,3${NBSP}km`],
     [12_400, "en", `12${NBSP}km`],
-  ] as const)("%d m in %s", (m, locale, text) => expect(formatDistance(m, locale)).toBe(text));
+  ] as const)("%d m in %s", (m, locale, text) => expect(formatPackDistance(m, locale)).toBe(text));
   it("returns nothing for a distance it cannot state", () => {
-    expect(formatDistance(Number.NaN, "en")).toBe("");
-    expect(formatDistance(-1, "fr")).toBe("");
-    expect(formatDistance(Number.POSITIVE_INFINITY, "en")).toBe("");
+    expect(formatPackDistance(Number.NaN, "en")).toBe("");
+    expect(formatPackDistance(-1, "fr")).toBe("");
+    expect(formatPackDistance(Number.POSITIVE_INFINITY, "en")).toBe("");
   });
 });

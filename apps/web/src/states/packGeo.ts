@@ -50,7 +50,7 @@ export function parsePointInput(latText: string, lonText: string): PointInput {
 }
 
 /** "120 m", "1.2 km" (French: "1,2 km", with a no-break space before the unit). */
-export function formatDistance(metres: number, locale: Locale): string {
+export function formatPackDistance(metres: number, locale: Locale): string {
   if (!Number.isFinite(metres) || metres < 0) return "";
   if (metres < 1000) {
     const m = metres < 100 ? Math.round(metres) : Math.round(metres / 10) * 10;

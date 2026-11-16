@@ -9,7 +9,7 @@ import { MIN_TOUCH_TARGET_PX } from "./stateCopy";
 import { normalizeText } from "./filters";
 import { message, type MessageId } from "./messages";
 import { type PackPlaceRecord, type WheelchairTag, WHEELCHAIR_TAGS, countByTag } from "./packPlaces";
-import { type Point, type PointInput, distanceMetres, formatDistance } from "./packGeo";
+import { type Point, type PointInput, distanceMetres, formatPackDistance } from "./packGeo";
 import { attributionLine, ageLabel, isStale } from "./provenance";
 import { type RouteStateView, getRouteEmpty } from "./routeStates";
 
@@ -105,7 +105,7 @@ export function toCard(p: PackPlaceRecord, ctx: PackContext, from: Point | null)
     ageText: p.provenance ? ageLabel(p.provenance.retrievedOn, today, locale) : null,
     staleNotice: p.provenance && isStale(p.provenance.retrievedOn, today) ? message("pack.stale", locale) : null,
     noSourceNotice: p.tagUnknownReason === "missing-provenance" ? message("pack.noSource", locale) : null,
-    distanceText: from && p.location ? message("pack.distance", locale, { d: formatDistance(distanceMetres(from, p.location), locale) }) : null,
+    distanceText: from && p.location ? message("pack.distance", locale, { d: formatPackDistance(distanceMetres(from, p.location), locale) }) : null,
   };
 }
 

@@ -34,9 +34,9 @@ describe("savedRouteView", () => {
     expect(v.kind === "content" && v.countText).toBe("1 lieu enregistré.");
     expect(v.kind === "content" && v.items[0]!.removeLabel).toBe("Retirer Bar des lieux enregistrés");
   });
-  it("uses the route's first listed error kind for an online failure", () => {
+  it("uses the data-load wording for an online failure", () => {
     const v = savedRouteView({ status: "error", httpStatus: 500 }, ctx());
-    expect(v.kind === "error" && v.view.title).toBe("No connection and no offline pack");
+    expect(v.kind === "error" && v.view.title).toBe("The places could not be loaded");
   });
   it("shows the offline error when the device is offline", () => {
     const v = savedRouteView({ status: "error" }, ctx({ connectivity: initialConnectivity(false) }));

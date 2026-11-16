@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { endorsedByForbiddenOrgSample } from "../../../../packages/shared/test/forbiddenOrg.ts";
 import {
   EMPTY_KINDS,
   ERROR_KINDS,
@@ -12,6 +13,9 @@ import {
   getErrorState,
   initialConnectivity,
   lintCopy,
+  CATALOG,
+  EXTRA_ROUTES,
+  message,
   offlineBanner,
   placeRouteView,
   statusText,
@@ -48,6 +52,12 @@ function allCopy(locale: Locale): string[] {
     today: "2026-11-15",
   });
   if (content.kind === "content" && content.savedCopyNotice) out.push(content.savedCopyNotice);
+  for (const id of Object.keys(CATALOG) as (keyof typeof CATALOG)[]) {
+    void CATALOG[id];
+    out.push(message(id, locale, { n: 2, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m", m: 1, date: "1 May 2026", label: "L", value: "V", text: "T" }));
+    out.push(message(id, locale, { n: 1, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m", m: 1, date: "1 May 2026", label: "L", value: "V", text: "T" }));
+  }
+  for (const r of Object.values(EXTRA_ROUTES.routes)) out.push(r.label[locale]);
   return out.filter((x) => x !== "");
 }
 
@@ -59,6 +69,8 @@ describe("lintCopy", () => {
     ["AAA conformant", "overclaim-certified"],
     ["We guarantee access", "overclaim-guarantee"],
     ["Powered by AI", "mentions-ai"],
+    [endorsedByForbiddenOrgSample("en"), "banned-organisation"],
+    [endorsedByForbiddenOrgSample("fr"), "banned-organisation"],
   ])("flags %s", (text, issue) => {
     expect(lintCopy(text, "en")).toContain(issue);
   });
@@ -76,7 +88,7 @@ describe("all package copy passes the linter", () => {
   for (const locale of locales) {
     it(`${locale}: no overclaims, prohibited wording or typography problems`, () => {
       const copy = allCopy(locale);
-      expect(copy.length).toBeGreaterThan(60);
+      expect(copy.length).toBeGreaterThan(100);
       for (const s of copy) expect(lintCopy(s, locale), s).toEqual([]);
     });
   }
