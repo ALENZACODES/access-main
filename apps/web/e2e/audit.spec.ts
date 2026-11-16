@@ -74,7 +74,9 @@ async function measure(page: Page) {
           const associated = field.labels?.[0];
           if (associated) {
             const clone = associated.cloneNode(true) as HTMLElement;
-            for (const nested of Array.from(clone.querySelectorAll("input, select, textarea, button"))) nested.remove();
+            for (const nested of Array.from(clone.querySelectorAll("input, select, textarea, button"))) {
+              nested.replaceWith(document.createTextNode(" "));
+            }
             label = clone.innerText;
           }
         }
@@ -92,7 +94,10 @@ async function measure(page: Page) {
           width: Math.round(hitBox.width * 10) / 10,
           height: Math.round(hitBox.height * 10) / 10,
           inline: tag === "a" && getComputedStyle(el).display === "inline" && parentText.length > ownText.length + 10,
-          native: ["a", "button", "input", "select", "textarea", "summary"].includes(tag) && !el.hasAttribute("ondblclick") && el.getAttribute("draggable") !== "true",
+          native: (
+            ["a", "button", "input", "select", "textarea", "summary"].includes(tag)
+            || ["listbox", "option", "combobox", "radio", "checkbox", "switch", "slider", "tab", "menuitem", "menuitemcheckbox", "menuitemradio"].includes(el.getAttribute("role") ?? "")
+          ) && !el.hasAttribute("ondblclick") && el.getAttribute("draggable") !== "true",
         };
       });
   });
