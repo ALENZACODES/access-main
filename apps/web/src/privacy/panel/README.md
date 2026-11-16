@@ -158,3 +158,11 @@ createPrivacyController({
 - New audits: `device.audit.test.ts` (wording lint, EN/FR parity, HTML audit of each
   new state, passphrase never stored); the plain-language audit now also covers
   the new copy and the live panel with all three sections on.
+
+## Upload policy and claim wording (P10H, partial)
+
+- `egress.ts`: a policy now has `allowUpload` (default false). Reads (GET, HEAD, OPTIONS) to a listed origin are allowed; sends (other methods, beacons, WebSockets) are blocked with the reason `upload-blocked`, reporting only the host. The App's own origin is not affected.
+- `claims.ts`: words that suggest a service the App does not have (account, server, sync, cloud, upload, telemetry; FR equivalents) are allowed only in the exact approved sentences.
+- `policy.ts`: `checkPolicy` / `assertPolicy` compare the declared no-server policy with the data list, the purposes and the network guard. Nothing calls `assertPolicy` at start-up yet; the shell has to do that.
+
+Not built in this round: retention checks on the data list, consent-gated storage keys, and their panel wording.

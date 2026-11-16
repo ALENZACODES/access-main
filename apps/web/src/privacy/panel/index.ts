@@ -67,3 +67,7 @@ export { MIN_PASSPHRASE_LENGTH, passphraseProblem, protect, unprotect } from "./
 export type { CryptoLike, OpenProblem, PassphraseProblem } from "./protectedBackup";
 export { DEVICE_STRINGS, isDeviceStatus } from "./copyDevice";
 export type { DeviceStatus, ProtectedProblem } from "./copyDevice";
+export { APPROVED_CLAIMS, claimIssues } from "./claims";
+export type { ClaimIssue } from "./claims";
+export { NO_SERVER_POLICY, assertPolicy, checkPolicy } from "./policy";
+export type { AppPolicy, PolicyCode, PolicyInput, PolicyProblem } from "./policy";

@@ -12,9 +12,15 @@ export interface EgressPolicy {
   readonly selfOrigin: string;
   /** Other https origins the App may contact. */
   readonly allowedOrigins: readonly string[];
+  /**
+   * Whether the App may send data (POST, PUT, WebSocket, beacons) to a listed
+   * origin. Default false: listed origins are read-only. The App's own origin is
+   * not affected.
+   */
+  readonly allowUpload: boolean;
 }
 
-export type BlockReason = "not-listed" | "invalid-url" | "blocked-scheme";
+export type BlockReason = "not-listed" | "invalid-url" | "blocked-scheme" | "upload-blocked";
 export type Via = "fetch" | "xhr" | "beacon" | "websocket" | "eventsource";
 
 export type Decision =
@@ -35,7 +41,7 @@ const LOCAL_SCHEMES = new Set(["data:", "blob:", "about:"]);
 const WEB_SCHEMES: Readonly<Record<string, string>> = { "http:": "http:", "https:": "https:", "ws:": "http:", "wss:": "https:" };
 
 /** Validates and freezes a policy. Throws if an origin is not a clean https origin. */
-export function createEgressPolicy(p: { selfOrigin: string; allowedOrigins?: readonly string[] }): EgressPolicy {
+export function createEgressPolicy(p: { selfOrigin: string; allowedOrigins?: readonly string[]; allowUpload?: boolean }): EgressPolicy {
   let self: string;
   try {
     self = new URL(p.selfOrigin).origin;
@@ -48,10 +54,17 @@ export function createEgressPolicy(p: { selfOrigin: string; allowedOrigins?: rea
     if (!isCleanOrigin(o)) throw new RangeError(`not a clean https origin: ${o}`);
     if (!allowed.includes(o)) allowed.push(o);
   }
-  return Object.freeze({ selfOrigin: self, allowedOrigins: Object.freeze(allowed) });
+  return Object.freeze({ selfOrigin: self, allowedOrigins: Object.freeze(allowed), allowUpload: p.allowUpload === true });
 }
 
-export function decide(policy: EgressPolicy, input: string): Decision {
+const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * `method` is the HTTP method, or "SEND" for channels that carry data out
+ * (WebSocket, beacons). Reads from a listed origin are allowed; sends are not,
+ * unless the policy says so.
+ */
+export function decide(policy: EgressPolicy, input: string, method = "GET"): Decision {
   let url: URL;
   try {
     url = new URL(input, `${policy.selfOrigin}/`);
@@ -63,7 +76,12 @@ export function decide(policy: EgressPolicy, input: string): Decision {
   if (web === undefined) return { allowed: false, host: url.protocol, scheme: url.protocol, reason: "blocked-scheme" };
   const origin = `${web}//${url.host}`;
   if (origin === policy.selfOrigin) return { allowed: true, kind: "same-origin" };
-  if (policy.allowedOrigins.includes(origin)) return { allowed: true, kind: "listed-origin" };
+  if (policy.allowedOrigins.includes(origin)) {
+    if (!policy.allowUpload && !READ_METHODS.has(method.toUpperCase())) {
+      return { allowed: false, host: url.host, scheme: url.protocol, reason: "upload-blocked" };
+    }
+    return { allowed: true, kind: "listed-origin" };
+  }
   return { allowed: false, host: url.host, scheme: url.protocol, reason: "not-listed" };
 }
 
@@ -73,6 +91,13 @@ export interface GuardHost {
   navigator?: { sendBeacon?(url: string | URL, data?: unknown): boolean };
   WebSocket?: unknown;
   EventSource?: unknown;
+}
+
+function methodOf(input: unknown, init: unknown): string {
+  const fromInit = init !== null && typeof init === "object" ? (init as { method?: unknown }).method : undefined;
+  if (typeof fromInit === "string") return fromInit;
+  const fromRequest = input !== null && typeof input === "object" ? (input as { method?: unknown }).method : undefined;
+  return typeof fromRequest === "string" ? fromRequest : "GET";
 }
 
 function urlOf(input: unknown): string {
@@ -97,8 +122,8 @@ export function installEgressGuard(
   now: () => Date = () => new Date(),
 ): InstalledGuard {
   const undo: Array<() => void> = [];
-  const check = (input: unknown, via: Via): boolean => {
-    const d = decide(policy, urlOf(input));
+  const check = (input: unknown, via: Via, method = "GET"): boolean => {
+    const d = decide(policy, urlOf(input), method);
     if (d.allowed) return true;
     try {
       onBlocked({ at: now().toISOString(), host: d.host, scheme: d.scheme, via, reason: d.reason });
@@ -112,7 +137,7 @@ export function installEgressGuard(
   const origFetch = host.fetch;
   if (typeof origFetch === "function") {
     const wrapped = function (this: unknown, input: unknown, init?: unknown): Promise<unknown> {
-      return check(input, "fetch") ? origFetch.call(host, input, init) : Promise.reject(refusal());
+      return check(input, "fetch", methodOf(input, init)) ? origFetch.call(host, input, init) : Promise.reject(refusal());
     };
     host.fetch = wrapped;
     undo.push(() => {
@@ -124,7 +149,7 @@ export function installEgressGuard(
   if (proto !== undefined && typeof proto.open === "function") {
     const origOpen = proto.open;
     const wrapped = function (this: unknown, method: string, url: string | URL, ...rest: unknown[]): unknown {
-      if (!check(url, "xhr")) throw refusal();
+      if (!check(url, "xhr", String(method))) throw refusal();
       return origOpen.call(this, method, url, ...rest);
     };
     proto.open = wrapped as typeof proto.open;
@@ -137,7 +162,7 @@ export function installEgressGuard(
   const origBeacon = nav?.sendBeacon;
   if (nav !== undefined && typeof origBeacon === "function") {
     const wrapped = function (url: string | URL, data?: unknown): boolean {
-      return check(url, "beacon") ? origBeacon.call(nav, url, data) : false;
+      return check(url, "beacon", "SEND") ? origBeacon.call(nav, url, data) : false;
     };
     nav.sendBeacon = wrapped;
     undo.push(() => {
@@ -150,7 +175,7 @@ export function installEgressGuard(
     if (typeof orig !== "function") continue;
     const proxy = new Proxy(orig as new (...a: unknown[]) => object, {
       construct(target, args, newTarget) {
-        if (!check(args[0], via)) throw refusal();
+        if (!check(args[0], via, via === "websocket" ? "SEND" : "GET")) throw refusal();
         return Reflect.construct(target, args, newTarget) as object;
       },
     });
