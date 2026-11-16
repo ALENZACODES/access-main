@@ -8,19 +8,18 @@ type ToolProps = Record<string, unknown>;
 
 export type HubPage =
   | "employment" | "housing" | "safety" | "diary" | "auditors" | "handoff"
-  | "games" | "routeReports" | "wav" | "eventOrganiser" | "eventPlan" | "reports";
+  | "games" | "routeReports" | "wav" | "eventOrganiser" | "eventPlan";
 
 /** Pages whose records are labelled demonstration or sample data. */
-const DEMONSTRATION: readonly HubPage[] = ["employment", "housing", "handoff", "eventPlan", "reports"];
+const DEMONSTRATION: readonly HubPage[] = ["employment", "housing", "handoff", "eventPlan"];
 
 /**
- * Keeps a mounted tool inside a 320 px wide page: long choices and grouped fields shrink to the page,
- * and a wide table scrolls inside its own box instead of moving the whole page sideways.
+ * Keeps a mounted tool inside a 320 px wide page: long choices and grouped fields shrink to the page
+ * instead of moving the whole page sideways.
  */
 const FIT = `
 .hub-tool :is(select, input, textarea, button) { max-width: 100%; }
 .hub-tool fieldset { min-width: 0; }
-.hub-tool .table-scroll { overflow-x: auto; max-width: 100%; }
 `;
 
 class ToolBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {

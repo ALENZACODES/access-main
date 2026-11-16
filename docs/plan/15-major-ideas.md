@@ -557,7 +557,7 @@ The table above is dated 14 November. Since then seven feature packages merged, 
 | 3 Peer Connect | `/more/peers` lists the request topics | The request flow with consent and routing is built in access-help but not mounted: its text fails the shell's post-build wording check |
 | 6 Employment and Income | `/more/employment`: listing with workplace access record, commute check, referral summary | Real listings |
 | 7 Accessible Housing | `/more/housing`: the first housing finder | The unit and room depth finder and barrier evidence form: built in access-tools, not mounted because of a repeated-landmark fault |
-| 8 Advocacy Engine | `/settings/advocacy` (evidence pack) and `/more/reports` (suppressed report tables and indicators) | Real consented reports |
+| 8 Advocacy Engine | `/settings/advocacy` (evidence pack export) | The suppressed report tables and indicators are built in `packages/advocacy` but not mounted: the panel's focusable scrolling boxes fail the shell's route audit. No real consented reports exist |
 | 11 Community Events and Social | `/more/events`, `/more/event-organiser` (organiser checklist), `/more/event-plan` (outing plan) | A per-event access page for a real event, and the journey join |
 | 12 Access Auditors and Venue Dashboard | `/more/auditors`: observations, volunteer programme, venue responses, correction cases | Publication of any audited value |
 | 13 Play and Rehab Games | `/more/games`: 19 of the 50 games, with dwell select | The other 31 games; gaze |

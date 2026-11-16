@@ -17,7 +17,6 @@ const RouteReportsPage = lazy(() => import("./RouteReportsPage"));
 const WavPage = lazy(() => import("./WavPage"));
 const EventOrganiserPage = lazy(() => import("./EventOrganiserPage"));
 const EventPlanPage = lazy(() => import("./EventPlanPage"));
-const ReportsPage = lazy(() => import("./ReportsPage"));
 
 function Pending({ children }: { children: ReactNode }) {
   const { t } = useTranslation("hub");
@@ -39,5 +38,4 @@ export const hubRoutes: RouteObject[] = [
   { path: "accessible-taxis", element: <Pending><WavPage /></Pending> },
   { path: "event-organiser", element: <Pending><EventOrganiserPage /></Pending> },
   { path: "event-plan", element: <Pending><EventPlanPage /></Pending> },
-  { path: "reports", element: <Pending><ReportsPage /></Pending> },
 ];

@@ -78,11 +78,7 @@ const hubAliases = (
   .map(([find, repo, pkg, entry = "src/index.ts"]) => ({
     find: new RegExp(`^${find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
     replacement: path.join(root, ".lanes", repo, "packages", pkg, entry),
-  }))
-  .concat([
-    { find: /^@hub\/advocacy-reports$/, replacement: path.join(root, "packages/advocacy/src/ui/ReportsPanel.tsx") },
-    { find: /^@hub\/advocacy-demo$/, replacement: path.join(root, "packages/advocacy/src/reports/demo.ts") },
-  ]);
+  }));
 
 export default defineConfig({
   plugins: [react()],

@@ -77,7 +77,7 @@ Reachable from the shell after the integration round of 16 November (routes, pac
 | Conditions | `/more/route-reports` (list; the form needs a place) and `/more/accessible-taxis` (zero records, shown as unknown) | A link from a place page to the report form; routing facts are not used by the journey route |
 | Peers | `/more/peers`: topic list only | The peer request flow: the package holds wording the post-build check rejects |
 | Events | `/more/event-organiser` and `/more/event-plan` | The per-event access page and journey hand-off, which need an event record; `/more/events` still lists demonstration events without them |
-| Advocacy | `/more/reports`: report tables on the demonstration set, export behind the evidence-export permission | Tables from real consented reports; none exist |
+| Advocacy | `/settings/advocacy`: the evidence pack export, as before | The report tables and indicators (`ReportsPanel`): its focusable scrolling boxes fail the shell's Day 17 route audit |
 
 Each route was checked in English and French by unit tests and by browser accessibility and keyboard tests. Every record these routes show is demonstration, sample or the person's own entry; none is a verified accessibility fact.
 

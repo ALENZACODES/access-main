@@ -37,11 +37,11 @@
 | `/more/events` | access-help `event-access`: demonstration records | Labelled demonstration events |
 | `/more/event-organiser` | access-help `event-access`: `OrganiserForm` | The organiser's own answers, on the device |
 | `/more/event-plan` | access-help `outings`: `EventOutingPlanner` | Labelled sample events and the person's own plans |
-| `/more/reports` | access-main `advocacy`: `ReportsPanel` | The package's labelled demonstration set. Saving files needs the evidence-export permission |
 
 Not mounted, and the change each one needs in its own package:
 
 - **Housing depth finder and barrier evidence form** (access-tools `housing` at `310e8de`). `DepthFinder.tsx` renders `<section className="room-facts" aria-labelledby=...>` for every room of every unit, and the room names repeat from unit to unit (axe reports "unit entry"), so the page has several region landmarks with the same name and fails the axe `landmark-unique` rule. Change that `<section>` to a `<div>` (the `<h4>` already labels it), or name each region with the unit as well. Then move the `housing` pin in `lanes.hub.json`.
 - **Peer request flow** (access-help `peers`, `PeerRequestFlow`). `src/strings.ts` holds the sentence "The App is not affiliated with or endorsed by any organisation." The post-build wording check (`apps/web/scripts/check-dist-overclaim.mjs`) fails on the words "endorsed by" anywhere in the bundle. Reword it in both languages without those words, for example "No organisation has endorsed the App."
+- **Report tables** (access-main `packages/advocacy`, `ReportsPanel`). The panel makes each wide table's scrolling box and each indicator list focusable with `tabIndex={0}` on a `<div>`. The Day 17 route audit (`apps/web/e2e/audit.spec.ts`) reports every focusable element that is not a native control as a serious keyboard finding, so `/more/reports` failed it with 12 findings per language. Either the panel drops `tabIndex` from those boxes, or the audit accepts a named, focusable scrolling region. The evidence pack at `/settings/advocacy` is unchanged.
 - **Route report form from a place page.** The form needs a place the shell has already resolved. `/more/route-reports?place=<id>` accepts one, but no page links to it yet; the place page belongs to another lane.
 

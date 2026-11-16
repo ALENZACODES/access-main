@@ -111,31 +111,3 @@ declare module "@access/outings" {
   import type { ComponentType } from "react";
   export const EventOutingPlanner: ComponentType<{ lang: "en" | "fr"; today?: string }>;
 }
-
-declare module "@hub/advocacy-reports" {
-  import type { ComponentType } from "react";
-  export interface HubPackFile {
-    name: string;
-    mime: string;
-    content: string;
-  }
-  export const ReportsPanel: ComponentType<{
-    lang: "en" | "fr";
-    input: unknown;
-    options: unknown;
-    logs: unknown;
-    onExportFiles?: (files: HubPackFile[]) => void;
-  }>;
-}
-
-declare module "@hub/advocacy-demo" {
-  export const DEMO_REPORT_AS_OF: string;
-  export const DEMO_PURPOSE: unknown;
-  export const DEMO_REGIONS: readonly unknown[];
-  export const DEMO_INPUT_SETS: readonly unknown[];
-  export const DEMO_REPORTS: readonly unknown[];
-  export const DEMO_CONSENT_LEDGER: readonly unknown[];
-  export const DEMO_DELIVERIES: readonly unknown[];
-  export const DEMO_CITATIONS: readonly unknown[];
-  export const DEMO_REVIEWS: readonly unknown[];
-}

@@ -11,7 +11,6 @@ const ROUTES = [
   { path: "accessible-taxis", en: "Accessible taxis", fr: "Taxis accessibles" },
   { path: "event-organiser", en: "Event access checklist", fr: "Liste d’accessibilité d’un événement" },
   { path: "event-plan", en: "Event outing plan", fr: "Plan de sortie pour un événement" },
-  { path: "reports", en: "Report tables", fr: "Tableaux de signalements" },
 ] as const;
 
 async function open(page: Page, locale: "en" | "fr", path: string) {

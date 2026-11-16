@@ -68,6 +68,8 @@ test("french shell persists and returns to english", { annotation: { type: "chec
 });
 
 test("module pages do not invent places and axe is clean", { annotation: [{ type: "check", description: "G1-place-honesty" }, { type: "check", description: "G3-accessibility-routes" }] }, async ({ page }) => {
+  // One page load and one axe run per route. The time allowed grows with the route list.
+  test.setTimeout(Math.max(30_000, ROUTES.length * 1_500));
   for (const route of ROUTES) {
     await page.goto(route);
     await expectOneHeading(page);
