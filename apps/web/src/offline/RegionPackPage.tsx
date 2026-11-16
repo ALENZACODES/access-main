@@ -122,9 +122,6 @@ export function OfflineRegionPage() {
     <p>{c.intro}</p>
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {error && <p role="alert">{error}</p>}
-    {error && (error.toLowerCase().includes("storage") || error.toLowerCase().includes("quota") || error.includes(c.storage)) ? (
-      <p role="status">{pressureView({ phase: "stopped", result: { regionId: "", available: [], missing: [], completed: false, reason: "quota" } }, language).message}</p>
-    ) : null}
     {message && <p role="status" tabIndex={-1}>{message}</p>}
     {manifest && <>
       <p>{c.built}: <time dateTime={manifest.builtAt}>{manifest.builtAt.slice(0, 10)}</time>. {c.counts}: {manifest.counts.records.toLocaleString(language)}.</p>
@@ -147,7 +144,10 @@ export function OfflineRegionPage() {
             <span lang="und">{cell.id}</span> — {cellStatusText(language, cell.lookup)}
           </li>)}</ul>
         </details>}
-        {result && !result.completed && busy !== region.id && <p>{downloadResultText(language, result)}</p>}
+        {result && !result.completed && busy !== region.id && (() => {
+          const view = pressureView({ phase: "stopped", result }, language);
+          return <p data-testid="storage-pressure">{view.message} {view.details}</p>;
+        })()}
         <div className="button-row">
           {!region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!online || !!busy} onClick={() => void download(region.id)}>{statuses.includes("stale") ? r.update : partial ? r.resume : c.download}</button>}
           {busy === region.id && <button type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => abortRef.current?.abort()}>{r.pause}</button>}

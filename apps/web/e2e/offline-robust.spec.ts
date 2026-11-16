@@ -134,3 +134,20 @@ for (const language of ["en", "fr"] as const) {
     await expect(region.locator(`[data-cell-status="available"]`)).toHaveCount(2);
   });
 }
+
+test("offline regions: low storage stops before a cell and names what is not downloaded", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.storage, "estimate", { value: async () => ({ quota: 2_000_000, usage: 1_500_000 }) });
+  });
+  await serve(page, build("2026-11-15T12:00:00Z", "v2"));
+  await page.goto("/offline");
+  const region = page.locator(".record-list > li").filter({ has: page.getByRole("heading", { name: "Toronto" }) });
+  await region.getByRole("button", { name: "Download", exact: true }).click();
+  await expect(region.getByTestId("storage-pressure")).toHaveText(
+    "Storage space is low. Free space, then retry missing cells. Saved cells: 0. Cells not downloaded: 2. Cells not downloaded are not available offline.",
+  );
+  await region.locator("summary").click();
+  await expect(region.locator(`[data-cell-status="missing"]`)).toHaveCount(2);
+  await expect(region.locator(`[data-cell-status="unknown"]`)).toHaveCount(0);
+  await axeClean(page, "quota");
+});

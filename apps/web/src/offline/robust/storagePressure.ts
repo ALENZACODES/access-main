@@ -1,6 +1,6 @@
 import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload.ts";
 
-/** User-facing download state; missing cells never become availability claims. */
+/** User-facing download state. Cells not downloaded are named as such, never as available and never as UNKNOWN. */
 export type PressureState =
   | { readonly phase: "idle" | "working"; readonly result: null }
   | { readonly phase: "stopped"; readonly result: DownloadResult };
@@ -14,9 +14,9 @@ export const PRESSURE_COPY = {
     quota: "Storage space is low. Free space, then retry missing cells.",
     interrupted: "Download interrupted. Retry missing cells.",
     error: "Download stopped. Retry missing cells.",
-    partial: "Missing cells remain UNKNOWN offline.",
+    partial: "Cells not downloaded are not available offline.",
     saved: "Saved cells",
-    missing: "UNKNOWN cells",
+    missing: "Cells not downloaded",
   },
   fr: {
     start: "Télécharger la région",
@@ -26,9 +26,9 @@ export const PRESSURE_COPY = {
     quota: "L’espace de stockage est insuffisant. Libérez de l’espace, puis réessayez les cellules manquantes.",
     interrupted: "Téléchargement interrompu. Réessayez les cellules manquantes.",
     error: "Téléchargement arrêté. Réessayez les cellules manquantes.",
-    partial: "Les cellules manquantes restent INCONNUES hors ligne.",
+    partial: "Les cellules non téléchargées ne sont pas disponibles hors ligne.",
     saved: "Cellules enregistrées",
-    missing: "Cellules INCONNUES",
+    missing: "Cellules non téléchargées",
   },
 } as const;
 

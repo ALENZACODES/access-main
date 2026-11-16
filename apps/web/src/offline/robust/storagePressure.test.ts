@@ -39,8 +39,8 @@ describe("storage-pressure retry", () => {
     expect(first?.available).toEqual(["one"]);
     expect(first?.missing).toEqual(["two"]);
     expect(first?.reason).toBe("quota");
-    expect(pressureView(controller.getState(), "en").details).toContain("UNKNOWN cells: 1");
-    expect(pressureView(controller.getState(), "fr").details).toContain("INCONNUES");
+    expect(pressureView(controller.getState(), "en").details).toContain("Cells not downloaded: 1. Cells not downloaded are not available offline.");
+    expect(pressureView(controller.getState(), "fr").details).toContain("Cellules non téléchargées\u00a0: 1.");
     controller.dispose();
 
     const resumed = createPressureController(manifest, data.dependencies);
