@@ -38,4 +38,10 @@ export default tseslint.config(
       globals: { ...globals.node },
     },
   },
+  {
+    files: ["apps/web/src/narrow/**/*.mjs"],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 );
