@@ -311,3 +311,14 @@ the shell intentionally uses fallbacks; present copies are always scanned.
 This gate does not substitute for the built-asset text and byte-budget check.
 The organisation-name denylist comes exclusively from the existing shared
 `forbiddenOrgNeedles()` helper, without duplicate definitions.
+
+## Pinned source quality
+
+Both `lanes.lock.json` and `lanes.hub.json` use one published commit per
+upstream repository. After `lanes:ensure` and `hub:sync`, the build,
+pretest and pretypecheck scripts run `prepare-copy.mjs` on the temporary
+`.lanes` copies. The operation preserves `UNKNOWN` and schema identifiers,
+updates English/French display sentences, and fails on remaining prohibited
+wording. Source and licence data must remain unchanged. Its regression tests
+cover help articles, clinical-boundary copy, place labels, safety check-in
+messages and auditor explanations. The final built-asset gate is separate.

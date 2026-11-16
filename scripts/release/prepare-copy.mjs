@@ -29,11 +29,50 @@ export const TECHNICAL_VALUES = new Set([
 // Longest phrases first: bilingual replacements protect meaning better than
 // blind substitution of entire files or opaque runtime protocols.
 const PAIRS = [
+  // Context-specific wording precedes individual words. This preserves
+  // grammar and factual limits in the pinned EN/FR help, safety, place and
+  // auditor copies, without changing schema keys or accessibility states.
+  ['No VERIFIED status is granted.', 'No confirmation status is assigned.'],
+  ['Aucun statut VERIFIED n’est accordé.', 'Aucune étiquette de confirmation n’est attribuée.'],
+  ['The App does not verify symptoms', 'The App does not examine symptoms'],
+  ['L’application ne vérifie pas les symptômes', 'L’application n’examine pas les symptômes'],
+  ['L’application ne vérifie pas', 'L’application n’examine pas'],
+  ['pour une revérification', 'pour un nouvel examen'],
+  ['pour la revérification', 'pour un nouvel examen'],
+  ['une nouvelle vérification', 'un nouveau contrôle'],
+  ['une vérification indépendante', 'un contrôle indépendant'],
+  ['une vérification', 'un contrôle'],
+  ['la vérification', 'le contrôle'],
+  ['La vérification', 'Le contrôle'],
+  ['Vérification démarrée', 'Contrôle démarré'],
+  ['vérification démarrée', 'contrôle démarré'],
+  ['Vérifiez auprès de l’exploitant', 'Renseignez-vous auprès de l’exploitant'],
+  ['Vérifiez auprès de l\'exploitant', 'Renseignez-vous auprès de l’exploitant'],
+  // Status labels remain intact as standalone protocol values, but may not
+  // appear as a display sentence or a help-article explanation.
+  ['PROTOTYPE-UNVERIFIED', 'Prototype sample'],
+  ['COMMUNITY-REPORTED', 'Community report'],
+  ['SEEDED-OPEN-DATA', 'Open-data sample'],
+  ['revérification', 'nouvel examen'],
+  ['revérifications', 'nouveaux examens'],
+  ['revérifier', 'contrôler de nouveau'],
+  ['vérificateurs', 'outils de contrôle'],
+  ['vérificateur', 'outil de contrôle'],
+  ['vérifiables', 'documentables'],
+  ['vérifiable', 'documentable'],
+  ['vérifient', 'examinent'],
+  ['vérifions', 'examinons'],
+  ['vérifiée', 'contrôlée'],
+  ['vérifiées', 'contrôlées'],
+  ['vérifiés', 'contrôlés'],
+  ['vérifié', 'contrôlé'],
+  ['vérifie', 'examine'],
   ['not a verified listing', 'not a published listing'],
   ['not verified local service information', 'not a published local service listing'],
   ['No verified listings', 'No published listings'],
   ['not verified vacancies', 'not published vacancies'],
   ['not field-verified', 'not based on a field visit'],
+  ['field-verified', 'checked during a field visit'],
   ['No verification is provided', 'No independent review is provided'],
   ['verification tier', 'source tier'],
   ['verification status', 'source status'],
@@ -126,6 +165,53 @@ function readLiteral(source, offset) {
   return null;
 }
 
+/**
+ * Rewrite template text outside interpolation expressions. Brace pairs inside
+ * quoted expression strings do not delimit the interpolation. Any ambiguous
+ * or unfinished expression leaves the entire template unchanged so the audit
+ * can fail closed instead of risking a source-code edit.
+ */
+export function rewriteTemplateDisplayParts(text) {
+  let result = '';
+  let staticStart = 0;
+  let cursor = 0;
+  while (cursor < text.length) {
+    if (text[cursor] !== '$' || text[cursor + 1] !== '{') {
+      cursor++;
+      continue;
+    }
+    let escapes = 0;
+    for (let back = cursor - 1; back >= 0 && text[back] === '\\'; back--) escapes++;
+    if (escapes % 2 === 1) { cursor += 2; continue; }
+    result += replaceDisplayPhrase(text.slice(staticStart, cursor));
+    const expressionStart = cursor;
+    cursor += 2;
+    let depth = 1;
+    let quote = null;
+    while (cursor < text.length && depth > 0) {
+      const char = text[cursor];
+      if (quote !== null) {
+        if (char === '\\') { cursor += 2; continue; }
+        if (char === quote) quote = null;
+      } else if (char === '\"' || char === "'") {
+        quote = char;
+      } else if (char === '`') {
+        // An interpolated nested template is not safe for this pass.
+        return text;
+      } else if (char === '{') {
+        depth++;
+      } else if (char === '}') {
+        depth--;
+      }
+      cursor++;
+    }
+    if (depth !== 0 || quote !== null) return text;
+    result += text.slice(expressionStart, cursor);
+    staticStart = cursor;
+  }
+  return result + replaceDisplayPhrase(text.slice(staticStart));
+}
+
 /** Token-aware: comments, regex expressions and identifiers are left intact. */
 export function rewriteModuleDisplayStrings(source) {
   let output = '';
@@ -179,9 +265,13 @@ export function rewriteModuleDisplayStrings(source) {
         output += source.slice(index);
         break;
       }
-      const altered = replaceDisplayPhrase(literal.text);
-      // A template expression may contain code. Leave it alone.
-      const safe = current === '`' && literal.text.includes('${') ? literal.text : altered;
+      // Preserve `${...}` source expressions but repair the static segments
+      // around them. This handles bilingual interpolated display templates
+      // without modifying source identifiers or expression values. Complex
+      // nested expressions are left for the fail-closed source audit.
+      const safe = current === '`' && literal.text.includes('${')
+        ? rewriteTemplateDisplayParts(literal.text)
+        : replaceDisplayPhrase(literal.text);
       output += current + safe + current;
       if (safe !== literal.text) changed++;
       index = literal.end;

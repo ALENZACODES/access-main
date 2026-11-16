@@ -85,14 +85,14 @@ test('candidate filter rejects technical tokens but preserves readable sentences
   assert.equal(isDisplayCandidate('Source tier for this record'), true);
 });
 
-test('preparation closes the gate on an unresolved template expression', async () => {
+test('preparation closes the gate on an unsafe source claim', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'release-preparation-gate-'));
   try {
     const copy = join(dir, '.lanes', 'example', 'packages', 'sample', 'src');
     await mkdir(copy, { recursive: true });
-    await writeFile(join(copy, 'index.ts'), 'const label = `Verification tier: ${tier}`;');
+    await writeFile(join(copy, 'index.ts'), 'const label = '+JSON.stringify('Endorsed by '+forbiddenOrgNeedles()[0])+';');
     await assert.rejects(prepareCopiedModules(dir, {strict:true}), /unresolved display issue/);
-    assert.equal(await readFile(join(copy,'index.ts'),'utf8'), 'const label = `Verification tier: ${tier}`;');
+    assert.equal(await readFile(join(copy,'index.ts'),'utf8'), 'const label = '+JSON.stringify('Endorsed by '+forbiddenOrgNeedles()[0])+';');
   } finally { await rm(dir, {recursive:true,force:true}); }
 });
 
@@ -135,7 +135,7 @@ test('non-strict mode still refuses unsafe text when pinned sources exist', asyn
   try {
     const copy = join(dir, '.lanes', 'module', 'src');
     await mkdir(copy, { recursive: true });
-    await writeFile(join(copy, 'view.ts'), 'export const label=`Verification status: ${tier}`;');
+    await writeFile(join(copy, 'view.ts'), 'export const label='+JSON.stringify('Endorsed by '+forbiddenOrgNeedles()[0])+';');
     await assert.rejects(prepareCopiedModules(dir), /unresolved display issue/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });

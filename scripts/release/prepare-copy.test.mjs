@@ -7,6 +7,7 @@ import {
   TECHNICAL_VALUES, replaceDisplayPhrase, rewriteModuleDisplayStrings,
   prepareCopiedModules, parsePrepareArgs,
 } from './prepare-copy.mjs';
+import { auditPreparedModule } from './copy-source-audit.mjs';
 
 const examples = [
   ['Demonstration data — not a verified listing', 'Demonstration data — not a published listing'],
@@ -63,9 +64,9 @@ test('does not corrupt escaped strings', () => {
   assert.match(content, /"Check \\"this record\\""/);
 });
 
-test('keeps template interpolations as source', () => {
+test('repairs static template text without modifying interpolations', () => {
   const src = 'const sentence = `Verification tier: ${tier}`;';
-  assert.equal(rewriteModuleDisplayStrings(src).content, src);
+  assert.equal(rewriteModuleDisplayStrings(src).content, 'const sentence = `Source tier: ${tier}`;');
 });
 
 test('is idempotent and deterministic', () => {
@@ -245,4 +246,81 @@ test('UNKNOWN and source tokens are unaffected during EN and FR changes', () => 
   assert.match(after, /protocol = "PROTOTYPE-UNVERIFIED"/);
   assert.match(after, /english = "Source tier: UNKNOWN"/);
   assert.match(after, /french = "Niveau de contrôle : UNKNOWN"/);
+});
+
+test('pinned help clinical boundaries retain meaning without prohibited wording', () => {
+  const inputs = [
+    'fr: "L’application ne vérifie pas les symptômes, ne lit pas une tension et ne donne pas de conseil personnel."',
+    'fr: "Changer ceci n’ajoute pas un vérificateur ni une fonction de tri."',
+    'fr: "Les montants étaient marqués pour une revérification. Cet article omet les montants."',
+    'fr: "Vous ne trouverez pas un vérificateur de symptômes."',
+  ];
+  for (const input of inputs) {
+    const output = rewriteModuleDisplayStrings(input).content;
+    assert.equal(auditPreparedModule(output, 'help.ts').length, 0, output);
+    assert.match(output, /ne donne pas de conseil personnel|n’ajoute pas|omet les montants|Vous ne trouverez pas/);
+    assert.equal(rewriteModuleDisplayStrings(output).content, output);
+  }
+});
+
+test('pinned explanatory articles replace display labels, not protocol identifiers', () => {
+  const input = [
+    'const message = "PROTOTYPE-UNVERIFIED means the record is for the prototype and has not been checked on site.";',
+    'const status = "PROTOTYPE-UNVERIFIED";',
+    'const statement = "VERIFIED would require evidence this prototype does not create.";',
+    'const french = "PROTOTYPE-UNVERIFIED veut dire que la fiche sert au prototype et n’a pas été vérifiée sur place.";',
+    'const unknown = "UNKNOWN";',
+  ].join('\n');
+  const output = rewriteModuleDisplayStrings(input).content;
+  assert.equal(auditPreparedModule(output, 'articles.ts').length, 0);
+  assert.match(output, /status = "PROTOTYPE-UNVERIFIED"/);
+  assert.match(output, /unknown = "UNKNOWN"/);
+  assert.match(output, /has not been checked on site/);
+  assert.equal(rewriteModuleDisplayStrings(output).content, output);
+});
+
+test('pinned place copy retains tier metadata and revises EN and FR prose', () => {
+  const input = [
+    'const key = "verificationTier";',
+    'const data = "VERIFIED";',
+    'const a = "PROTOTYPE-UNVERIFIED. Prototype seed. Unverified by the App.";',
+    'const b = "PROTOTYPE-UNVERIFIED. Graine de prototype. Non vérifié par l’application.";',
+    'const c = "Tier 3 without enough evidence. Not shown as verified.";',
+    'const d = "Niveau 3 sans preuve suffisante. Pas affiché comme vérifié.";',
+  ].join('\n');
+  const output = rewriteModuleDisplayStrings(input).content;
+  assert.equal(auditPreparedModule(output, 'modelCopy.ts').length, 0);
+  assert.match(output, /key = "verificationTier"/);
+  assert.match(output, /data = "VERIFIED"/);
+  assert.equal(rewriteModuleDisplayStrings(output).content, output);
+});
+
+test('pinned bilingual safety templates preserve interpolation and punctuation', () => {
+  const input = [
+    'const a = { fr: `Fenêtre de vérification ouverte jusqu’à ${"{time}"}. Rien n’est envoyé nulle part.` };',
+    'const b = { fr: `Vérification démarrée${NB}: {time}` };',
+    'const c = { en: "Verification tier: {tier}.", fr: `Niveau de vérification${NB}: {tier}.` };',
+  ].join('\n');
+  const output = rewriteModuleDisplayStrings(input).content;
+  assert.equal(auditPreparedModule(output, 'safety.ts').length, 0);
+  assert.match(output, /\$\{"\{time\}"\}/);
+  assert.match(output, /\$\{NB\}/);
+  assert.match(output, /Contrôle démarré/);
+  assert.equal(rewriteModuleDisplayStrings(output).content, output);
+});
+
+test('pinned auditor explanations are updated without changing accessibility status', () => {
+  const input = [
+    'const policy = "Canonical tiers: 0 unverified, 1 reported, 2 corroborated, 3 field-surveyed with evidence. No VERIFIED status is granted.";',
+    'const fr = "Niveaux canoniques : 0 non vérifié, 1 signalé. Aucun statut VERIFIED n’est accordé.";',
+  ].join('\n');
+  const output = rewriteModuleDisplayStrings(input).content;
+  assert.equal(auditPreparedModule(output, 'audit.ts').length, 0);
+  assert.match(output, /0 not independently checked/);
+  assert.match(output, /Aucune étiquette de confirmation/);
+});
+
+test('the source audit still rejects unhandled user-facing wording', () => {
+  const unrepaired = 'const fr = "On a procédé à une vérifiabilité présumée";';
+  assert.ok(auditPreparedModule(unrepaired, 'fixture.ts').length > 0);
 });
