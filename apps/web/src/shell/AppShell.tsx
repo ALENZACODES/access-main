@@ -99,10 +99,10 @@ export function AppShell() {
         <div className="header-bar">
           <Link className="app-mark" to="/">{t("appName")}</Link>
           <div className="language-switch" role="group" aria-label={t("language.label")}>
-            <button type="button" className="lang-button" aria-pressed={language === "en"} onClick={() => void setLanguage("en")}>
+            <button type="button" className="lang-button" lang="en" aria-pressed={language === "en"} onClick={() => void setLanguage("en")}>
               {t("language.english")}
             </button>
-            <button type="button" className="lang-button" aria-pressed={language === "fr"} onClick={() => void setLanguage("fr")}>
+            <button type="button" className="lang-button" lang="fr" aria-pressed={language === "fr"} onClick={() => void setLanguage("fr")}>
               {t("language.french")}
             </button>
           </div>

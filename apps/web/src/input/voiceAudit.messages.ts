@@ -28,7 +28,7 @@ export function formatIssue(
       case "target-too-small":
         return `La cible tactile de ${q} est inférieure à 44${NBSP}px.`;
       case "target-size-unknown":
-        return `La taille de la cible tactile de ${q} est inconnue${NBSP}: à vérifier.`;
+        return `La taille de la cible tactile de ${q} est inconnue. Mesurez-la avant de la compter comme conforme.`;
     }
   }
   switch (kind) {
@@ -37,6 +37,6 @@ export function formatIssue(
     case "target-too-small":
       return `The touch target of ${q} is smaller than 44 px.`;
     case "target-size-unknown":
-      return `The touch target size of ${q} is unknown: needs checking.`;
+      return `The touch target size of ${q} is unknown. Measure it before counting it as passing.`;
   }
 }

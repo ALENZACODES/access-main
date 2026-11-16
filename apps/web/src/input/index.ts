@@ -8,3 +8,4 @@ export {
   type AuditIssue,
   type ControlDescriptor,
 } from "./voiceAudit.ts";
+export { contextualName } from "./contextualName.ts";
