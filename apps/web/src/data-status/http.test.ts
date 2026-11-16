@@ -164,11 +164,14 @@ describe('handleDataStatus: downloads', () => {
   it('summary: valid JSON that keeps unknown values null and applies thresholds', async () => {
     const res = await ok(get('/en/data-status/summary.json?stale_places=2000'));
     expect(res.headers['content-type']).toBe('application/json; charset=utf-8');
-    const json = JSON.parse(res.body);
+    const json = JSON.parse(res.body) as {
+      sources: { sourceId: string; state: string }[];
+      datasets: { id: string; staleAfterDays: number }[];
+    };
     expect(validateSummary(json)).toEqual([]);
-    expect(json.sources.find((s: any) => s.sourceId === 'c')).toMatchObject({ licence: null, retrieved: null, state: 'unknown' });
-    expect(json.sources.find((s: any) => s.sourceId === 'b').state).toBe('fresh');
-    expect(json.datasets.find((d: any) => d.id === 'p').staleAfterDays).toBe(2000);
+    expect(json.sources.find((s) => s.sourceId === 'c')).toMatchObject({ licence: null, retrieved: null, state: 'unknown' });
+    expect(json.sources.find((s) => s.sourceId === 'b')?.state).toBe('fresh');
+    expect(json.datasets.find((d) => d.id === 'p')?.staleAfterDays).toBe(2000);
   });
 });
 

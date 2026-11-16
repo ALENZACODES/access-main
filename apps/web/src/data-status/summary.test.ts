@@ -43,21 +43,21 @@ describe('validateSummary', () => {
   it('catches wrong shapes and values', () => {
     expect(validateSummary(null)).toEqual(['not an object']);
     expect(validateSummary({})).toEqual(['schemaVersion', 'generatedAt', 'totals', 'datasets', 'sources']);
-    const mutate = (fn: (s: any) => void) => {
-      const copy = JSON.parse(summaryToJson(summary));
+    const mutate = (fn: (s: { sources: Record<string, unknown>[] }) => void) => {
+      const copy = JSON.parse(summaryToJson(summary)) as { sources: Record<string, unknown>[] };
       fn(copy);
       return validateSummary(copy);
     };
-    expect(mutate((s) => (s.sources[0].state = 'great'))).toContain('sources[0].state');
-    expect(mutate((s) => (s.sources[0].licence = 5))).toContain('sources[0].licence');
-    expect(mutate((s) => (s.sources[0].retrieved = '1/2/2026'))).toContain('sources[0].retrieved');
+    expect(mutate((s) => (s.sources[0]!.state = 'great'))).toContain('sources[0].state');
+    expect(mutate((s) => (s.sources[0]!.licence = 5))).toContain('sources[0].licence');
+    expect(mutate((s) => (s.sources[0]!.retrieved = '1/2/2026'))).toContain('sources[0].retrieved');
   });
 
   it('rejects inventing a value for something unknown', () => {
     const i = summary.sources.findIndex((s) => s.sourceId === 'c');
-    const copy = JSON.parse(summaryToJson(summary));
-    copy.sources[i].licenceOpen = false;
-    copy.sources[i].state = 'fresh';
+    const copy = JSON.parse(summaryToJson(summary)) as { sources: Record<string, unknown>[] };
+    copy.sources[i]!.licenceOpen = false;
+    copy.sources[i]!.state = 'fresh';
     expect(validateSummary(copy)).toEqual([
       `sources[${i}].licenceOpen-must-be-null-when-licence-unknown`,
       `sources[${i}].state-must-be-unknown-when-date-unknown`,

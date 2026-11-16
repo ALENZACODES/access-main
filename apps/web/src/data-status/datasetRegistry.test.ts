@@ -86,7 +86,7 @@ describe('auditRegistry', () => {
       ],
       NOW,
     );
-    expect(a.findings.map((f) => f.code)).toEqual(['licence-not-open', 'stale']);
+    expect(a.findings.map((f) => f.code)).toEqual(['licence-unrecognised', 'stale']);
   });
 
   it('drops unsafe URLs and reports future dates as unknown', () => {

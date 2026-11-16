@@ -2,7 +2,7 @@
  * Registry audit: every dataset must carry source, open licence and retrieved date.
  * The audit reports gaps; it never fills them in. Unknown stays Unknown.
  */
-import { checkProvenance, freshness, type FreshnessState, type ProvenanceIssue } from './dataStatus';
+import { checkProvenance, freshness, licenceKind, type FreshnessState, type ProvenanceIssue } from './dataStatus';
 import { staleAfterFor, type DatasetKind } from './freshnessPolicy';
 import type { SourceInput } from './sourceList';
 
@@ -74,7 +74,7 @@ export interface AuditResult {
 const FINDING_RANK: Readonly<Record<FindingCode, number>> = {
   'missing-source': 0,
   'missing-licence': 0,
-  'licence-not-open': 0,
+  'licence-unrecognised': 0,
   'duplicate-dataset-id': 0,
   'duplicate-source-id': 0,
   'empty-name': 1,
@@ -161,7 +161,7 @@ export function auditRegistry(
         name: clean(s.name) ?? clean(s.source),
         url: httpUrl(s.url),
         licence,
-        licenceOpen: licence === null ? null : !issues.includes('licence-not-open'),
+        licenceOpen: licence === null || licenceKind(licence) === 'unknown' ? null : licenceKind(licence) !== 'unrecognised',
         retrievedIso: dateOk ? (clean(s.retrievedAt) as string).slice(0, 10) : null,
         state,
         issues,
