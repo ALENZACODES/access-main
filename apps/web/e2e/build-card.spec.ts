@@ -39,7 +39,7 @@ test("the build card is in French and passes axe", async ({ page }) => {
   await page.goto("/build-card");
   await page.getByRole("button", { name: "Français" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Fiche de version" })).toBeVisible();
-  await expect(page.getByText("Identifiant de version : e2e")).toBeVisible();
+  await expect(page.getByText("Identifiant de version : e2e")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Non connectée dans cette version" })).toHaveCount(6);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);

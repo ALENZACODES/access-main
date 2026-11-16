@@ -48,3 +48,15 @@ declare module "@access-main/data-client" {
   export const createPackSource: typeof import("./data-client-fallback.ts").createPackSource;
   export const createFixtureSource: typeof import("./data-client-fallback.ts").createFixtureSource;
 }
+
+declare module "@access-tools/finders/shell" {
+  export function searchFindersForShell(
+    source: import("@access-main/data-client").PackSource,
+    query: { kind: import("@access/shared").FinderKind; text: string },
+    ctx: import("@access/shared").ModuleContext,
+  ): ReturnType<import("@access/shared").FindersModule["search"]>;
+}
+
+declare module "@access/help/shell" {
+  export const helpShellModule: import("@access/shared").HelpModule;
+}
