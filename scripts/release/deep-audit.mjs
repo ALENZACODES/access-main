@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /** Artifact-level offline, interaction, locale and evidence release gates. */
 import { readFile } from 'node:fs/promises';
+import { inspectNavigationHtml, inspectNavigationGraph } from './navigation-audit.mjs';
+import { inspectPrivacyHtml, inspectPrivacyScript, inspectHttpHeaders } from './privacy-audit.mjs';
+import { inspectSemanticHtml } from './semantics-audit.mjs';
+import { inspectContentJson } from './content-audit.mjs';
 import { extname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { collectFiles, decodeUtf8, finding } from './site-audit.mjs';
@@ -48,17 +52,26 @@ export async function deepAudit(root, options = {}) {
   const names = new Set(entries.keys());
   const issues = [];
   const documents = [];
+  const pages = new Map();
   const totals = { html: 0, css: 0, json: 0, scripts: 0,
     controls: 0, links: 0, records: 0, unknown: 0 };
   for (const [name, entry] of entries) {
     const extension = extname(name).toLowerCase();
-    if (!TEXT_EXTENSIONS.has(extension)) continue;
+    if (!TEXT_EXTENSIONS.has(extension) && name !== '_headers') continue;
     const decoded = decodeUtf8(await readFile(entry.absolute), name);
     issues.push(...decoded.issues);
     if (decoded.text === null) continue;
     const text = decoded.text;
+    if (name === '_headers') {
+      issues.push(...inspectHttpHeaders(text, name));
+      continue;
+    }
     if (extension === '.html') {
       totals.html += 1;
+      pages.set(name, text);
+      issues.push(...inspectNavigationHtml(text, name));
+      issues.push(...inspectPrivacyHtml(text, name));
+      issues.push(...inspectSemanticHtml(text, name));
       documents.push({ kind: 'html', file: name, text });
       issues.push(...inspectOfflineHtml(text, name, names));
       issues.push(...inspectHtmlInteractions(text, name));
@@ -73,6 +86,7 @@ export async function deepAudit(root, options = {}) {
       issues.push(...inspectCssInteractions(text, name));
     } else if (extension === '.js' || extension === '.mjs') {
       totals.scripts += 1;
+      issues.push(...inspectPrivacyScript(text, name));
       if (isServiceWorkerName(name)) {
         issues.push(...inspectPrecache(text, name, names));
         issues.push(...inspectServiceWorker(text, name));
@@ -91,12 +105,14 @@ export async function deepAudit(root, options = {}) {
         else issues.push(...inspectTranslationPairs(value, name));
         issues.push(...inspectReleasedRecords(value, name));
         issues.push(...inspectEvidenceLists(value, name));
+        issues.push(...inspectContentJson(value, name));
         const summary = sourceSummary(value);
         totals.records += summary.records;
         totals.unknown += summary.unknown;
       }
     }
   }
+  issues.push(...inspectNavigationGraph(pages, names));
   const graph = classifyOfflineDependencies(documents);
   return {
     files: entries.size,
