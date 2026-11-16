@@ -115,6 +115,9 @@ body {
 }
 
 .app-mark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--header-ink);
   font-size: 1.35rem;
   font-weight: 750;
@@ -166,6 +169,8 @@ body {
 .nav-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: 44px;
   color: var(--header-ink);
   text-decoration: underline;
   text-underline-offset: 0.18em;
@@ -388,7 +393,9 @@ progress {
 .text-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 2.75rem;
+  min-width: 2.75rem;
 }
 
 /* Lane records: name first, then source, licence, date, and tier as a description list. */

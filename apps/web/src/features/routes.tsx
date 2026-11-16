@@ -53,7 +53,9 @@ function PackageView({ moduleName, exportName, props = {} }: {
 }
 
 function ControlsScreen(): ReactNode {
-  return <PackageView moduleName="controls" exportName="App" />;
+  const { i18n } = useTranslation();
+  // Embedded: the shell keeps its own <main>, h1, title and document language.
+  return <PackageView moduleName="controls" exportName="App" props={{ embedded: true, initialLang: i18n.language.startsWith("fr") ? "fr" : "en" }} />;
 }
 
 function ConsentScreen(): ReactNode {
@@ -219,7 +221,7 @@ function SourcesScreen(): ReactNode {
 function FeaturePage({ entry, children }: { entry: Entry; children: ReactNode }): ReactNode {
   const { t } = useTranslation();
   return <><h1>{t(`features.${entry}`)}</h1><p>{t(`features.${entry}Desc`)}</p>
-    {children}<p><Link to="/settings">{t("features.back")}</Link></p></>;
+    {children}<p><Link className="text-link" to="/settings">{t("features.back")}</Link></p></>;
 }
 
 function ControlsPage(): ReactNode { return <FeaturePage entry="controls"><ControlsScreen /></FeaturePage>; }
