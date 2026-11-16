@@ -1,7 +1,7 @@
-import { mountOfflineDashboard } from "./offlineDashboard.ts";
-import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload.ts";
+import { mountOfflineDashboard } from "./offlineDashboard";
+import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload";
 
-/** User-facing download state. Cells not downloaded are named as such, never as available and never as UNKNOWN. */
+/** User-facing download state; missing cells never become availability claims. */
 export type PressureState =
   | { readonly phase: "idle" | "working"; readonly result: null }
   | { readonly phase: "stopped"; readonly result: DownloadResult };
@@ -15,9 +15,9 @@ export const PRESSURE_COPY = {
     quota: "Storage space is low. Free space, then retry missing cells.",
     interrupted: "Download interrupted. Retry missing cells.",
     error: "Download stopped. Retry missing cells.",
-    partial: "Cells not downloaded are not available offline.",
+    partial: "Missing cells remain UNKNOWN offline.",
     saved: "Saved cells",
-    missing: "Cells not downloaded",
+    missing: "UNKNOWN cells",
   },
   fr: {
     start: "Télécharger la région",
@@ -27,9 +27,9 @@ export const PRESSURE_COPY = {
     quota: "L’espace de stockage est insuffisant. Libérez de l’espace, puis réessayez les cellules manquantes.",
     interrupted: "Téléchargement interrompu. Réessayez les cellules manquantes.",
     error: "Téléchargement arrêté. Réessayez les cellules manquantes.",
-    partial: "Les cellules non téléchargées ne sont pas disponibles hors ligne.",
+    partial: "Les cellules manquantes restent INCONNUES hors ligne.",
     saved: "Cellules enregistrées",
-    missing: "Cellules non téléchargées",
+    missing: "Cellules INCONNUES",
   },
 } as const;
 
@@ -46,10 +46,13 @@ export function pressureView(state: PressureState, language: Language): Pressure
   if (state.phase === "working") {
     return { message: copy.working, details: "", action: copy.retry, disabled: true };
   }
-  if (state.phase === "idle" || state.result === null) {
+  if (state.phase === "idle") {
     return { message: "", details: "", action: copy.start, disabled: false };
   }
   const result = state.result;
+  if (result === null) {
+    return { message: copy.error, details: "", action: copy.retry, disabled: false };
+  }
   const message = result.completed ? copy.complete : result.reason === "quota" ? copy.quota :
     result.reason === "interrupted" ? copy.interrupted : copy.error;
   const separator = language === "fr" ? "\u00a0:" : ":";
@@ -121,7 +124,6 @@ export function createPressureController(
 /**
  * Explicit opt-in UI: hosts mount this panel beside their offline download control.
  * The host is responsible for first-party fetching and open-licence data selection.
- * Round 3 mounts the inventory dashboard through this same entry point.
  */
 export function mountStoragePressurePanel(
   root: HTMLElement,

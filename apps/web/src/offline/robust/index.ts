@@ -1,25 +1,27 @@
-export {
-  OFFLINE_STRINGS,
-  cellStatusText,
-  cellSummaryText,
-  downloadRegion,
-  downloadResultText,
-  lookupOfflineCell,
-  regionCellReport,
-  type CellLookup,
-  type CellReport,
-  type CellStatus,
-  type CellStore,
-  type DownloadDependencies,
-  type DownloadResult,
-  type Language,
-  type Provenance,
-  type RegionCell,
-  type RegionManifest,
-  type StopReason,
-  type StorageEstimate,
-  type StoredCell,
-} from "./regionDownload.ts";
+/** Public offline robustness entry point. */
+export * from "./regionDownload";
+export * from "./storagePressure";
+export * from "./offlineDashboard";
+export * from "./regionInventory";
+export * from "./quotaPlanning";
+export * from "./offlineCopy";
+export * from "./manifestAudit";
+export * from "./localReport";
+export * from "./indexedCellStore";
+export * from "./firstPartyFetch";
+export * from "./accessibilityGuard";
+export * from "./cellTriage";
+export * from "./triageCopy";
+export * from "./offlineTriagePanel";
+export * from "./triageBudget";
+export * from "./triageExport";
+export * from "./cleanupPlan";
+export * from "./cleanupController";
+export * from "./cleanupCopy";
+export * from "./cleanupPanel";
+export * from "./cleanupReceipt";
+
+// Existing main-branch pack integration: retain these public exports.
 export {
   createIndexedDbLedger,
   createMemoryLedger,
@@ -27,15 +29,8 @@ export {
   regionManifestFor,
   type CellLedger,
 } from "./packCells.ts";
-export {
-  PRESSURE_COPY,
-  createPressureController,
-  mountStoragePressurePanel,
-  pressureView,
-} from "./storagePressure.ts";
-export type { PressureController, PressureState, PressureView } from "./storagePressure.ts";
 
-export * from "./offlineDashboard.ts";
-export * from "./regionInventory.ts";
-export * from "./quotaPlanning.ts";
-export * from "./offlineCopy.ts";
+export * from "./updateAssessment";
+export * from "./updateCopy";
+export * from "./updateReviewExport";
+export * from "./updateReviewPanel";
