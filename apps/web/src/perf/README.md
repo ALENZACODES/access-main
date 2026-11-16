@@ -5,7 +5,7 @@
 | Piece | Where it runs |
 | --- | --- |
 | First-install budget guard (`install-budget.ts`) | `scripts/check-install-budget.ts`, run by `postbuild`, so CI's `npm run build` step fails above **4,141,875 B** |
-| Route chunks (`lazy-chunk.ts`, `routeChunks.ts`) | `src/router.tsx` (About, Profile, module pages, place detail, Help, Data status, Build card, Offline) and the nav links in `shell/AppShell.tsx` (preload on focus or pointer) |
+| Route chunks (`lazy-chunk.ts`, `routeChunks.ts`) | `src/router.tsx` (About, Profile, module pages, place detail, Help, Data status, Build card, Offline), `src/features/routes.tsx` (the six /settings/* feature pages share one `featureScreens` chunk) and the nav links in `shell/AppShell.tsx` (preload on focus or pointer) |
 | Vendor split | `vite.config.ts`: schema validation (`ajv` family, only Settings feature packages) and ZIP export (`fflate`, only Contribute) get their own chunks, so they are no longer in the start-up preload |
 | Day 22 timing and LCP | `e2e/perf.spec.ts`, in CI's e2e step; writes `test-results/perf/day22-performance.json` |
 

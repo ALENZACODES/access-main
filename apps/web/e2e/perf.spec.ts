@@ -127,8 +127,11 @@ test("start-up loads no on-demand chunk; focusing a nav link preloads only that 
   await page.goto("/", { waitUntil: "networkidle" });
   expect(requested.filter((path) => /\/assets\/(ajv|fflate|maplibre)-/.test(path)), "on-demand chunks at start-up").toEqual([]);
   expect(requested.filter((path) => /\/assets\/DataStatusPage-/.test(path))).toEqual([]);
+  expect(requested.filter((path) => /\/assets\/featureScreens-/.test(path)), "settings feature screens at start-up").toEqual([]);
 
   await page.getByRole("navigation").getByRole("link", { name: "Data status", exact: true }).focus();
   await expect.poll(() => requested.some((path) => /\/assets\/DataStatusPage-/.test(path))).toBe(true);
+  await page.getByRole("navigation").getByRole("link", { name: "Settings", exact: true }).focus();
+  await expect.poll(() => requested.some((path) => /\/assets\/featureScreens-/.test(path))).toBe(true);
   expect(requested.filter((path) => /\/assets\/maplibre-/.test(path)), "MapLibre is never preloaded").toEqual([]);
 });

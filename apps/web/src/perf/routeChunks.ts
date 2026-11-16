@@ -20,6 +20,7 @@ export const routeChunks = {
   "/data-status": lazyImport(() => import("../pages/DataStatusPage.tsx")),
   "/build-card": lazyImport(() => import("../pages/BuildCardPage.tsx")),
   "/offline": lazyImport(() => import("../pages/OfflinePackPage.tsx")),
+  "/settings": lazyImport(() => import("../features/featureScreens.tsx")),
 } as const;
 
 export type ChunkedRoute = keyof typeof routeChunks;
