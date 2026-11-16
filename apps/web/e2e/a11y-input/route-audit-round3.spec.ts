@@ -19,8 +19,8 @@ import {
 // fixture. Every configured route is required to return a successful response.
 for (const path of routes()) {
   test.describe(`P16C live route input audit: ${path}`, () => {
-    test.beforeEach(async ({ page, baseURL }) => {
-      await visit(page, path, baseURL);
+    test.beforeEach(async ({ page }) => {
+      await visit(page, path, "en");
     });
 
     test("reverse Tab traversal mirrors forward navigation", async ({ page }) => {
@@ -87,31 +87,31 @@ for (const path of routes()) {
 // Configure real English/French pairs; no path patterns are invented here.
 for (const [english, french] of configuredLocalePairs()) {
   test.describe(`Locale parity: ${english.path} / ${french.path}`, () => {
-    test("both routes expose correct document language and structure", async ({ page, baseURL }) => {
-      await visit(page, english.path, baseURL);
+    test("both routes expose correct document language and structure", async ({ page }) => {
+      await visit(page, english.path, "en");
       await assertDocumentLanguage(page, "en");
-      await visit(page, french.path, baseURL);
+      await visit(page, french.path, "fr");
       await assertDocumentLanguage(page, "fr");
     });
 
-    test("both routes preserve keyboard navigation", async ({ page, baseURL }) => {
+    test("both routes preserve keyboard navigation", async ({ page }) => {
       for (const locale of [english, french]) {
-        await visit(page, locale.path, baseURL);
+        await visit(page, locale.path, locale.language);
         const walk = await walkSequentialFocus(page);
         assertWalk(walk);
       }
     });
 
-    test("both routes expose targets sized for switch input", async ({ page, baseURL }) => {
+    test("both routes expose targets sized for switch input", async ({ page }) => {
       for (const locale of [english, french]) {
-        await visit(page, locale.path, baseURL);
+        await visit(page, locale.path, locale.language);
         expect(await inspectTargetSizes(page), `${locale.language} target sizes`).toEqual([]);
       }
     });
 
-    test("both languages retain explicit evidence details", async ({ page, baseURL }) => {
+    test("both languages retain explicit evidence details", async ({ page }) => {
       for (const locale of [english, french]) {
-        await visit(page, locale.path, baseURL);
+        await visit(page, locale.path, locale.language);
         expect(await inspectEvidenceLabels(page), `${locale.language} evidence details`)
           .toEqual([]);
       }
@@ -123,15 +123,15 @@ for (const [english, french] of configuredLocalePairs()) {
 // works without connectivity simply because the browser has cached a shell.
 for (const path of configuredOfflineRoutes()) {
   test.describe(`Offline route: ${path}`, () => {
-    test("main shell remains available after a warm visit", async ({ page, context, baseURL }) => {
-      await visit(page, path, baseURL);
+    test("main shell remains available after a warm visit", async ({ page, context }) => {
+      await visit(page, path, "en");
       const url = page.url();
       const observation = await observeOfflineShell(context, page, url);
       assertOfflineObservation(observation, false);
     });
 
-    test("an offline route restores connectivity after the check", async ({ page, context, baseURL }) => {
-      await visit(page, path, baseURL);
+    test("an offline route restores connectivity after the check", async ({ page, context }) => {
+      await visit(page, path, "en");
       await observeOfflineShell(context, page, page.url());
       const response = await page.reload({ waitUntil: "domcontentloaded" });
       expect(response?.ok()).toBe(true);

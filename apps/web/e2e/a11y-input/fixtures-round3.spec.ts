@@ -36,6 +36,22 @@ const fixture = `<!doctype html>
   opener.addEventListener('click', () => dialog.showModal());
   dialog.addEventListener('close', () => opener.focus());
   document.querySelector('#close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('keydown', (event) => {
+    if (event.key !== 'Tab') return;
+    const nodes = [...dialog.querySelectorAll(
+      'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )].filter((el) => !el.hasAttribute('disabled') && el.getAttribute('aria-hidden') !== 'true');
+    if (nodes.length === 0) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
 </script>
 </body></html>`;
 

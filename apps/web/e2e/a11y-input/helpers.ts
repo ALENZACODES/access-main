@@ -79,7 +79,13 @@ export async function chooseLanguage(page: Page, language: Language): Promise<vo
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 }
 
-export async function visit(page: Page, route: string, language: Language): Promise<void> {
+export async function visit(page: Page, route: string, language: Language = "en"): Promise<void> {
+  if (language !== "en" && language !== "fr") {
+    throw new Error(`visit() expects language "en" or "fr", got ${JSON.stringify(language)}`);
+  }
+  // Switch language the way a person does, so document.documentElement.lang updates
+  // through the shell (useApplyPreferences) before the route is asserted.
+  if (language === "fr") await chooseLanguage(page, "fr");
   const response = await page.goto(route, { waitUntil: "domcontentloaded" });
   expect(response, `Missing HTTP response for ${route}`).not.toBeNull();
   expect(response?.ok(), `Route ${route} did not load`).toBe(true);
