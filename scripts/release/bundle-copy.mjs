@@ -130,7 +130,7 @@ export function findForbiddenShippedCopy(source, forbiddenPatterns) {
         const from = Math.max(0, position - 35);
         const to = Math.min(token.value.length, position + (match?.[0].length ?? 0) + 55);
         const context = pattern.source.includes('rif')
-          ? `; excerpt=${JSON.stringify(token.value.slice(from, to).replace(/\\s+/g, ' '))}`
+          ? `; excerpt=${JSON.stringify(token.value.slice(from, to).replace(/\s+/g, ' '))}`
           : '';
         issues.push(`offset ${token.offset}: prohibited text in JavaScript string (${pattern.source})${context}`);
       }
