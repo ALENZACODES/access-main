@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { forbiddenOrgNeedles, containsForbiddenOrg } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import { COPY_RULES, scanCatalog, scanCopy, scanHtml, visibleText } from './index';
 
 const rules = (text: string) => scanCopy(text).map((v) => v.rule);
-// The banned organisation names are assembled here so they never appear literally in the repo.
-const NAME_A = ['sci', 'ontario'].join('');
-const NAME_B = ['S', 'C', 'I', 'O'].join('');
-const NAME_C = ['Spinal', 'Cord', 'Injury', 'Ontario'].join(' ');
+// The banned organisation names come only from the repo's shared helper, so they never appear as text here.
+const NEEDLES = forbiddenOrgNeedles();
 
 describe('copy rules flag violations', () => {
   it.each([
@@ -17,7 +16,7 @@ describe('copy rules flag violations', () => {
     ['medical-advice', ['Seek medical advice', 'See your doctor', 'diagnosis', 'consultez votre médecin', 'traitement']],
     ['eligibility-advice', ['You qualify for this', 'eligible households', 'Vous êtes admissible']],
     ['guarantee-claim', ['guaranteed accurate', 'garanti exact', '100% accurate', 'toujours exact']],
-    ['banned-name', [NAME_A, NAME_B, `${NAME_C} members`]],
+    ['banned-name', [...NEEDLES, ...NEEDLES.map((n) => `${n.toUpperCase()} members`), ...NEEDLES.map((n) => `the ${n}, again`)]],
   ])('%s', (rule, samples) => {
     for (const s of samples) expect(rules(s), s).toContain(rule);
   });
@@ -72,5 +71,44 @@ describe('visibleText / scanHtml', () => {
   it('flags banned wording a reader would see, but not attribute values or CSS', () => {
     expect(scanHtml('<p>Real-time data</p>').map((v) => v.rule)).toEqual(['real-time-claim']);
     expect(scanHtml('<p data-x="verified" style="content:\'AI\'">ok</p>')).toEqual([]);
+  });
+});
+
+describe('banned organisation names', () => {
+  it('the rule is built from the shared helper: it flags every needle it returns, in either language and any case', () => {
+    expect(NEEDLES.length).toBeGreaterThanOrEqual(5);
+    for (const n of NEEDLES) {
+      for (const text of [n, n.toUpperCase(), `Visit ${n}.`, `(${n})`, `${n}\u00A0:`]) expect(rules(text), `needle ${NEEDLES.indexOf(n)}`).toContain('banned-name');
+    }
+  });
+
+  it('does not flag words that merely contain a needle', () => {
+    for (const n of NEEDLES.filter((x) => /^[a-z]+$/i.test(x) && x.length <= 6)) {
+      expect(rules(`un${n}ment`), 'prefix').not.toContain('banned-name');
+      expect(rules(`${n}s and ${n}ish`), 'suffix').not.toContain('banned-name');
+    }
+  });
+
+  it('is clean for ordinary copy', () => {
+    for (const text of ['Data status', 'Ontario open data', 'Spinal care', 'Statut des données']) expect(rules(text)).not.toContain('banned-name');
+  });
+
+  // Every file of this lane, as text. Failing files are reported by path only, never by the needle.
+  const files = import.meta.glob<string>(['./**/*.{ts,tsx,md,css,html}', '../pages/DataStatusPage*.tsx'], { query: '?raw', import: 'default', eager: true });
+
+  it('no file of the data-status lane or its page contains a banned name', () => {
+    const entries = Object.entries(files);
+    expect(entries.length).toBeGreaterThan(80);
+    const offenders = entries.filter(([, text]) => containsForbiddenOrg(text)).map(([path]) => path);
+    expect(offenders).toEqual([]);
+  });
+
+  it('the scan can see a violation (it reports a path, not the name)', () => {
+    const planted = Object.entries({ 'planted.ts': `// ${NEEDLES[0] ?? ''}` }).filter(([, text]) => containsForbiddenOrg(text)).map(([path]) => path);
+    expect(planted).toEqual(['planted.ts']);
+  });
+
+  it('the French and English catalogues contain no banned name', () => {
+    expect(scanCatalog().filter((v) => v.includes('banned-name'))).toEqual([]);
   });
 });

@@ -6,10 +6,16 @@ import {
   buildCacheRecords,
   buildExportFiles,
   buildSourceList,
+  cachedSourceInputs,
+  cleanValue,
   dataBadge,
+  explainStatus,
   formatRate,
+  groupCachedSources,
   mountDataStatusPanel,
+  parseRetrieved,
   renderSourceListHtml,
+  t as dsT,
   type DataBadge,
   type ExportFile,
   type MountedPanel,
@@ -86,22 +92,26 @@ export function DataStatusPage() {
   // With no cached records the share is UNKNOWN, never 0.
   const unknownDates = entries.filter((entry) => badges.get(entry.id)?.ageDays === null).length;
   const unknownDateRate = formatRate(entries.length > 0 ? (unknownDates / entries.length) * 100 : null, locale);
-  // One row per source and licence. The oldest retrieval is shown, so a stale
-  // record is never hidden behind a newer one; a missing date makes it Unknown.
-  const bySource = new Map<string, { id: string; name: string; licence: string; retrievedAt: string | null }>();
-  for (const entry of entries) {
-    const key = `${entry.provenance.source_name}\u0000${entry.provenance.licence}`;
-    const retrievedAt = entry.provenance.retrieved_at ?? null;
-    const current = bySource.get(key);
-    if (!current) {
-      bySource.set(key, { id: key, name: entry.provenance.source_name, licence: entry.provenance.licence, retrievedAt });
-    } else if (current.retrievedAt !== null && (retrievedAt === null || retrievedAt < current.retrievedAt)) {
-      current.retrievedAt = retrievedAt;
-    }
-  }
-  const sourceRows = buildSourceList([...bySource.values()], locale, now);
+  // One row per source and licence. The date is the oldest retrieval, and Unknown when any record has no
+  // usable date, so a row never looks better than its worst record (see data-status/cacheSources.ts).
+  const sources = groupCachedSources(entries, now);
+  const sourceRows = buildSourceList(cachedSourceInputs(sources), locale, now);
   const sourceListHtml = renderSourceListHtml(sourceRows, locale);
-
+  // Every status says why: the retrieved date, the age and the limit, or the reason it is Unknown.
+  const basisFor = (entry: CacheEntry): string => {
+    const badge = badges.get(entry.id);
+    if (!badge) return "";
+    return explainStatus(
+      {
+        state: badge.state,
+        ageDays: badge.ageDays,
+        retrievedIso: parseRetrieved(entry.provenance.retrieved_at)?.day ?? null,
+        limitDays: DEFAULT_STALE_AFTER_DAYS,
+        issues: badge.issues,
+      },
+      locale,
+    ).text;
+  };
   // The panel and the export files read the same records: one dataset per cache kind, one source per cached record.
   const panelRecords = useMemo(() => buildCacheRecords(entries, locale), [entries, locale]);
   panelInputs.current = { records: panelRecords, locale };
@@ -214,6 +224,7 @@ export function DataStatusPage() {
                 </p>
                 <p>{badges.get(entry.id)?.provenanceLine}</p>
                 <p className={`freshness freshness-${badges.get(entry.id)?.state ?? "unknown"}`}>{badges.get(entry.id)?.label}</p>
+                <p data-testid="status-basis">{basisFor(entry)}</p>
                 {badges.get(entry.id)?.licence === "terms" ? <p>{t("data.licenceTerms")}</p> : null}
                 {badges.get(entry.id)?.licence === "unrecognised" ? <p>{t("data.licenceUnrecognised")}</p> : null}
                 {badges.get(entry.id)?.licence === "unknown" ? <p>{t("data.licenceUnknown")}</p> : null}
@@ -245,8 +256,21 @@ export function DataStatusPage() {
       </section>
       {sourceRows.length > 0 ? (
         <section className="stack" aria-labelledby="source-list-title">
-          <h2 id="source-list-title">{locale === "fr" ? "Sources et licences" : "Sources and licences"}</h2>
+          <h2 id="source-list-title">{dsT(locale, "src.title")}</h2>
           <div dangerouslySetInnerHTML={{ __html: sourceListHtml }} />
+          <ul data-testid="source-basis">
+            {sources
+              .filter((s) => s.basis === "unknown-record" || s.recordCount > 1)
+              .map((s) => (
+                <li key={s.id}>
+                  <strong>{cleanValue(s.name) ?? dsT(locale, "unknownName")}</strong>
+                  {locale === "fr" ? "\u00A0:" : ":"}{" "}
+                  {s.basis === "unknown-record"
+                    ? dsT(locale, "src.basisUnknown", { n: s.unknownDateCount, total: s.recordCount })
+                    : dsT(locale, "src.basisOldest", { total: s.recordCount })}
+                </li>
+              ))}
+          </ul>
         </section>
       ) : null}
       <section className="stack">

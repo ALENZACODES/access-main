@@ -12,6 +12,8 @@
  *   GET /{en|fr}/data-status/catalogue.json -> DCAT JSON-LD catalogue of datasets and sources
  *   Page query: state, kind, q, issues, stale_<type>, sort, dir, page, size
  */
+import { buildCompleteness, completenessToJson } from './completeness';
+import { checkConsistency, consistencyToJson } from './consistency';
 import { buildCatalogue, catalogueToJson } from './catalogue';
 import { buildIcs } from './ics';
 import { buildReviewQueue } from './reviewDue';
@@ -63,7 +65,7 @@ const BASE_HEADERS = {
   'cross-origin-opener-policy': 'same-origin',
 } as const;
 
-type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue';
+type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue' | 'completeness' | 'consistency';
 const SUFFIX: Readonly<Record<string, Kind>> = {
   '': 'html',
   '/sources.csv': 'csv',
@@ -71,6 +73,8 @@ const SUFFIX: Readonly<Record<string, Kind>> = {
   '/summary.json': 'summary',
   '/review.ics': 'ics',
   '/catalogue.json': 'catalogue',
+  '/completeness.json': 'completeness',
+  '/consistency.json': 'consistency',
 };
 
 function header(req: DsRequest, name: string): string | undefined {
@@ -100,7 +104,7 @@ export function matchRoute(url: string, basePath: string = DEFAULT_BASE_PATH): R
   }
   let path = parsed.pathname;
   if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json)?$/.exec(path);
+  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json|\/completeness\.json|\/consistency\.json)?$/.exec(path);
   if (!m || (m[2] ?? '') !== basePath) return null;
   return { locale: (m[1] as Locale | undefined) ?? null, kind: SUFFIX[m[3] ?? ''] as Kind, pathname: path, search: parsed.search };
 }
@@ -190,6 +194,12 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
       );
     case 'catalogue':
       return respond(req, 200, { ...common, 'content-type': 'application/ld+json; charset=utf-8' }, catalogueToJson(buildCatalogue(audit, now)));
+    case 'completeness':
+      return respond(req, 200, { ...common, 'content-type': 'application/json; charset=utf-8' }, completenessToJson(buildCompleteness(audit), now));
+    case 'consistency': {
+      const result = checkConsistency(records, now, { thresholds: view.thresholds });
+      return respond(req, 200, { ...common, 'content-type': 'application/json; charset=utf-8' }, consistencyToJson(result, now));
+    }
     case 'summary':
       return respond(req, 200, { ...common, 'content-type': 'application/json; charset=utf-8' }, summaryToJson(buildSummary(audit, now)));
     default:
