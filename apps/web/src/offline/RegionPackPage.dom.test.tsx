@@ -1,0 +1,134 @@
+/** @vitest-environment jsdom */
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import axe from "axe-core";
+import { I18nextProvider } from "react-i18next";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import type { PackManifest, PackSource, RegionIntegrityPart, RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { initI18n } from "../i18n/index.ts";
+import { packIntegrityCopy } from "../recovery/packIntegrity.ts";
+import { offlineCatalog } from "./catalog.ts";
+import { OfflineRegionPage } from "./RegionPackPage.tsx";
+
+const i18n = initI18n();
+const sourceMeta = { name: "OpenStreetMap", licence: "ODbL-1.0" as const, date: "2026-11-01" };
+const goodBytes = new TextEncoder().encode("abc");
+const goodSha = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+
+const manifest: PackManifest = {
+  version: 1,
+  builtAt: "2026-11-01T00:00:00Z",
+  sourceCommit: "test",
+  sources: [{ sourceId: "osm-test", name: "OpenStreetMap", licence: "ODbL-1.0", retrieved: "2026-11-01", inWebPack: true }],
+  regions: [{ id: "toronto", label: { en: "Toronto", fr: "Toronto" }, bbox: [-80, 43.5, -79.5, 44], cells: ["n43.5_w079.5"] }],
+  tranches: {},
+  search: {},
+  tiles: {},
+  counts: { records: 1, byTranche: {}, bySource: {} },
+};
+
+const status: RegionStatus = {
+  id: "toronto",
+  label: { en: "Toronto", fr: "Toronto" },
+  cells: ["n43.5_w079.5"],
+  bytes: 3,
+  downloaded: true,
+  verified: true,
+  missingCells: [],
+  builtAt: manifest.builtAt,
+  count: 1,
+};
+
+function part(overrides: Partial<RegionIntegrityPart> = {}): RegionIntegrityPart {
+  return {
+    path: "venues/osm-test/cell.ndjson.gz",
+    data: goodBytes,
+    expectedBytes: 3,
+    expectedSha256: goodSha,
+    expectedCount: 1,
+    actualCount: 1,
+    structurallyValid: true,
+    source: sourceMeta,
+    ...overrides,
+  };
+}
+
+function mockSource(options: { parts: RegionIntegrityPart[]; fetchBytes?: Uint8Array }): PackSource {
+  return {
+    manifest: async () => manifest,
+    cellsFor: async () => ["n43.5_w079.5"],
+    records: async function* () {},
+    search: async () => [],
+    get: async () => null,
+    sourcesFor: () => [],
+    regions: async () => [status],
+    downloadRegion: async () => status,
+    deleteRegion: async () => undefined,
+    storedRegionIntegrity: async () => ({ regionId: "toronto", cellCount: 1, parts: options.parts }),
+    fetchRegionPartBytes: async () => options.fetchBytes ?? goodBytes,
+    commitCheckedRegion: vi.fn(async () => status),
+  };
+}
+
+async function view(lang: "en" | "fr", source: PackSource) {
+  await i18n.changeLanguage(lang);
+  return render(
+    <I18nextProvider i18n={i18n}>
+      <OfflineRegionPage packSource={source} />
+    </I18nextProvider>,
+  );
+}
+
+async function axeViolations(container: HTMLElement) {
+  const results = await axe.run(container, {
+    runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"] },
+    rules: { "color-contrast": { enabled: false } },
+  });
+  return results.violations;
+}
+
+beforeAll(() => {
+  i18n.options.react = { ...i18n.options.react, useSuspense: false };
+});
+afterEach(cleanup);
+
+describe("offline region integrity re-check", () => {
+  it("announces a completed check only after the stored digest and count match", async () => {
+    await view("en", mockSource({ parts: [part()] }));
+    await screen.findByRole("heading", { name: "Offline regions" });
+    fireEvent.click(screen.getByRole("button", { name: offlineCatalog.en.recheck }));
+    expect(await screen.findByText(offlineCatalog.en.downloaded)).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: packIntegrityCopy("en", "corrupt").title })).toBeNull();
+  });
+
+  it.each(["en", "fr"] as const)("shows CorruptPackNotice with a re-download action for a corrupt pack (%s)", async (locale) => {
+    const { container } = await view(locale, mockSource({ parts: [part({ data: new TextEncoder().encode("abd") })] }));
+    await screen.findByRole("heading", { name: offlineCatalog[locale].title });
+    fireEvent.click(screen.getByRole("button", { name: offlineCatalog[locale].recheck }));
+    const copy = packIntegrityCopy(locale, "corrupt");
+    const notice = await screen.findByRole("alert");
+    expect(notice.getAttribute("lang")).toBe(locale);
+    expect(screen.getByRole("heading", { name: copy.title })).toBeTruthy();
+    expect(screen.getByRole("button", { name: copy.action })).toBeTruthy();
+    expect(notice.textContent).not.toMatch(/verif|vérif/i);
+    for (const button of notice.querySelectorAll("button")) {
+      expect(button.style.minWidth).toBe("44px");
+      expect(button.style.minHeight).toBe("44px");
+    }
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("re-downloads through redownloadPack and only then clears the damaged notice", async () => {
+    const source = mockSource({
+      parts: [part({ data: new TextEncoder().encode("abd") })],
+      fetchBytes: goodBytes,
+    });
+    await view("en", source);
+    await screen.findByRole("heading", { name: "Offline regions" });
+    fireEvent.click(screen.getByRole("button", { name: offlineCatalog.en.recheck }));
+    const action = packIntegrityCopy("en", "corrupt").action;
+    fireEvent.click(await screen.findByRole("button", { name: action }));
+    await waitFor(() => expect(source.commitCheckedRegion).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText(offlineCatalog.en.complete)).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: packIntegrityCopy("en", "corrupt").title })).toBeNull();
+  });
+});

@@ -13,6 +13,9 @@ export type PackSource = {
   regions: () => Promise<unknown[]>;
   downloadRegion: (id: string) => Promise<unknown>;
   deleteRegion: (id: string) => Promise<void>;
+  storedRegionIntegrity: (id: string) => Promise<null>;
+  fetchRegionPartBytes: (path: string) => Promise<Uint8Array>;
+  commitCheckedRegion: (id: string, parts: ReadonlyArray<{ sha256: string; data: Uint8Array }>) => Promise<unknown>;
 };
 
 export function fieldValue(record: PackRecord, key: string) {
@@ -33,6 +36,13 @@ export function createPackSource(options: { baseUrl?: string } = {}): PackSource
       throw new Error("data-client is not pinned on this branch");
     },
     deleteRegion: async () => {},
+    storedRegionIntegrity: async () => null,
+    fetchRegionPartBytes: async (path) => {
+      throw new Error(`data-client is not pinned on this branch (${path})`);
+    },
+    commitCheckedRegion: async () => {
+      throw new Error("data-client is not pinned on this branch");
+    },
   };
 }
 
