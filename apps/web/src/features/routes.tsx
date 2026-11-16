@@ -3,7 +3,7 @@ import { Link, type RouteObject } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { registerFeatureTranslations } from "./i18n.ts";
 import { loadFeaturePackage, type FeaturePackage } from "./packages.ts";
-import { consentGranted } from "./consent.ts";
+import { consentGranted, consentStatus, type ConsentCheck } from "./consent.ts";
 
 registerFeatureTranslations();
 
@@ -18,7 +18,13 @@ function Message({ name }: { name: "pending" | "unavailable" }): ReactNode {
 function SettingsIndex(): ReactNode {
   const { t } = useTranslation();
   return <><h1>{t("features.title")}</h1><p>{t("features.description")}</p>
-    <nav aria-label={t("features.title")}><ul>{entries.map((entry) => <li key={entry}>
+    <nav aria-label={t("features.title")}><ul>
+      <li>
+        <Link style={{ display: "inline-block", minHeight: 44, padding: 8 }} to="/profile">
+          {t("features.profile")}
+        </Link><p>{t("features.profileDesc")}</p>
+      </li>
+      {entries.map((entry) => <li key={entry}>
       <Link style={{ display: "inline-block", minHeight: 44, padding: 8 }} to={`/settings/${entry}`}>
         {t(`features.${entry}`)}
       </Link><p>{t(`features.${entry}Desc`)}</p>
@@ -72,20 +78,18 @@ function ConsentScreen(): ReactNode {
 
 function Guarded({ purpose, children }: { purpose: string; children: ReactNode }): ReactNode {
   const { t } = useTranslation();
-  const [granted, setGranted] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [status, setStatus] = useState<"checking" | ConsentCheck>("checking");
   useEffect(() => {
     let active = true;
-    setGranted(false);
-    setChecking(true);
-    void consentGranted(purpose).then((value) => {
-      if (active) { setGranted(value); setChecking(false); }
+    setStatus("checking");
+    void consentStatus(purpose).then((value) => {
+      if (active) setStatus(value);
     });
     return () => { active = false; };
   }, [purpose]);
   return <section aria-live="polite">
-    {checking ? <p>{t("features.loading")}</p> : granted ? children : <>
-      <p>{t("features.permission")}</p><p>{t("features.consentUnavailable")}</p>
+    {status === "checking" ? <p>{t("features.loading")}</p> : status === "granted" ? children : <>
+      <p>{t(status === "unavailable" ? "features.consentUnavailable" : "features.permission")}</p>
       <Link to="/settings/consent">{t("features.consentLink")}</Link>
     </>}
   </section>;
