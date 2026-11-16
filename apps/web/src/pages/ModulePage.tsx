@@ -11,7 +11,7 @@ import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
-import { StateNotice, getState, type EmptyKind, type ErrorKind } from "../states/index.ts";
+import { StateNotice, ERROR_KINDS, getRouteEmpty, getRouteError, getState, type EmptyKind, type ErrorKind } from "../states/index.ts";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -172,7 +172,15 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
       {stateKind ? (
         <StateNotice
           lang={locale}
-          view={getState(stateKind, locale)}
+          view={
+            (id === "places" || id === "finders" || id === "journey" || id === "map")
+              ? (
+                  (ERROR_KINDS as string[]).includes(stateKind)
+                    ? getRouteError(id === "places" ? "search" : id, stateKind as ErrorKind, locale)
+                    : getRouteEmpty(id === "places" ? "search" : id, locale) ?? getState(stateKind, locale)
+                )
+              : getState(stateKind, locale)
+          }
           onAction={{
             retry: () => setAttempt((count) => count + 1),
             "clear-search": clearSearch,
