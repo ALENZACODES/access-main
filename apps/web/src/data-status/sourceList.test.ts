@@ -31,6 +31,30 @@ describe('buildSourceList', () => {
     expect(renderSourceListHtml(rows, 'en')).not.toContain('Licence needs review');
   });
 
+  it('treats the string UNKNOWN as Unknown, never as an open licence', () => {
+    const sources: SourceInput[] = [
+      { id: 'u', name: 'Unspecified feed', licence: 'UNKNOWN', retrievedAt: '2026-11-10' },
+      { id: 'u2', name: 'Also unknown', licence: 'unknown', retrievedAt: '2026-11-10' },
+    ];
+    const en = buildSourceList(sources, 'en', NOW);
+    expect(en.every((r) => r.licenceOpen === null)).toBe(true);
+    expect(en.every((r) => r.licence === 'Unknown')).toBe(true);
+    const enHtml = renderSourceListHtml(en, 'en');
+    expect(enHtml).toContain('Unknown');
+    expect(enHtml).not.toContain('UNKNOWN');
+    // Not flagged as open, and not the unrecognised-licence review line.
+    expect(enHtml).not.toContain('Licence needs review');
+
+    const fr = buildSourceList(sources, 'fr', NOW);
+    expect(fr.every((r) => r.licenceOpen === null)).toBe(true);
+    expect(fr.every((r) => r.licence === 'Inconnue')).toBe(true);
+    const frHtml = renderSourceListHtml(fr, 'fr');
+    expect(frHtml).toContain('Inconnue');
+    expect(frHtml).not.toContain('UNKNOWN');
+    expect(frHtml).not.toContain('Licence à examiner');
+    expect(frHtml).not.toContain("'");
+  });
+
   it('status label agrees with dataBadge (provenance consistency)', () => {
     for (const s of src) {
       const row = buildSourceList([s], 'fr', NOW)[0]!;
