@@ -20,6 +20,7 @@ export const en = {
     primary: "Primary",
     home: "Home",
     places: "Places",
+    map: "Map",
     journey: "Journey",
     finders: "Finders",
     navigator: "Directory",

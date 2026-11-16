@@ -8,12 +8,16 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:e2e": "playwright test",
-    "verify:build": "node scripts/verify-build.ts"
+    "verify:build": "node scripts/verify-build.ts",
+    "check:dist-overclaim": "node scripts/check-dist-overclaim.mjs",
+    "postbuild": "node scripts/check-dist-overclaim.mjs"
   },
   "dependencies": {
     "@access/shared": "*",
     "dexie": "^4.2.1",
     "i18next": "^25.6.2",
+    "maplibre-gl": "^5.15.0",
+    "pmtiles": "^4.3.0",
     "react": "^19.2.0",
     "react-aria-components": "^1.13.0",
     "react-dom": "^19.2.0",

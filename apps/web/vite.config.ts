@@ -106,7 +106,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
-        globIgnores: ["data/**", "**/*.pmtiles"],
+        globIgnores: ["data/**", "**/*.pmtiles", "**/maplibre-*.js"],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/packs\//, dataPath],
         cleanupOutdatedCaches: true,
@@ -160,6 +160,9 @@ export default defineConfig({
           if (id.includes("/dexie")) return "dexie";
           if (id.includes("/workbox-")) return "workbox";
           if (id.includes("/react/")) return "react";
+          // MapLibre and pmtiles are loaded only on /map and exceed the 512 KiB
+          // first-install JS budget, so they stay out of the vendor and precache sets.
+          if (id.includes("/maplibre-gl") || id.includes("/pmtiles")) return "maplibre";
           return "vendor";
         },
       },

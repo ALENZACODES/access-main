@@ -5,6 +5,7 @@ import viteConfig from "../../vite.config.ts?raw";
 import { en } from "./en.ts";
 import { fr } from "./fr.ts";
 import { hubText } from "../hub/i18n.ts";
+import { mapMessages } from "../map/i18n.ts";
 
 /**
  * Day 24 endorsement sweep for the shell. Every user-facing string, the page
@@ -27,6 +28,8 @@ const SURFACES: Array<[string, string]> = [
   ...leaves(fr).map(([key, text]): [string, string] => [`fr.${key}`, text]),
   ...leaves(hubText.en).map(([key, text]): [string, string] => [`hub.en.${key}`, text]),
   ...leaves(hubText.fr).map(([key, text]): [string, string] => [`hub.fr.${key}`, text]),
+  ...leaves(mapMessages.en).map(([key, text]): [string, string] => [`map.en.${key}`, text]),
+  ...leaves(mapMessages.fr).map(([key, text]): [string, string] => [`map.fr.${key}`, text]),
   ["index.html", between(indexHtml, "<head>", "</head>")],
   ["webmanifest", between(viteConfig, "manifest: {", "icons:")],
 ];
@@ -50,6 +53,8 @@ describe("endorsement and overclaim sweep", () => {
     expect(SURFACES.find(([where]) => where === "webmanifest")?.[1]).toContain("description");
     expect(SURFACES.some(([where]) => where.startsWith("hub.en."))).toBe(true);
     expect(SURFACES.some(([where]) => where.startsWith("hub.fr."))).toBe(true);
+    expect(SURFACES.some(([where]) => where.startsWith("map.en."))).toBe(true);
+    expect(SURFACES.some(([where]) => where.startsWith("map.fr."))).toBe(true);
   });
 
   it("finds no endorsement, verification, guarantee, live, medical, eligibility, or AI claim", () => {
