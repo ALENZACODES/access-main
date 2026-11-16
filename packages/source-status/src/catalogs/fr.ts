@@ -42,7 +42,7 @@ export const fr: Record<keyof typeof en, string> = {
   seeded: "SEEDED-OPEN-DATA — Étiquette d'un exemple de données ouvertes ; pas une vérification.",
   prototype: "PROTOTYPE-UNVERIFIED — Étiquette de métadonnées de prototype non vérifiées.",
   emptyTier: "Aucun enregistrement avec niveau",
-  tierCountSeparator: " : ",
+  tierCountSeparator: " : ",
   listSeparator: " ; ",
   footer: "Ce module autonome ne lit ni ne modifie le cache ou les rapports de cet appareil.",
 };

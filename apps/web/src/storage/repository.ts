@@ -245,8 +245,8 @@ export interface ExportPhrases {
   storage: string;
   consent: string;
   withdrawn: string;
-  /** English uses ": ". French uses a narrow no-break space before the colon. */
-  separator: ": " | "\u202f: ";
+  /** English uses ": ". French uses a no-break space (U+00A0) before the colon. */
+  separator: ": " | "\u00a0: ";
 }
 
 function named(names: Record<string, string>, value: string | null): string | null {

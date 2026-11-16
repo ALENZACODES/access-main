@@ -2,6 +2,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Browser } from "@playwright/test";
 
+
+test.describe.configure({ mode: "serial" });
 /**
  * Day 22 performance record (P11). Measured in CI on every run.
  *
