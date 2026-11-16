@@ -44,8 +44,8 @@ const DEFS = {
     fr: { one: "{n} lieu enregistré.", other: "{n} lieux enregistrés." },
   },
   "saved.remove": { en: "Remove {name} from saved places", fr: "Retirer {name} des lieux enregistrés" },
-  "place.unknownFor": { en: "UNKNOWN: {features}", fr: "INCONNU : {features}" },
-  "place.matchedFor": { en: "Reported yes: {features}", fr: "Signalé oui : {features}" },
+  "place.unknownFor": { en: "UNKNOWN: {features}", fr: "INCONNU : {features}" },
+  "place.matchedFor": { en: "Reported yes: {features}", fr: "Signalé oui : {features}" },
   "place.showSource": { en: "Show source", fr: "Afficher la source" },
 } as const satisfies Record<string, Entry>;
 
