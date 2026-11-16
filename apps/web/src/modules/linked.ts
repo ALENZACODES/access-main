@@ -1,7 +1,7 @@
 import { createPackSource, fieldValue, type PackSource } from "@access-main/data-client";
 import { createPlacesModule } from "@access-maps/places-shell";
 import { helpShellModule } from "@access/help";
-import type { ModuleRegistry, ModuleResult } from "@access/shared";
+import { emptyModuleResult, type ModuleRegistry, type ModuleResult, type PlacesModule } from "@access/shared";
 import { createFindersModule, createJourneyModule, gamesShellModule, navigatorShellModule } from "./lane-adapters.ts";
 import { createModules } from "./stubs.ts";
 import type { PackRecord, PlaceDetail } from "./types.ts";
@@ -42,11 +42,31 @@ export async function getPlaceDetail(source: PackSource, id: string): Promise<Mo
   }
 }
 
+
+/** The places package is only ready when the data pack can be read. A missing or broken pack stays unavailable, with no invented records. */
+async function packIsAvailable(source: PackSource): Promise<boolean> {
+  try {
+    await source.manifest();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function placesWithPack(source: PackSource, places: PlacesModule): PlacesModule {
+  return {
+    ...places,
+    search: async (query, ctx) => (await packIsAvailable(source) ? places.search(query, ctx) : emptyModuleResult("places", "modules.unavailable")),
+    get: async (id, ctx) => (await packIsAvailable(source) ? places.get(id, ctx) : emptyModuleResult("places", "modules.unavailable")),
+  };
+}
+
 /** The six real modules over one shared data source. Every result goes through guardModules in createModules. */
 export function createLinkedModules(source: PackSource): ModuleRegistry {
   const get = (id: string) => getPlaceDetail(source, id);
+  const places = placesWithPack(source, { ...createPlacesModule(source), get });
   const guarded = createModules({
-    places: { ...createPlacesModule(source), get },
+    places,
     journey: createJourneyModule(source),
     finders: createFindersModule(source),
     navigator: navigatorShellModule,
@@ -54,7 +74,7 @@ export function createLinkedModules(source: PackSource): ModuleRegistry {
     help: helpShellModule,
   });
   // `get` is checked by getPlaceDetail, so it is set again here in case the guard rebuilt the places module.
-  return { ...guarded, places: { ...guarded.places, get } };
+  return { ...guarded, places: { ...guarded.places, get: places.get } };
 }
 
 let sharedSource: PackSource | null = null;

@@ -1,14 +1,15 @@
 import type { PackSource } from "@access-main/data-client";
 import { filterGames } from "@access-tools/games";
 import { DIRECTORY } from "@access-tools/navigator";
-import type {
-  ActivityDefinition,
-  DirectoryEntry,
-  FindersModule,
-  JourneyModule,
-  GamesModule,
-  ModuleResult,
-  NavigatorModule,
+import {
+  emptyModuleResult,
+  type ActivityDefinition,
+  type DirectoryEntry,
+  type FindersModule,
+  type JourneyModule,
+  type GamesModule,
+  type ModuleResult,
+  type NavigatorModule,
 } from "@access/shared";
 
 function ready<T>(moduleId: ModuleResult<T>["moduleId"], items: T[], messageKey: string): ModuleResult<T> {
@@ -17,27 +18,27 @@ function ready<T>(moduleId: ModuleResult<T>["moduleId"], items: T[], messageKey:
 
 /**
  * The journey-data package plans over coordinates, not the shell's origin and
- * destination labels. This adapter does not invent a route when no coordinates
- * are in the request.
+ * destination labels. Until that wiring exists, the route stays unavailable
+ * and does not invent a trip.
  */
 export function createJourneyModule(source: PackSource): JourneyModule {
   void source;
   return {
     id: "journey",
-    plan: async () => ready("journey", [], "journey.shellReady"),
+    plan: async () => emptyModuleResult("journey", "modules.unavailable"),
   };
 }
 
 /**
  * The finders package reads an access-tools place pack, not the shell PackSource
- * used here. An empty ready result is shown until that wiring exists. It does
+ * used here. Until that wiring exists, the route stays unavailable and does
  * not invent washrooms, parking, chargers, or repair shops.
  */
 export function createFindersModule(source: PackSource): FindersModule {
   void source;
   return {
     id: "finders",
-    search: async () => ready("finders", [], "finders.shellReady"),
+    search: async () => emptyModuleResult("finders", "modules.unavailable"),
   };
 }
 
