@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
 import { offlineCatalog } from "./catalog.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { CorruptPackNotice } from "../recovery/index.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
 const source = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
@@ -21,6 +22,8 @@ export function OfflineRegionPage() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [packStatus, setPackStatus] = useState<"corrupt" | "unknown" | null>(null);
+  const [packRegion, setPackRegion] = useState<string | null>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const dialogTitle = useId();
@@ -57,6 +60,15 @@ export function OfflineRegionPage() {
     <p>{c.intro}</p>
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {error && <p role="alert">{error}</p>}
+    {packStatus ? (
+      <CorruptPackNotice
+        status={packStatus}
+        locale={language}
+        onRedownload={() => { if (packRegion) void download(packRegion); setPackStatus(null); }}
+        onDismiss={() => setPackStatus(null)}
+        busy={!!busy}
+      />
+    ) : null}
     {message && <p role="status" tabIndex={-1}>{message}</p>}
     {manifest && <>
       <p>{c.built}: <time dateTime={manifest.builtAt}>{manifest.builtAt.slice(0, 10)}</time>. {c.counts}: {manifest.counts.records.toLocaleString(language)}.</p>
@@ -70,7 +82,7 @@ export function OfflineRegionPage() {
         <p>{region.downloaded ? c.downloaded : c.notDownloaded}</p>
         <div className="button-row">
           {!region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!online || !!busy} onClick={() => void download(region.id)}>{c.download}</button>}
-          {region.downloaded && <><button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => void refresh().then(() => setMessage(c.downloaded))}>{c.verify}</button>
+          {region.downloaded && <><button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => { setPackRegion(region.id); setPackStatus("unknown"); void refresh().then(() => setMessage(c.downloaded)); }}>{c.verify}</button>
           <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => setConfirmation(region.id)}>{c.delete}</button></>}
         </div>
         {busy === region.id && progress && <div className="stack"><label id={progressTitle}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={progressTitle} value={progress.done} max={progress.total || 1}/></div>}

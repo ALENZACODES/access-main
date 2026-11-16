@@ -20,3 +20,5 @@ notice buttons have a minimum 44 by 44 CSS-pixel touch target.
 
 Run `vitest run apps/web/src/recovery/recovery.test.ts` from a workspace with
 Vitest installed.
+
+`packIntegrity.ts` and `CorruptPackNotice` detect a damaged or uncheckable pack and offer a re-download. A pack is never treated as complete when the digest or size cannot be confirmed.
