@@ -9,6 +9,9 @@ import {
 import { dashboardCopy } from "./offlineCopy.ts";
 import { inspectRegion, inventoryPage, type RegionInventory } from "./regionInventory.ts";
 import { formatBinaryBytes, planCapacity, type CapacityPlan } from "./quotaPlanning.ts";
+import { auditManifest } from "./manifestAudit.ts";
+import { createLocalReport, saveReportFile } from "./localReport.ts";
+import { createOfflineAction } from "./accessibilityGuard.ts";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -146,13 +149,7 @@ function element<K extends keyof HTMLElementTagNameMap>(
 }
 
 function action(text: string): HTMLButtonElement {
-  const button = element("button", text);
-  button.type = "button";
-  button.style.minHeight = "44px";
-  button.style.minWidth = "44px";
-  button.style.padding = "8px 12px";
-  button.style.margin = "4px";
-  return button;
+  return createOfflineAction(document, text);
 }
 
 function definition(term: string, value: string): HTMLElement {
@@ -179,6 +176,7 @@ export function mountOfflineDashboard(
   language: Language,
 ): () => void {
   const copy = dashboardCopy(language);
+  const audit = auditManifest(manifest, new Date().toISOString().slice(0, 10));
   const model = createOfflineDashboardModel(manifest, dependencies);
   const section = element("section");
   const heading = element("h2", copy.title);
@@ -193,14 +191,22 @@ export function mountOfflineDashboard(
   const downloadButton = action(copy.download);
   const cancelButton = action(copy.cancel);
   const detailsButton = action(copy.inspect);
+  const exportTextButton = action(language === "fr" ? "Exporter le rapport texte" : "Export text report");
+  const exportJsonButton = action(language === "fr" ? "Exporter le rapport JSON" : "Export JSON report");
+  const auditStatus = element("p");
+  auditStatus.textContent = audit.ready ?
+    (language === "fr" ? "Licence et source indiquées pour chaque cellule." :
+      "Licence and source recorded for each cell.") :
+    (language === "fr" ? "Données non admissibles au téléchargement. État hors ligne INCONNU." :
+      "Data cannot be downloaded. Offline status UNKNOWN.");
   const detailsId = `offline-cells-${safeId(manifest.regionId)}`;
   const details = element("div");
   details.id = detailsId;
   detailsButton.setAttribute("aria-controls", detailsId);
   const policy = element("p", copy.policy);
   const help = element("p", copy.actionHelp);
-  controls.append(refreshButton, downloadButton, cancelButton, detailsButton);
-  section.append(heading, description, status, summary, controls, help, details, policy);
+  controls.append(refreshButton, downloadButton, cancelButton, detailsButton, exportTextButton, exportJsonButton);
+  section.append(heading, description, auditStatus, status, summary, controls, help, details, policy);
   root.append(section);
 
   const renderDetails = (state: DashboardState): void => {
@@ -251,7 +257,7 @@ export function mountOfflineDashboard(
     const busy = state.phase === "checking" || state.phase === "downloading";
     section.setAttribute("aria-busy", String(busy));
     refreshButton.disabled = busy;
-    downloadButton.disabled = busy || state.inventory === null || state.inventory.complete;
+    downloadButton.disabled = !audit.ready || busy || state.inventory === null || state.inventory.complete;
     cancelButton.hidden = state.phase !== "downloading";
     cancelButton.disabled = state.phase !== "downloading";
     detailsButton.disabled = state.inventory === null;
@@ -282,10 +288,26 @@ export function mountOfflineDashboard(
   };
 
   const onRefresh = (): void => { void model.refresh(); };
+  const onExport = (format: "txt" | "json"): void => {
+    const state = model.getState();
+    const report = createLocalReport({
+      regionId: manifest.regionId,
+      inventory: state.inventory,
+      plan: state.plan,
+      result: state.lastResult,
+      audit,
+      date: new Date().toISOString().slice(0, 10),
+    });
+    saveReportFile(report, language, format, root.ownerDocument);
+  };
+  const onText = (): void => { onExport("txt"); };
+  const onJson = (): void => { onExport("json"); };
   const onDownload = (): void => { void model.download(); };
   const onCancel = (): void => { model.cancel(); };
   const onDetails = (): void => { model.toggleDetails(); };
   refreshButton.addEventListener("click", onRefresh);
+  exportTextButton.addEventListener("click", onText);
+  exportJsonButton.addEventListener("click", onJson);
   downloadButton.addEventListener("click", onDownload);
   cancelButton.addEventListener("click", onCancel);
   detailsButton.addEventListener("click", onDetails);
@@ -296,6 +318,8 @@ export function mountOfflineDashboard(
     unsubscribe();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
+    exportTextButton.removeEventListener("click", onText);
+    exportJsonButton.removeEventListener("click", onJson);
     downloadButton.removeEventListener("click", onDownload);
     cancelButton.removeEventListener("click", onCancel);
     detailsButton.removeEventListener("click", onDetails);

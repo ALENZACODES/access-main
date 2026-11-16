@@ -50,6 +50,9 @@ export function pressureView(state: PressureState, language: Language): Pressure
     return { message: "", details: "", action: copy.start, disabled: false };
   }
   const result = state.result;
+  if (result === null) {
+    return { message: copy.error, details: "", action: copy.retry, disabled: false };
+  }
   const message = result.completed ? copy.complete : result.reason === "quota" ? copy.quota :
     result.reason === "interrupted" ? copy.interrupted : copy.error;
   const separator = language === "fr" ? "\u00a0:" : ":";
@@ -130,4 +133,56 @@ export function mountStoragePressurePanel(
   language: Language,
 ): () => void {
   return mountOfflineDashboard(root, manifest, dependencies, language);
+}
+
+/**
+ * Optional first-party persistent shell entry point. The host supplies a
+ * first-party fetcher and capacity estimate. The database is opened only on
+ * explicit mount and closed when the panel unmounts.
+ */
+export async function mountPersistentStoragePressurePanel(
+  root: HTMLElement,
+  manifest: RegionManifest,
+  dependencies: Omit<DownloadDependencies, "store">,
+  language: Language,
+): Promise<() => void> {
+  const { openIndexedCellStore } = await import("./indexedCellStore");
+  const store = await openIndexedCellStore();
+  try {
+    const unmount = mountOfflineDashboard(root, manifest, { ...dependencies, store }, language);
+    return () => { unmount(); store.close(); };
+  } catch (error) {
+    store.close();
+    throw error;
+  }
+}
+
+/** Convenience shell integration requiring only a same-origin data directory. */
+export async function mountFirstPartyOfflinePanel(
+  root: HTMLElement,
+  manifest: RegionManifest,
+  basePath: string,
+  language: Language,
+): Promise<() => void> {
+  const { createFirstPartyCellFetcher } = await import("./firstPartyFetch");
+  const { openIndexedCellStore } = await import("./indexedCellStore");
+  const store = await openIndexedCellStore();
+  try {
+    const fetchCell = createFirstPartyCellFetcher({
+      basePath,
+      origin: root.ownerDocument.location.origin,
+      fetchFn: fetch,
+    });
+    const estimateStorage = async () => {
+      if (!navigator.storage?.estimate) return {};
+      return navigator.storage.estimate();
+    };
+    const unmount = mountOfflineDashboard(root, manifest, {
+      store, fetchCell, estimateStorage,
+    }, language);
+    return () => { unmount(); store.close(); };
+  } catch (error) {
+    store.close();
+    throw error;
+  }
 }
