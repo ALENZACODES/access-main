@@ -8,10 +8,8 @@ import { join, relative, resolve, sep } from 'node:path';
 
 const TEXT_DECODER = new TextDecoder('utf-8', { fatal: true });
 const MAX_POLICY_FILE = 1_048_576;
-const SCRIPT_EXTENSIONS = new Set(['.mjs', '.js', '.cjs', '.ts', '.tsx']);
 const WORKFLOW_NAME = /\.ya?ml$/i;
 const OMIT = new Set(['.git', 'node_modules', 'dist', 'build', '.next', 'coverage', '.cache']);
-const PROHIBITED_SCHEDULE_KEYS = new Set(['schedule', 'cron']);
 
 function report(file, rule, message) {
   return { file, rule, message };

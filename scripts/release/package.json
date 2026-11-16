@@ -1,0 +1,9 @@
+{
+  "name": "access-release-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --experimental-strip-types *.test.mjs",
+    "verify": "npm run test && node --experimental-strip-types check.mjs --dir ../../apps/web/dist && node audit.mjs --dir ../../apps/web/dist && node deep-audit.mjs --dir ../../apps/web/dist && node preflight.mjs --root ../.. --dist ../../apps/web/dist"
+  }
+}
