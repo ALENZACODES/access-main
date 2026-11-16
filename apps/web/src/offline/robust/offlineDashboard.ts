@@ -29,6 +29,7 @@ export interface DashboardModel {
   readonly subscribe: (listener: (state: DashboardState) => void) => () => void;
   readonly refresh: () => Promise<void>;
   readonly download: () => Promise<void>;
+  readonly downloadSelected: (ids: readonly string[]) => Promise<void>;
   readonly cancel: () => void;
   readonly toggleDetails: () => void;
   readonly setPage: (page: number) => void;
@@ -76,22 +77,24 @@ export function createOfflineDashboardModel(
     pending = task;
     return task;
   };
-  const download = (): Promise<void> => {
+  const download = (requested?: readonly string[]): Promise<void> => {
     if (disposed) return Promise.resolve();
     if (pending !== null) return pending;
     if (state.inventory === null || state.inventory.complete) return Promise.resolve();
+    const subManifest = requested === undefined ? manifest : selectedDownloadPlan(manifest, state.inventory, requested).manifest;
+    if (subManifest.cells.length === 0) return Promise.resolve();
     abort = new AbortController();
     const signal = abort.signal;
     publish({ phase: "downloading" });
     const task = (async (): Promise<void> => {
       let result: DownloadResult | null = null;
       try {
-        result = await downloadRegion(manifest, dependencies, signal);
+        result = await downloadRegion(subManifest, dependencies, signal);
       } catch {
         result = {
           regionId: manifest.regionId,
           available: [],
-          missing: manifest.cells.map((cell) => cell.id),
+          missing: subManifest.cells.map((cell) => cell.id),
           completed: false,
           reason: "download-error",
         };
@@ -122,7 +125,8 @@ export function createOfflineDashboardModel(
       return () => { listeners.delete(listener); };
     },
     refresh,
-    download,
+    download: () => download(),
+    downloadSelected: (ids) => download(ids),
     cancel() { abort?.abort(); },
     toggleDetails() { publish({ expanded: !state.expanded, page: 0 }); },
     setPage(page) {
@@ -208,6 +212,9 @@ export function mountOfflineDashboard(
   controls.append(refreshButton, downloadButton, cancelButton, detailsButton, exportTextButton, exportJsonButton);
   section.append(heading, description, auditStatus, status, summary, controls, help, details, policy);
   root.append(section);
+  const triageHost = element("div");
+  section.append(triageHost);
+  const unmountTriage = mountOfflineTriage(triageHost, manifest, model, language, audit.ready);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -316,6 +323,7 @@ export function mountOfflineDashboard(
   void model.refresh();
   return () => {
     unsubscribe();
+    unmountTriage();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
