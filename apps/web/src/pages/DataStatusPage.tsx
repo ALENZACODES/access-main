@@ -3,18 +3,27 @@ import { useTranslation } from "react-i18next";
 import { DISPLAY_TIERS, tierMessageKey, type CacheEntry } from "@access/shared";
 import {
   DEFAULT_STALE_AFTER_DAYS,
+  auditRegistry,
+  buildAgeDistribution,
   buildCacheRecords,
+  buildChecksumFile,
   buildExportFiles,
+  buildMarkdownFile,
   buildSourceList,
+  buildWorkload,
   cachedSourceInputs,
   cleanValue,
   dataBadge,
+  describeVerify,
+  extraLabel,
   explainStatus,
   formatRate,
   groupCachedSources,
   mountDataStatusPanel,
   parseRetrieved,
+  renderAgeBandsHtml,
   renderSourceListHtml,
+  renderWorkloadHtml,
   t as dsT,
   type DataBadge,
   type ExportFile,
@@ -46,6 +55,7 @@ export function DataStatusPage() {
   const [confirming, setConfirming] = useState(false);
   const [cleared, setCleared] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [checksumsFailed, setChecksumsFailed] = useState(false);
   const clearRef = useRef<HTMLButtonElement>(null);
   const clearedRef = useRef<HTMLParagraphElement>(null);
   const panelHostRef = useRef<HTMLDivElement>(null);
@@ -117,6 +127,20 @@ export function DataStatusPage() {
   panelInputs.current = { records: panelRecords, locale };
   // The panel has its own source-list (CSV) button, which respects its filters, so the file list here leaves CSV out.
   const exportFiles: ExportFile[] = buildExportFiles(panelRecords, locale, now);
+  const markdownFile = buildMarkdownFile(panelRecords, locale, now);
+  // Planning views read the same audit as the panel and the files, so the numbers always agree.
+  const audit = auditRegistry(panelRecords, now);
+  const workloadHtml = renderWorkloadHtml(buildWorkload(audit, now), locale);
+  const ageBandsHtml = renderAgeBandsHtml(buildAgeDistribution(audit, now), locale);
+  const saveChecksums = async (): Promise<void> => {
+    const file = await buildChecksumFile(exportFiles, locale);
+    if (file === null) {
+      setChecksumsFailed(true);
+      return;
+    }
+    setChecksumsFailed(false);
+    saveTextFile(file.text, file.filename, file.mime);
+  };
 
   // The panel mounts once the saved records have been read, so it never shows an empty
   // inventory for a moment while records are still loading.
@@ -276,9 +300,15 @@ export function DataStatusPage() {
       <section className="stack">
         {loaded ? <div ref={panelHostRef} /> : null}
       </section>
+      {loaded && entries.length > 0 ? (
+        <div className="stack" data-testid="planning-views">
+          <div dangerouslySetInnerHTML={{ __html: workloadHtml }} />
+          <div dangerouslySetInnerHTML={{ __html: ageBandsHtml }} />
+        </div>
+      ) : null}
       <section className="stack" aria-labelledby="export-title">
-        <h2 id="export-title">{locale === "fr" ? "Télécharger" : "Downloads"}</h2>
-        <p>{locale === "fr" ? "Les fichiers sont créés sur cet appareil à partir des données enregistrées ci-dessus." : "Files are made on this device from the saved records above."}</p>
+        <h2 id="export-title">{dsT(locale, "dl.title")}</h2>
+        <p>{dsT(locale, "dl.intro")}</p>
         <div className="button-row">
           {exportFiles.filter((file) => file.id !== "csv").map((file) => (
             <Button
@@ -290,7 +320,18 @@ export function DataStatusPage() {
               {file.label}
             </Button>
           ))}
+          <Button
+            variant="secondary"
+            isDisabled={entries.length === 0}
+            onPress={() => saveTextFile(markdownFile.text, markdownFile.filename, markdownFile.mime)}
+          >
+            {extraLabel("markdown", locale)}
+          </Button>
+          <Button variant="secondary" isDisabled={entries.length === 0} onPress={() => void saveChecksums()}>
+            {extraLabel("checksums", locale)}
+          </Button>
         </div>
+        {checksumsFailed ? <p role="status">{describeVerify(null, locale)[0]}</p> : null}
       </section>
       <section className="stack" aria-labelledby="legend-title">
         <h2 id="legend-title">{t("data.legendTitle")}</h2>

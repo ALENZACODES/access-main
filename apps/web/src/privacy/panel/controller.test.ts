@@ -138,3 +138,103 @@ describe("erase", () => {
     expect(c.dispatch({ type: "erase-ask" }).lastExport).toBeNull();
   });
 });
+
+import { consentKey, type Purpose } from "./consent";
+import { putExpiring } from "./expiry";
+
+const PURPOSES: readonly Purpose[] = [
+  {
+    id: "saved-places",
+    label: { en: "Saved places", fr: "Lieux enregistrés" },
+    description: { en: "Remember places on this device", fr: "Garder des lieux sur cet appareil" },
+    wordingVersion: 1,
+  },
+  {
+    id: "map-hints",
+    label: { en: "Map hints", fr: "Indices de carte" },
+    description: { en: "Show short hints on the map", fr: "Afficher de courts indices sur la carte" },
+    wordingVersion: 1,
+  },
+];
+
+describe("consent", () => {
+  it("starts with every purpose undecided", () => {
+    const { c } = make({ purposes: PURPOSES });
+    expect(c.getState().consent).toEqual({});
+    expect(c.html()).toContain("Not decided yet");
+  });
+  it("refuses invalid purposes at start-up", () => {
+    expect(() => make({ purposes: [{ ...PURPOSES[0]!, description: { en: "Verified", fr: "Texte" } }] })).toThrow(
+      /Invalid consent purposes/,
+    );
+  });
+  it("records and stores a choice, and says so", () => {
+    const { c, storage } = make({ purposes: PURPOSES });
+    const st = c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" });
+    expect(st.consent["saved-places"]?.decidedOn).toBe("2026-11-15");
+    expect(st.status).toEqual({ kind: "consent-saved", value: "granted", label: "Saved places" });
+    expect(storage?.getItem(consentKey(PREFIX))).toContain("saved-places");
+    expect(c.html()).toContain("Saved: allowed for “Saved places”.");
+  });
+  it("uses the French label after the language is switched", () => {
+    const { c } = make({ purposes: PURPOSES });
+    c.dispatch({ type: "set-locale", locale: "fr" });
+    const st = c.dispatch({ type: "consent", purposeId: "map-hints", value: "declined" });
+    expect(st.status).toEqual({ kind: "consent-saved", value: "declined", label: "Indices de carte" });
+  });
+  it("loads earlier choices on the next start", () => {
+    const { c, storage } = make({ purposes: PURPOSES });
+    c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" });
+    const again = createPrivacyController({
+      storage,
+      prefix: PREFIX,
+      inventory: FIXTURE,
+      purposes: PURPOSES,
+      now: () => NOW,
+    });
+    expect(again.getState().consent["saved-places"]?.value).toBe("granted");
+  });
+  it("ignores a purpose it does not know", () => {
+    const { c } = make({ purposes: PURPOSES });
+    const before = c.getState();
+    expect(c.dispatch({ type: "consent", purposeId: "nope", value: "granted" })).toBe(before);
+  });
+  it("says so when the choice could not be saved, and still keeps it for this page", () => {
+    const { c } = make({ purposes: PURPOSES }, null);
+    const st = c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" });
+    expect(st.status).toEqual({ kind: "save-failed" });
+    expect(st.consent["saved-places"]?.value).toBe("granted");
+  });
+  it("erasing local data also resets every choice to undecided", () => {
+    const { c } = make({ purposes: PURPOSES });
+    c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" });
+    c.dispatch({ type: "erase-ask" });
+    const st = c.dispatch({ type: "erase-confirm" });
+    expect(st.consent).toEqual({});
+    expect(c.html()).not.toContain("Allowed since");
+  });
+  it("hides the section when there are no purposes", () => {
+    expect(make().c.html()).not.toContain("data-privacy-consent");
+  });
+});
+
+describe("expired items", () => {
+  const T0 = new Date(2026, 10, 1, 9, 0, 0);
+  it("removes expired items at start-up and says how many", () => {
+    const storage = createMemoryStorage({ [`${PREFIX}plain`]: "keep" });
+    putExpiring(storage, `${PREFIX}old`, "a", T0, 1);
+    putExpiring(storage, `${PREFIX}new`, "b", NOW, 30);
+    const c = createPrivacyController({ storage, prefix: PREFIX, inventory: FIXTURE, now: () => NOW });
+    expect(c.getState().status).toEqual({ kind: "expired-removed", count: 1 });
+    expect(storage.getItem(`${PREFIX}old`)).toBeNull();
+    expect(storage.getItem(`${PREFIX}new`)).not.toBeNull();
+    expect(storage.getItem(`${PREFIX}plain`)).toBe("keep");
+    expect(c.html()).toContain("Expired items removed from this device: 1.");
+  });
+  it("shows no status when nothing expired", () => {
+    expect(make().c.getState().status).toBeNull();
+  });
+  it("does not fail when storage is unavailable", () => {
+    expect(make({}, null).c.getState().status).toBeNull();
+  });
+});

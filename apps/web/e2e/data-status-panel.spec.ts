@@ -112,6 +112,32 @@ test("Data status in French: panel, downloads and typography", async ({ page }) 
   await expect(page.getByRole("heading", { name: "Télécharger" })).toBeVisible();
 });
 
+test("Data status in French: the page text uses the real typography characters", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, ROWS);
+  await page.reload();
+  await page.getByRole("button", { name: "Français" }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  const region = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(region).toBeVisible();
+  const text = (await region.evaluate((el) => el.textContent)) ?? "";
+  const NBSP = "\u00A0";
+  // The French "Taux" rate label and the panel use a no-break space before a colon, not a plain space.
+  expect(text).toContain(`${NBSP}:`);
+  expect(text).not.toMatch(/ :(?!\/\/)/);
+  // A plain colon directly after a letter would break the rule too (times and URLs such as 12:30 or https:// are fine).
+  expect(text).not.toMatch(/[A-Za-zÀ-ÿ]:(?!\/\/)/);
+  // High punctuation takes a narrow no-break space; a plain space or none is wrong.
+  expect(text).not.toMatch(/[^\s\u202F][;!?]/);
+  expect(text).not.toMatch(/ [;!?]/);
+  // Apostrophes are typographic, never ASCII.
+  expect(text).toContain("\u2019");
+  expect(text).not.toContain("'");
+  // The characters are the ones asked for, not look-alikes: the panel label uses U+2019 exactly.
+  const label = await region.getAttribute("aria-label");
+  expect(label).toBe("Panneau de l\u2019état des données");
+});
+
 test("Data status: panel and download targets are at least 44 px", async ({ page }) => {
   await page.goto("/data-status");
   await seed(page, ROWS);

@@ -14,6 +14,11 @@ const STATUSES: readonly Status[] = [
   { kind: "erase-partial", failed: 3 },
   { kind: "nothing" },
   { kind: "unavailable" },
+  { kind: "consent-saved", value: "granted", label: "Lieux" },
+  { kind: "consent-saved", value: "declined", label: "Places" },
+  { kind: "save-failed" },
+  { kind: "expired-removed", count: 0 },
+  { kind: "expired-removed", count: 4 },
 ];
 
 // This is the CI guard for the wording rules: every shipped string, both languages.
@@ -57,5 +62,30 @@ describe("scope wording", () => {
   it("says the panel does not cover server data, in both languages", () => {
     expect(PANEL_STRINGS.en.scopeNote).toContain("does not cover data held on a server");
     expect(PANEL_STRINGS.fr.scopeNote).toContain("ne sont pas incluses");
+  });
+});
+
+describe("consent copy", () => {
+  it.each(LOCALES)("passes the copy lint with sample dates and labels (%s)", (loc) => {
+    expect(lintTable(loc, PANEL_STRINGS[loc].consent)).toEqual([]);
+  });
+  it("French button names keep the visible word first, as Label in Name needs", () => {
+    const c = PANEL_STRINGS.fr.consent;
+    expect(c.ariaAllow("Lieux").startsWith(c.allow)).toBe(true);
+    expect(c.ariaDecline("Lieux").startsWith(c.decline)).toBe(true);
+  });
+  it("English button names keep the visible words first", () => {
+    const c = PANEL_STRINGS.en.consent;
+    expect(c.ariaAllow("Places").startsWith(c.allow)).toBe(true);
+    expect(c.ariaDecline("Places").startsWith(c.decline)).toBe(true);
+  });
+  it("French consent messages put U+00A0 before the colon", () => {
+    expect(PANEL_STRINGS.fr.status({ kind: "consent-saved", value: "granted", label: "A" })).toContain("Enregistré\u00a0:");
+    expect(PANEL_STRINGS.fr.consent.ariaAllow("A")).toContain("Autoriser\u00a0:");
+  });
+  it("French quotes a label with narrow no-break spaces", () => {
+    expect(PANEL_STRINGS.fr.status({ kind: "consent-saved", value: "declined", label: "Lieux" })).toContain(
+      "«\u202fLieux\u202f»",
+    );
   });
 });
