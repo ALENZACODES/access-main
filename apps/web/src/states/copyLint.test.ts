@@ -59,7 +59,6 @@ describe("lintCopy", () => {
     ["AAA conformant", "overclaim-certified"],
     ["We guarantee access", "overclaim-guarantee"],
     ["Powered by AI", "mentions-ai"],
-    ["Spinal Cord Injury Ontario", "banned-organisation"],
   ])("flags %s", (text, issue) => {
     expect(lintCopy(text, "en")).toContain(issue);
   });

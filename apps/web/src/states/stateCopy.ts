@@ -14,11 +14,7 @@
 export type Locale = "en" | "fr";
 
 export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed" | "not-found" | "load-failed" | "offline";
-<<<<<<< HEAD
 export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places" | "no-saved-places";
-=======
-export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places";
->>>>>>> origin/main
 export type ActionId = "retry" | "go-home" | "go-back" | "download-pack" | "clear-search" | "change-trip" | "help";
 
 /** The six Day 22 states, in the plan's order. */
