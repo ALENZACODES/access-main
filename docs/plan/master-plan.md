@@ -71,7 +71,7 @@ Reachable from the shell after the integration round of 16 November (routes, pac
 
 | Lane | Reachable at | Not reachable yet |
 | --- | --- | --- |
-| Games | `/more/games`: 19 games and the dwell select setting. `/games` lists the 19 names | Dwell select outside the games |
+| Games | `/more/games`: 25 games and the dwell select setting. `/games` lists the 25 names | Dwell select outside the games |
 | Work and home | `/more/employment`: listings with the access record, commute check and referral summary | Housing unit and room depth finder and the barrier evidence form: `/more/housing` stays on the earlier pin until a repeated-landmark fault in the package is fixed |
 | Auditors | `/more/auditors`: observations, programme, venue responses, cases and service summary | — |
 | Conditions | `/more/route-reports` (list; the form needs a place) and `/more/accessible-taxis` (zero records, shown as unknown) | A link from a place page to the report form; routing facts are not used by the journey route |

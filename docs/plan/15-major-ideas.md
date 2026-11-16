@@ -561,4 +561,4 @@ The table above is dated 14 November. Since then seven feature packages merged, 
 | 8 Advocacy Engine | `/settings/advocacy` (evidence pack export) | The suppressed report tables and indicators are built in `packages/advocacy` but not mounted: the panel's focusable scrolling boxes fail the shell's route audit. No real consented reports exist |
 | 11 Community Events and Social | `/more/events`, `/more/event-organiser` (organiser checklist), `/more/event-plan` (outing plan) | A per-event access page for a real event, and the journey join |
 | 12 Access Auditors and Venue Dashboard | `/more/auditors`: observations, volunteer programme, venue responses, correction cases | Publication of any audited value |
-| 13 Play and Rehab Games | `/more/games`: 19 of the 50 games, with dwell select. `/games` lists them | The other 31 games; gaze |
+| 13 Play and Rehab Games | `/more/games`: 25 of the 50 games, with dwell select. `/games` lists them | The other 25 games; gaze |

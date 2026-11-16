@@ -155,11 +155,11 @@ describe.skipIf(!toolsReady)("linked registry over two real ODbL records (tools)
 describe.skipIf(!toolsReady)("linked registry: games and navigator (tools)", () => {
   const noQuery = { ...ctx, query: undefined };
 
-  it("games: the nineteen games of the pinned package, none with a clinical claim or a flash", async () => {
+  it("games: the 25 games of the pinned package, none with a clinical claim or a flash", async () => {
     const games = await registry().games.list(noQuery);
     expect(games).toMatchObject({ moduleId: "games", availability: "ready", liveStatus: "unavailable", asOf: null });
-    expect(games.items).toHaveLength(19);
-    expect(new Set(games.items.map((item) => item.id)).size).toBe(19);
+    expect(games.items).toHaveLength(25);
+    expect(new Set(games.items.map((item) => item.id)).size).toBe(25);
     for (const item of games.items) {
       expect(item.title.trim()).not.toBe("");
       expect(item).toMatchObject({ clinicalClaim: false, seizureRiskFlash: false, keyboardOperable: true });
