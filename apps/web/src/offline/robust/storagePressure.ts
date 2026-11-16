@@ -1,3 +1,4 @@
+import { mountOfflineDashboard } from "./offlineDashboard.ts";
 import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload.ts";
 
 /** User-facing download state. Cells not downloaded are named as such, never as available and never as UNKNOWN. */
@@ -120,6 +121,7 @@ export function createPressureController(
 /**
  * Explicit opt-in UI: hosts mount this panel beside their offline download control.
  * The host is responsible for first-party fetching and open-licence data selection.
+ * Round 3 mounts the inventory dashboard through this same entry point.
  */
 export function mountStoragePressurePanel(
   root: HTMLElement,
@@ -127,35 +129,5 @@ export function mountStoragePressurePanel(
   dependencies: DownloadDependencies,
   language: Language,
 ): () => void {
-  const controller = createPressureController(manifest, dependencies);
-  const panel = document.createElement("section");
-  panel.setAttribute("aria-label", language === "fr" ? "Téléchargement hors ligne" : "Offline download");
-  const status = document.createElement("p");
-  status.setAttribute("role", "status");
-  status.setAttribute("aria-live", "polite");
-  status.setAttribute("aria-atomic", "true");
-  const details = document.createElement("p");
-  const button = document.createElement("button");
-  button.type = "button";
-  button.style.minWidth = "44px";
-  button.style.minHeight = "44px";
-  panel.append(status, details, button);
-  root.append(panel);
-  const render = (state: PressureState): void => {
-    const view = pressureView(state, language);
-    status.textContent = view.message;
-    details.textContent = view.details;
-    button.textContent = view.action;
-    button.disabled = view.disabled;
-  };
-  const onClick = (): void => { void controller.retry(); };
-  button.addEventListener("click", onClick);
-  const unsubscribe = controller.subscribe(render);
-  render(controller.getState());
-  return () => {
-    unsubscribe();
-    controller.dispose();
-    button.removeEventListener("click", onClick);
-    panel.remove();
-  };
+  return mountOfflineDashboard(root, manifest, dependencies, language);
 }
