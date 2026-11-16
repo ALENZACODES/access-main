@@ -9,7 +9,7 @@ accessible notice for failed pack, download and export operations.
 | --- | --- | --- |
 | Region download on `/offline` | `offline/RegionPackPage.tsx` | `download`, classified by `classifyPackDownloadError` |
 | Preferences export (text and JSON) on `/profile` | `pages/ProfilePage.tsx` | `export`, through `runRecoverable` |
-| Evidence pack export on `/more/advocacy` | `features/routes.tsx` (AdvocacyScreen) | `export`, through `classifyRecoveryError` |
+| Evidence pack export on `/settings/advocacy` | `features/featureScreens.tsx` (AdvocacyScreen) | `export`, through `classifyRecoveryError` |
 
 Each shows `<RecoveryNotice>` with Try again (a user-pressed retry, never
 automatic), Correct the data (moves focus to the input) where the input is at

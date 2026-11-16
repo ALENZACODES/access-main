@@ -1,21 +1,23 @@
-import { lazy } from "react";
 import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import { Section } from "./modules/Section.tsx";
 import { optionalPage, optionalRoutes } from "./modules/optionalRoutes.ts";
-import { AboutPage } from "./pages/AboutPage.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
 import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
-import { ProfilePage } from "./pages/ProfilePage.tsx";
+import { routePage } from "./perf/routeChunks.ts";
 import { AppShell } from "./shell/AppShell.tsx";
 
 // Every route in the integration contract is lazy, so none is on the first-install path.
-const ModulePage = lazy(() => import("./pages/ModulePage.tsx").then((module) => ({ default: module.ModulePage })));
-const PlaceDetailPage = lazy(() => import("./pages/PlaceDetailPage.tsx").then((module) => ({ default: module.PlaceDetailPage })));
-const HelpPage = lazy(() => import("./pages/HelpPage.tsx").then((module) => ({ default: module.HelpPage })));
-const DataStatusPage = lazy(() => import("./pages/DataStatusPage.tsx").then((module) => ({ default: module.DataStatusPage })));
-const BuildCardPage = lazy(() => import("./pages/BuildCardPage.tsx").then((module) => ({ default: module.BuildCardPage })));
-const OfflinePackPage = lazy(() => import("./pages/OfflinePackPage.tsx").then((module) => ({ default: module.OfflinePackPage })));
+// Home and onboarding stay in the entry chunk: they are the first screens. The rest
+// share route chunks with the nav-link preload in perf/routeChunks.ts.
+const AboutPage = routePage("/about", (module) => module.AboutPage);
+const ProfilePage = routePage("/profile", (module) => module.ProfilePage);
+const ModulePage = routePage("/places", (module) => module.ModulePage);
+const PlaceDetailPage = routePage("/place", (module) => module.PlaceDetailPage);
+const HelpPage = routePage("/help", (module) => module.HelpPage);
+const DataStatusPage = routePage("/data-status", (module) => module.DataStatusPage);
+const BuildCardPage = routePage("/build-card", (module) => module.BuildCardPage);
+const OfflinePackPage = routePage("/offline", (module) => module.OfflinePackPage);
 
 // Entry files owned by other lanes. A missing file renders a "being connected" page, not a build error.
 const MapPage = optionalPage("map");
@@ -29,9 +31,9 @@ export const routes: RouteObject[] = [
     element: <AppShell />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "about", element: <AboutPage /> },
+      { path: "about", element: <Section><AboutPage /></Section> },
       { path: "onboarding", element: <OnboardingPage /> },
-      { path: "profile", element: <ProfilePage /> },
+      { path: "profile", element: <Section><ProfilePage /></Section> },
       { path: "data-status", element: <Section><DataStatusPage /></Section> },
       { path: "build-card", element: <Section><BuildCardPage /></Section> },
       { path: "offline", element: <Section><OfflinePackPage /></Section> },
