@@ -119,8 +119,8 @@ export function isLegacyTechnicalToken(text) {
 export function findForbiddenShippedCopy(source, forbiddenPatterns) {
   const { strings, error } = extractShippedStrings(source);
   if (error) {
-    const offset = Number(error.match(/offset (\\d+)/)?.[1] ?? 0);
-    const excerpt = source.slice(Math.max(0, offset - 50), offset + 80).replace(/\\s+/g, ' ');
+    const offset = Number(error.match(/offset (\d+)/)?.[1] ?? 0);
+    const excerpt = source.slice(Math.max(0, offset - 50), offset + 80).replace(/\s+/g, ' ');
     return { issues: [`${error}; source excerpt=${JSON.stringify(excerpt)}`], inspected: strings.length };
   }
   const issues = [];
