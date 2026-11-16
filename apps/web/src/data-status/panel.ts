@@ -55,6 +55,11 @@ export interface PanelState {
   staticView?: { action: string; csvHref: string; creditsHref: string; summaryHref: string; icsHref?: string; catalogueHref?: string };
   /** Sort and page of the sources table; used in server-rendered mode, where headings and pager are links. */
   table?: TableView | undefined;
+  /**
+   * For hosts that already control page width: tables wrap their text to fit instead of
+   * scrolling, so no focusable scroll container is added. Default false (scrolling regions).
+   */
+  plainTables?: boolean | undefined;
 }
 
 const esc = escapeHtml;
@@ -66,6 +71,13 @@ function statusBadge(state: FreshnessState, locale: Locale): string {
 /** Wide tables scroll inside a focusable, named region so the page itself never scrolls sideways. */
 function scrollable(label: string, table: string): string {
   return `<div class="ds-scroll" role="region" tabindex="0" aria-label="${esc(label)}">${table}</div>`;
+}
+
+const SCROLL_OPEN = /<div class="ds-scroll" role="region" tabindex="0" aria-label="[^"]*">/g;
+
+/** Swaps each focusable scroll region for a plain wrapper whose text wraps. Table content is untouched. */
+export function plainTables(html: string): string {
+  return html.replace(SCROLL_OPEN, '<div class="ds-wrap" style="overflow-wrap:anywhere">');
 }
 
 function datasetTable(audit: AuditResult, locale: Locale): string {
@@ -266,7 +278,7 @@ export function renderDataStatusPanel(state: PanelState): string {
       (sv.catalogueHref ? ` ${downloadLink(sv.catalogueHref + thrQuery, t(locale, 'dl.catalogue'))}` : '') +
       `</div>`
     : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))}</div>`;
-  return (
+  const html =
     notices +
     snapshotLine(state) +
     actions +
@@ -279,8 +291,8 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined) +
     `<div data-region="sources" aria-live="polite">${renderSourcesRegion(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined)}</div>` +
     coverageSection(state) +
-    scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale))
-  );
+    scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale));
+  return state.plainTables === true ? plainTables(html) : html;
 }
 
 type EventTarget = {
@@ -319,6 +331,8 @@ export interface MountOptions {
   onFiltersChange?: ((search: string) => void) | undefined;
   /** Extra localized notices, for example files that could not be read. */
   getNotices?: ((locale: Locale) => readonly string[]) | undefined;
+  /** See PanelState.plainTables. */
+  plainTables?: boolean | undefined;
 }
 
 export interface MountedPanel {
@@ -373,7 +387,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     lastRecords = records ?? [];
     host.setAttribute('lang', locale);
     host.setAttribute('role', 'region');
-    host.setAttribute('aria-label', t(locale, 'qa.title'));
+    host.setAttribute('aria-label', t(locale, 'panel.label'));
     host.innerHTML = renderDataStatusPanel({
       records: lastRecords,
       locale,
@@ -387,6 +401,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       history,
       changes,
       notices: opts.getNotices?.(locale),
+      plainTables: opts.plainTables,
     });
   };
 
@@ -398,7 +413,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     }
     const now = nowFn();
     const audit = auditRegistry(lastRecords, now, thresholds);
-    region.innerHTML = renderSourcesRegion(audit, opts.getLocale(), filters, now);
+    const results = renderSourcesRegion(audit, opts.getLocale(), filters, now);
+    region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
   };
 
   const onFilterEvent = (ev: unknown): void => {
