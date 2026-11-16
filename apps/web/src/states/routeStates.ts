@@ -65,7 +65,7 @@ export function createRouteStates<R extends string>(
   };
 }
 
-export type RouteId = "search" | "place" | "journey" | "finders" | "map";
+export type RouteId = "search" | "place" | "journey" | "finders" | "map" | "saved";
 
 /** Default route set; replace the ids with the app's real route ids via createRouteStates. */
 export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
@@ -94,6 +94,12 @@ export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
     label: { en: "Map", fr: "Carte" },
     empty: "map-no-places",
     errors: ["offline-no-pack"],
+  },
+  saved: {
+    label: { en: "Saved places", fr: "Lieux enregistrés" },
+    empty: "no-saved-places",
+    // An online failure with no listed kind falls back to the first one.
+    errors: ["offline-no-pack", "offline"],
   },
 };
 

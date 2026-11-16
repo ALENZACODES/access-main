@@ -2,7 +2,9 @@
  * Registry audit: every dataset must carry source, open licence and retrieved date.
  * The audit reports gaps; it never fills them in. Unknown stays Unknown.
  */
-import { checkProvenance, freshness, licenceKind, type FreshnessState, type ProvenanceIssue } from './dataStatus';
+import { ageInDays, checkProvenance, freshness, licenceKind, type FreshnessState, type ProvenanceIssue } from './dataStatus';
+import { parseRetrieved } from './dateRules';
+import { cleanValue } from './unknownTokens';
 import { staleAfterFor, type DatasetKind } from './freshnessPolicy';
 import type { SourceInput } from './sourceList';
 
@@ -38,7 +40,12 @@ export interface AuditedSource {
   licence: string | null;
   /** true = on the open list, false = present but not on it, null = licence not recorded. */
   licenceOpen: boolean | null;
+  /** UTC day of retrieval (YYYY-MM-DD) when the date is real; null otherwise. A future day is kept here and the state is Unknown. */
   retrievedIso: string | null;
+  /** Whole calendar days (UTC) since retrieval; null when the date is missing, invalid or in the future. */
+  ageDays: number | null;
+  /** The staleness limit applied: stale means more than this many days old. */
+  limitDays: number;
   state: FreshnessState;
   issues: ProvenanceIssue[];
 }
@@ -89,11 +96,7 @@ export function findingRank(code: FindingCode): number {
   return FINDING_RANK[code];
 }
 
-function clean(v: string | null | undefined): string | null {
-  if (typeof v !== 'string') return null;
-  const t = v.trim();
-  return t === '' ? null : t;
-}
+const clean = cleanValue;
 
 function httpUrl(v: string | null | undefined): string | null {
   const u = clean(v);
@@ -152,7 +155,6 @@ export function auditRegistry(
       } else if (state === 'unknown') sawUnknown = true;
 
       const licence = clean(s.licence);
-      const dateOk = !issues.includes('missing-date') && !issues.includes('invalid-date');
       sources.push({
         datasetId: r.id,
         datasetName: display,
@@ -162,7 +164,9 @@ export function auditRegistry(
         url: httpUrl(s.url),
         licence,
         licenceOpen: licence === null || licenceKind(licence) === 'unknown' ? null : licenceKind(licence) !== 'unrecognised',
-        retrievedIso: dateOk ? (clean(s.retrievedAt) as string).slice(0, 10) : null,
+        retrievedIso: parseRetrieved(s.retrievedAt)?.day ?? null,
+        ageDays: ageInDays(s.retrievedAt, now),
+        limitDays: days,
         state,
         issues,
       });

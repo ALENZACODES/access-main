@@ -5,6 +5,7 @@
  */
 import type { Locale } from "./stateCopy";
 import { lintFrench } from "./typography";
+import { forbiddenOrgNeedles } from "../../../../packages/shared/test/forbiddenOrg.ts";
 
 export type CopyIssue =
   | "overclaim-verified"
@@ -17,6 +18,10 @@ export type CopyIssue =
   | "straight-apostrophe"
   | "punctuation-spacing";
 
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Built only from the shared forbidden-name helper, so no name appears in this file. */
+const ORG_PATTERN = new RegExp(forbiddenOrgNeedles().map(escapeRegExp).join("|"), "i");
+
 const RULES: ReadonlyArray<readonly [CopyIssue, RegExp]> = [
   ["overclaim-verified", /\bverified\b|\bvérifi/i],
   ["overclaim-realtime", /real[- ]?time|temps réel|live data|à jour en direct/i],
@@ -24,7 +29,7 @@ const RULES: ReadonlyArray<readonly [CopyIssue, RegExp]> = [
   ["overclaim-certified", /certified|certifi|\bAAA\b|conformant|conforme/i],
   ["overclaim-guarantee", /guarantee|garanti/i],
   ["mentions-ai", /\bAI\b|\bIA\b|artificial intelligence|intelligence artificielle/i],
-  ["banned-organisation", /scio|sciontario|spinal cord injury ontario/i],
+  ["banned-organisation", ORG_PATTERN],
 ];
 
 export function lintCopy(text: string, locale: Locale): CopyIssue[] {

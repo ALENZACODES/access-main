@@ -140,7 +140,7 @@ describe('mountDataStatusPanel', () => {
     const host = new FakeHost();
     let locale: 'en' | 'fr' = 'en';
     mount(host, { getLocale: () => locale });
-    expect(host.attrs).toMatchObject({ lang: 'en', role: 'region', 'aria-label': 'Data quality overview' });
+    expect(host.attrs).toMatchObject({ lang: 'en', role: 'region', 'aria-label': 'Data status panel' });
     locale = 'fr';
     host.click('recalculate');
     expect(host.attrs['lang']).toBe('fr');

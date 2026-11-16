@@ -3,7 +3,9 @@
  * A retrieved date moving backwards, or a licence/date disappearing, is surfaced
  * first because it may mean data was lost rather than refreshed.
  */
-import { parseIsoDate, type Locale } from './dataStatus';
+import { parseRetrieved } from './dateRules';
+import type { Locale } from './dataStatus';
+import { cleanValue } from './unknownTokens';
 import type { DatasetRecord } from './datasetRegistry';
 import { t } from './i18n';
 import { escapeHtml, type SourceInput } from './sourceList';
@@ -48,15 +50,11 @@ export function changeRank(code: ChangeCode): number {
   return RANK[code];
 }
 
-function clean(v: string | null | undefined): string | null {
-  if (typeof v !== 'string') return null;
-  const x = v.trim();
-  return x === '' ? null : x;
-}
+const clean = cleanValue;
 
 /** YYYY-MM-DD when the value is a valid ISO date, else null. */
 function dayOf(v: string | null | undefined): string | null {
-  return parseIsoDate(v) === null ? null : (clean(v) as string).slice(0, 10);
+  return parseRetrieved(v)?.day ?? null;
 }
 
 function firstById<T extends { id: string }>(items: readonly T[]): Map<string, T> {
