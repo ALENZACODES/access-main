@@ -18,13 +18,20 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium",
+      // Day 22 first-result gates need the runner to themselves. Other e2e
+      // files running in parallel push the medians over the 1,500 ms gate.
+      name: "perf",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: ["release/**", "axe-sweep/**"],
+      testMatch: "perf.spec.ts",
+      fullyParallel: false,
     },
     {
-      // The axe sweep is heavy. Running it after the default project keeps the
-      // Day 22 perf gates from competing with it for CPU on CI runners.
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: ["release/**", "perf.spec.ts", "axe-sweep/**"],
+      dependencies: ["perf"],
+    },
+    {
       name: "axe-sweep",
       use: { ...devices["Desktop Chrome"] },
       testMatch: "axe-sweep/**/*.spec.ts",
