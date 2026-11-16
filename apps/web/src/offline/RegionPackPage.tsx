@@ -115,9 +115,12 @@ export function OfflineRegionPage() {
       await refresh();
       if (result.completed) setMessage(c.complete);
       else if (result.reason === "download-error") {
-        // Cell-by-cell download records the stop rather than throwing; recovery
-        // still names the cause (digest, size, or record-count mismatch).
-        setFailure({ region: id, failure: classifyPackDownloadError(fetchFailure, navigator.onLine) });
+        // Digest, size or record-count mismatches use the recovery notice.
+        // A failed fetch that still saved earlier cells stays a partial result
+        // so the user can resume.
+        const classified = classifyPackDownloadError(fetchFailure, navigator.onLine);
+        if (classified.reason === "invalid-data") setFailure({ region: id, failure: classified });
+        else setError(downloadResultText(language, result));
       } else setError(downloadResultText(language, result));
     } catch (cause) {
       // Recovery copy names the cause and the next step; raw error text is never shown.
@@ -177,7 +180,7 @@ export function OfflineRegionPage() {
             <span lang="und">{cell.id}</span> — {cellStatusText(language, cell.lookup)}
           </li>)}</ul>
         </details>}
-        {result && !result.completed && result.reason !== "download-error" && busy !== region.id && (() => {
+        {result && !result.completed && failure?.region !== region.id && busy !== region.id && (() => {
           const view = pressureView({ phase: "stopped", result }, language);
           return <p data-testid="storage-pressure">{view.message} {view.details}</p>;
         })()}
