@@ -113,64 +113,54 @@ export async function walkSequentialFocus(
   }
   await resetSequentialFocus(page);
   const forward: FocusSnapshot[] = [];
-  const keys = new Set<string>();
+  const backwards: FocusSnapshot[] = [];
+  const seen = new Set<string>();
+  let error: string | null = null;
   let wrapped = false;
-  for (let index = 0; index < maxSteps; index += 1) {
+
+  for (let step = 0; step < maxSteps; step += 1) {
     const next = await tabOnce(page);
-    if (next === null) break;
+    if (next === null) {
+      // Tab may leave the document and enter browser chrome at the end.
+      // It must not be interpreted as a focusable application control.
+      break;
+    }
     const key = stableFocusKey(next);
-    if (keys.has(key)) {
+    if (seen.has(key)) {
       wrapped = true;
       break;
     }
+    const previous = forward[forward.length - 1];
     forward.push(next);
-    keys.add(key);
-  }
-  if (forward.length === 0) {
-    return {
-      forward, backwards: [], returnedToStart: false,
-      trapped: false, error: "No keyboard focus target found",
-    };
-  }
-  // A wrapped Tab is already sitting on the first recorded control. A Tab
-  // that leaves the document instead sits in browser chrome or on the body.
-  // Reverse that *one* exploratory Tab to regain the actual last control.
-  // Never reconstruct the walk from body: browser chrome, SPA render timing,
-  // and per-control DOM updates can yield a different entry point.
-  if (wrapped || forward.length < maxSteps) {
-    await page.keyboard.press("Shift+Tab");
-  }
-  const last = await observeFocus(page);
-  const expectedLast = forward[forward.length - 1];
-  const atLast = last !== null &&
-    stableFocusKey(last) === stableFocusKey(expectedLast);
-  if (!atLast) {
-    return {
-      forward, backwards: [], returnedToStart: false,
-      trapped: !wrapped && forward.length === maxSteps,
-      error: `Reverse focus mismatch at last step ${forward.length - 1}`,
-    };
-  }
-  const backwards: FocusSnapshot[] = [];
-  let mismatch: string | null = null;
-  for (let index = forward.length - 2; index >= 0; index -= 1) {
-    const previous = await tabOnce(page, true);
-    if (previous === null) {
-      mismatch = `Focus disappeared while reversing at step ${index}`;
+    seen.add(key);
+    if (!previous) continue;
+
+    // Test the *actual* adjacent transition before taking another forward
+    // step. Replaying Tab from <body> after the full walk can enter at a
+    // different point when browser chrome or a rendered SPA is involved.
+    const reverse = await tabOnce(page, true);
+    if (reverse === null || stableFocusKey(reverse) !== stableFocusKey(previous)) {
+      error = `Reverse focus mismatch at step ${forward.length - 2}: ` +
+        `expected ${stableFocusKey(previous)}, observed ${reverse ? stableFocusKey(reverse) : "none"}`;
       break;
     }
-    backwards.push(previous);
-    if (stableFocusKey(previous) !== stableFocusKey(forward[index])) {
-      mismatch = `Reverse focus mismatch at step ${index}`;
+    backwards.unshift(reverse);
+    const again = await tabOnce(page);
+    if (again === null || stableFocusKey(again) !== key) {
+      error = `Forward focus mismatch after reversing at step ${forward.length - 1}: ` +
+        `expected ${key}, observed ${again ? stableFocusKey(again) : "none"}`;
       break;
     }
   }
+
+  if (forward.length === 0 && error === null) error = "No keyboard focus target found";
+  const trapped = !wrapped && forward.length === maxSteps;
   return {
     forward,
     backwards,
-    returnedToStart: mismatch === null,
-    trapped: !wrapped && forward.length === maxSteps,
-    error: mismatch,
+    returnedToStart: error === null,
+    trapped,
+    error,
   };
 }
 
