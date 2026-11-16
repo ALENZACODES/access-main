@@ -1,34 +1,18 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { appRoutes } from "../a11y-input/helpers.ts";
 
 /**
- * Residual Day 17 / P20 axe sweep: every shell ROUTES entry, in English and
+ * Residual Day 17 / P20 axe sweep: every live app route, in English and
  * French, at 320px and 1280px. Language is forced through localStorage (the
  * same keys the shell uses) before navigation, because detectLanguage() does
  * not read the path or ?lang=. Any axe violation fails CI unless it is on the
  * documented allowlist below, each with a reason.
  *
- * This list must stay in lockstep with `ROUTES` in e2e/shell.spec.ts and
- * e2e/audit.spec.ts.
+ * The route list is the live app list from P16's `appRoutes()` (router.tsx
+ * plus the Settings and More tables it mounts), not a hand-copied subset.
  */
-const ROUTES = [
-  "/",
-  "/about",
-  "/onboarding",
-  "/profile",
-  "/data-status",
-  "/build-card",
-  "/offline",
-  "/places",
-  "/map",
-  "/journey",
-  "/finders",
-  "/navigator",
-  "/games",
-  "/settings",
-  "/more",
-  "/help",
-] as const;
+const ROUTES = appRoutes();
 
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
@@ -38,7 +22,7 @@ const VIEWPORTS = [
 ] as const;
 
 type Language = "en" | "fr";
-type Route = (typeof ROUTES)[number];
+type Route = string;
 type ViewportWidth = (typeof VIEWPORTS)[number]["width"];
 
 /** Must match LANGUAGE_STORAGE_KEY / LANGUAGE_SET_KEY in src/i18n/index.ts. */
@@ -103,8 +87,19 @@ async function forceLanguage(page: Page, language: Language): Promise<void> {
   );
 }
 
-test("axe sweep covers every ROUTES entry in EN and FR at 320 and 1280", () => {
-  expect(ROUTES).toHaveLength(16);
+test("axe sweep covers every live app route in EN and FR at 320 and 1280", () => {
+  expect(ROUTES).toEqual(appRoutes());
+  expect(ROUTES).toEqual(
+    expect.arrayContaining([
+      "/contribute",
+      "/settings/controls",
+      "/settings/consent",
+      "/settings/caregiver",
+      "/settings/sync",
+      "/settings/advocacy",
+      "/settings/sources",
+    ]),
+  );
   expect(VIEWPORTS.map((viewport) => viewport.width)).toEqual([320, 1280]);
 });
 
@@ -131,7 +126,7 @@ for (const language of ["en", "fr"] as const) {
           await expect(page.locator("html")).toHaveAttribute("lang", language === "fr" ? /^fr\b/i : /^en\b/i);
           await expect(page.getByRole("link", { name: COPY[language].skip })).toHaveCount(1);
           await expect(page.getByRole("link", { name: COPY[language].home, exact: true })).toBeVisible();
-          await expect(page.getByRole("button", { name: COPY[language].switchTo })).toBeVisible();
+          await expect(page.getByRole("banner").getByRole("button", { name: COPY[language].switchTo })).toBeVisible();
 
           const result = await new AxeBuilder({ page }).withTags([...AXE_TAGS]).analyze();
           const hits: ViolationHit[] = result.violations.flatMap((violation) =>

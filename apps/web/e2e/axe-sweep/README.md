@@ -1,10 +1,12 @@
 # EN/FR axe route sweep
 
 `axe-sweep.spec.ts` is a Playwright-discovered test. It runs axe with WCAG
-2.0/2.1 A/AA and 2.2 AA rule tags on every shell `ROUTES` entry, in English
-and in French, at 320px and at 1280px. That matrix is required: a link crawl
-is not a substitute, because unlinked or not-found paths would be missed or
-scanned by accident.
+2.0/2.1 A/AA and 2.2 AA rule tags on every live app route, in English and in
+French, at 320px and at 1280px. The route list comes from P16's `appRoutes()`
+in `e2e/a11y-input/helpers.ts`, which reads `router.tsx` plus the Settings and
+More tables the router mounts, so a new page is included without copying a
+path list. A link crawl is not a substitute, because unlinked or not-found
+paths would be missed or scanned by accident.
 
 Language is forced by writing `access.language` and `access.language.set` in
 `localStorage` before navigation (the keys `detectLanguage()` actually reads).
