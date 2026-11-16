@@ -67,7 +67,17 @@ async function measure(page: Page) {
         const field = el as HTMLInputElement;
         let label = "";
         if (tag === "a" || tag === "button" || tag === "summary") label = el.innerText;
-        else if (tag === "input" || tag === "select" || tag === "textarea") label = field.labels?.[0]?.innerText ?? "";
+        else if (tag === "input" || tag === "select" || tag === "textarea") {
+          // Visible label is the associated <label> text, not the control's own
+          // options or value (a <select> inside its label would otherwise include
+          // every option in innerText).
+          const associated = field.labels?.[0];
+          if (associated) {
+            const clone = associated.cloneNode(true) as HTMLElement;
+            for (const nested of Array.from(clone.querySelectorAll("input, select, textarea, button"))) nested.remove();
+            label = clone.innerText;
+          }
+        }
         // WCAG 2.5.8 counts the whole area that activates the control. When the input sits inside its
         // own label (React Aria radios and checkboxes), clicking the label activates it, so the label is the target.
         const wrapping = field.labels ? Array.from(field.labels).find((item) => item.contains(el)) : undefined;
