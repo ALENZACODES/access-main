@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { containsForbiddenOrg } from "../../../../packages/shared/test/forbiddenOrg.ts";
 import {
   EMPTY_KINDS,
   ERROR_KINDS,
@@ -74,7 +75,7 @@ describe("state copy", () => {
     for (const l of locales) {
       for (const v of allViews(l)) {
         for (const s of strings(v)) {
-          expect(s).not.toMatch(/scio|sciontario|spinal cord injury ontario/i);
+          expect(containsForbiddenOrg(s)).toBe(false);
           expect(s).not.toMatch(/\b(AI|IA|artificial|intelligence)\b/);
         }
       }
