@@ -13,7 +13,7 @@ export function csvCell(value: string): string {
 
 export function toCsv(rows: readonly (readonly string[])[], bom = false): string {
   const body = rows.map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
-  return bom ? `﻿${body}` : body;
+  return bom ? `\uFEFF${body}` : body;
 }
 
 export function auditedSourcesToCsv(sources: readonly AuditedSource[], locale: Locale, bom = true): string {

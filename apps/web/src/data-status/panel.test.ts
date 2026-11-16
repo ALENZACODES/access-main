@@ -56,7 +56,7 @@ describe('QA report', () => {
   it('counts and items are localized and escaped', () => {
     const en = buildQaReport(audit, 'en');
     expect(en.counts.find((c) => c.key === 'qa.counts.notOpen')?.value).toBe(1);
-    expect(en.items[0]?.text).toContain('licence is not on the open list');
+    expect(en.items[0]?.text).toContain('licence not recognised');
     const html = renderQaReportHtml(en, 'en');
     expect(html).toContain('<h2 id="ds-qa-title">Data quality overview</h2>');
     expect(html).toContain('Places &lt;A&gt; / b');
