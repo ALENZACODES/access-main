@@ -38,7 +38,7 @@ export const en = {
   tierE: "E — Official-page desk check; not field evidence review. Not stored in this demonstration.",
   higherTiers: "Tiers 2, 3 and 4 require different evidence; none are asserted by this prototype.",
   seeded: "SEEDED-OPEN-DATA — Label for an illustrative open-data seed; not evidence review.",
-  prototype: "PROTOTYPE-not independently checked — Label for not independently checked prototype metadata.",
+  prototype: "PROTOTYPE-UNVERIFIED — Label for not independently checked prototype metadata.",
   emptyTier: "No tiered records",
   tierCountSeparator: ": ",
   listSeparator: "; ",
