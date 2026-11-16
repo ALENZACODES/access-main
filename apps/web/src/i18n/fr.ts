@@ -72,12 +72,12 @@ export const fr: Messages = {
       "Les préférences, y compris les choix de mobilité, restent dans la mémoire de ce navigateur. Cette interface n'a pas de compte et n'envoie rien.",
     countsTitle: "Enregistrements dans cette interface",
     countsIntro: "Ces nombres sont lus sur cet appareil. Ils ne décrivent pas une couverture.",
-    verified:
-      "Enregistrements stockés qui disent encore vérifiés\u00a0: {{count}}. Ce prototype refuse cette étiquette.",
+    refusedLabelCount:
+      "Enregistrements stockés portant encore une étiquette de confirmation refusée\u00a0: {{count}}. Ce prototype n’utilise pas cette étiquette.",
     frenchNote:
       "Le texte français de l'interface est une traduction provisoire. Il doit encore être révisé par une personne qualifiée. Au-delà de l'interface, le contenu est en anglais dans ce prototype.",
     audit:
-      "Des vérifications automatiques couvrent cette interface. Elles ne constituent pas un audit WCAG complet, ni un essai avec des personnes qui utilisent une technologie d'assistance.",
+      "Des contrôles automatiques couvrent cette interface. Elles ne constituent pas un audit WCAG complet, ni un essai avec des personnes qui utilisent une technologie d'assistance.",
     notices:
       "Les bibliothèques d'exécution comprennent React Aria Components (Apache-2.0), i18next (MIT), Dexie (Apache-2.0), et Workbox avec vite-plugin-pwa (MIT). Ces noms sont des crédits, pas des appuis.",
   },
@@ -142,7 +142,7 @@ export const fr: Messages = {
     storageUnavailable: "Ce navigateur n'a pas autorisé le stockage sur l'appareil.",
     storageNext:
       "Les préférences et les enregistrements en cache ne peuvent pas être gardés dans ce navigateur pour le moment. La navigation privée ou un disque plein peuvent en être la cause. Vous pouvez quand même lire l'aide, ou réessayer.",
-    storageRetry: "Vérifier le stockage de nouveau",
+    storageRetry: "Contrôler de nouveau le stockage",
     storageHelp: "Lire où vont les préférences",
     wifi: "Préférence Wi-Fi pour les futurs téléchargements\u00a0: {{value}}.",
     wifiOn: "Wi-Fi seulement",
@@ -252,10 +252,10 @@ export const fr: Messages = {
       "Aucun trajet n'est dans ces données. La planification des trajets n'est pas reliée à cette version, donc il n'y a rien à enregistrer pour l'instant.",
     helpTitle: "Numéros d'aide",
     helpSource: "Comparé à la page officielle le {{date}}.",
-    elevatorTitle: "État des ascenseurs, dernière vérification",
+    elevatorTitle: "État des ascenseurs, dernier contrôle",
     elevatorLead:
-      "Ce sont des copies des avis de panne de l'exploitant au moment où les données ont été préparées. Elles ne sont pas en direct et peuvent être périmées. Vérifiez auprès de l'exploitant avant de compter sur un ascenseur.",
-    elevatorItem: "{{station}}. Dernière vérification le {{date}}.",
+      "Ce sont des copies des avis de panne de l'exploitant au moment où les données ont été préparées. Elles ne sont pas en direct et peuvent être périmées. Renseignez-vous auprès de l’exploitant avant de compter sur un ascenseur.",
+    elevatorItem: "{{station}}. Dernier contrôle le {{date}}.",
     elevatorSource: "Source\u00a0: {{name}}. Licence\u00a0: {{licence}}. Récupéré le {{date}}. Niveau 0, copie enregistrée.",
     reportTitle: "Signaler un problème pour un lieu enregistré",
     reportPlace: "Lieu",
@@ -458,9 +458,9 @@ export const fr: Messages = {
     noDate: "Sans date",
     undated_one: "{{count}} enregistrement en cache n'a pas de date de source.",
     undated_other: "{{count}} enregistrements en cache n'ont pas de date de source.",
-    verificationTitle: "Position sur la vérification",
-    verificationBody: "Aucun enregistrement de ce prototype n'est vérifié. Le niveau 3 et l'étiquette vérifié sont refusés.",
-    verifiedCount: "Enregistrements en cache qui disent encore vérifié\u00a0: {{count}}.",
+    labelPolicyTitle: "Comment les fiches sont étiquetées",
+    labelPolicyBody: "Aucune fiche de ce prototype ne porte une étiquette de confirmation. Le niveau 3 et cette étiquette sont refusés.",
+    refusedLabelCount: "Fiches en cache portant encore une étiquette de confirmation refusée\u00a0: {{count}}.",
     modulesTitle: "Parties de the App dans cette version",
     modulesCaption: "Si chaque partie a répondu comme connectée",
     part: "Partie",
@@ -468,7 +468,7 @@ export const fr: Messages = {
     stateConnected: "Connectée",
     stateNotConnected: "Non connectée dans cette version",
     stateError: "N'a pas répondu",
-    stateChecking: "Vérification en cours",
+    stateChecking: "Contrôle en cours",
     journeysNote: "Les trajets de démonstration ne peuvent être montrés que si Trajet est connecté. Sinon, utilisez la solution de repli.",
     fallbackTitle: "Solution de repli hors ligne",
     fallbackReady: "Prête. Un service worker contrôle cette page, donc l'interface peut se rouvrir sans réseau.",
