@@ -1,4 +1,4 @@
-import { containsForbiddenOrg } from '../../../../packages/shared/test/forbiddenOrg.ts';
+import { forbiddenOrgNeedles } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import type { CheckResult, Entry } from './types.js';
 
 /**
@@ -78,7 +78,7 @@ export const COPY_RULES: readonly CopyRule[] = [
     level: 'ban',
     // The needles come only from the shared forbiddenOrg helper. The pattern never matches.
     pattern: /(?!)/,
-    custom: containsForbiddenOrg,
+    custom: (text) => forbiddenOrgNeedles().some((needle) => text.toLowerCase().includes(needle.toLowerCase())),
     en: 'Name of an organisation that must not appear.',
     fr: 'Nom d’un organisme qui ne doit pas apparaître.',
   },
