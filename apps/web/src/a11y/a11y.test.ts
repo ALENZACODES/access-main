@@ -1,4 +1,7 @@
 /** @vitest-environment jsdom */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import mainSource from '../main.tsx?raw';
 import appShellSource from '../shell/AppShell.tsx?raw';
@@ -15,6 +18,8 @@ import {
   parseHex,
   skipLinkLabel,
 } from './index';
+
+const globalCss = readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../styles/global.css'), 'utf8');
 
 describe('contrastRatio', () => {
   it('is 21 for black on white and 1 for identical colours', () => {
@@ -100,6 +105,13 @@ describe('skip link wiring', () => {
     expect(appShellSource).toMatch(/className="a11y-skip-link"/);
     expect(appShellSource).toMatch(/skipLinkLabel\(/);
     expect(buildA11yCss()).toContain('.a11y-skip-link');
+  });
+
+  it('drops unused .skip-link rules and hides the control with inset-block-start', () => {
+    expect(globalCss).not.toMatch(/(?<!a11y)\.skip-link\b/);
+    expect(globalCss).toContain('.a11y-skip-link');
+    expect(globalCss).toContain('inset-block-start');
+    expect(globalCss).not.toMatch(/\.a11y-skip-link[^{]*\{[^}]*transform:/);
   });
 });
 
