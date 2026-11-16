@@ -1,11 +1,7 @@
 import { createPackSource, fieldValue, type PackSource } from "@access-main/data-client";
 import { createJourneyModule } from "@access-maps/journey-data";
 import { createPlacesModule } from "@access-maps/places-shell";
-import { createFindersModule } from "@access-tools/finders";
-import { gamesShellModule } from "@access-tools/games";
-import { navigatorShellModule } from "@access-tools/navigator";
-import { helpShellModule } from "@access/help";
-import type { ModuleRegistry, ModuleResult } from "@access/shared";
+import type { FindersModule, HelpModule, ModuleRegistry, ModuleResult } from "@access/shared";
 import { createModules } from "./stubs.ts";
 import type { PackRecord, PlaceDetail } from "./types.ts";
 
@@ -45,16 +41,48 @@ export async function getPlaceDetail(source: PackSource, id: string): Promise<Mo
   }
 }
 
+/**
+ * Load finders and help only when those modules run. A static import of the
+ * package entry points pulled the help article corpus, the finders React
+ * pages, and Ajv onto every ModulePage visit, including place search and
+ * journey plan (Day 22 first-result path).
+ */
+function deferredFinders(source: PackSource): FindersModule {
+  let pending: Promise<FindersModule> | undefined;
+  const load = () => {
+    pending ??= import("@access-tools/finders/shell").then((mod) => ({
+      id: "finders" as const,
+      search: (query: Parameters<FindersModule["search"]>[0], ctx: Parameters<FindersModule["search"]>[1]) =>
+        mod.searchFindersForShell(source, query, ctx),
+    }));
+    return pending;
+  };
+  return {
+    id: "finders",
+    search: async (query, ctx) => (await load()).search(query, ctx),
+  };
+}
+
+function deferredHelp(): HelpModule {
+  let pending: Promise<HelpModule> | undefined;
+  const load = () => {
+    pending ??= import("@access/help/shell").then((mod) => mod.helpShellModule);
+    return pending;
+  };
+  return {
+    id: "help",
+    list: async (ctx) => (await load()).list(ctx),
+  };
+}
+
 /** The six real modules over one shared data source. Every result goes through guardModules in createModules. */
 export function createLinkedModules(source: PackSource): ModuleRegistry {
   const get = (id: string) => getPlaceDetail(source, id);
   const guarded = createModules({
     places: { ...createPlacesModule(source), get },
     journey: createJourneyModule(source),
-    finders: createFindersModule(source),
-    navigator: navigatorShellModule,
-    games: gamesShellModule,
-    help: helpShellModule,
+    finders: deferredFinders(source),
+    help: deferredHelp(),
   });
   // `get` is checked by getPlaceDetail, so it is set again here in case the guard rebuilt the places module.
   return { ...guarded, places: { ...guarded.places, get } };
