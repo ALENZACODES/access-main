@@ -1,36 +1,31 @@
 # Keyboard, switch and screen-reader route checks
 
-These Playwright tests exercise keyboard navigation, sequential switch-style
-activation and accessible structure on configured web routes. They use no
-external services, map tiles or credentials.
+`route-input.spec.ts` runs in CI with the rest of the web Playwright suite
+(`npm run test:e2e`). By default it checks **every live route**, read from
+`src/router.tsx`, the Settings table in `src/features/routes.tsx` and, once it
+is in the build, the More (J lane) table in `src/hub/routes.tsx`. A new route
+is covered without editing the spec. Parameter routes (`/places/:id`,
+`/help/:id`) and the catch-all are skipped.
 
-These specs live under `apps/web/e2e`, so `npm run test:e2e -w @access/web`
-runs them with the rest of the web Playwright suite (default route `/`).
+Each route is opened in English and in French (switched with the header
+language button, as a person would) at 320 and 1280 CSS pixels. Each run checks:
 
-From the repository root, with the web server running (or an existing
-Playwright `webServer` configuration):
+- document language, one `main` landmark, one non-empty `h1` and a page title;
+- unique ids and image alternatives;
+- an accessible name on every visible control, and the visible label inside
+  that name (WCAG 2.5.3 label in name), read from Chrome's accessibility tree;
+- 44 by 44 CSS pixel targets for buttons, fields and links (a link inside a
+  sentence is exempt, as in WCAG 2.5.8);
+- axe with the WCAG 2.2 AA rule set;
+- the skip link as the first Tab stop, then Tab and Shift+Tab;
+- Enter, then Space, activating the first enabled button in `main`.
 
-```sh
-A11Y_ROUTES=/,/map,/services A11Y_BASE_URL=http://127.0.0.1:3000 \
-  npx playwright test apps/web/e2e/a11y-input
-```
+`A11Y_ROUTES=/map,/more` narrows a local run to the listed paths. CI leaves
+it unset, so CI covers every route.
 
-`A11Y_ROUTES` is a comma-separated list of actual local paths. It defaults to
-`/` because other route names are not known in this lane. `A11Y_BASE_URL`
-overrides Playwright's configured `baseURL`; otherwise localhost:3000 is used.
-A missing route fails instead of being silently skipped. Run the suite once
-per supported locale, using its actual locale-prefixed routes where applicable.
+Automated checks find some failures. They do not prove WCAG 2.2 AA, real
+assistive-technology announcements or physical switch timing. Manual
+screen-reader, switch and keyboard testing still follows.
 
-Checks include landmark and heading semantics, document language, named
-controls, image alternatives, forward/reverse keyboard focus, native button
-activation with Enter and Space, and 44×44 CSS-pixel target dimensions on
-applicable controls. The target check is intentionally stricter than some
-WCAG exceptions; annotate justified exceptions in application-level tests.
-
-Automated DOM tests cannot verify real assistive-technology announcements,
-physical switch timing, complete keyboard workflows or full WCAG 2.2 AA
-conformance. Follow with manual screen-reader, switch and keyboard testing.
-
-These tests contain no accessibility-location dataset. Any future fixture
-must carry its source, open licence and collection date; missing accessibility
+These tests contain no accessibility-location dataset. Missing accessibility
 facts must remain UNKNOWN rather than inferred.
