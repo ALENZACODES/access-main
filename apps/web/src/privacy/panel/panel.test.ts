@@ -24,6 +24,20 @@ describe("renderInventoryTableHtml", () => {
     expect(html).toContain('role="region"');
     expect(html).toContain("aria-labelledby");
   });
+  it("reflows as stacked cards on narrow screens instead of a sideways scroller", () => {
+    const html = renderInventoryTableHtml("en", FIXTURE);
+    expect(html).not.toContain("overflow-x");
+    expect(html).not.toContain("tabindex");
+    expect(html).toContain('class="privacy-inventory"');
+    expect(html).toMatch(/@media\s*\(max-width:\s*40em\)/);
+    expect(html).toMatch(/display:\s*block/);
+    expect(html).toContain('data-label="Where it is kept"');
+    expect(html).toContain('data-label="Why"');
+    expect(html).toContain('data-label="How long"');
+    expect(html).toContain('data-label="Source and date"');
+    const fr = renderInventoryTableHtml("fr", FIXTURE);
+    expect(fr).toContain("data-label=\"Où c’est conservé\"");
+  });
   it("shows missing fields as unknown, never as a value", () => {
     const html = renderInventoryTableHtml("en", FIXTURE);
     const settings = html.slice(html.indexOf('data-id="settings"'));

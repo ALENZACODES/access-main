@@ -16,7 +16,7 @@ is sent anywhere and no third-party code or data is used.
   each key is really gone and reports any that are not.
 - `controller.ts` + `panel.ts` + `mount.ts`: the panel (language, table, download,
   erase with confirmation, polite status). Buttons and language options are at
-  least 44 x 44 px; the table scrolls by keyboard.
+  least 44 x 44 px. Below 40em (including 320px) the inventory table reflows into stacked cards, so it does not overflow and does not use a tabindex scroller.
 
 Not covered by tests: `adaptElement` and `browserDownload` need a real browser.
 
