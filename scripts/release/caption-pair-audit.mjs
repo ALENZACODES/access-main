@@ -1,5 +1,5 @@
 /** Cross-language media caption timing consistency checks. */
-import { finding, tokenizeHtml } from './site-audit.mjs';
+import { finding } from './site-audit.mjs';
 import { mediaBlocks, describeMedia } from './media-audit.mjs';
 import { resolveDownload } from './download-audit.mjs';
 
