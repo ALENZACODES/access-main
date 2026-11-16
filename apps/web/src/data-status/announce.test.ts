@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAnnouncer, describeChange, describeList, filterParts, REPEAT_MARK, sortPart, type ListState } from './announce';
+import { createAnnouncer, describeListChange, describeList, filterParts, REPEAT_MARK, sortPart, type ListState } from './announce';
 import { NO_FILTERS, type Filters } from './filters';
 import { lintFrench } from './i18n';
 
@@ -68,40 +68,40 @@ describe('describeList', () => {
   });
 });
 
-describe('describeChange', () => {
+describe('describeListChange', () => {
   it('describes the whole list on first use', () => {
-    expect(describeChange(null, base, 'en')).toBe(describeList(base, 'en'));
+    expect(describeListChange(null, base, 'en')).toBe(describeList(base, 'en'));
   });
   it('repeats the full description when nothing changed', () => {
-    expect(describeChange(base, { ...base }, 'en')).toBe(describeList(base, 'en'));
+    expect(describeListChange(base, { ...base }, 'en')).toBe(describeList(base, 'en'));
   });
   it('names the new result and filters after a filter change', () => {
     const next = with_({ shown: 3, filters: f({ query: 'park' }) });
-    expect(describeChange(base, next, 'en')).toBe('3 sources shown. Filters: name contains “park”.');
+    expect(describeListChange(base, next, 'en')).toBe('3 sources shown. Filters: name contains “park”.');
   });
   it('says filters were cleared when the last one is removed', () => {
     const prev = with_({ shown: 3, filters: f({ query: 'park' }) });
-    expect(describeChange(prev, base, 'en')).toBe('12 sources shown. Filters cleared.');
-    expect(describeChange(prev, base, 'fr')).toBe('12 sources affichées. Filtres effacés.');
+    expect(describeListChange(prev, base, 'en')).toBe('12 sources shown. Filters cleared.');
+    expect(describeListChange(prev, base, 'fr')).toBe('12 sources affichées. Filtres effacés.');
   });
   it('says only the sort after a sort change, and says when it is removed', () => {
     const sorted = with_({ sort: { key: 'status', dir: 'desc' } });
-    expect(describeChange(base, sorted, 'en')).toBe('Sorted by status, descending.');
-    expect(describeChange(sorted, base, 'en')).toBe('Sorting removed.');
+    expect(describeListChange(base, sorted, 'en')).toBe('Sorted by status, descending.');
+    expect(describeListChange(sorted, base, 'en')).toBe('Sorting removed.');
   });
   it('says the page and the row count after a page change', () => {
     const prev = with_({ page: 1, pages: 3, shown: 25 });
     const next = with_({ page: 2, pages: 3, shown: 25 });
-    expect(describeChange(prev, next, 'en')).toBe('Page 2 of 3. 25 sources shown.');
+    expect(describeListChange(prev, next, 'en')).toBe('Page 2 of 3. 25 sources shown.');
   });
   it('does not repeat the count after a filter change that also moves the page', () => {
     const prev = with_({ page: 3, pages: 3, shown: 5 });
     const next = with_({ page: 1, pages: 1, shown: 2, filters: f({ onlyIssues: true }) });
-    expect(describeChange(prev, next, 'en')).toBe('2 sources shown. Filters: only items to review.');
+    expect(describeListChange(prev, next, 'en')).toBe('2 sources shown. Filters: only items to review.');
   });
   it('combines a filter change and a sort change', () => {
     const next = with_({ shown: 0, filters: f({ query: 'zzz' }), sort: { key: 'source', dir: 'asc' } });
-    expect(describeChange(base, next, 'en')).toBe('No sources match. Filters: name contains “zzz”. Sorted by source, ascending.');
+    expect(describeListChange(base, next, 'en')).toBe('No sources match. Filters: name contains “zzz”. Sorted by source, ascending.');
   });
   it('has no French typography problems in any of the change sentences', () => {
     const states = [
@@ -110,7 +110,7 @@ describe('describeChange', () => {
       with_({ page: 2, pages: 2 }),
       with_({ shown: 0, filters: f({ onlyIssues: true }) }),
     ];
-    for (const s of states) expect(lintFrench(describeChange(base, s, 'fr')), JSON.stringify(s)).toEqual([]);
+    for (const s of states) expect(lintFrench(describeListChange(base, s, 'fr')), JSON.stringify(s)).toEqual([]);
   });
 });
 
