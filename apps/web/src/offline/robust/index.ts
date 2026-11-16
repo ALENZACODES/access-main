@@ -34,3 +34,8 @@ export {
   pressureView,
 } from "./storagePressure.ts";
 export type { PressureController, PressureState, PressureView } from "./storagePressure.ts";
+
+export * from "./offlineDashboard.ts";
+export * from "./regionInventory.ts";
+export * from "./quotaPlanning.ts";
+export * from "./offlineCopy.ts";

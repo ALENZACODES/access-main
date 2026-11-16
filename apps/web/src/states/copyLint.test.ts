@@ -12,9 +12,12 @@ import {
   getErrorState,
   initialConnectivity,
   lintCopy,
+<<<<<<< HEAD
   CATALOG,
   EXTRA_ROUTES,
   message,
+=======
+>>>>>>> origin/main
   offlineBanner,
   placeRouteView,
   statusText,
@@ -51,12 +54,15 @@ function allCopy(locale: Locale): string[] {
     today: "2026-11-15",
   });
   if (content.kind === "content" && content.savedCopyNotice) out.push(content.savedCopyNotice);
+<<<<<<< HEAD
   for (const id of Object.keys(CATALOG) as (keyof typeof CATALOG)[]) {
     void CATALOG[id];
     out.push(message(id, locale, { n: 2, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m", m: 1, date: "1 May 2026" }));
     out.push(message(id, locale, { n: 1, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m", m: 1, date: "1 May 2026" }));
   }
   for (const r of Object.values(EXTRA_ROUTES.routes)) out.push(r.label[locale]);
+=======
+>>>>>>> origin/main
   return out.filter((x) => x !== "");
 }
 
@@ -86,7 +92,11 @@ describe("all package copy passes the linter", () => {
   for (const locale of locales) {
     it(`${locale}: no overclaims, prohibited wording or typography problems`, () => {
       const copy = allCopy(locale);
+<<<<<<< HEAD
       expect(copy.length).toBeGreaterThan(100);
+=======
+      expect(copy.length).toBeGreaterThan(60);
+>>>>>>> origin/main
       for (const s of copy) expect(lintCopy(s, locale), s).toEqual([]);
     });
   }
