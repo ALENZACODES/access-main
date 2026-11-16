@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DISPLAY_TIERS, tierMessageKey, type CacheEntry } from "@access/shared";
-import { DEFAULT_STALE_AFTER_DAYS, dataBadge, formatRate, type DataBadge } from "../data-status/index.ts";
+import { DEFAULT_STALE_AFTER_DAYS, buildSourceList, dataBadge, formatRate, renderSourceListHtml, type DataBadge } from "../data-status/index.ts";
 import { Button } from "../design/Button.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
 import { ErrorActions } from "../shell/ErrorActions.tsx";
@@ -165,6 +165,12 @@ export function DataStatusPage() {
           <p role="status" tabIndex={-1} ref={clearedRef}>{t("data.cleared")}</p>
         ) : null}
       </section>
+      {sourceRows.length > 0 ? (
+        <section className="stack" aria-labelledby="source-list-title">
+          <h2 id="source-list-title">{locale === "fr" ? "Sources et licences" : "Sources and licences"}</h2>
+          <div dangerouslySetInnerHTML={{ __html: sourceListHtml }} />
+        </section>
+      ) : null}
       <section className="stack" aria-labelledby="legend-title">
         <h2 id="legend-title">{t("data.legendTitle")}</h2>
         <dl className="review-list">

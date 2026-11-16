@@ -19,3 +19,6 @@ export {
   type ProvenanceIssue,
   type RateDisplay,
 } from "./dataStatus.ts";
+
+export { buildSourceList, renderSourceListHtml, escapeHtml } from "./sourceList.ts";
+export type { SourceInput, SourceRow } from "./sourceList.ts";
