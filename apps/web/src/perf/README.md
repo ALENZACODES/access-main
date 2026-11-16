@@ -27,6 +27,9 @@ only with Settings packages).
 Day 22 record from a local run (Playwright Chromium, 390×844, CPU 4×
 slowdown, local production build, no network throttling, 3 cold runs,
 median): home LCP 288 ms; time to first result: place search 388 ms, journey
-plan 418 ms, washroom finder 450 ms. A CI runner or a desktop is not a real
+plan 418 ms, washroom finder 450 ms. The e2e gates are LCP ≤ 1,200 ms and
+first result ≤ 1,500 ms, about twice the CI medians seen on this branch. A
+separate e2e checks that preloading on focus or pointer leaves focus and the
+route unchanged. A CI runner or a desktop is not a real
 phone. The plan's on-phone measurement still has to be done by hand and
 compared with Day 12; no Day 12 record exists in this repo yet.

@@ -19,15 +19,16 @@ import { expect, test, type Browser } from "@playwright/test";
  *   the time until the person learns the answer.
  *
  * The record is written to test-results/perf/day22-performance.json. The
- * gates are deliberately loose (LCP 2,500 ms, first result 4,000 ms) so CI
- * noise does not flake, but a large regression fails. A CI runner is not a
+ * gates are LCP 1,200 ms and first result 1,500 ms: about twice the CI
+ * medians recorded on this branch (LCP 312–352 ms, first results 388–605 ms),
+ * so runner noise does not flake but a real regression fails. A CI runner is not a
  * real phone; the record says so.
  */
 
 const RUNS = 3;
 const CPU_SLOWDOWN = 4;
-const LCP_GATE_MS = 2_500;
-const FIRST_RESULT_GATE_MS = 4_000;
+const LCP_GATE_MS = 1_200;
+const FIRST_RESULT_GATE_MS = 1_500;
 const FLOWS = [
   { name: "place search", route: "/places" },
   { name: "journey plan", route: "/journey" },
@@ -134,4 +135,26 @@ test("start-up loads no on-demand chunk; focusing a nav link preloads only that 
   await page.getByRole("navigation").getByRole("link", { name: "Settings", exact: true }).focus();
   await expect.poll(() => requested.some((path) => /\/assets\/featureScreens-/.test(path))).toBe(true);
   expect(requested.filter((path) => /\/assets\/maplibre-/.test(path)), "MapLibre is never preloaded").toEqual([]);
+});
+
+test("preloading on focus or pointer keeps focus and the current route", async ({ page }) => {
+  const requested: string[] = [];
+  page.on("request", (request) => { if (request.url().endsWith(".js")) requested.push(new URL(request.url()).pathname); });
+  await page.goto("/", { waitUntil: "networkidle" });
+  const nav = page.getByRole("navigation");
+  for (const [name, chunk] of [["Data status", /\/assets\/DataStatusPage-/], ["Settings", /\/assets\/featureScreens-/]] as const) {
+    const link = nav.getByRole("link", { name, exact: true });
+    await link.focus();
+    await expect.poll(() => requested.some((path) => chunk.test(path))).toBe(true);
+    // The preload must not move focus, navigate or announce anything.
+    await page.waitForLoadState("networkidle");
+    await expect(link).toBeFocused();
+    await expect(page).toHaveURL(/\/$/);
+  }
+  const help = nav.getByRole("link", { name: "Help", exact: true });
+  const focused = nav.getByRole("link", { name: "Settings", exact: true });
+  await help.hover();
+  await page.waitForLoadState("networkidle");
+  await expect(focused).toBeFocused();
+  await expect(page).toHaveURL(/\/$/);
 });
