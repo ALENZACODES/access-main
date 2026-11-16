@@ -125,7 +125,14 @@ export function findForbiddenShippedCopy(source, forbiddenPatterns) {
     for (const pattern of forbiddenPatterns) {
       pattern.lastIndex = 0;
       if (pattern.test(token.value)) {
-        issues.push(`offset ${token.offset}: prohibited text in JavaScript string (${pattern.source})`);
+        const match = token.value.match(pattern);
+        const position = match?.index ?? 0;
+        const from = Math.max(0, position - 35);
+        const to = Math.min(token.value.length, position + (match?.[0].length ?? 0) + 55);
+        const context = pattern.source.includes('rif')
+          ? `; excerpt=${JSON.stringify(token.value.slice(from, to).replace(/\\s+/g, ' '))}`
+          : '';
+        issues.push(`offset ${token.offset}: prohibited text in JavaScript string (${pattern.source})${context}`);
       }
     }
   }
