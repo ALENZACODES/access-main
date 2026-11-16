@@ -75,4 +75,44 @@ export interface PackSource {
   /** Download and commit one cell of a region; resolves with its byte count. */
   downloadCell?(regionId: string, cellId: string, onBytes?: (size: number) => void): Promise<number>;
   deleteRegion(id: string): Promise<void>;
+  /**
+   * On-device parts for a previously downloaded region, or null if this
+   * device has no stored entry for the region. Raw bytes are included when
+   * the client kept them, so a later integrity check can hash them.
+   */
+  storedRegionIntegrity(id: string): Promise<RegionIntegritySnapshot | null>;
+  /** Fetches one part's bytes from the network. Does not read or write the store. */
+  fetchRegionPartBytes(path: string): Promise<Uint8Array>;
+  /**
+   * Replaces the stored region only after every part passes size, digest,
+   * parse and record-count checks. The previously stored pack is left in
+   * place when a check fails.
+   */
+  commitCheckedRegion(id: string, parts: ReadonlyArray<{ sha256: string; data: Uint8Array }>): Promise<RegionStatus>;
+}
+
+/** Provenance copied from the independently supplied pack manifest. */
+export interface IntegritySource {
+  name: string;
+  licence: string;
+  date: string;
+}
+
+/** One expected pack part and whatever is currently stored for it. */
+export interface RegionIntegrityPart {
+  path: string;
+  data: Uint8Array | null;
+  expectedBytes: number;
+  expectedSha256: string;
+  expectedCount: number;
+  /** Null when the part is missing from the store. */
+  actualCount: number | null;
+  structurallyValid: boolean;
+  source: IntegritySource;
+}
+
+export interface RegionIntegritySnapshot {
+  regionId: string;
+  cellCount: number;
+  parts: RegionIntegrityPart[];
 }

@@ -14,7 +14,7 @@ export interface ItemView {
   tier: string | null;
 }
 
-/** Lane message keys are not shell strings. The shell chooses its own sentence for each state. */
+/** Lane message keys are not shell strings. The shell chooses its own sentence for each state. The linked-records sentence is only used when the list is not empty. */
 export function statusKey(result: ModuleResult<unknown>): string {
   if (result.availability === "ready") {
     if (result.items.length === 0) {
@@ -45,6 +45,18 @@ function fromProvenance(provenance: Provenance): Pick<ItemView, "source" | "lice
   };
 }
 
+/** Use the record's own tier. A missing or UNKNOWN value stays unknown and is not invented. */
+function recordTier(item: Record<string, unknown>): string {
+  const direct = item.tier;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+  if (typeof direct === "number" && Number.isFinite(direct)) return String(direct);
+  const provenance = isRecord(item.provenance) ? item.provenance : null;
+  const fromProvenanceTier = provenance?.tier;
+  if (typeof fromProvenanceTier === "string" && fromProvenanceTier.trim()) return fromProvenanceTier.trim();
+  if (typeof fromProvenanceTier === "number" && Number.isFinite(fromProvenanceTier)) return String(fromProvenanceTier);
+  return "UNKNOWN";
+}
+
 /**
  * Turns a checked lane item into what the screen lists. The shell only gets
  * here after `guardModules` has accepted the result, so provenance is present
@@ -63,7 +75,7 @@ export function toItemView(id: ModuleId, item: unknown, locale: Locale, index: n
       source: text(item.sourceName, locale),
       licence: text(item.licenceNote, locale),
       date: text(item.retrievedOn, locale),
-      tier: "E",
+      tier: recordTier(item),
     };
   }
   const label = text(item.name, locale) ?? text(item.title, locale) ?? text(item.summary, locale);
@@ -106,7 +118,7 @@ export function ResultItems({ id, items }: { id: ModuleId; items: readonly unkno
               </div>
               <div>
                 <dt>{t("modules.itemTier")}</dt>
-                <dd>{t("modules.itemTierValue", { tier: view.tier })}</dd>
+                <dd>{view.tier.toUpperCase() === "UNKNOWN" ? t("modules.unknownValue") : t("modules.itemTierValue", { tier: view.tier })}</dd>
               </div>
             </dl>
           ) : null}
