@@ -12,6 +12,7 @@ import { useOnline } from "./useOnline.ts";
 const LINKS = [
   ["/", "nav.home", true],
   ["/places", "nav.places", false],
+  ["/map", "nav.map", false],
   ["/journey", "nav.journey", false],
   ["/finders", "nav.finders", false],
   ["/navigator", "nav.navigator", false],

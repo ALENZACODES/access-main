@@ -23,6 +23,7 @@ export const fr: Messages = {
     primary: "Navigation principale",
     home: "Accueil",
     places: "Lieux",
+    map: "Carte",
     journey: "Trajet",
     finders: "Recherche",
     navigator: "Répertoire",

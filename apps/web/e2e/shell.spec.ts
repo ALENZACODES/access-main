@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const ROUTES = ["/", "/about", "/onboarding", "/profile", "/data-status", "/build-card", "/offline", "/places", "/journey", "/finders", "/navigator", "/games", "/settings", "/help"];
+const ROUTES = ["/", "/about", "/onboarding", "/profile", "/data-status", "/build-card", "/offline", "/places", "/map", "/journey", "/finders", "/navigator", "/games", "/settings", "/more", "/help"];
 
 async function expectOneHeading(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
