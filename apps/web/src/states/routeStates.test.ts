@@ -36,6 +36,10 @@ describe("route states (via package index)", () => {
 
   it("place route empty state keeps accessibility UNKNOWN", () => {
     expect(getRouteEmpty("place", "en")?.title).toContain("UNKNOWN");
+    // The map has no search box: its empty state names the view and filters.
+    expect(getRouteEmpty("map", "en")?.title).toBe("No places in this map view");
+    expect(getRouteEmpty("map", "fr")?.ariaLabel).toBe("Carte – Aucun lieu dans cette vue de la carte");
+    expect(getRouteError("map", "pack-download-failed", "en").title).toBe("No connection and no offline pack");
     expect(getRouteEmpty("place", "fr")?.title).toContain("INCONNUE");
   });
 

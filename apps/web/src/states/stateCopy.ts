@@ -14,7 +14,7 @@
 export type Locale = "en" | "fr";
 
 export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed";
-export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown";
+export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places";
 export type ActionId = "retry" | "go-home" | "go-back" | "download-pack" | "clear-search" | "change-trip" | "help";
 
 /** The six Day 22 states, in the plan's order. */
@@ -120,6 +120,15 @@ const EMPTY: Record<EmptyKind, Entry> = {
       fr: "Choisissez un autre type, ou effacez les mots de recherche.",
     },
     actions: ["clear-search"],
+  },
+  // The map has no search box; an empty view is about the area and filters.
+  "map-no-places": {
+    title: { en: "No places in this map view", fr: "Aucun lieu dans cette vue de la carte" },
+    description: {
+      en: "Try moving the map or changing the filters.",
+      fr: "Déplacez la carte ou modifiez les filtres.",
+    },
+    actions: ["help"],
   },
   // Unknown stays UNKNOWN: never imply a place is or is not accessible.
   "accessibility-unknown": {

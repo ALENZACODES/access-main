@@ -92,8 +92,8 @@ export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
   },
   map: {
     label: { en: "Map", fr: "Carte" },
-    empty: "search-no-results",
-    errors: ["offline-no-pack", "pack-download-failed"],
+    empty: "map-no-places",
+    errors: ["offline-no-pack"],
   },
 };
 

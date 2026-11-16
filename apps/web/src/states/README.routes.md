@@ -1,9 +1,18 @@
-# states routes (round 2)
+# Route states
 
-`index.ts` is the package entry for this folder; import from `./states` (or `./index` in tests), not from the individual files.
+`routeStates.ts` maps each live route to its empty state and allowed error
+kinds. `getRouteError(route, kind, locale)` and `getRouteEmpty(route, locale)`
+return the state view plus a `routeId` and an `ariaLabel` (route name – title).
+A kind a route does not list falls back to that route's first listed kind.
 
-- `routeStates.ts` applies the state components to routes: `ROUTE_STATES` declares, per route (`search`, `place`, `saved`, `map`), its empty state and allowed error kinds. `createRouteStates(routes)` builds the same helpers for the app's own route ids and labels (the default four are placeholders to rename); `getRouteError(route, kind, locale)` and `getRouteEmpty(route, locale)` return the state view plus `routeId` and an `ariaLabel` (route name – title). Unlisted error kinds fall back to `unknown`; unknown routes get the generic error and no empty state.
-- The `place` route's empty state stays UNKNOWN; nothing is inferred about accessibility.
-- Only new user strings are the four route names (EN + FR). No data sources, so no licence or date to record.
-- Depends on `stateCopy.ts` from round 1.
-- Test: `vitest run apps/web/src/states`.
+| Route id | Live component | Empty state | Error kinds |
+| --- | --- | --- | --- |
+| `search` | `/places` (`pages/ModulePage.tsx`) | search-no-results | offline-no-pack, pack-download-failed |
+| `journey` | `/journey` (`pages/ModulePage.tsx`) | journey-no-route | offline-no-pack, pack-download-failed |
+| `finders` | `/finders` (`pages/ModulePage.tsx`) | finder-no-results | offline-no-pack, pack-download-failed |
+| `map` | `/map` (`map/MapPage.tsx`) | map-no-places | offline-no-pack (offline only; online load failures keep the map's own message) |
+| `place` | place detail | accessibility-unknown | offline-no-pack, pack-download-failed |
+
+The map has no search box, so its empty state is about the map view and the
+filters, not a search. `createRouteStates(routes)` builds the same helpers for
+another route table.

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { panMapTo, silenceMapMotion, zoomMapBy } from "./camera.ts";
 import { FeatureList } from "./FeatureList.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { useOnline } from "../shell/useOnline.ts";
 import { StateNotice, getRouteEmpty, getRouteError } from "../states/index.ts";
 import { CachedPMTilesSource, tileArchiveUrl, warmRegionTiles } from "./tileCache.ts";
 import "./map.css";
@@ -107,6 +108,7 @@ export function MapPage() {
   const [selectedNeeds, setSelectedNeeds] = useState<Need[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const online = useOnline();
   const [libraryError, setLibraryError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const listId = "map-place-list";
@@ -278,13 +280,15 @@ export function MapPage() {
         <section className="map-results" aria-label={t("map.list")}>
           <p role="status">{loading ? t("map.loading") : `${visible.length} ${t("map.records")}`}</p>
           {libraryError && <p id="map-library-error" role="alert">{t("map.libraryUnavailable")} {t("map.controlsUnavailable")}</p>}
-          {error ? (
+          {/* Offline, the map's data cannot load: say so with the offline state. Online, a load
+              failure is not a pack download, so the map's own message is kept. */}
+          {error && !online ? (
             <StateNotice
               lang={locale}
-              view={getRouteError("map", "pack-download-failed", locale)}
+              view={getRouteError("map", "offline-no-pack", locale)}
               onAction={{ retry: refresh }}
             />
-          ) : null}
+          ) : error ? <p role="alert">{t("map.unavailable")}</p> : null}
           {visible.length ? <FeatureList features={listFeatures as React.ComponentProps<typeof FeatureList>["features"]} locale={locale} selectedId={selectedId} onSelect={select} listId={listId} />
             : !loading && !error ? (
               <div id={listId} tabIndex={-1}>
