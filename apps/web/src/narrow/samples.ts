@@ -2,7 +2,7 @@ import { applyWaivers, parseWaivers } from './ci.js';
 import { auditBudget } from './budget.js';
 import { auditConsistency } from './consistency.js';
 import { auditContrast } from './contrast.js';
-import { endorsedByForbiddenOrgSample } from '../../../../packages/shared/test/forbiddenOrg.ts';
+import { forbiddenOrgNeedles } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import { auditCopy, COPY_RULES } from './copylint.js';
 import { auditFocusObscured } from './focus.js';
 import { lintHtml } from './htmllint.js';
@@ -366,7 +366,7 @@ export const SAMPLE_TEXT: Readonly<Record<string, string>> = {
   'claim-conformance': 'Fully accessible',
   'mention-tech': 'Powered by AI',
   'mention-tech-terms': 'Uses machine learning',
-  'mention-org': endorsedByForbiddenOrgSample('en'),
+  'mention-org': `Endorsed by ${forbiddenOrgNeedles()[0] ?? ''}`,
   'advice-eligibility': 'You qualify for support',
   'advice-medical': 'Consult your doctor',
   'claim-complete': 'Always up to date',

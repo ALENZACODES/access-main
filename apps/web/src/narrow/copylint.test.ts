@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { auditCopy, auditCopyDict, COPY_RULES, plain, scanCopy } from './copylint.js';
-import { endorsedByForbiddenOrgSample } from '../../../../packages/shared/test/forbiddenOrg.ts';
+import { forbiddenOrgNeedles } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import { SAMPLE_TEXT } from './samples.js';
 
 const ids = (t: string): string[] => scanCopy(t).map((h) => h.rule.id);
@@ -14,7 +14,7 @@ const BAD: ReadonlyArray<readonly [string, readonly string[]]> = [
   ['claim-conformance', ['Fully accessible', 'AAA-conformant', 'WCAG 2.2 compliant', 'Certifié accessible', '100% accessible', 'Entièrement accessible']],
   ['mention-tech', ['Powered by AI', 'Propulsé par l’IA', 'AI route planner']],
   ['mention-tech-terms', ['Uses machine learning', 'Intelligence artificielle', 'Ask the chatbot', 'Powered by GPT', 'An LLM']],
-  ['mention-org', [endorsedByForbiddenOrgSample('en'), endorsedByForbiddenOrgSample('fr')]],
+  ['mention-org', forbiddenOrgNeedles().map((needle) => `Endorsed by ${needle}`)],
   ['advice-eligibility', ['You qualify for support', 'You are eligible', 'Vous avez droit à une aide', 'Vous êtes admissible']],
   ['advice-medical', ['Consult your doctor', 'You should take rest', 'Consultez votre médecin', 'Vous devriez arrêter']],
   ['claim-complete', ['Always up to date', 'Toujours à jour', 'Complete and accurate']],
