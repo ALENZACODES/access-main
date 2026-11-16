@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   downloadRegion,
   lookupOfflineCell,
+  regionCellReport,
   OFFLINE_STRINGS,
   type CellStore,
   type DownloadDependencies,
@@ -40,7 +41,7 @@ function createDependencies(store: CellStore): DownloadDependencies {
   return {
     store,
     estimateStorage: async () => ({ quota: 100 * 1024 * 1024, usage: 0 }),
-    fetchCell: async () => new Uint8Array([1, 2, 3]),
+    fetchCell: async () => 3,
   };
 }
 
@@ -57,7 +58,6 @@ describe("offline region robustness", () => {
     });
     expect(await lookupOfflineCell(manifest, store, "a")).toEqual({
       status: "available",
-      data: new Uint8Array([1, 2, 3]),
       provenance,
     });
   });
@@ -77,7 +77,7 @@ describe("offline region robustness", () => {
     expect(result).toMatchObject({
       available: ["a"], missing: ["b", "c"], completed: false, reason: "quota",
     });
-    expect((await lookupOfflineCell(manifest, store, "b")).status).toBe("unknown");
+    expect((await lookupOfflineCell(manifest, store, "b")).status).toBe("missing");
   });
 
   it("resumes without fetching already committed cells", async () => {
@@ -85,7 +85,7 @@ describe("offline region robustness", () => {
     const fetched: string[] = [];
     const fetchCell: DownloadDependencies["fetchCell"] = async (_regionId, cell) => {
       fetched.push(cell.id);
-      return new Uint8Array([1, 2, 3]);
+      return 3;
     };
     let checks = 0;
     const first = await downloadRegion(manifest, {
@@ -108,7 +108,7 @@ describe("offline region robustness", () => {
 
   it("reports pre-existing later cells even after quota stops progress", async () => {
     const store = createStore();
-    await store.put("test-region", "c", { data: new Uint8Array([1, 2, 3]), provenance });
+    await store.put("test-region", "c", { bytes: 3, provenance });
     const result = await downloadRegion(manifest, {
       ...createDependencies(store),
       estimateStorage: async () => ({}),
@@ -118,24 +118,44 @@ describe("offline region robustness", () => {
     expect(result.reason).toBe("quota");
   });
 
-  it("does not infer availability for unknown, absent or stale cells", async () => {
+  it("labels older copies stale, absent cells missing and unlisted cells UNKNOWN", async () => {
     const store = createStore();
-    await store.put("test-region", "a", {
-      data: new Uint8Array([1, 2, 3]),
-      provenance: { ...provenance, date: "2025-01-01" },
+    const older = { ...provenance, date: "2025-01-01" };
+    await store.put("test-region", "a", { bytes: 3, provenance: older });
+    await store.put("test-region", "b", { bytes: 1, provenance });
+    expect(await lookupOfflineCell(manifest, store, "a")).toEqual({
+      status: "stale", stored: older, expected: provenance,
     });
-    await store.put("test-region", "b", {
-      data: new Uint8Array([1]), provenance,
+    expect((await lookupOfflineCell(manifest, store, "b")).status).toBe("stale");
+    expect((await lookupOfflineCell(manifest, store, "c")).status).toBe("missing");
+    expect((await lookupOfflineCell(manifest, store, "outside")).status).toBe("unknown");
+    const unreadable: CellStore = {
+      get: async () => { throw new Error("blocked"); },
+      put: async () => undefined,
+    };
+    expect((await lookupOfflineCell(manifest, unreadable, "a")).status).toBe("unknown");
+    expect((await regionCellReport(manifest, store)).map((cell) => cell.lookup.status)).toEqual([
+      "stale", "stale", "missing",
+    ]);
+  });
+
+  it("re-downloads stale cells and then reports them available", async () => {
+    const store = createStore();
+    await store.put("test-region", "a", { bytes: 3, provenance: { ...provenance, date: "2025-01-01" } });
+    const fetched: string[] = [];
+    const result = await downloadRegion(manifest, {
+      ...createDependencies(store),
+      fetchCell: async (_regionId, cell) => { fetched.push(cell.id); return 3; },
     });
-    for (const id of ["a", "b", "c", "outside"]) {
-      expect((await lookupOfflineCell(manifest, store, id)).status).toBe("unknown");
-    }
+    expect(fetched).toEqual(["a", "b", "c"]);
+    expect(result.completed).toBe(true);
+    expect((await lookupOfflineCell(manifest, store, "a")).status).toBe("available");
   });
 
   it("does not save partial bytes or download when quota is unknown", async () => {
     const store = createStore();
     const invalid = await downloadRegion(manifest, {
-      ...createDependencies(store), fetchCell: async () => new Uint8Array([1]),
+      ...createDependencies(store), fetchCell: async () => 1,
     });
     expect(invalid.reason).toBe("download-error");
     expect(invalid.available).toEqual([]);
@@ -145,7 +165,7 @@ describe("offline region robustness", () => {
       estimateStorage: async () => ({}),
       fetchCell: async () => {
         fetched = true;
-        return new Uint8Array([1, 2, 3]);
+        return 3;
       },
     });
     expect(noQuota.reason).toBe("quota");
@@ -159,11 +179,11 @@ describe("offline region robustness", () => {
       ...createDependencies(store),
       fetchCell: async () => {
         controller.abort();
-        return new Uint8Array([1, 2, 3]);
+        return 3;
       },
     }, controller.signal);
     expect(result.reason).toBe("interrupted");
-    expect((await lookupOfflineCell(manifest, store, "a")).status).toBe("unknown");
+    expect((await lookupOfflineCell(manifest, store, "a")).status).toBe("missing");
   });
 
   it("requires meaningful provenance and valid dates", async () => {
@@ -184,5 +204,7 @@ describe("offline region robustness", () => {
     expect(OFFLINE_STRINGS.fr.unknown).toBe("INCONNU");
     expect(OFFLINE_STRINGS.en.resume).toBeTruthy();
     expect(OFFLINE_STRINGS.fr.resume).toBeTruthy();
+    expect(OFFLINE_STRINGS.en.stale).not.toBe(OFFLINE_STRINGS.en.unknown);
+    expect(OFFLINE_STRINGS.fr.stale).not.toBe(OFFLINE_STRINGS.fr.unknown);
   });
 });

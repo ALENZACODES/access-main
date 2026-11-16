@@ -1,8 +1,14 @@
 export {
   OFFLINE_STRINGS,
+  cellStatusText,
+  cellSummaryText,
   downloadRegion,
+  downloadResultText,
   lookupOfflineCell,
+  regionCellReport,
   type CellLookup,
+  type CellReport,
+  type CellStatus,
   type CellStore,
   type DownloadDependencies,
   type DownloadResult,
@@ -14,3 +20,10 @@ export {
   type StorageEstimate,
   type StoredCell,
 } from "./regionDownload.ts";
+export {
+  createIndexedDbLedger,
+  createMemoryLedger,
+  createPackCellStore,
+  regionManifestFor,
+  type CellLedger,
+} from "./packCells.ts";

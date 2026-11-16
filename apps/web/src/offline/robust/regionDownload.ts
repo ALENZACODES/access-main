@@ -18,8 +18,13 @@ export interface RegionManifest {
   readonly cells: readonly RegionCell[];
 }
 
+/**
+ * Ledger entry for one committed cell. The cell's records live in the host's
+ * pack store; the ledger records how many bytes were committed and from which
+ * source, licence and date, so an older copy can be told apart from a current one.
+ */
 export interface StoredCell {
-  readonly data: Uint8Array;
+  readonly bytes: number;
   readonly provenance: Provenance;
 }
 
@@ -36,11 +41,12 @@ export interface StorageEstimate {
 
 export interface DownloadDependencies {
   readonly store: CellStore;
+  /** Fetch, check and commit one cell's data. Resolve with the bytes received. */
   readonly fetchCell: (
     regionId: string,
     cell: RegionCell,
     signal?: AbortSignal,
-  ) => Promise<Uint8Array>;
+  ) => Promise<number>;
   readonly estimateStorage: () => Promise<StorageEstimate>;
 }
 
@@ -54,17 +60,26 @@ export interface DownloadResult {
   readonly reason: StopReason;
 }
 
+/**
+ * available: the stored copy matches the current manifest.
+ * stale: a copy is stored, but from an older or different build. It is shown
+ *   with its own date and is never presented as current.
+ * missing: nothing is stored for this cell.
+ * unknown: the cell is not in the manifest, or the store could not be read.
+ */
 export type CellLookup =
   | { readonly status: "unknown" }
-  | {
-      readonly status: "available";
-      readonly data: Uint8Array;
-      readonly provenance: Provenance;
-    };
+  | { readonly status: "missing" }
+  | { readonly status: "stale"; readonly stored: Provenance; readonly expected: Provenance }
+  | { readonly status: "available"; readonly provenance: Provenance };
+
+export type CellStatus = CellLookup["status"];
 
 export const OFFLINE_STRINGS = {
   en: {
     available: "Available offline",
+    stale: "Out of date",
+    missing: "Not downloaded",
     unknown: "UNKNOWN",
     partial: "Only part of this region is available offline.",
     complete: "Region download complete.",
@@ -72,9 +87,14 @@ export const OFFLINE_STRINGS = {
     interrupted: "Download paused. Resume when ready.",
     error: "Download stopped. Saved cells remain available.",
     resume: "Resume download",
+    pause: "Pause download",
+    update: "Download the current data",
+    staleRegion: "Some cells are out of date. Their saved copies are not used offline until the current data is downloaded.",
   },
   fr: {
     available: "Disponible hors ligne",
+    stale: "Périmée",
+    missing: "Non téléchargée",
     unknown: "INCONNU",
     partial: "Seule une partie de cette région est disponible hors ligne.",
     complete: "Téléchargement de la région terminé.",
@@ -82,6 +102,9 @@ export const OFFLINE_STRINGS = {
     interrupted: "Téléchargement interrompu. Reprenez quand vous voulez.",
     error: "Téléchargement arrêté. Les cellules enregistrées restent disponibles.",
     resume: "Reprendre le téléchargement",
+    pause: "Interrompre le téléchargement",
+    update: "Télécharger les données actuelles",
+    staleRegion: "Certaines cellules sont périmées. Leurs copies enregistrées ne servent pas hors ligne tant que les données actuelles ne sont pas téléchargées.",
   },
 } as const;
 
@@ -111,17 +134,20 @@ function validateManifest(manifest: RegionManifest): void {
   }
 }
 
-function matches(stored: StoredCell | undefined, expected: RegionCell): stored is StoredCell {
+function matches(stored: StoredCell | undefined, expected: RegionCell): boolean {
   return (
     stored !== undefined &&
-    stored.data.byteLength === expected.bytes &&
+    stored.bytes === expected.bytes &&
     stored.provenance.source === expected.provenance.source &&
     stored.provenance.licence === expected.provenance.licence &&
     stored.provenance.date === expected.provenance.date
   );
 }
 
-/** Unlisted, absent, unreadable or stale cells remain UNKNOWN. */
+/**
+ * Only a copy that matches the current manifest is available. An older copy is
+ * stale, an absent one is missing, and an unlisted or unreadable cell is UNKNOWN.
+ */
 export async function lookupOfflineCell(
   manifest: RegionManifest,
   store: CellStore,
@@ -132,11 +158,32 @@ export async function lookupOfflineCell(
   if (!expected) return { status: "unknown" };
   try {
     const stored = await store.get(manifest.regionId, cellId);
-    if (!matches(stored, expected)) return { status: "unknown" };
-    return { status: "available", data: stored.data, provenance: stored.provenance };
+    if (stored === undefined) return { status: "missing" };
+    if (!matches(stored, expected)) {
+      return { status: "stale", stored: stored.provenance, expected: expected.provenance };
+    }
+    return { status: "available", provenance: stored.provenance };
   } catch {
     return { status: "unknown" };
   }
+}
+
+export interface CellReport {
+  readonly id: string;
+  readonly lookup: CellLookup;
+}
+
+/** One lookup per manifest cell, in manifest order. */
+export async function regionCellReport(
+  manifest: RegionManifest,
+  store: CellStore,
+): Promise<readonly CellReport[]> {
+  validateManifest(manifest);
+  const reports: CellReport[] = [];
+  for (const cell of manifest.cells) {
+    reports.push({ id: cell.id, lookup: await lookupOfflineCell(manifest, store, cell.id) });
+  }
+  return reports;
 }
 
 async function enoughSpace(
@@ -193,17 +240,17 @@ export async function downloadRegion(
         break;
       }
       try {
-        const data = await dependencies.fetchCell(manifest.regionId, cell, signal);
+        const received = await dependencies.fetchCell(manifest.regionId, cell, signal);
         if (signal?.aborted) {
           reason = "interrupted";
           break;
         }
-        if (data.byteLength !== cell.bytes) {
+        if (received !== cell.bytes) {
           reason = "download-error";
           break;
         }
         await dependencies.store.put(manifest.regionId, cell.id, {
-          data,
+          bytes: received,
           provenance: cell.provenance,
         });
         available.add(cell.id);
@@ -223,4 +270,51 @@ export async function downloadRegion(
     completed: reason === "complete" && missing.length === 0,
     reason,
   };
+}
+
+/** French singular for 0 and 1. */
+const plural = (count: number, one: string, many: string) => (count <= 1 ? one : many);
+
+/** Plain-language status for one cell. Stale copies keep their own date. */
+export function cellStatusText(language: Language, lookup: CellLookup): string {
+  const s = OFFLINE_STRINGS[language];
+  switch (lookup.status) {
+    case "available":
+      return language === "fr"
+        ? `${s.available}. Données du ${lookup.provenance.date}.`
+        : `${s.available}. Data from ${lookup.provenance.date}.`;
+    case "stale":
+      return language === "fr"
+        ? `${s.stale}. Copie enregistrée le ${lookup.stored.date}, données actuelles du ${lookup.expected.date}. Téléchargez-la de nouveau pour l’utiliser hors ligne.`
+        : `${s.stale}. Saved copy from ${lookup.stored.date}; current data is from ${lookup.expected.date}. Download it again to use it offline.`;
+    case "missing":
+      return language === "fr"
+        ? `${s.missing}. Pas disponible hors ligne.`
+        : `${s.missing}. Not available offline.`;
+    default:
+      return language === "fr"
+        ? `${s.unknown}. L’appareil n’a pas pu lire cette cellule.`
+        : `${s.unknown}. This device could not read this cell.`;
+  }
+}
+
+/** Counts per status, for a short summary of a region. */
+export function cellSummaryText(language: Language, statuses: readonly CellStatus[]): string {
+  const count = (status: CellStatus) => statuses.filter((value) => value === status).length;
+  const s = OFFLINE_STRINGS[language];
+  return language === "fr"
+    ? `${statuses.length} ${plural(statuses.length, "cellule", "cellules")}. ${s.available}\u00a0: ${count("available")}. ${s.stale}s\u00a0: ${count("stale")}. ${s.missing}s\u00a0: ${count("missing")}. ${s.unknown}\u00a0: ${count("unknown")}.`
+    : `${statuses.length} cells. ${s.available}: ${count("available")}. ${s.stale}: ${count("stale")}. ${s.missing}: ${count("missing")}. ${s.unknown}: ${count("unknown")}.`;
+}
+
+/** Outcome of a download run, naming what is and is not available offline. */
+export function downloadResultText(language: Language, result: DownloadResult): string {
+  const s = OFFLINE_STRINGS[language];
+  if (result.completed) return s.complete;
+  const reason = result.reason === "quota" ? s.quota : result.reason === "interrupted" ? s.interrupted : s.error;
+  const total = result.available.length + result.missing.length;
+  const counts = language === "fr"
+    ? `${result.available.length} ${plural(result.available.length, "cellule", "cellules")} sur ${total} ${plural(result.available.length, "disponible", "disponibles")} hors ligne, ${result.missing.length} non ${plural(result.missing.length, "téléchargée", "téléchargées")}.`
+    : `${result.available.length} of ${total} cells available offline, ${result.missing.length} not downloaded.`;
+  return `${s.partial} ${counts} ${reason}`;
 }
