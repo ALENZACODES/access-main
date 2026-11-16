@@ -118,6 +118,31 @@ describe('accesskey-dup', () => {
   });
 });
 
+describe('change-context', () => {
+  it('asks for a look at a select, radio or checkbox with an inline change script, and nothing else', () => {
+    const hit = (html: string) => frag(html).filter((x) => x.rule === 'change-context').map((x) => x.status);
+    expect(hit('<label>A <select onchange="go()"><option>x</option></select></label>')).toEqual(['unknown']);
+    expect(hit('<label>A <input type="radio" name="r" onchange="go()"></label>')).toEqual(['unknown']);
+    expect(hit('<label>A <input type="checkbox" onchange="go()"></label>')).toEqual(['unknown']);
+    expect(hit('<label>A <select><option>x</option></select></label>')).toEqual([]);
+    expect(hit('<label>A <input type="text" onchange="go()" autocomplete="name"></label>')).toEqual([]);
+    expect(hit('<label>A <select onchange=""><option>x</option></select></label>')).toEqual([]);
+  });
+});
+
+describe('key-handler', () => {
+  const page = (attrs: string): string => `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page</title></head><body${attrs}><main><h1>T</h1></main></body></html>`;
+  const hit = (html: string) => lintHtml(html).entries.filter((x) => x.rule === 'key-handler').map((x) => x.status);
+  it('asks for a look at an inline key script on the body, whichever key event it uses', () => {
+    for (const ev of ['onkeydown', 'onkeypress', 'onkeyup']) expect(hit(page(` ${ev}="run(event)"`)), ev).toEqual(['unknown']);
+  });
+  it('leaves a page with no body key script, and a key script on one control, alone', () => {
+    expect(hit(page(''))).toEqual([]);
+    expect(hit(page(' onclick="x()"'))).toEqual([]);
+    expect(lintHtml('<label>Q <input onkeydown="x()" autocomplete="name"></label>', { fragment: true }).entries.some((x) => x.rule === 'key-handler')).toBe(false);
+  });
+});
+
 describe('form, details and dialog rules', () => {
   it('aria-errormessage also counts as pointing to the error', () => {
     expect(rulesOf('<label>M <input aria-invalid="true" aria-errormessage="e" autocomplete="email"></label><p id="e">x</p>')).not.toContain('invalid-describedby');

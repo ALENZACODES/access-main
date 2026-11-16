@@ -2,7 +2,7 @@ import { applyWaivers, parseWaivers } from './ci.js';
 import { auditBudget } from './budget.js';
 import { auditConsistency } from './consistency.js';
 import { auditContrast } from './contrast.js';
-import { forbiddenOrgNeedles } from '../../../../packages/shared/test/forbiddenOrg.ts';
+import { endorsedByForbiddenOrgSample } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import { auditCopy, COPY_RULES } from './copylint.js';
 import { auditFocusObscured } from './focus.js';
 import { lintHtml } from './htmllint.js';
@@ -52,7 +52,7 @@ export function sampleEntries(): Entry[] {
   const rect: Rect = { left: 0, top: 0, right: 1, bottom: 1 };
   const el = (id: string, name: string, text: string) => ({ id, tag: 'a', role: null, rect, name, text });
   const badHtml =
-    '<html><head><link rel="alternate" hreflang="english" href="/e"></head><body><h1>a</h1><h3>b</h3><img src="a.png"><button></button><input type="email">' +
+    '<html><head><link rel="alternate" hreflang="english" href="/e"></head><body onkeydown="k(event)"><h1>a</h1><h3>b</h3><img src="a.png"><button></button><input type="email">' +
     '<p id="d"></p><p id="d"></p><div tabindex="2"></div><div aria-hidden="true"><button>x</button></div>' +
     '<button aria-labelledby="zz">x</button><a href="/x">click here</a><iframe></iframe><video autoplay></video>' +
     '<button style="width:20px">go</button><main></main><main></main>' +
@@ -61,7 +61,7 @@ export function sampleEntries(): Entry[] {
     '<svg role="img"></svg><svg></svg><video src="v.mp4"></video><meta http-equiv="refresh" content="5">' +
     '<input autocomplete="e-mail"><li>x</li><p lang="english">x</p><nav></nav><nav></nav>' +
     '<button accesskey="a">a</button><button accesskey="a">b</button>' +
-    '<input aria-invalid="true"><input autofocus><details></details><dialog></dialog></body></html>';
+    '<select aria-label="s" onchange="go(this)"></select><input aria-invalid="true"><input autofocus><details></details><dialog></dialog></body></html>';
   const facts = (over: Partial<PageFacts>): PageFacts => ({
     title: 'T', lang: 'en', links: [], controls: [], draggables: [], nav: ['A', 'B'], help: { text: 'Help', region: 'footer', afterMain: true }, truncated: false, ...over,
   });
@@ -366,7 +366,7 @@ export const SAMPLE_TEXT: Readonly<Record<string, string>> = {
   'claim-conformance': 'Fully accessible',
   'mention-tech': 'Powered by AI',
   'mention-tech-terms': 'Uses machine learning',
-  'mention-org': `Endorsed by ${forbiddenOrgNeedles()[0] ?? ''}`,
+  'mention-org': endorsedByForbiddenOrgSample('en'),
   'advice-eligibility': 'You qualify for support',
   'advice-medical': 'Consult your doctor',
   'claim-complete': 'Always up to date',

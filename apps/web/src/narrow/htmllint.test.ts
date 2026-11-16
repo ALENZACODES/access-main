@@ -59,6 +59,8 @@ const FIXTURES: ReadonlyArray<readonly [HtmlRule, string, string]> = [
   ['autofocus', doc('<label>Q <input autofocus></label>'), doc('<label>Q <input></label>')],
   ['details-summary', doc('<details><p>x</p></details>'), doc('<details><summary>More</summary><p>x</p></details>')],
   ['dialog-name', doc('<dialog open><p>x</p></dialog>'), doc('<dialog open aria-label="Filters"><p>x</p></dialog>')],
+  ['change-context', doc('<label>Pick <select onchange="go(this)"><option>a</option></select></label>'), doc('<label>Pick <select><option>a</option></select></label>')],
+  ['key-handler', '<!DOCTYPE html><html lang="en"><head>' + HEAD + '</head><body onkeydown="run(event)"><main></main></body></html>', doc('<p>x</p>')],
   ['hreflang-code', doc('', { head: HEAD + '<link rel="alternate" hreflang="english" href="/en">' }), doc('', { head: HEAD + '<link rel="alternate" hreflang="fr-CA" href="/fr"><link rel="alternate" hreflang="x-default" href="/">' })],
 ];
 

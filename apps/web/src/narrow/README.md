@@ -21,7 +21,7 @@ measure reports UNKNOWN, never a pass.
 | keyboard | 2.1.1, 2.1.2 | presses real Tab: trap is a failure, unreached controls and odd order are UNKNOWN |
 | focus-visible | 2.4.7 | compares outline, shadow, border, colours and pseudo-elements before and after focus |
 | motion | none | with reduced motion on, running animations fail; endless ones are UNKNOWN |
-| static-html | several | 36 markup rules (lang, title, viewport, headings, alt, names, ids, landmarks) on a file or the live page |
+| static-html | several | 38 markup rules (lang, title, viewport, headings, alt, names, ids, landmarks) on a file or the live page. `change-context` (3.2.2, a select, radio or checkbox with an inline change script) and `key-handler` (2.1.4, an inline key script on the body) are UNKNOWN only |
 | copy | none | words the App does not use in user copy fail; claims needing a person to read them are UNKNOWN |
 | link-cue | 1.4.1 | an in-text link with no underline, border or weight change needs 3:1 against the text around it |
 | non-text-contrast | 1.4.11 | text fields, selects and text areas: a border or fill that is 3:1 against the page |
