@@ -4,7 +4,11 @@
  */
 import type { AuditResult, AuditTotals } from './datasetRegistry';
 
-export const SUMMARY_SCHEMA_VERSION = 1;
+/**
+ * 2: each source gains ageDays (whole UTC calendar days, null when Unknown) and limitDays (the stale limit that was
+ * applied), so a reader can check a status from the numbers. Everything in version 1 is unchanged.
+ */
+export const SUMMARY_SCHEMA_VERSION = 2;
 
 export interface SummaryJson {
   schemaVersion: typeof SUMMARY_SCHEMA_VERSION;
@@ -27,6 +31,10 @@ export interface SummaryJson {
     licence: string | null;
     licenceOpen: boolean | null;
     retrieved: string | null;
+    /** Whole UTC calendar days since retrieval; null (never 0) when the date is missing, unreadable or in the future. */
+    ageDays: number | null;
+    /** Stale means ageDays is greater than this. */
+    limitDays: number;
     state: string;
     issues: string[];
   }[];
@@ -54,6 +62,8 @@ export function buildSummary(audit: AuditResult, now: Date): SummaryJson {
       licence: s.licence,
       licenceOpen: s.licenceOpen,
       retrieved: s.retrievedIso,
+      ageDays: s.ageDays,
+      limitDays: s.limitDays,
       state: s.state,
       issues: [...s.issues],
     })),
@@ -82,6 +92,16 @@ export function validateSummary(v: unknown): string[] {
       if (x['licence'] !== null && typeof x['licence'] !== 'string') out.push(`sources[${i}].licence`);
       if (x['licenceOpen'] !== null && typeof x['licenceOpen'] !== 'boolean') out.push(`sources[${i}].licenceOpen`);
       if (x['retrieved'] !== null && !(typeof x['retrieved'] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x['retrieved']))) out.push(`sources[${i}].retrieved`);
+      const age = x['ageDays'];
+      const limit = x['limitDays'];
+      if (age !== null && !(typeof age === 'number' && Number.isInteger(age) && age >= 0)) out.push(`sources[${i}].ageDays`);
+      if (!(typeof limit === 'number' && Number.isInteger(limit) && limit >= 1)) out.push(`sources[${i}].limitDays`);
+      if (x['state'] === 'unknown' && age !== null) out.push(`sources[${i}].ageDays-must-be-null-when-unknown`);
+      if (x['state'] !== 'unknown' && age === null) out.push(`sources[${i}].ageDays-required-when-state-known`);
+      if (typeof age === 'number' && typeof limit === 'number') {
+        if (x['state'] === 'fresh' && age > limit) out.push(`sources[${i}].state-fresh-but-age-over-limit`);
+        if (x['state'] === 'stale' && age <= limit) out.push(`sources[${i}].state-stale-but-age-within-limit`);
+      }
       if (x['licence'] === null && x['licenceOpen'] !== null) out.push(`sources[${i}].licenceOpen-must-be-null-when-licence-unknown`);
       if (x['retrieved'] === null && x['state'] !== 'unknown') out.push(`sources[${i}].state-must-be-unknown-when-date-unknown`);
     });

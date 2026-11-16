@@ -3,6 +3,14 @@
 Builds on `../onDeviceNotice`. Everything here is local to the browser; nothing
 is sent anywhere and no third-party code or data is used.
 
+
+**What the App uses today.** Only `createPrivacyController` and `mountPrivacyPanel`,
+with the data list, on the About page. Everything else in this folder is code that
+no part of the App calls yet: `installPrivacyRoute` and the `#/privacy` and
+`#/confidentialite` routes, the network guard, the CSP builder, the consent
+helpers and, where present, `assertPolicy`. The sections below say how a shell
+would call them; they do not say that it does.
+
 - `inventory.ts`: the list of what the App keeps. Each entry has a source (EN +
   FR), a record date and an optional licence. A missing `where`, `purpose` or
   `keptFor` is shown as unknown, never filled in. `createPrivacyController`
@@ -163,6 +171,6 @@ createPrivacyController({
 
 - `egress.ts`: a policy now has `allowUpload` (default false). Reads (GET, HEAD, OPTIONS) to a listed origin are allowed; sends (other methods, beacons, WebSockets) are blocked with the reason `upload-blocked`, reporting only the host. The App's own origin is not affected.
 - `claims.ts`: words that suggest a service the App does not have (account, server, sync, cloud, upload, telemetry; FR equivalents) are allowed only in the exact approved sentences.
-- `policy.ts`: `checkPolicy` / `assertPolicy` compare the declared no-server policy with the data list, the purposes and the network guard. Nothing calls `assertPolicy` at start-up yet; the shell has to do that.
+- `policy.ts`: `checkPolicy` / `assertPolicy` compare the declared no-server policy with the data list, the purposes and the network guard. Nothing calls `assertPolicy` yet; a shell would have to call it at start-up.
 
 Not built in this round: retention checks on the data list, consent-gated storage keys, and their panel wording.

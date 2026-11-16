@@ -1,7 +1,7 @@
 // What the App promises about where data goes, written down once and checked.
-// The shell declares the policy; the panel shows the no-server wording only when
-// that wording is backed by a configured network guard that blocks uploads, and
-// start-up fails if the inventory, the guard or the wording contradict the policy.
+// A shell declares the policy and can call assertPolicy at start-up, which throws
+// if the data list, the purposes or the network guard contradict it. Nothing in the
+// App calls it yet.
 
 import { claimIssues } from "./claims";
 import type { EgressPolicy } from "./egress";
