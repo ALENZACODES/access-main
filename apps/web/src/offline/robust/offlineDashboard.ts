@@ -215,6 +215,9 @@ export function mountOfflineDashboard(
   const triageHost = element("div");
   section.append(triageHost);
   const unmountTriage = mountOfflineTriage(triageHost, manifest, model, language, audit.ready);
+  const cleanupHost = element("div");
+  section.append(cleanupHost);
+  const unmountCleanup = mountOfflineCleanup(cleanupHost, manifest, model, dependencies.store, language, audit.ready);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -324,6 +327,7 @@ export function mountOfflineDashboard(
   return () => {
     unsubscribe();
     unmountTriage();
+    unmountCleanup();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
