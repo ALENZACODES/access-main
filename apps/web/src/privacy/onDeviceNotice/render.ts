@@ -31,7 +31,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 export function renderOnDeviceNoticeHtml(opts: NoticeOptions): string {
   const s = STRINGS[opts.locale];
   const titleId = "privacy-on-device-title";
-  const colon = opts.locale === "fr" ? "\u00a0:" : ":";
+  const colon = opts.locale === "fr" ? "\u00A0:" : ":";
   const rows = opts.items
     .map((it) => {
       const w = it.where ?? "unknown";
