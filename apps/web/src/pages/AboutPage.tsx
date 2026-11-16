@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { BUILD_ID, CONTRACT_VERSION } from "../buildInfo.ts";
 import { summarizeStorage, type StorageSummary } from "../storage/repository.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
-import { renderOnDeviceNoticeHtml } from "../privacy/onDeviceNotice/index.ts";
+import { aboutNoticeItems, renderOnDeviceNoticeHtml } from "../privacy/onDeviceNotice/index.ts";
 
 export function AboutPage() {
   const { t, i18n } = useTranslation();
@@ -42,11 +42,7 @@ export function AboutPage() {
         dangerouslySetInnerHTML={{
           __html: renderOnDeviceNoticeHtml({
             locale,
-            items: [
-              { id: "profile", label: { en: "Profile", fr: "Profil" }, where: "on-device" },
-              { id: "cache", label: { en: "Cached records", fr: "Enregistrements en cache" }, where: "on-device" },
-              { id: "outbox", label: { en: "Contribution export drafts", fr: "Brouillons d’export de contribution" }, where: "on-device" },
-            ],
+            items: aboutNoticeItems(),
             reviewedOn: "2026-11-15",
           }),
         }}

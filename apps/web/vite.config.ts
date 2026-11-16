@@ -33,17 +33,39 @@ interface LanePackage {
 /** Each pulled package is compiled from source in .lanes/<repo>/<path>/src/index.ts. */
 const lock = JSON.parse(readFileSync(path.join(repoRoot, "lanes.lock.json"), "utf8")) as { packages: LanePackage[] };
 const fallbacks = path.join(root, "src/modules/lane-fallbacks.ts");
+const UNLINKED = new Set(["@access-tools/games", "@access-tools/navigator"]);
 const laneAliases = lock.packages.map((pkg) => {
   const repo = pkg.repo.split("/")[1];
   if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
-  const real = path.join(repoRoot, ".lanes", repo, ...pkg.path.split("/"), "src", "index.ts");
-  return { find: new RegExp(`^${escapeRegExp(pkg.alias)}$`), replacement: existsSync(real) ? real : fallbacks };
+  const pkgRoot = path.join(repoRoot, ".lanes", repo, ...pkg.path.split("/"));
+  const real = path.join(pkgRoot, "src", "index.ts");
+  const resolved = UNLINKED.has(pkg.alias) ? fallbacks : existsSync(real) ? real : fallbacks;
+  return { find: new RegExp(`^${escapeRegExp(pkg.alias)}$`), replacement: resolved };
 });
 const dataClientReal = path.join(repoRoot, "packages/data-client/src/index.ts");
 const dataClientAlias = {
   find: /^@access-main\/data-client$/,
   replacement: existsSync(dataClientReal) ? dataClientReal : path.join(root, "src/modules/data-client-fallback.ts"),
 };
+
+/** I13 More hub packages, synced by scripts/sync-hub.mjs into .lanes/. */
+const hubAliases = (
+  [
+    ["@access-tools/employment", "access-tools", "employment"],
+    ["@access-tools/housing", "access-tools", "housing"],
+    ["@access-tools/safety", "access-tools", "safety"],
+    ["@access-tools/timing", "access-tools", "timing"],
+    ["@access-tools/diary", "access-tools", "diary"],
+    ["@access-tools/auditors", "access-tools", "auditors"],
+    ["@access-tools/handoff", "access-tools", "handoff"],
+    ["@hub/handoff-fixtures", "access-tools", "handoff", "src/fixtures.ts"],
+    ["@access/peers", "access-help", "peers"],
+    ["@access/event-access", "access-help", "event-access"],
+  ] as Array<[string, string, string] | [string, string, string, string]>
+).map(([find, repo, pkg, entry = "src/index.ts"]) => ({
+  find,
+  replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
+}));
 
 /** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
 function buildManifest(): Plugin {
@@ -117,6 +139,7 @@ export default defineConfig({
     alias: [
       { find: "@access/shared", replacement: path.resolve(root, "../../packages/shared/src/index.ts") },
       ...laneAliases,
+      ...hubAliases,
       dataClientAlias,
     ],
   },
@@ -134,6 +157,11 @@ export default defineConfig({
           ) {
             return "react-aria";
           }
+          if (id.includes("/node_modules/react-aria/")) return "react-aria";
+          // Schema validation (Settings feature packages) and ZIP export (Contribute) are only used
+          // on those routes. In their own chunks they stay out of the start-up preload set.
+          if (/\/node_modules\/(ajv|ajv-formats|fast-uri|fast-deep-equal|json-schema-traverse|require-from-string)\//.test(id)) return "ajv";
+          if (id.includes("/node_modules/fflate/")) return "fflate";
           if (id.includes("/react-dom/")) return "react-dom";
           if (id.includes("/react-router") || id.includes("/@remix-run/")) return "router";
           if (id.includes("/i18next") || id.includes("/react-i18next/")) return "i18n";

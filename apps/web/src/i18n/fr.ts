@@ -28,6 +28,7 @@ export const fr: Messages = {
     finders: "Recherche",
     navigator: "Répertoire",
     games: "Jeux",
+    more: "Plus",
     help: "Aide",
     settings: "Réglages",
     data: "État des données",
@@ -79,6 +80,20 @@ export const fr: Messages = {
       "Des contrôles automatiques couvrent cette interface. Ils ne constituent pas un audit WCAG complet, ni un essai avec des personnes qui utilisent une technologie d’assistance.",
     notices:
       "Les bibliothèques d'exécution comprennent React Aria Components (Apache-2.0), i18next (MIT), Dexie (Apache-2.0), et Workbox avec vite-plugin-pwa (MIT). Ces noms sont des crédits, pas des appuis.",
+  },
+  privacyNotice: {
+    title: "Où vos données sont conservées",
+    whereOnDevice: "Reste sur cet appareil",
+    whereSentToServer: "Envoyé à un serveur",
+    whereUnknown: "Inconnu",
+    reviewed: "Dernière révision\u202f: {{date}}",
+    empty: "Cette liste est vide. Cela ne signifie pas qu’aucune donnée n’est conservée.",
+    dismiss: "Fermer",
+    itemProfile: "Profil",
+    itemCache: "Enregistrements en cache",
+    itemOutbox: "Brouillons d’export de contribution",
+    itemLanguage: "Choix de langue",
+    itemGeolocation: "Géolocalisation facultative",
   },
   storage: {
     cacheCount_one: "{{count}} enregistrement stocké sur cet appareil",
@@ -154,6 +169,8 @@ export const fr: Messages = {
   },
   modules: {
     ready: "Ces fiches viennent de la partie liée de the App. Chacune indique sa source, sa licence, sa date et son niveau. L'inconnu reste inconnu.",
+    empty: "Aucune fiche n’est affichée.",
+    noMatches: "Aucune fiche correspondante n’a été trouvée. La recherche a été lancée dans la partie liée de the App. L’inconnu reste inconnu.",
     error: "Cette partie de the App n'a pas pu se charger. Aucune fiche n'est affichée. Réessayez plus tard.",
     contractError: "Cette partie de the App a fourni des fiches sans source, licence, date ou niveau. Aucune n'est donc affichée.",
     itemSource: "Source",
