@@ -14,7 +14,7 @@ export interface PanelEvent {
 export interface PanelRoot {
   innerHTML: string;
   addEventListener(type: "click" | "change", handler: (e: PanelEvent) => void): void;
-  querySelector(selector: string): { focus(): void } | null;
+  querySelector(selector: string): { focus(): void; value?: string } | null;
 }
 
 export interface MountOptions {
@@ -68,7 +68,11 @@ export function mountPrivacyPanel(
     render(`[data-locale-option][value="${v}"]`);
   });
 
+  const before = controller.getState().signals;
   render();
+  void controller.dispatchAsync({ type: "read-signals" }).then((s) => {
+    if (s.signals !== before) render();
+  });
   return { render: () => render() };
 }
 
