@@ -29,25 +29,25 @@
       "repo": "ALENZACODES/access-tools",
       "path": "packages/finders",
       "alias": "@access-tools/finders",
-      "commit": "202ca448c5e36e0d04114d092ee3d170c629d596"
+      "commit": "f2a67af170343596cd933c3c4c53a73fd717200a"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "path": "packages/place",
       "alias": "@access-tools/place",
-      "commit": "202ca448c5e36e0d04114d092ee3d170c629d596"
+      "commit": "f2a67af170343596cd933c3c4c53a73fd717200a"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "path": "packages/navigator",
       "alias": "@access-tools/navigator",
-      "commit": "202ca448c5e36e0d04114d092ee3d170c629d596"
+      "commit": "f2a67af170343596cd933c3c4c53a73fd717200a"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "path": "packages/games",
       "alias": "@access-tools/games",
-      "commit": "202ca448c5e36e0d04114d092ee3d170c629d596"
+      "commit": "f2a67af170343596cd933c3c4c53a73fd717200a"
     },
     {
       "repo": "ALENZACODES/access-help",
