@@ -13,6 +13,7 @@ import type { MapRouteView } from "./mapRoute";
 import { type Preferences, TEXT_SCALES } from "./preferences";
 import { type RenderOptions, escapeHtml, renderBanner, renderLink, renderStateView } from "./renderHtml";
 import type { SourcesView } from "./sourcesPage";
+import type { CoverageView } from "./coverage";
 
 const BOX = `min-width:${MIN_TARGET_PX}px;min-height:${MIN_TARGET_PX}px`;
 const theme = (o: RenderOptions): Theme => o.theme ?? "light";
@@ -40,8 +41,18 @@ export function renderMapRoute(v: MapRouteView, o: RenderOptions): string {
       return `<li><article lang="${o.locale}" aria-labelledby="${p}-e${i}-h" style="${styleFor("body", theme(o))}"><h3 id="${p}-e${i}-h">${name}</h3><p>${loc}</p>${dist}${src}${open}</article></li>`;
     })
     .join("");
+  const nf = v.nearForm;
+  const nearErr = nf.error ? `<p id="${p}-near-err" style="${styleFor("alert", theme(o))}">${escapeHtml(nf.error)}</p>` : "";
+  const nearAttr = nf.error ? ` aria-invalid="true" aria-describedby="${p}-near-err"` : "";
+  const field = (name: "lat" | "lon", label: string, value: string): string =>
+    `<div><label for="${p}-${name}" style="display:block">${escapeHtml(label)}</label><input id="${p}-${name}" name="${name}" type="text" inputmode="decimal" autocomplete="off" maxlength="20" value="${escapeHtml(value)}"${nearAttr} style="${FIELD_STYLE(o)}"></div>`;
+  const nearForm =
+    `<form method="get" action=""><fieldset><legend>${escapeHtml(nf.legend)}</legend>` +
+    field("lat", nf.latLabel, nf.latValue) + field("lon", nf.lonLabel, nf.lonValue) + nearErr +
+    `<p>${escapeHtml(nf.privacy)}</p>` +
+    `<button type="submit" style="${BOX};${styleFor("button", theme(o))}">${escapeHtml(nf.submitLabel)}</button></fieldset></form>`;
   const inner =
-    `<h2 id="${p}-h">${escapeHtml(v.heading)}</h2>` + note(v.note, o) +
+    `<h2 id="${p}-h">${escapeHtml(v.heading)}</h2>` + note(v.note, o) + nearForm +
     (v.unlocatedNotice ? `<p role="status">${escapeHtml(v.unlocatedNotice)}</p>` : "") +
     `<ul>${items}</ul>`;
   return banner + section(o, p, "body", inner);
@@ -175,4 +186,28 @@ export function renderSettingsForm(prefs: Preferences, o: RenderOptions, notice:
     `<div><input id="${p}-motion" type="checkbox" name="reduceMotion"${prefs.reduceMotion ? " checked" : ""} style="${FIELD_STYLE(o)}"><label for="${p}-motion" style="display:inline-block;min-height:${MIN_TARGET_PX}px">${escapeHtml(message("settings.motion", L))}</label></div>` +
     `<button type="submit" style="${BOX};${styleFor("button", theme(o))}">${escapeHtml(message("settings.save", L))}</button></form>`;
   return section(o, p, "body", `<h2 id="${p}-h">${escapeHtml(message("settings.heading", L))}</h2>${notice ? note(notice, o) : ""}${form}`);
+}
+
+export function renderCoverageRoute(v: CoverageView, o: RenderOptions): string {
+  const p = o.idPrefix ?? "coverage";
+  if (v.kind === "error") return renderStateView(v.view, o, `${p}-error`);
+  const banner = renderBanner(v.banner, { ...o, idPrefix: p });
+  const head = `<h2 id="${p}-h">${escapeHtml(v.heading)}</h2><p>${escapeHtml(v.intro)}</p>`;
+  const lines = v.lines.length > 0 ? `<ul>${v.lines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` : "";
+  if (v.kind === "empty") return banner + section(o, p, "body", `${head}<p role="status">${escapeHtml(v.text)}</p>${lines}`);
+  const h = v.headers;
+  const cols = [h.feature, h.yes, h.no, h.partial, h.unknown, h.share].map((x) => `<th scope="col">${escapeHtml(x)}</th>`).join("");
+  const rows = v.rows
+    .map((r) => `<tr><th scope="row">${escapeHtml(r.label)}</th><td>${r.yes}</td><td>${r.no}</td><td>${r.partial}</td><td><strong style="${styleFor("unknown", theme(o))}">${r.unknown}</strong></td><td>${escapeHtml(r.shareText)}</td></tr>`)
+    .join("");
+  return banner + section(o, p, "body", `${head}${lines}<table><caption>${escapeHtml(v.caption)}</caption><thead><tr>${cols}</tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+/** Static page served (and cached) for navigations that fail while offline. */
+export function renderOfflinePage(o: RenderOptions, links: readonly { readonly href: string; readonly label: string }[]): string {
+  const p = o.idPrefix ?? "offline";
+  const inner =
+    `<h2 id="${p}-h">${escapeHtml(message("offline.body", o.locale))}</h2>` +
+    `<ul>${links.map((l) => `<li>${renderLink(l.href, l.label, theme(o))}</li>`).join("")}</ul>`;
+  return section(o, p, "status", inner, ' role="status"');
 }

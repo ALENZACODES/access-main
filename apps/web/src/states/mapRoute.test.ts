@@ -66,3 +66,25 @@ describe("mapRouteView", () => {
     expect(v.unlocatedNotice).toBe("2 lieux n’ont aucun emplacement enregistré.");
   });
 });
+
+describe("mapRouteView near form", () => {
+  const list = (over: Partial<MapContext> = {}) => {
+    const v = mapRouteView({ status: "ok", places }, ctx(over));
+    if (v.kind !== "list") throw new Error("list expected");
+    return v.nearForm;
+  };
+  it("has labels, a privacy note and a 44px submit control", () => {
+    const f = list();
+    expect(f).toMatchObject({ legend: "Sort by distance from a point", latLabel: "Latitude", submitLabel: "Sort by distance", error: null, latValue: "", lonValue: "" });
+    expect(f.privacy).toBe("The point is used only to sort this list. It is not saved.");
+    expect(f.minTargetPx).toBeGreaterThanOrEqual(44);
+  });
+  it("redisplays what was typed, or the point when only a point is known", () => {
+    expect(list({ nearInput: { lat: "43,5", lon: "x" }, nearError: true })).toMatchObject({ latValue: "43,5", lonValue: "x" });
+    expect(list({ near })).toMatchObject({ latValue: String(near.lat), lonValue: String(near.lon) });
+  });
+  it("shows an error message, in French too", () => {
+    expect(list({ nearError: true }).error).toBe("Enter a latitude from -90 to 90 and a longitude from -180 to 180.");
+    expect(list({ nearError: true, locale: "fr" }).error).toContain("Saisissez une latitude de -90 à 90");
+  });
+});

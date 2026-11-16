@@ -143,6 +143,58 @@ const DEFS = {
     en: "Details are reported by their sources and may be incomplete or out of date. UNKNOWN means no detail is recorded.",
     fr: "Les détails sont signalés par leurs sources et peuvent être incomplets ou périmés. INCONNU signifie qu'aucun détail n'est enregistré.",
   },
+  "nav.coverage": { en: "Coverage", fr: "Couverture" },
+  "coverage.heading": { en: "Data coverage", fr: "Couverture des données" },
+  "coverage.intro": {
+    en: "How many details are reported for each feature, and how many are UNKNOWN.",
+    fr: "Nombre de détails signalés pour chaque caractéristique, et nombre de détails INCONNUS.",
+  },
+  "coverage.caption": { en: "Reported and UNKNOWN details by feature", fr: "Détails signalés et INCONNUS par caractéristique" },
+  "coverage.colFeature": { en: "Feature", fr: "Caractéristique" },
+  "coverage.colYes": { en: "Yes", fr: "Oui" },
+  "coverage.colNo": { en: "No", fr: "Non" },
+  "coverage.colPartial": { en: "Partly", fr: "En partie" },
+  "coverage.colUnknown": { en: "UNKNOWN", fr: "INCONNU" },
+  "coverage.colShare": { en: "Reported", fr: "Signalé" },
+  "coverage.places": {
+    en: { one: "{n} place is listed.", other: "{n} places are listed." },
+    fr: { one: "{n} lieu est répertorié.", other: "{n} lieux sont répertoriés." },
+  },
+  "coverage.located": {
+    en: "{n} with a recorded location, {m} with location UNKNOWN.",
+    fr: "{n} avec un emplacement enregistré, {m} avec emplacement INCONNU.",
+  },
+  "coverage.stale": {
+    en: { one: "{n} place has details retrieved more than a year ago.", other: "{n} places have details retrieved more than a year ago." },
+    fr: { one: "{n} lieu a des détails consultés il y a plus d'un an.", other: "{n} lieux ont des détails consultés il y a plus d'un an." },
+  },
+  "coverage.sources": {
+    en: { one: "{n} source recorded. Latest retrieval: {date}.", other: "{n} sources recorded. Latest retrieval: {date}." },
+    fr: { one: "{n} source enregistrée. Dernière consultation : {date}.", other: "{n} sources enregistrées. Dernière consultation : {date}." },
+  },
+  "coverage.dropped": {
+    en: { one: "{n} record could not be shown because it was incomplete.", other: "{n} records could not be shown because they were incomplete." },
+    fr: { one: "{n} fiche n'a pas pu être affichée, car elle était incomplète.", other: "{n} fiches n'ont pas pu être affichées, car elles étaient incomplètes." },
+  },
+  "coverage.empty": { en: "No places are listed yet.", fr: "Aucun lieu n'est encore répertorié." },
+  "export.text": { en: "Plain-text version", fr: "Version en texte brut" },
+  "export.csv": { en: "Download as CSV", fr: "Télécharger en CSV" },
+  "offline.body": {
+    en: "This page is not saved on this device. Places you saved and pages you visited recently still work.",
+    fr: "Cette page n'est pas enregistrée sur cet appareil. Les lieux enregistrés et les pages consultées récemment fonctionnent toujours.",
+  },
+  "map.near.legend": { en: "Sort by distance from a point", fr: "Trier selon la distance à partir d'un point" },
+  "map.near.lat": { en: "Latitude", fr: "Latitude" },
+  "map.near.lon": { en: "Longitude", fr: "Longitude" },
+  "map.near.submit": { en: "Sort by distance", fr: "Trier par distance" },
+  "map.near.privacy": {
+    en: "The point is used only to sort this list. It is not saved.",
+    fr: "Le point sert uniquement à trier cette liste. Il n'est pas enregistré.",
+  },
+  "map.near.error": {
+    en: "Enter a latitude from -90 to 90 and a longitude from -180 to 180.",
+    fr: "Saisissez une latitude de -90 à 90 et une longitude de -180 à 180.",
+  },
   "place.showSource": { en: "Show source", fr: "Afficher la source" },
 } as const satisfies Record<string, Entry>;
 

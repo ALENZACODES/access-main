@@ -21,6 +21,22 @@ export interface MapContext {
   readonly locale: Locale;
   readonly connectivity: ConnectivityState;
   readonly near: GeoPoint | null;
+  /** Text typed into the form, for redisplay. */
+  readonly nearInput?: { readonly lat: string; readonly lon: string };
+  /** A point was supplied but is not valid. */
+  readonly nearError?: boolean;
+}
+
+export interface NearForm {
+  readonly legend: string;
+  readonly latLabel: string;
+  readonly lonLabel: string;
+  readonly submitLabel: string;
+  readonly privacy: string;
+  readonly latValue: string;
+  readonly lonValue: string;
+  readonly error: string | null;
+  readonly minTargetPx: number;
 }
 
 export interface MapEntry {
@@ -37,7 +53,7 @@ export interface MapEntry {
 }
 
 export type MapRouteView =
-  | { readonly kind: "list"; readonly heading: string; readonly note: string; readonly unlocatedNotice: string | null; readonly entries: readonly MapEntry[]; readonly banner: OfflineBanner | null }
+  | { readonly kind: "list"; readonly heading: string; readonly note: string; readonly nearForm: NearForm; readonly unlocatedNotice: string | null; readonly entries: readonly MapEntry[]; readonly banner: OfflineBanner | null }
   | { readonly kind: "empty"; readonly view: RouteStateView; readonly banner: OfflineBanner | null }
   | { readonly kind: "error"; readonly view: RouteStateView };
 
@@ -84,6 +100,17 @@ export function mapRouteView(load: MapLoad, ctx: MapContext): MapRouteView {
     kind: "list",
     heading: message("map.heading", locale),
     note: message("map.note", locale),
+    nearForm: {
+      legend: message("map.near.legend", locale),
+      latLabel: message("map.near.lat", locale),
+      lonLabel: message("map.near.lon", locale),
+      submitLabel: message("map.near.submit", locale),
+      privacy: message("map.near.privacy", locale),
+      latValue: ctx.nearInput?.lat ?? (ctx.near ? String(ctx.near.lat) : ""),
+      lonValue: ctx.nearInput?.lon ?? (ctx.near ? String(ctx.near.lon) : ""),
+      error: ctx.nearError ? message("map.near.error", locale) : null,
+      minTargetPx: MIN_TOUCH_TARGET_PX,
+    },
     unlocatedNotice: unlocated.length > 0 ? message("map.unlocated", locale, { n: unlocated.length }) : null,
     entries: [...located, ...unlocated],
     banner,

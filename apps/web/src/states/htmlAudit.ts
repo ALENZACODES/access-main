@@ -24,7 +24,8 @@ export type HtmlViolationCode =
   | "error-association"
   | "link-name"
   | "table-structure"
-  | "page-structure";
+  | "page-structure"
+  | "third-party-resource";
 
 export interface HtmlViolation {
   readonly code: HtmlViolationCode;
@@ -35,6 +36,10 @@ interface Tag {
   readonly name: string;
   readonly attrs: Readonly<Record<string, string>>;
 }
+
+const ABSOLUTE = /^\s*(https?:)?\/\//i;
+const RESOURCE_TAGS = new Set(["script", "link", "img", "iframe", "source", "video", "audio", "embed", "object", "track"]);
+const sameOriginPath = (v: string | undefined): boolean => v !== undefined && /^\/(?!\/)/.test(v);
 
 function parseTags(html: string): Tag[] {
   const tags: Tag[] = [];
@@ -130,7 +135,13 @@ export function auditHtml(html: string, locale: Locale): HtmlViolation[] {
       const ref = t.attrs["aria-describedby"];
       if (!ref || !ids.has(ref)) add("error-association", t.attrs.id ?? t.name);
     }
-    if (t.name === "script" || Object.keys(t.attrs).some((a) => a.startsWith("on"))) add("inline-script", t.name);
+    if (Object.keys(t.attrs).some((a) => a.startsWith("on"))) add("inline-script", `${t.name} event handler`);
+    if (t.name === "script" && !sameOriginPath(t.attrs.src)) add("inline-script", "script without a same-origin src");
+    if (RESOURCE_TAGS.has(t.name)) {
+      const ref = t.attrs.src ?? t.attrs.href ?? t.attrs.srcset;
+      if (ref !== undefined && ABSOLUTE.test(ref)) add("third-party-resource", `<${t.name}> ${ref}`);
+    }
+    if (t.name === "form" && t.attrs.action !== undefined && ABSOLUTE.test(t.attrs.action)) add("third-party-resource", `<form> ${t.attrs.action}`);
 
     const fg = style.color;
     const bg = style.background ?? style["background-color"];
@@ -141,6 +152,9 @@ export function auditHtml(html: string, locale: Locale): HtmlViolation[] {
   }
 
   if (regions > 0 && !/<h[1-6]\b/i.test(html)) add("missing-heading", "no heading in region");
+  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
+    if (m[1]!.trim() !== "") add("inline-script", "inline script body");
+  }
 
   for (const m of html.matchAll(/<(button|summary)\b[^>]*>([\s\S]*?)<\/\1>/g)) {
     if (m[2]!.replace(/<[^>]*>/g, "").trim() === "") add("button-name", `<${m[1]!}>`);
