@@ -2,6 +2,7 @@
 // breaks. Exceptions must be listed with a reason and a date, and an exception
 // that no longer matches a file is itself reported, so the list cannot rot.
 
+import { auditCsp } from "../panel/csp";
 import { forbiddenOrgNeedles } from "../../../../../packages/shared/test/forbiddenOrg.ts";
 import { lintCopy } from "../panel/copyLint";
 
@@ -13,6 +14,7 @@ export type RuleId =
   | "insecure-url"
   | "scheduled-workflow"
   | "claim-wording"
+  | "weak-csp"
   | "stale-exemption"
   | "bad-exemption";
 
@@ -95,6 +97,21 @@ const SECRET_PATTERNS: ReadonlyArray<{ re: RegExp; why: string }> = [
 // Hosts that appear in plain http:// only as XML namespace identifiers, never fetched.
 const HTTP_OK = /^http:\/\/(?:localhost|127\.0\.0\.1|\[::1\]|www\.w3\.org\/|www\.sitemaps\.org\/)/i;
 
+/** The Content-Security-Policy a file sets, if it sets one: an HTML meta tag, a _headers line, JSON or TOML. */
+export function extractCsp(f: SourceFile): { policy: string; delivery: "header" | "meta" } | null {
+  if (/\.html?$/i.test(f.path)) {
+    const m = /<meta\s+[^>]*http-equiv\s*=\s*["']Content-Security-Policy["'][^>]*>/i.exec(f.text);
+    const c = m === null ? null : /content\s*=\s*"([^"]*)"|content\s*=\s*'([^']*)'/i.exec(m[0]);
+    const v = c?.[1] ?? c?.[2];
+    return v === undefined ? null : { policy: v.replace(/&amp;/g, "&").replace(/&quot;/g, '"'), delivery: "meta" };
+  }
+  const line = /^[ \t]*Content-Security-Policy[ \t]*[:=][ \t]*"?([^"\n]+)"?[ \t]*,?[ \t]*$/im.exec(f.text);
+  if (line?.[1] !== undefined) return { policy: line[1].trim(), delivery: "header" };
+  const json = /"Content-Security-Policy"\s*,?\s*"value"\s*:\s*"([^"]+)"|"Content-Security-Policy"\s*:\s*"([^"]+)"/i.exec(f.text);
+  const j = json?.[1] ?? json?.[2];
+  return j === undefined ? null : { policy: j, delivery: "header" };
+}
+
 const COPY_FILE = /(?:^|\/)(?:[^/]*\.)?(?:copy|strings|messages|locales?|i18n|translations?)(?:\.[^/]*)?\.(?:ts|tsx|js|jsx|json)$/i;
 const SCRIPT_FILE = /\.(?:ts|tsx|js|jsx|mjs|cjs|json|html|css|md|ya?ml)$/i;
 const WORKFLOW_FILE = /^\.github\/workflows\/[^/]+\.ya?ml$/i;
@@ -130,6 +147,14 @@ export function scanFile(f: SourceFile): Finding[] {
     for (const m of f.text.matchAll(/http:\/\/[^\s"'`)<>]+/gi)) {
       if (!HTTP_OK.test(m[0])) {
         out.push({ rule: "insecure-url", path: f.path, line: lineOf(f.text, m.index ?? 0), detail: `plain http: ${m[0].slice(0, 60)}` });
+      }
+    }
+  }
+  if (/\.(?:html?|json|toml)$/i.test(f.path) || /(?:^|\/)_headers$/.test(f.path)) {
+    const csp = extractCsp(f);
+    if (csp !== null) {
+      for (const p of auditCsp(csp.policy, { delivery: csp.delivery })) {
+        out.push({ rule: "weak-csp", path: f.path, line: 1, detail: `${p.code}: ${p.detail}` });
       }
     }
   }
