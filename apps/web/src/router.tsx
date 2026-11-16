@@ -8,6 +8,7 @@ import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { ProfilePage } from "./pages/ProfilePage.tsx";
 import { AppShell } from "./shell/AppShell.tsx";
+const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
 
 // Every route in the integration contract is lazy, so none is on the first-install path.
 const ModulePage = lazy(() => import("./pages/ModulePage.tsx").then((module) => ({ default: module.ModulePage })));
@@ -47,6 +48,7 @@ export const routes: RouteObject[] = [
       { path: "contribute", element: <Section><ContributePage /></Section> },
       { path: "settings/*", element: <Section><SettingsRoutes /></Section> },
       { path: "more/*", element: <Section><MoreRoutes /></Section> },
+      { path: "dev/narrow", element: <Section><NarrowAuditPage /></Section> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
