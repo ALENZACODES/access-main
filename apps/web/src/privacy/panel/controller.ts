@@ -1,4 +1,6 @@
+import { assertValidPurposes, loadConsent, saveConsent, setConsent, type ConsentState, type Purpose } from "./consent";
 import type { Locale } from "./copyLint";
+import { purgeExpired } from "./expiry";
 import { assertValidInventory, type InventoryEntry } from "./inventory";
 import { eraseLocalData, exportLocalData, listKeys, type ExportFile } from "./localData";
 import { renderPrivacyPanelHtml } from "./panel";
@@ -12,6 +14,8 @@ export interface ControllerDeps {
   /** Every key the App writes starts with this. Export and erase act on it only. */
   prefix: string;
   inventory: readonly InventoryEntry[];
+  /** Optional features the person can allow. Empty or omitted hides the section. */
+  purposes?: readonly Purpose[];
   now: () => Date;
   reviewedOn?: string;
   /** e.g. navigator.languages, used only when no preference is stored */
@@ -23,6 +27,7 @@ export interface PrivacyState {
   confirmingErase: boolean;
   status: Status | null;
   lastExport: ExportFile | null;
+  consent: ConsentState;
 }
 
 export type PrivacyAction =
@@ -30,7 +35,8 @@ export type PrivacyAction =
   | { type: "erase-ask" }
   | { type: "erase-cancel" }
   | { type: "erase-confirm" }
-  | { type: "set-locale"; locale: Locale };
+  | { type: "set-locale"; locale: Locale }
+  | { type: "consent"; purposeId: string; value: "granted" | "declined" };
 
 export interface PrivacyController {
   getState(): PrivacyState;
@@ -38,12 +44,24 @@ export interface PrivacyController {
   html(): string;
 }
 
-/** Throws at start-up if the inventory breaks the wording or data rules. */
+/**
+ * Throws at start-up if the inventory or the purposes break the wording or data
+ * rules. On start it also removes expired local items (see expiry.ts).
+ */
 export function createPrivacyController(deps: ControllerDeps): PrivacyController {
   assertValidInventory(deps.inventory);
+  const purposes = deps.purposes ?? [];
+  assertValidPurposes(purposes);
   const initial: PrivacyPrefs =
     loadPrefs(deps.storage, deps.prefix) ?? { locale: detectLocale(deps.languages ?? []) };
-  let state: PrivacyState = { prefs: initial, confirmingErase: false, status: null, lastExport: null };
+  const purged = deps.storage === null ? 0 : purgeExpired(deps.storage, deps.prefix, deps.now()).purged.length;
+  let state: PrivacyState = {
+    prefs: initial,
+    confirmingErase: false,
+    status: purged > 0 ? { kind: "expired-removed", count: purged } : null,
+    lastExport: null,
+    consent: loadConsent(deps.storage, deps.prefix, purposes),
+  };
 
   const unavailable = (): PrivacyState => ({
     ...state,
@@ -59,6 +77,22 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const prefs: PrivacyPrefs = { locale: action.locale };
         savePrefs(storage, deps.prefix, prefs);
         state = { ...state, prefs };
+        break;
+      }
+      case "consent": {
+        const purpose = purposes.find((p) => p.id === action.purposeId);
+        if (purpose === undefined) break;
+        const consent = setConsent(state.consent, purpose, action.value, deps.now());
+        const saved = saveConsent(storage, deps.prefix, consent);
+        state = {
+          ...state,
+          consent,
+          confirmingErase: false,
+          lastExport: null,
+          status: saved
+            ? { kind: "consent-saved", value: action.value, label: purpose.label[state.prefs.locale] }
+            : { kind: "save-failed" },
+        };
         break;
       }
       case "export": {
@@ -98,7 +132,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
             : r.removed === 0
               ? { kind: "nothing" }
               : { kind: "erased", count: r.removed };
-        state = { ...state, confirmingErase: false, status, lastExport: null };
+        state = { ...state, confirmingErase: false, status, lastExport: null, consent: {} };
         break;
       }
     }
@@ -112,6 +146,8 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       renderPrivacyPanelHtml({
         locale: state.prefs.locale,
         inventory: deps.inventory,
+        purposes,
+        consent: state.consent,
         ...(deps.reviewedOn !== undefined ? { reviewedOn: deps.reviewedOn } : {}),
         confirmingErase: state.confirmingErase,
         status: state.status,

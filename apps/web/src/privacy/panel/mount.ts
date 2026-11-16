@@ -55,6 +55,19 @@ export function mountPrivacyPanel(
         controller.dispatch({ type: "erase-confirm" });
         render("[data-privacy-status]");
         break;
+      case "consent-grant":
+      case "consent-decline": {
+        const action = t.getAttribute("data-action");
+        const purposeId = t.getAttribute("data-purpose");
+        if (purposeId === null) break;
+        controller.dispatch({
+          type: "consent",
+          purposeId,
+          value: action === "consent-grant" ? "granted" : "declined",
+        });
+        render(`[data-action="${action}"][data-purpose="${purposeId}"]`);
+        break;
+      }
       default:
         break;
     }
