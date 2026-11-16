@@ -8,6 +8,7 @@ import { SectionLoading } from "../modules/Section.tsx";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
+import { bundledPlace } from "../packs/bundledToronto.ts";
 
 const PackPlaceView = lazy(() => import("@access-tools/place").then((module) => ({ default: module.PackPlaceView })));
 
@@ -17,6 +18,7 @@ export function PlaceDetailPage() {
   const { profile } = useProfileState();
   const online = useOnline();
   const [loaded, setLoaded] = useState<{ id: string; result: ModuleResult<PlaceDetail> } | null>(null);
+  const [bundledName, setBundledName] = useState<string | null | undefined>(undefined);
   const locale = i18n.language.startsWith("fr") ? ("fr" as const) : ("en" as const);
 
   useEffect(() => {
@@ -27,6 +29,9 @@ export function PlaceDetailPage() {
       .then((result) => {
         if (current) setLoaded({ id, result });
       });
+    void bundledPlace(id).then((row) => {
+      if (current) setBundledName(row?.name ?? null);
+    });
     return () => {
       current = false;
     };
@@ -34,7 +39,9 @@ export function PlaceDetailPage() {
 
   const result = loaded?.id === id ? loaded.result : null;
   const detail = result?.items[0] ?? null;
-  const heading = detail ? (detail.name === "UNKNOWN" ? t("placeDetail.nameUnknown") : detail.name) : t("placeDetail.title");
+  const heading = detail
+    ? (detail.name === "UNKNOWN" ? t("placeDetail.nameUnknown") : detail.name)
+    : (bundledName ?? t("placeDetail.title"));
   useDocumentTitle(heading);
 
   const odbl = detail?.sources.filter((source) => source.licence.toUpperCase().startsWith("ODBL")) ?? [];
@@ -45,7 +52,7 @@ export function PlaceDetailPage() {
         <Link to="/places">{t("placeDetail.back")}</Link>
       </p>
       <h1>{heading}</h1>
-      {result === null ? <p role="status">{t("placeDetail.loading")}</p> : <p role="status">{t(result.messageKey)}</p>}
+      {result === null || bundledName === undefined ? <p role="status">{t("placeDetail.loading")}</p> : detail ? <p role="status">{t(result.messageKey)}</p> : bundledName ? null : <p role="status">{t(result.messageKey)}</p>}
       {detail ? (
         <Suspense fallback={<SectionLoading />}>
           <PackPlaceView record={detail.record} sources={detail.sources} locale={locale} />
