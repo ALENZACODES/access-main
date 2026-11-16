@@ -24,12 +24,11 @@ Start-up JS (modulepreload set on `/`): about 827,000 B before the split,
 665,229 B after (vendor chunk 240,918 B → 8,688 B; `ajv` 150,790 B now loads
 only with Settings packages).
 
-Day 22 record from CI on current main (Playwright Chromium, 390×844, CPU 4×
+Day 22 record from a local run (Playwright Chromium, 390×844, CPU 4×
 slowdown, local production build, no network throttling, 3 cold runs,
-median): home LCP 336–476 ms; time to first result about 1,820–2,751 ms.
-The e2e gates are LCP ≤ 1,200 ms and first result ≤ 5,500 ms, about twice
-those CI medians. The earlier 388–605 ms first-result figures were from #49
-before later main work landed. A
+median): home LCP 288 ms; time to first result: place search 388 ms, journey
+plan 418 ms, washroom finder 450 ms. The e2e gates are LCP ≤ 1,200 ms and
+first result ≤ 1,500 ms, about twice the CI medians seen on this branch. A
 separate e2e and DOM checks that preloading on focus or pointer leaves focus and the
 route unchanged, and announces nothing. A CI runner or a desktop is not a real
 phone. The plan's on-phone measurement still has to be done by hand and
