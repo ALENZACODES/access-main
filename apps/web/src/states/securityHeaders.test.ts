@@ -27,7 +27,8 @@ describe("securityHeaders", () => {
 
 describe("auditHeaders fails on violations", () => {
   it("missing or weak CSP", () => {
-    const { "content-security-policy": _, ...none } = good;
+    const none: Record<string, string> = { ...good };
+    delete none["content-security-policy"];
     expect(codes(none)).toContain("csp-missing");
     expect(codes({ ...good, "content-security-policy": "script-src 'self'; frame-ancestors 'none'" })).toContain("csp-default-src");
     expect(codes({ ...good, "content-security-policy": "default-src *; frame-ancestors 'none'" })).toContain("csp-wildcard");

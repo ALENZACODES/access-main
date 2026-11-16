@@ -20,7 +20,7 @@ interface FakeRequest { url: string; method: string; mode: string }
 const req = (path: string, over: Partial<FakeRequest> = {}): FakeRequest => ({ url: `https://app.test${path}`, method: "GET", mode: "navigate", ...over });
 
 function boot(config: SwConfig = DEFAULT_SW_CONFIG, network: (r: FakeRequest) => Promise<FakeResponse> = async () => new FakeResponse("net")) {
-  const listeners: Record<string, ((e: any) => void)[]> = {};
+  const listeners: Record<string, ((e: unknown) => void)[]> = {};
   const stores = new Map<string, Map<string, FakeResponse>>();
   const key = (r: FakeRequest | string): string => (typeof r === "string" ? `https://app.test${r}` : r.url);
   const cacheApi = {
@@ -40,7 +40,7 @@ function boot(config: SwConfig = DEFAULT_SW_CONFIG, network: (r: FakeRequest) =>
   const events: string[] = [];
   const self = {
     location: { origin: "https://app.test" },
-    addEventListener: (t: string, fn: (e: any) => void) => void (listeners[t] ??= []).push(fn),
+    addEventListener: (t: string, fn: (e: unknown) => void) => void (listeners[t] ??= []).push(fn),
     skipWaiting: async () => void events.push("skipWaiting"),
     clients: { claim: async () => void events.push("claim") },
   };

@@ -13,8 +13,8 @@
  */
 export type Locale = "en" | "fr";
 
-export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed" | "not-found" | "load-failed" | "offline";
-export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places";
+export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed" | "not-found" | "load-failed" | "data-load-failed" | "offline";
+export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places" | "no-saved-places";
 export type ActionId = "retry" | "go-home" | "go-back" | "download-pack" | "clear-search" | "change-trip" | "help";
 
 /** The six Day 22 states, in the plan's order. */
@@ -110,6 +110,14 @@ const ERRORS: Record<ErrorKind, Entry> = {
     },
     actions: ["retry", "go-back"],
   },
+  "data-load-failed": {
+    title: { en: "The places could not be loaded", fr: "Les lieux n’ont pas pu être chargés" },
+    description: {
+      en: "The saved places could not be opened on this device. Try again.",
+      fr: "Les lieux enregistrés n’ont pas pu être ouverts sur cet appareil. Réessayez.",
+    },
+    actions: ["retry", "go-home"],
+  },
   offline: {
     title: { en: "You are offline", fr: "Vous êtes hors ligne" },
     description: {
@@ -144,6 +152,14 @@ const EMPTY: Record<EmptyKind, Entry> = {
       fr: "Choisissez un autre type, ou effacez les mots de recherche.",
     },
     actions: ["clear-search"],
+  },
+  "no-saved-places": {
+    title: { en: "No saved places yet", fr: "Aucun lieu enregistré" },
+    description: {
+      en: "No places are saved on this device.",
+      fr: "Aucun lieu n’est enregistré sur cet appareil.",
+    },
+    actions: ["go-home"],
   },
   // The map has no search box; an empty view is about the area and filters.
   "map-no-places": {

@@ -13,7 +13,6 @@ export type CopyIssue =
   | "overclaim-certified"
   | "overclaim-guarantee"
   | "mentions-ai"
-  | "banned-organisation"
   | "straight-apostrophe"
   | "punctuation-spacing";
 
@@ -24,7 +23,6 @@ const RULES: ReadonlyArray<readonly [CopyIssue, RegExp]> = [
   ["overclaim-certified", /certified|certifi|\bAAA\b|conformant|conforme/i],
   ["overclaim-guarantee", /guarantee|garanti/i],
   ["mentions-ai", /\bAI\b|\bIA\b|artificial intelligence|intelligence artificielle/i],
-  ["banned-organisation", /scio|sciontario|spinal cord injury ontario/i],
 ];
 
 export function lintCopy(text: string, locale: Locale): CopyIssue[] {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PREFERENCES, ROUTE_NAMES, SLUGS, assertAccessiblePage, auditPage, createQueue, handleRequest, hrefFor, initialConnectivity,
-  auditHeaders, parseQueue, type AppDeps, type AppRequest, type Locale, type PlacesLoad, type Preferences,
+  auditHeaders, type AppDeps, type AppRequest, type Locale, type PlacesLoad, type Preferences,
 } from "./index";
 import { LOC_PROV, MemoryStore, mkRecord } from "./testHelpers";
 
@@ -83,7 +83,7 @@ describe("routing and status codes", () => {
     const nf = await handleRequest(get("/fr/zzz"), deps());
     expect(nf.status).toBe(404);
     expect(nf.html).toContain('<html lang="fr"');
-    expect(nf.html).toContain("Cette page est introuvable");
+    expect(nf.html).toContain("Ce lieu n’a pas été trouvé");
     expect((await handleRequest(get("/en/place/missing"), deps())).status).toBe(404);
     expect((await handleRequest(get("/en/report/missing"), deps())).status).toBe(404);
   });
@@ -92,7 +92,7 @@ describe("routing and status codes", () => {
     for (const path of ["search", "map", "saved", "compare", "sources", "place/hall-1", "report/hall-1"]) {
       const res = await handleRequest(get(`/en/${path}`), d);
       expect(res.status, path).toBe(503);
-      expect(res.html, path).toContain("You are offline");
+      expect(res.html, path).toMatch(/You are offline|No connection and no offline pack/);
     }
   });
   it("serves settings even when data cannot load", async () => {
@@ -335,7 +335,7 @@ describe("resilience", () => {
     fired[0]!();
     const res = await pending;
     expect(res.status).toBe(503);
-    expect(res.html).toContain("This is taking too long");
+    expect(res.html).toContain("The places could not be loaded");
   });
   it("turns a thrown loader error into an error page that reveals nothing", async () => {
     const res = await handleRequest(get("/en/search"), deps({ loadPlaces: async () => { throw new Error("secret connection string"); } }));
@@ -347,7 +347,7 @@ describe("resilience", () => {
     const d = deps({ queue: { ...deps().queue, enqueue: () => { throw new Error("disk full: /var/secret"); } } });
     const res = await handleRequest({ url: "/en/report/hall-1", method: "POST", form: { feature: "elevator", suggested: "yes" } }, d);
     expect(res.status).toBe(500);
-    expect(res.html).toContain("Something went wrong");
+    expect(res.html).toContain("The places could not be loaded");
     expect(res.html).not.toMatch(/secret|disk/);
     assertAccessiblePage(res.html, "en");
   });

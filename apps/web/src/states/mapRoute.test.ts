@@ -56,7 +56,7 @@ describe("mapRouteView", () => {
     const off = mapRouteView({ status: "ok", places }, ctx({ connectivity: { status: "offline", lastSavedOn: "2026-11-01" } }));
     expect(off.kind === "list" && off.banner?.title).toBe("You are offline");
     const err = mapRouteView({ status: "error", httpStatus: 500 }, ctx());
-    expect(err.kind === "error" && err.view.title).toBe("Something went wrong on our side");
+    expect(err.kind === "error" && err.view.title).toBe("The places could not be loaded");
   });
   it("is available in French", () => {
     const v = mapRouteView({ status: "ok", places }, ctx({ locale: "fr", near }));

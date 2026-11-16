@@ -97,7 +97,7 @@ async function dispatch(req: AppRequest, deps: AppDeps): Promise<AppResponse> {
     const v = name ? EXTRA_ROUTES.getRouteError(name, kind, locale) : getErrorState(kind, locale);
     return page(route, v.title, renderStateView(v, { ...base, idPrefix: "err" }), 503, resolved);
   };
-  const failKind = load.status === "error" ? errorKindFromStatus(load.httpStatus, deps.connectivity.status === "online") : "unknown";
+  const failKind = load.status === "error" ? errorKindFromStatus(load.httpStatus, deps.connectivity.status === "online") : "data-load-failed";
 
   switch (route) {
     case "search": {
@@ -231,7 +231,7 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
   } catch {
     const pref = deps.preferences.locale;
     const locale: Locale = pref === "auto" ? parseAcceptLanguage(req.acceptLanguage) : pref;
-    const view = getErrorState("unknown", locale);
+    const view = getErrorState("data-load-failed", locale);
     const html = renderPage({
       locale, current: null, heading: view.title, preferences: deps.preferences, alternateHref: null,
       body: renderStateView(view, { locale, theme: themeFor(deps.preferences), idPrefix: "fatal" }),
