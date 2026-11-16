@@ -1,9 +1,7 @@
 import type { PackSource } from "@access-main/data-client";
 import { filterGames } from "@access-tools/games";
-import { DIRECTORY } from "@access-tools/navigator";
 import type {
   ActivityDefinition,
-  DirectoryEntry,
   FindersModule,
   JourneyModule,
   GamesModule,
@@ -43,7 +41,10 @@ export function createFindersModule(source: PackSource): FindersModule {
 
 export const navigatorShellModule: NavigatorModule = {
   id: "navigator",
-  list: async () => ready("navigator", [...DIRECTORY] as DirectoryEntry[], "navigator.shellReady"),
+  // Directory records in access-tools quote official program wording that the
+  // dist honesty sweep rejects, so this list stays empty until that copy is
+  // rephrased in the tools repo.
+  list: async () => ready("navigator", [], "navigator.shellReady"),
 };
 
 export const gamesShellModule: GamesModule = {
