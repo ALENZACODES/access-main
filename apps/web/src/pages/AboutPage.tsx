@@ -79,7 +79,7 @@ export function AboutPage() {
         <h2 id="counts-title">{t("about.countsTitle")}</h2>
         <p>{t("about.countsIntro")}</p>
         <p>{summary ? t("storage.cacheCount", { count: summary.cacheCount }) : t("home.checking")}</p>
-        <p>{t("about.verified", { count: summary?.verifiedClaimCount ?? 0 })}</p>
+        <p>{t("about.refusedLabelCount", { count: summary?.refusedLabelCount ?? 0 })}</p>
         <p>{t("footer.build", { id: BUILD_ID })}</p>
         <p>{t("footer.contract", { version: CONTRACT_VERSION })}</p>
         <p>

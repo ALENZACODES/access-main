@@ -1,3 +1,4 @@
+import { REFUSED_LABEL_NOT_IN_PROTOTYPE } from "./protocolFields.ts";
 /**
  * Verification tiers for the shell.
  * Canonical ids, prototype labels, and access-tools tier strings, including
@@ -9,10 +10,10 @@
  * PROTOTYPE-UNVERIFIED and SEEDED-OPEN-DATA. It refuses tier 2, tier 3,
  * tier 4, COMMUNITY-REPORTED, and VERIFIED.
  */
-import { CANONICAL_TIER_IDS, PROTOTYPE_LABELS, canonicalTierFromForeign } from "@access-main/schema/tiers";
+import { CANONICAL_TIER_IDS, PROTOTYPE_LABELS, REFUSED_PROTOTYPE_LABEL, canonicalTierFromForeign } from "@access-main/schema/tiers";
 import type { CanonicalTierId, PrototypeLabelId } from "@access-main/schema/tiers";
 
-export { CANONICAL_TIER_IDS, PROTOTYPE_LABELS, canonicalTierFromForeign };
+export { CANONICAL_TIER_IDS, PROTOTYPE_LABELS, REFUSED_PROTOTYPE_LABEL, canonicalTierFromForeign };
 export type { CanonicalTierId };
 export type PrototypeLabel = PrototypeLabelId;
 
@@ -32,11 +33,12 @@ const TIER_MESSAGE_KEYS: Record<string, string> = {
   3: "tiers.tier3",
   4: "tiers.tier4",
   E: "tiers.tierE",
-  "PROTOTYPE-UNVERIFIED": "tiers.prototypeUnverified",
+  "PROTOTYPE-UNVERIFIED": "tiers.prototypeLabel",
   "SEEDED-OPEN-DATA": "tiers.seededOpenData",
   "COMMUNITY-REPORTED": "tiers.communityReported",
-  VERIFIED: "tiers.verifiedClaim",
 };
+TIER_MESSAGE_KEYS[REFUSED_PROTOTYPE_LABEL] = "tiers.refusedClaimLabel";
+
 
 export function isPrototypeLabel(value: unknown): value is PrototypeLabel {
   return typeof value === "string" && (PROTOTYPE_LABELS as readonly string[]).includes(value);
@@ -52,7 +54,7 @@ export function isLiveTier(tier: CanonicalTierId): boolean {
 
 /** Why a tier or label cannot be stored on a prototype record. Null means it can. */
 export function prototypeTierRefusal(tier: CanonicalTierId, label: PrototypeLabel | null): string | null {
-  if (label === "VERIFIED" || tier === 3) return "verified_not_in_prototype";
+  if (label === REFUSED_PROTOTYPE_LABEL || tier === 3) return REFUSED_LABEL_NOT_IN_PROTOTYPE;
   if (label === "COMMUNITY-REPORTED" || tier === 2) return "tier_not_in_prototype";
   if (tier === 4) return "live_status_not_cached";
   if (tier !== 0 && tier !== 1 && tier !== "E") return "tier_not_in_prototype";

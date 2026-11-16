@@ -28,7 +28,7 @@ describe("UNKNOWN", () => {
   });
   it("labels the third button as could-not-check in EN and FR", () => {
     expect(STRINGS.en.unknown).toBe("I could not check");
-    expect(STRINGS.fr.unknown).toBe("Je n’ai pas pu v\u00e9rifier");
+    expect(STRINGS.fr.unknown).toBe("Je n’ai pas pu contrôler");
   });
 });
 

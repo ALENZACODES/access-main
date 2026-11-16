@@ -48,15 +48,15 @@ export const fr: Record<MessageKey, string> = {
   "period.unknown": "Période inconnue",
   "tier.0": "Niveau 0\u00a0: import de données ouvertes",
   "tier.1": "Niveau 1\u00a0: déclaration d’un exploitant",
-  "tier.E": "Niveau E\u00a0: vérification au bureau d’une page officielle",
-  "label.PROTOTYPE-UNVERIFIED": "Prototype, non vérifié",
+  "tier.E": "Niveau E\u00a0: contrôle au bureau d’une page officielle",
+  "label.prototypeSample": "Étiquette d’échantillon de prototype",
   "label.SEEDED-OPEN-DATA": "Données ouvertes préchargées",
   "export.button": "Exporter le dossier",
   "export.done": "Dossier de preuves exporté sous {file}.",
   "method.heading": "Comment les comptes sont traités",
   "rules.heading": "Règles de suppression",
   "footer.note":
-    "Prototype. Les libellés de statut des données suivent les niveaux de vérification. Rien de ce qui est affiché ici n’est vérifié.",
+    "Prototype. Les libellés de statut des données suivent les niveaux du prototype. Rien de ce qui est affiché ici ne porte une étiquette de confirmation.",
   "pack.method.1":
     "Les comptes sont des sommes d’observations de source regroupées par catégorie, secteur grossier et période. Ils sont calculés sur cet appareil à partir des enregistrements fournis.",
   "pack.method.2":
@@ -66,7 +66,7 @@ export const fr: Record<MessageKey, string> = {
   "pack.method.4":
     "Aucun total n’est imprimé entre les cellules, ni aucun total provincial, de sorte qu’une cellule supprimée ne peut pas être retrouvée par soustraction.",
   "pack.method.5":
-    "Les enregistrements marqués comme démonstration ou exemple ne sont pas des comptes principaux. Seuls les niveaux de prototype 0, 1 et E et les libellés PROTOTYPE-UNVERIFIED et SEEDED-OPEN-DATA sont acceptés. Rien dans ce dossier n’est vérifié.",
+    "Les enregistrements marqués comme démonstration ou exemple ne sont pas des comptes principaux. Seuls les niveaux de prototype 0, 1 et E et leurs libellés d’échantillon permis sont acceptés. Rien dans ce dossier ne porte une étiquette de confirmation.",
   "pack.counting":
     "L’admissibilité aux comptes principaux suit les règles de décompte des pièces de packages/schema/docs/counting-rules.md. Les enregistrements dont example est à true ou dont l’identifiant est celui d’un jeu de test, les valeurs de plus de 730 jours, les observations d’état hors de la fenêtre de 30 jours et les valeurs sans date ne sont pas comptés. Les valeurs inconnues ne sont pas comptées.",
   "pack.rule.small_cell_threshold": "Les comptes inférieurs à {k} sont supprimés.",

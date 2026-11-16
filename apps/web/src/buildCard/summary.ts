@@ -1,4 +1,4 @@
-import { MODULE_IDS, type CacheEntry, type CacheKind, type ModuleId, type ModuleRegistry } from "@access/shared";
+import { MODULE_IDS, REFUSED_PROTOTYPE_LABEL, type CacheEntry, type CacheKind, type ModuleId, type ModuleRegistry } from "@access/shared";
 
 /**
  * Day 25 build card. Everything on it is read from this build or this device.
@@ -17,8 +17,8 @@ export interface CardSummary {
   byKind: Array<{ kind: CacheKind; count: number }>;
   byTier: Array<{ tier: string; count: number }>;
   sources: SourceLine[];
-  /** Entries that carry a verified label or tier 3. The cache refuses them, so this should be 0. */
-  verifiedClaims: number;
+  /** Entries that carry a refused confirmation label or tier 3. The cache refuses them, so this should be 0. */
+  refusedLabelCount: number;
   /** Entries with no source date. Shown, not hidden. */
   undated: number;
 }
@@ -27,14 +27,14 @@ export function summarizeEntries(entries: readonly CacheEntry[]): CardSummary {
   const kinds = new Map<CacheKind, number>();
   const tiers = new Map<string, number>();
   const sources = new Map<string, SourceLine>();
-  let verifiedClaims = 0;
+  let refusedLabelCount = 0;
   let undated = 0;
   for (const entry of entries) {
     kinds.set(entry.kind, (kinds.get(entry.kind) ?? 0) + 1);
     const p = entry.provenance;
     const tier = p.prototype_label ? `${String(p.tier)} · ${p.prototype_label}` : String(p.tier);
     tiers.set(tier, (tiers.get(tier) ?? 0) + 1);
-    if (p.prototype_label === "VERIFIED" || p.tier === 3) verifiedClaims += 1;
+    if (p.prototype_label === REFUSED_PROTOTYPE_LABEL || p.tier === 3) refusedLabelCount += 1;
     const date = p.source_date?.trim() ? p.source_date.slice(0, 10) : "";
     if (!date) undated += 1;
     const key = `${p.source_name}\u0000${p.licence}\u0000${date}`;
@@ -49,7 +49,7 @@ export function summarizeEntries(entries: readonly CacheEntry[]): CardSummary {
     sources: [...sources.values()].sort(
       (a, b) => a.source_name.localeCompare(b.source_name) || a.licence.localeCompare(b.licence) || a.source_date.localeCompare(b.source_date),
     ),
-    verifiedClaims,
+    refusedLabelCount,
     undated,
   };
 }

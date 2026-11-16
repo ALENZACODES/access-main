@@ -65,10 +65,10 @@ describe("offline cache rules", () => {
 
   it("refuses live status, verified labels, and tier 3 on a prototype record", () => {
     expect(validateCacheEntry(entry({ provenance: { ...provenance, tier: 4 } })).some((issue) => issue.code === "live_status_not_cached")).toBe(true);
-    expect(validateCacheEntry(entry({ provenance: { ...provenance, tier: 3 } })).some((issue) => issue.code === "verified_not_in_prototype")).toBe(true);
+    expect(validateCacheEntry(entry({ provenance: { ...provenance, tier: 3 } })).some((issue) => issue.code === "refused_label_not_in_prototype")).toBe(true);
     expect(
       validateCacheEntry(entry({ provenance: { ...provenance, prototype_label: "VERIFIED" } })).some(
-        (issue) => issue.code === "verified_not_in_prototype",
+        (issue) => issue.code === "refused_label_not_in_prototype",
       ),
     ).toBe(true);
     expect(

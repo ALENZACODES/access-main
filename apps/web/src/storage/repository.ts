@@ -1,5 +1,6 @@
 import {
   LOCAL_USER_ID,
+  REFUSED_PROTOTYPE_LABEL,
   estimateEntryBytes,
   validateCacheEntry,
   validateManifest,
@@ -34,7 +35,7 @@ export interface StorageSummary {
   cacheCount: number;
   outboxCount: number;
   byKind: Record<CacheKind, number>;
-  verifiedClaimCount: number;
+  refusedLabelCount: number;
   newestStoredAt: string | null;
 }
 
@@ -183,7 +184,7 @@ export async function summarizeStorage(): Promise<StorageSummary> {
       cacheCount: 0,
       outboxCount: 0,
       byKind: { ...EMPTY_KINDS },
-      verifiedClaimCount: 0,
+      refusedLabelCount: 0,
       newestStoredAt: null,
     };
   }
@@ -193,10 +194,10 @@ export async function summarizeStorage(): Promise<StorageSummary> {
     safe(() => db.outbox.count(), 0),
   ]);
   const byKind = { ...EMPTY_KINDS };
-  let verifiedClaimCount = 0;
+  let refusedLabelCount = 0;
   for (const entry of entries) {
     byKind[entry.kind] += 1;
-    if (entry.provenance.prototype_label === "VERIFIED" || entry.provenance.tier === 3) verifiedClaimCount += 1;
+    if (entry.provenance.prototype_label === REFUSED_PROTOTYPE_LABEL || entry.provenance.tier === 3) refusedLabelCount += 1;
   }
   return {
     health,
@@ -204,7 +205,7 @@ export async function summarizeStorage(): Promise<StorageSummary> {
     cacheCount: entries.length,
     outboxCount,
     byKind,
-    verifiedClaimCount,
+    refusedLabelCount,
     newestStoredAt: entries[0]?.stored_at ?? null,
   };
 }

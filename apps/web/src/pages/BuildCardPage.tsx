@@ -26,7 +26,7 @@ const STATE_KEY: Record<ModuleState, string> = {
 
 const HONESTY = [
   "buildCard.honestyPrototype",
-  "buildCard.honestyUnverified",
+  "buildCard.honestyNoConfirmation",
   "buildCard.honestyOutage",
   "noEndorsement",
   "buildCard.honestyMedical",
@@ -165,10 +165,10 @@ export function BuildCardPage() {
         {summary && summary.undated > 0 ? <p>{t("buildCard.undated", { count: summary.undated })}</p> : null}
       </section>
 
-      <section className="stack" aria-labelledby="card-verification">
-        <h2 id="card-verification">{t("buildCard.verificationTitle")}</h2>
-        <p>{t("buildCard.verificationBody")}</p>
-        <p>{t("buildCard.verifiedCount", { count: summary?.verifiedClaims ?? 0 })}</p>
+      <section className="stack" aria-labelledby="card-label-policy">
+        <h2 id="card-label-policy">{t("buildCard.labelPolicyTitle")}</h2>
+        <p>{t("buildCard.labelPolicyBody")}</p>
+        <p>{t("buildCard.refusedLabelCount", { count: summary?.refusedLabelCount ?? 0 })}</p>
       </section>
 
       <section className="stack" aria-labelledby="card-modules">
