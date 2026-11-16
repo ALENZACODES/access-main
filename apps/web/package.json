@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:e2e": "playwright test",
-    "verify:build": "node scripts/verify-build.ts"
+    "verify:build": "node scripts/verify-build.ts",
+    "check:dist-overclaim": "node scripts/check-dist-overclaim.mjs",
+    "postbuild": "node scripts/check-dist-overclaim.mjs"
   },
   "dependencies": {
     "@access/shared": "*",

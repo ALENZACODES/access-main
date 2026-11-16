@@ -35,6 +35,7 @@ test("Settings lists every package route", async ({ page }) => {
   for (const path of paths.slice(1)) {
     await expect(page.locator(`a[href$="/settings${path}"]`)).toBeVisible();
   }
+  await expect(page.locator('a[href$="/profile"]')).toBeVisible();
 });
 
 test("Caregiver and advocacy actions remain blocked without consent", async ({ page }) => {
