@@ -104,7 +104,7 @@ function pullGroup(group, outDir, remoteBase, index) {
     git(["config", "core.sparseCheckout", "true"], tmp);
     git(["config", "core.sparseCheckoutCone", "false"], tmp);
     mkdirSync(path.join(tmp, ".git", "info"), { recursive: true });
-    writeFileSync(path.join(tmp, ".git", "info", "sparse-checkout"), group.packages.map((pkg) => `/${pkg.path}/\n`).join(""));
+    writeFileSync(path.join(tmp, ".git", "info", "sparse-checkout"), group.packages.map((pkg) => `/${pkg.path}/\n`).join("") + "/tsconfig.base.json\n");
     git(["fetch", "-q", "--depth", "1", "--filter=blob:none", "origin", group.ref], tmp);
     git(["checkout", "-q", "FETCH_HEAD"], tmp);
     rmSync(path.join(tmp, ".git"), { recursive: true, force: true });
@@ -115,6 +115,13 @@ function pullGroup(group, outDir, remoteBase, index) {
       mkdirSync(path.dirname(to), { recursive: true });
       rmSync(to, { recursive: true, force: true });
       renameSync(from, to);
+    }
+    const fromBase = path.join(tmp, "tsconfig.base.json");
+    if (existsSync(fromBase)) {
+      const toBase = path.join(outDir, repoName(group.repo), "tsconfig.base.json");
+      mkdirSync(path.dirname(toBase), { recursive: true });
+      rmSync(toBase, { force: true });
+      renameSync(fromBase, toBase);
     }
   } finally {
     rmSync(tmp, { recursive: true, force: true });
@@ -145,25 +152,35 @@ export function enforceSizeLimit(dirs, limit = MAX_FILE_BYTES) {
 
 export function syncLanes({ lockPath, outDir, allowUnpinned, remoteBase = "https://github.com", ifMissing = false, log = console.log }) {
   const lock = parseLock(readFileSync(lockPath, "utf8"));
-  if (ifMissing && lock.packages.every((pkg) => existsSync(packageDir(outDir, pkg)))) {
+  const fetchable = allowUnpinned ? lock.packages : lock.packages.filter((pkg) => pkg.commit !== UNPINNED);
+  const skipped = lock.packages.filter((pkg) => !fetchable.includes(pkg));
+  if (fetchable.length === 0) {
+    if (ifMissing) {
+      log(`lanes: skipping fetch; ${UNPINNED} pins are not set yet. The shell uses fallbacks until each package is pinned.`);
+      return { files: 0, bytes: 0, fetches: 0 };
+    }
+    assertPinned(lock, allowUnpinned);
+  }
+  if (ifMissing && fetchable.every((pkg) => existsSync(packageDir(outDir, pkg)))) {
     log("lanes: all packages already present, nothing to do");
     return { files: 0, bytes: 0, fetches: 0 };
   }
-  if (ifMissing && !allowUnpinned && lock.packages.some((pkg) => pkg.commit === UNPINNED)) {
-    log(`lanes: skipping fetch; ${UNPINNED} pins are not set yet. The shell uses fallbacks until each package is pinned.`);
-    return { files: 0, bytes: 0, fetches: 0 };
+  if (allowUnpinned || !ifMissing) {
+    assertPinned(lock, allowUnpinned);
   }
-  assertPinned(lock, allowUnpinned);
   mkdirSync(outDir, { recursive: true });
   writeFileSync(path.join(outDir, ".gitignore"), "*\n");
-  const repos = [...new Set(lock.packages.map((pkg) => repoName(pkg.repo)))];
+  const repos = [...new Set(fetchable.map((pkg) => repoName(pkg.repo)))];
   for (const name of repos) rmSync(path.join(outDir, name), { recursive: true, force: true });
-  const groups = planFetches(lock, allowUnpinned);
+  const groups = planFetches({ version: 1, packages: fetchable }, allowUnpinned);
   groups.forEach((group, index) => {
     log(`lanes: ${group.repo} @ ${group.ref.slice(0, 12)} (${group.packages.map((pkg) => pkg.path).join(", ")})`);
     pullGroup(group, outDir, remoteBase, index);
   });
   const { files, bytes } = enforceSizeLimit(repos.map((name) => path.join(outDir, name)));
+  if (skipped.length > 0) {
+    log(`lanes: skipping ${skipped.length} ${UNPINNED} package(s) (${skipped.map((pkg) => pkg.alias).join(", ")}). Pinned packages are still fetched.`);
+  }
   log(`lanes: ${files} files, ${bytes} bytes in ${outDir}`);
   return { files, bytes, fetches: groups.length };
 }
