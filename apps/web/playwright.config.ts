@@ -16,7 +16,26 @@ export default defineConfig({
     locale: "en-CA",
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      // Day 22 first-result record. Independent of the other projects so a
+      // red perf gate does not skip the axe sweep or the rest of e2e.
+      name: "perf",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: "perf.spec.ts",
+      fullyParallel: false,
+    },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: ["release/**", "perf.spec.ts", "axe-sweep/**"],
+    },
+    {
+      name: "axe-sweep",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: "axe-sweep/**/*.spec.ts",
+    },
+  ],
   webServer: {
     command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}`,

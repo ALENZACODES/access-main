@@ -5,27 +5,38 @@ declare module "@access-tools/employment" {
 
 declare module "@access-tools/housing" {
   import type { ComponentType } from "react";
-  export const HousingFinder: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr" }>;
+  export const HousingFinder: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr"; initialLanguage?: "en" | "fr" }>;
 }
 
 declare module "@access-tools/safety" {
   import type { ComponentType } from "react";
-  export const SafetyApp: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr" }>;
+  export const SafetyApp: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr"; initialLanguage?: "en" | "fr" }>;
+  export const SafetyPanel: ComponentType<{
+    language: "en" | "fr";
+    onLanguage: (language: "en" | "fr") => void;
+  }>;
 }
 
 declare module "@access-tools/diary" {
   import type { ComponentType } from "react";
-  export const Diary: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr" }>;
+  export const Diary: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr"; initialLanguage?: "en" | "fr" }>;
 }
 
 declare module "@access-tools/auditors" {
   import type { ComponentType } from "react";
-  export const App: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr" }>;
+  export const App: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr"; initialLanguage?: "en" | "fr" }>;
 }
 
 declare module "@access-tools/handoff" {
   import type { ComponentType } from "react";
-  export const HandoffAudit: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr" }>;
+  export const HandoffAudit: ComponentType<{
+    language?: "en" | "fr";
+    lang?: "en" | "fr";
+    initialLanguage?: "en" | "fr";
+    initialRecords?: readonly unknown[];
+    handoff?: unknown;
+    asOf?: string;
+  }>;
 }
 
 declare module "@access/peers" {
