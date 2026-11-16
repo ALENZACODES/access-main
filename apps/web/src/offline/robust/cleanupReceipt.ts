@@ -1,5 +1,4 @@
 import { type CleanupOutcome } from "./cleanupController";
-import { type RegionInventory } from "./regionInventory";
 import { type Language, type RegionManifest, type Provenance } from "./regionDownload";
 
 export interface CleanupReceiptItem {

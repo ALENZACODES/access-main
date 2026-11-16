@@ -25,7 +25,10 @@ function setup() {
       files.set(cell, data);
     },
   };
-  const fetchCell = vi.fn(async (_region: string, _cell: RegionManifest["cells"][number]) => 2);
+  const fetchCell = vi.fn(async (...args: [string, RegionManifest["cells"][number]]) => {
+    void args;
+    return 2;
+  });
   const deps: DownloadDependencies = {
     store, fetchCell,
     estimateStorage: async () => ({ quota: 4_000_000, usage: 0 }),

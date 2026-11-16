@@ -1,6 +1,6 @@
 import { MIN_TARGET_PX, createOfflineAction } from "./accessibilityGuard";
 import {
-  boundedCleanupSelection, browseCleanup, MAX_CLEANUP_SELECTION,
+  boundedCleanupSelection, browseCleanup,
   planCellCleanup, reconcileCleanupSelection, type CleanupFilter, type CleanupOrder,
 } from "./cleanupPlan";
 import { createCleanupController, type CleanupState } from "./cleanupController";
@@ -202,7 +202,7 @@ export function mountOfflineCleanup(
     const cleanup = controller?.state() ?? null;
     const enabled = !!permittedStore && auditReady && !!latest && !currentBusy(state);
     list.replaceChildren();
-    let display = latest ? browseCleanup(latest, {
+    const display = latest ? browseCleanup(latest, {
       text: query, filter, order, page, pageSize: 10,
     }) : null;
     page = display?.page ?? 0;
