@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { exitCode, parseArgs, runCli, type CliDeps } from './cli.js';
+import { exitCode, HELP_TEXT, parseArgs, runCli, type CliDeps } from './cli.js';
 import { mountNarrowPanel, narrowRoute, renderPanel, type PanelRoot } from './panel.js';
 import { buildRouteAudit, makeReport } from './report.js';
 import type { AuditPage } from './run.js';
@@ -48,6 +48,8 @@ describe('parseArgs', () => {
         historyFile: null,
         historyMax: null,
         maxWeightKb: null,
+        only: [],
+        skip: [],
       },
     });
   });
@@ -521,5 +523,61 @@ describe('panel', () => {
     expect(narrowRoute.path).toBe('/dev/narrow');
     expect(narrowRoute.title.fr).toBe('Audit écran étroit');
     expect(narrowRoute.mount).toBe(mountNarrowPanel);
+  });
+});
+
+describe('runCli with --only and --skip', () => {
+  async function noBrowser(): Promise<never> {
+    throw new Error('browser launched');
+  }
+  const TILES = "const u='https://tile.openstreetmap.org/1/2/3.png';";
+  it('parses lists, repeats and rejects bad names', () => {
+    expect(parseArgs(['--html', 'a.html', '--only', 'forms,auth', '--only', 'media', '--skip', 'contrast'])).toMatchObject({ ok: true, args: { only: ['forms', 'auth', 'media'], skip: ['contrast'] } });
+    expect(parseArgs(['--only', 'nope']).ok).toBe(false);
+    expect(parseArgs(['--skip', 'budget']).ok).toBe(false);
+    expect(parseArgs(['--skip']).ok).toBe(false);
+  });
+  it('a failure in a skipped check no longer fails the run, and the report says it did not run', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('tiles.js', TILES);
+    expect(await runCli(['--scan', 'tiles.js'], d.deps)).toBe(1);
+    expect(await runCli(['--scan', 'tiles.js', '--skip', 'external', '--out', 'o'], d.deps)).toBe(0);
+    expect(d.logs.join('\n')).toContain('Checks not run in this run: ');
+    expect(d.logs.join('\n')).toContain('External hosts');
+    expect(JSON.parse(d.files.get('o/narrow-audit.json') ?? '{}').skipped).toContain('external');
+  });
+  it('--only runs just the named checks', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('tiles.js', TILES);
+    expect(await runCli(['--scan', 'tiles.js', '--only', 'external'], d.deps)).toBe(1);
+    expect(await runCli(['--scan', 'tiles.js', '--only', 'forms'], d.deps)).toBe(0);
+  });
+  it('the skipped list survives waivers and a budget on the way to the files', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('tiles.js', TILES);
+    d.files.set('w.json', '[]');
+    d.files.set('b.json', '{"version":1,"checks":{}}');
+    await runCli(['--scan', 'tiles.js', '--skip', 'external', '--waivers', 'w.json', '--budget', 'b.json', '--out', 'o'], d.deps);
+    expect(JSON.parse(d.files.get('o/narrow-audit.json') ?? '{}').skipped).toContain('external');
+    expect(d.files.get('o/narrow-audit.en.html')).toContain('External hosts');
+  });
+  it('the French report names skipped checks in French', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('tiles.js', TILES);
+    await runCli(['--scan', 'tiles.js', '--skip', 'external', '--lang', 'fr'], d.deps);
+    expect(d.logs.join('\n')).toContain('Contrôles non exécutés');
+    expect(d.logs.join('\n')).toContain('Hôtes externes');
+  });
+  it('writing a budget while a check is skipped keeps that check’s old limit', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('tiles.js', TILES);
+    await runCli(['--scan', 'tiles.js', '--write-budget', 'b.json'], d.deps);
+    expect(JSON.parse(d.files.get('b.json') ?? '{}').checks.external).toEqual({ fail: 1, unknown: 0 });
+    await runCli(['--scan', 'tiles.js', '--skip', 'external', '--budget', 'b.json', '--write-budget', 'b2.json'], d.deps);
+    expect(JSON.parse(d.files.get('b2.json') ?? '{}').checks.external).toEqual({ fail: 1, unknown: 0 });
+  });
+  it('the help text mentions both flags in both languages', () => {
+    expect(HELP_TEXT).toContain('--only CHECK');
+    expect(HELP_TEXT).toContain('--skip CONTRÔLE');
   });
 });

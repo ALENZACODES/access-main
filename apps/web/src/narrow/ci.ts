@@ -106,9 +106,18 @@ export function renderSarif(report: AuditReport): string {
 
 // ---------------------------------------------------------------- JUnit
 
+function stripXmlControls(s: string): string {
+  let out = '';
+  for (const ch of s) {
+    const c = ch.charCodeAt(0);
+    if (c < 0x20 && c !== 0x09 && c !== 0x0a && c !== 0x0d) continue;
+    out += ch;
+  }
+  return out;
+}
+
 export function xmlEscape(s: string): string {
-  return s
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+  return stripXmlControls(s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -344,7 +353,7 @@ export function applyWaivers(report: AuditReport, waivers: readonly Waiver[], no
   });
   const withProblems = problems.length > 0 ? [...routes, buildRouteAudit('waivers', null, { waiver: { checked: waivers.length + parseProblems.length, entries: problems } })] : routes;
   const next = makeReport(withProblems, new Date(report.generatedAt));
-  return { report: { ...next, generatedAt: report.generatedAt }, waived };
+  return { report: { ...next, generatedAt: report.generatedAt, ...(report.skipped ? { skipped: report.skipped } : {}) }, waived };
 }
 
 /** Rebuilds a route with fewer entries, keeping how many items each check looked at. */

@@ -11,8 +11,9 @@ import { lintManifest } from './manifestlint.js';
 import { auditProvenance } from './provenance.js';
 import { buildRouteAudit, makeReport, renderHtml, renderJson, renderText, totals, type AuditReport, type RouteAudit } from './report.js';
 import { runAudit, type FullPage } from './run.js';
+import { describeSkipped, parseCheckIds, selectChecks } from './select.js';
 import { lintServiceWorker } from './swlint.js';
-import type { Lang } from './types.js';
+import type { CheckId, Lang } from './types.js';
 
 export interface CliArgs {
   readonly baseUrl: string;
@@ -45,6 +46,10 @@ export interface CliArgs {
   readonly historyFile: string | null;
   readonly historyMax: number | null;
   readonly maxWeightKb: number | null;
+  /** Run only these checks. Empty means all. */
+  readonly only: readonly CheckId[];
+  /** Switch these checks off. */
+  readonly skip: readonly CheckId[];
 }
 
 export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit'];
@@ -61,7 +66,7 @@ export const HELP_TEXT =
   '                    [--format sarif,junit] [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
   '                    [--manifest FILE ...] [--sw FILE ...] [--scan FILE ...] [--allow-host PATTERN ...]\n' +
   '                    [--budget FILE] [--write-budget FILE] [--history FILE] [--history-max N]\n' +
-  '                    [--max-weight-kb N]\n' +
+  '                    [--max-weight-kb N] [--only CHECK,...] [--skip CHECK,...]\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
   '\n' +
@@ -72,7 +77,7 @@ export const HELP_TEXT =
   '                    [--format sarif,junit] [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
   '                    [--manifest FICHIER ...] [--sw FICHIER ...] [--scan FICHIER ...] [--allow-host MOTIF ...]\n' +
   '                    [--budget FICHIER] [--write-budget FICHIER] [--history FICHIER] [--history-max N]\n' +
-  '                    [--max-weight-kb N]\n' +
+  '                    [--max-weight-kb N] [--only CONTRÔLE,...] [--skip CONTRÔLE,...]\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
 
@@ -102,6 +107,8 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let historyFile: string | null = null;
   let historyMax: number | null = null;
   let maxWeightKb: number | null = null;
+  const only: CheckId[] = [];
+  const skip: CheckId[] = [];
   let offline = false;
   let strictUnknown = false;
   let help = false;
@@ -203,6 +210,15 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         else if (a === '--write-budget') writeBudgetFile = got;
         else historyFile = got;
         break;
+      case '--only':
+      case '--skip': {
+        const list = need(a, next(), 'a list of check names', 'une liste de noms de contrôles');
+        if (typeof list !== 'string') return list;
+        const parsedIds = parseCheckIds(list);
+        if (!parsedIds.ok) return { ok: false, error: parsedIds.error };
+        for (const id of parsedIds.ids) if (!(a === '--only' ? only : skip).includes(id)) (a === '--only' ? only : skip).push(id);
+        break;
+      }
       case '--max-weight-kb': {
         const n = Number.parseInt(next() ?? '', 10);
         if (!Number.isInteger(n) || n < 1 || n > 1000000) return fail('--max-weight-kb must be a whole number of kilobytes, 1 or more.', '--max-weight-kb doit être un nombre entier de kilooctets, 1 ou plus.');
@@ -256,7 +272,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   }
   return {
     ok: true,
-    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, historyMax, maxWeightKb },
+    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, historyMax, maxWeightKb, only, skip },
   };
 }
 
@@ -356,6 +372,7 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       const strings = i18n ? [buildRouteAudit('strings', null, stringChecks(i18n.en, i18n.fr))] : [];
       report = makeReport([...strings, ...extra], deps.now());
     }
+    if (args.only.length > 0 || args.skip.length > 0) report = selectChecks(report, { only: args.only, skip: args.skip });
     let waivedText = '';
     if (args.waiversFile !== null) {
       const parsedWaivers = parseWaivers(await deps.readText(args.waiversFile));
@@ -376,6 +393,7 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
     if (budget) report = applyBudget(report, budget);
     deps.log(renderText(report, args.lang));
     if (waivedText) deps.log(waivedText);
+    if (report.skipped) deps.log(describeSkipped(report.skipped, args.lang));
     if (budget) deps.log(describeBudget(beforeBudget, budget, args.lang));
     if (args.writeBudgetFile !== null) await deps.writeText(args.writeBudgetFile, JSON.stringify(ratchet(beforeBudget, budget), null, 2) + '\n');
     if (args.historyFile !== null) {

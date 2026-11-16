@@ -67,6 +67,8 @@ export interface AuditReport {
   readonly scopeNote: LocalizedText;
   readonly references: readonly Reference[];
   readonly waived?: readonly WaivedItem[];
+  /** Checks that were switched off for this run. */
+  readonly skipped?: readonly CheckId[];
 }
 
 export const TOOL = { name: 'narrow-audit', version: '0.2.0' } as const;
@@ -162,6 +164,7 @@ const L = {
   stringsRoute: { en: 'Strings', fr: 'Chaînes' },
   waived: { en: 'Failures covered by a waiver', fr: 'Anomalies couvertes par une dérogation' },
   until: { en: 'until', fr: 'jusqu’au' },
+  skipped: { en: 'Checks not run in this run, so nothing is said about them', fr: 'Contrôles non exécutés, aucun résultat à leur sujet' },
 } as const;
 
 const colon = (lang: Lang): string => (lang === 'fr' ? `${NBSP}:` : ':');
@@ -204,6 +207,10 @@ export function renderText(report: AuditReport, lang: Lang): string {
     for (const w of report.waived) {
       lines.push(`  ${w.route} ${checkTitle(w.entry.check, lang)}${ruleTag(w.entry)} ${w.entry.id} (${L.until[lang]} ${w.expires})${colon(lang)} ${w.reason}`);
     }
+  }
+  if (report.skipped && report.skipped.length > 0) {
+    lines.push('');
+    lines.push(`${L.skipped[lang]}${colon(lang)} ${report.skipped.map((c) => CHECK_LABELS[c][lang]).join(', ')}`);
   }
   lines.push('');
   lines.push(`${L.sources[lang]}${colon(lang)}`);
@@ -249,6 +256,9 @@ export function renderBody(report: AuditReport, lang: Lang): string {
     }
     out.push('</section>');
   });
+  if (report.skipped && report.skipped.length > 0) {
+    out.push(`<h2>${escapeHtml(L.skipped[lang])}</h2><p>${escapeHtml(report.skipped.map((c) => CHECK_LABELS[c][lang]).join(', '))}</p>`);
+  }
   if (report.waived && report.waived.length > 0) {
     out.push(`<h2>${escapeHtml(L.waived[lang])}</h2><ul>`);
     for (const w of report.waived) {

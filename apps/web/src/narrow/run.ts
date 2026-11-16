@@ -1,8 +1,17 @@
 import { auditReflow, auditTargets, type Box } from './audit.js';
+import { auditConsistency, type RouteFacts } from './consistency.js';
+import { auditForms } from './forms.js';
+import { auditAuth } from './auth.js';
+import { auditStatus } from './status.js';
+import { auditMedia } from './media.js';
+import { auditClipping, auditFixedSpace } from './layoutspace.js';
+import { semanticsInPage, type SemanticFacts } from './semantics.js';
+import { auditLangParts, langBlocksInPage, type LangBlocks } from './langparts.js';
 import { auditContrast } from './contrast.js';
 import { auditCopy, auditCopyDict } from './copylint.js';
 import { auditFocusObscured } from './focus.js';
 import { lintHtml } from './htmllint.js';
+import { auditResources, resourcesInPage, type ResourceFacts } from './hostlint.js';
 import { auditI18n, type Dict, type ParityOptions } from './i18n.js';
 import {
   focusProbeInPage,
@@ -20,8 +29,10 @@ import { auditKeyboard, probeKeyboard, type KeyboardPage, type KeyboardProbe } f
 import { auditLanguage, auditNames } from './names.js';
 import { checkOfflineReload, offlineCheckResult, type OfflineContext, type OfflinePage } from './offline.js';
 import { INTERACTIVE_SELECTOR, type PageLike } from './page.js';
+import { auditParity, controlKeys, type View } from './parity.js';
 import { auditControlBoundaries, auditDragging, auditLinkCues, HELP_WORDS, probesInPage, type PageFacts } from './probes.js';
 import { auditMotion, DEFAULT_PROFILE, motionProbeInPage, type MediaOptions, type MotionResult, type Profile } from './profiles.js';
+import { auditWeight, weightInPage, type WeightFacts, type WeightOptions } from './weight.js';
 import { addCheck, buildRouteAudit, entriesFromFindings, makeReport, type AuditReport, type RouteAudit } from './report.js';
 import { auditTargetSpacing } from './spacing.js';
 import { auditTextSpacing } from './textspacing.js';
@@ -40,6 +51,10 @@ export interface RouteInputs {
   /** What the page loaded, for the external host check. */
   readonly resources?: ResourceFacts;
   readonly weight?: { readonly facts: WeightFacts; readonly options: WeightOptions };
+  /** Fields, sign-in, status, media, fixed bars and clipped text. */
+  readonly semantics?: SemanticFacts;
+  /** Text blocks with the language in force on each. */
+  readonly langBlocks?: LangBlocks;
   /** Host patterns the team allowed. */
   readonly allowHosts?: readonly string[];
   /** True when the browser overrides colours, so contrast cannot be judged. */
@@ -79,6 +94,8 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
     ...(input.html !== undefined ? { 'static-html': lintHtml(input.html) } : {}),
     ...(input.motion ? { motion: auditMotion(input.motion.result, input.motion.reduced) } : {}),
     ...(input.weight ? { weight: auditWeight(input.weight.facts, input.weight.options) } : {}),
+    ...(input.semantics ? semanticResults(input.semantics) : {}),
+    ...(input.langBlocks ? { 'lang-parts': auditLangParts(input.langBlocks) } : {}),
     ...(input.resources ? { external: auditResources(input.resources, input.allowHosts ? { allow: input.allowHosts } : {}) } : {}),
     ...(kb ? { keyboard: kb.keyboard, 'focus-visible': kb.focusVisible } : {}),
     ...(input.facts
@@ -89,6 +106,18 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
       : {}),
   };
   return buildRouteAudit(route, viewportWidth, results, snapshot.unmeasured, snapshot.truncated);
+}
+
+/** The checks that read the semantic facts of a page. */
+export function semanticResults(f: SemanticFacts): Parameters<typeof buildRouteAudit>[2] {
+  return {
+    forms: auditForms(f.fields, f.requiredNote),
+    auth: auditAuth(f),
+    status: auditStatus(f),
+    media: auditMedia(f.media),
+    'fixed-space': auditFixedSpace(f.fixed, f.viewport),
+    clipping: auditClipping(f.clips),
+  };
 }
 
 /** Playwright's Page fits this. emulateMedia and keyboard are optional. */
@@ -151,11 +180,15 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
   const facts = await page.evaluate(probesInPage, { maxElements: MAX_ELEMENTS, helpPattern: HELP_WORDS.source });
   const resources = await page.evaluate(resourcesInPage, { max: 400 });
   const weightFacts = await page.evaluate(weightInPage, { max: 400 });
+  const semantics = await page.evaluate(semanticsInPage, { maxElements: MAX_ELEMENTS });
+  const langBlocks = await page.evaluate(langBlocksInPage, { maxElements: MAX_ELEMENTS, maxBlocks: 300 });
   const audit = auditSnapshot(label, width, {
     snapshot,
     facts,
     resources,
     weight: { facts: weightFacts, options: opts.weight ?? {} },
+    semantics,
+    langBlocks,
     ...(opts.allowHosts ? { allowHosts: opts.allowHosts } : {}),
     focus,
     textSpacing,
@@ -249,5 +282,5 @@ export function selfAudit(now: Date): AuditReport {
   const facts = probesInPage({ maxElements: MAX_ELEMENTS, helpPattern: HELP_WORDS.source });
   const resources = resourcesInPage({ max: 400 });
   const weight = { facts: weightInPage({ max: 400 }), options: {} };
-  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts, resources, weight })], now);
+  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts, resources, weight, semantics: semanticsInPage({ maxElements: MAX_ELEMENTS }), langBlocks: langBlocksInPage({ maxElements: MAX_ELEMENTS, maxBlocks: 300 }) })], now);
 }

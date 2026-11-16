@@ -25,6 +25,7 @@ export interface Style {
   borderLeftColor: string;
   borderLeftWidth: string;
   textDecorationLine: string;
+  textOverflow: string;
   content: string;
 }
 
@@ -57,6 +58,8 @@ export interface Spec {
   focusStyle?: Partial<Style>;
   /** Style of an ancestor while a descendant has focus. */
   focusWithinStyle?: Partial<Style>;
+  /** Extra properties set on the element, such as paused or duration on media. */
+  props?: Record<string, unknown>;
   /** Style of the ::after pseudo element while this element has focus. */
   afterFocusStyle?: Partial<Style>;
 }
@@ -86,6 +89,7 @@ const DEFAULT_STYLE: Style = {
   borderLeftColor: 'rgb(0, 0, 0)',
   borderLeftWidth: '0px',
   textDecorationLine: 'none',
+  textOverflow: 'clip',
   content: 'normal',
 };
 
@@ -107,6 +111,7 @@ export class FakeEl {
   ) {
     this.tagName = spec.tag.toUpperCase();
     this.id = spec.id ?? '';
+    if (spec.props) Object.assign(this, spec.props);
   }
   get childNodes(): Array<{ nodeType: number; textContent: string | null }> {
     return this.spec.text ? [{ nodeType: 3, textContent: this.spec.text }] : [];
@@ -174,6 +179,7 @@ export interface DomOptions {
   scrollWidth?: number;
   clientWidth?: number;
   innerWidth?: number;
+  innerHeight?: number;
   html?: string;
   doctype?: boolean;
   title?: string;
@@ -205,6 +211,7 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
     document: g['document'],
     getComputedStyle: g['getComputedStyle'],
     innerWidth: g['innerWidth'],
+    innerHeight: g['innerHeight'],
     scrollX: g['scrollX'],
     scrollY: g['scrollY'],
     scrollTo: g['scrollTo'],
@@ -247,6 +254,7 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
   };
   g['getComputedStyle'] = (e: FakeEl, pseudo?: string) => e.style(pseudo);
   g['innerWidth'] = opts.innerWidth ?? 320;
+  g['innerHeight'] = opts.innerHeight ?? 640;
   g['scrollX'] = 0;
   g['scrollY'] = 40;
   g['scrollTo'] = (x: number, y: number) => {

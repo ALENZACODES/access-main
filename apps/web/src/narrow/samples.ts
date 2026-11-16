@@ -18,6 +18,12 @@ import { auditProvenance } from './provenance.js';
 import { buildRouteAudit, entriesFromFindings, makeReport } from './report.js';
 import { auditTargetSpacing } from './spacing.js';
 import { lintServiceWorker } from './swlint.js';
+import { auditAuth } from './auth.js';
+import { auditForms } from './forms.js';
+import { auditClipping, auditFixedSpace } from './layoutspace.js';
+import { auditLangParts } from './langparts.js';
+import { auditMedia } from './media.js';
+import { auditStatus } from './status.js';
 import { auditWeight } from './weight.js';
 import { auditTextSpacing } from './textspacing.js';
 import type { Entry, Rect } from './types.js';
@@ -166,6 +172,52 @@ export function sampleEntries(): Entry[] {
       { maxKb: 100 },
     ).entries,
     ...auditWeight({ resources: [{ url: 'https://x.test/a.js', bytes: 2000 * 1024, kind: 'script' }], images: [] }).entries,
+    ...auditForms(
+      [
+        { id: 'a', kind: 'input', type: 'text', name: 'email', label: '', placeholder: 'Email', required: true, autocomplete: '', inputmode: '', described: false, hintUnlinked: true, invalid: true, error: { text: '', announced: false } },
+        { id: 'b', kind: 'input', type: 'text', name: 'q', label: 'Phone', placeholder: '', required: false, autocomplete: '', inputmode: '', described: true, hintUnlinked: false, invalid: true, error: { text: 'Too short', announced: false } },
+      ],
+      false,
+    ).entries,
+    ...auditAuth({
+      passwords: [
+        { id: 'p0', autocomplete: 'off', pasteBlocked: true, hasUsername: true },
+        { id: 'p1', autocomplete: '', pasteBlocked: false, hasUsername: false },
+      ],
+      oneTime: [{ id: 'o0', autocomplete: '' }],
+      captchas: ['c0'],
+    }).entries,
+    ...auditStatus({
+      live: [
+        { id: 'l0', role: 'alert', live: 'off', hidden: true },
+        { id: 'l1', role: 'alert', live: '', hidden: false },
+        { id: 'l2', role: '', live: 'assertive', hidden: false },
+      ],
+      toasts: ['t0'],
+      progress: [{ id: 'g0', named: false }],
+    }).entries,
+    ...auditMedia([
+      { id: 'v0', tag: 'video', autoplay: true, playing: true, muted: false, loop: false, duration: 30, hasCaptions: false, controls: false, host: '' },
+      { id: 'v1', tag: 'video', autoplay: true, playing: true, muted: false, loop: false, duration: 30, hasCaptions: true, controls: true, host: '' },
+      { id: 'v2', tag: 'video', autoplay: true, playing: true, muted: true, loop: true, duration: null, hasCaptions: true, controls: false, host: '' },
+      { id: 'v3', tag: 'embed', autoplay: false, playing: null, muted: false, loop: false, duration: null, hasCaptions: false, controls: true, host: 'youtube.com' },
+    ]).entries,
+    ...auditFixedSpace(
+      [{ id: 'header[0]', position: 'fixed', edge: 'top', height: 400, width: 320 }],
+      { width: 320, height: 640 },
+    ).entries,
+    ...auditFixedSpace(
+      [{ id: 'header[0]', position: 'fixed', edge: 'top', height: 240, width: 320 }],
+      { width: 320, height: 640 },
+    ).entries,
+    ...auditClipping([
+      { id: 'p[0]', axis: 'x', ellipsis: true, text: 'A long place name' },
+      { id: 'p[1]', axis: 'y', ellipsis: false, text: 'Opening hours' },
+    ]).entries,
+    ...auditLangParts({
+      pageLang: 'en',
+      blocks: [1, 2, 3, 4].map((n) => ({ id: `p[${n}]`, lang: '', own: false, text: 'Les heures d’ouverture sont affichées pour tous les jours de la semaine' })),
+    }).entries,
     ...auditBudget(waiverReport, { version: 1, checks: { contrast: { fail: 0, unknown: 0 } } }).entries,
     ...auditBudget(makeReport([buildRouteAudit('/x', 320, { contrast: { checked: 1, entries: [{ check: 'contrast', id: 'a', status: 'unknown', message: { en: 'e', fr: 'f' } }] } })], new Date('2026-11-15T00:00:00Z')), { version: 1, checks: {} }).entries,
   ];

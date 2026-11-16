@@ -33,7 +33,14 @@ export type CheckId =
   | 'service-worker'
   | 'parity'
   | 'budget'
-  | 'weight';
+  | 'weight'
+  | 'forms'
+  | 'auth'
+  | 'status'
+  | 'media'
+  | 'fixed-space'
+  | 'clipping'
+  | 'lang-parts';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -65,6 +72,13 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   parity: '1.3.4',
   budget: null,
   weight: null,
+  'forms': '3.3.2',
+  'auth': '3.3.8',
+  'status': '4.1.3',
+  'media': '1.4.2',
+  'fixed-space': null,
+  'clipping': '1.4.10',
+  'lang-parts': '3.1.2',
 };
 
 export const CHECK_ORDER: readonly CheckId[] = [
@@ -96,6 +110,13 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'parity',
   'budget',
   'weight',
+  'forms',
+  'auth',
+  'status',
+  'media',
+  'fixed-space',
+  'clipping',
+  'lang-parts',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -127,6 +148,13 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   parity: { en: 'Same content in every view', fr: 'Même contenu dans chaque affichage' },
   budget: { en: 'Failure budget', fr: 'Budget d’anomalies' },
   weight: { en: 'Page weight and images', fr: 'Poids de la page et images' },
+  'forms': { en: 'Form labels and messages', fr: 'Étiquettes et messages des formulaires' },
+  'auth': { en: 'Signing in without tests', fr: 'Connexion sans épreuve' },
+  'status': { en: 'Status messages', fr: 'Messages d’état' },
+  'media': { en: 'Audio and video', fr: 'Audio et vidéo' },
+  'fixed-space': { en: 'Room left by fixed bars', fr: 'Place laissée par les barres fixes' },
+  'clipping': { en: 'Text cut off by its box', fr: 'Texte coupé par son bloc' },
+  'lang-parts': { en: 'Language of parts', fr: 'Langue des passages' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */

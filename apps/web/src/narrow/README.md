@@ -33,6 +33,13 @@ measure reports UNKNOWN, never a pass.
 | service-worker | none | worker source: fetch handler and cache fail when missing; precache, offline fallback, cache version, cleanup and error handling are UNKNOWN |
 | parity | 1.3.4 | a control present in the first view and gone in another (landscape, dark...) is UNKNOWN |
 | weight | none | what the page downloads and its images: a limit you set with `--max-weight-kb` fails; large pages and files are UNKNOWN; an image with no width and height fails |
+| forms | 3.3.2 | a field with only a placeholder fails; an unmarked required field, an unlinked hint, a text field that wants an email or phone keyboard, and an error that is not announced are UNKNOWN |
+| auth | 3.3.8 | a password field that blocks paste or turns autocomplete off fails; a missing user name field, a one-time code without autofill and any captcha are UNKNOWN |
+| status | 4.1.3 | an alert or status silenced by aria-live off, and an unnamed progress bar, fail; toast-like boxes outside a live region, hidden live regions and many assertive regions are UNKNOWN |
+| media | 1.4.2 | media that plays with sound by itself for more than three seconds fails; a moving video with no controls, a video with no captions track and any embedded player are UNKNOWN |
+| fixed-space | none | fixed and sticky bars over half of the screen height fail, over a third are UNKNOWN (limits of this tool, not of WCAG) |
+| clipping | 1.4.10 | text cut off by its own box fails; an ellipsis is UNKNOWN |
+| lang-parts | 3.1.2 | a block of text that looks French on an English page (or the reverse) with no lang attribute is UNKNOWN, as is a page whose language looks wrong as a whole |
 | budget | none | per-check limits for teams that cannot fix everything at once |
 | provenance | none | data records need source name, https URL, licence and retrieved date |
 
@@ -84,6 +91,11 @@ npx tsx apps/web/src/narrow/bin.mjs --manifest dist/manifest.webmanifest --sw di
   unknowns than agreed. `--write-budget FILE` writes the lower of each old limit
   and today's count, so a limit is never raised. Use the same path to ratchet.
 - `--max-weight-kb N` fails a page that loads more than N kilobytes. Without it the weight check only asks for a look. Files from other hosts that hide their size count as UNKNOWN, so the total can be higher.
+- `--only CHECK,...` runs only the named checks and `--skip CHECK,...` switches
+  some off. The report lists what did not run, in the text, the page and the JSON,
+  so a clean result is never read as clean for a check that was off. A budget
+  written while a check is off keeps that check's old limit. The `waiver` and
+  `budget` checks are about the run itself and cannot be named.
 - `--history FILE` appends a counts-only summary and prints the change since the
   last run (`--history-max N`, default 100). A missing file starts a new one.
 - With `--profiles`, `parity` compares each route's named controls in every view
@@ -164,6 +176,12 @@ Exit code 0 when no check failed, 1 when one failed, 2 on a usage or run error.
 - Service worker and host scans read text. A worker built by a library may look
   incomplete, and an address put together at run time is not seen. A tile server
   that is not on the built-in list is only an UNKNOWN `other` host.
+- Form, sign-in, status, media, fixed bar and clipping checks read the page as
+  rendered at the moment of the audit. A message that appears later, after a
+  click or a failed submit, is not seen. Autoplay is judged from what the browser
+  really started, so a browser that blocked it reports nothing.
+- Language of parts guesses from common words. Short text, names and quotations
+  are skipped or can be misread, so every finding is UNKNOWN.
 - The manifest check does not fetch icons, so it cannot tell if a file exists or
   has the size it claims.
 - Only the first 3000 elements of a page are read.

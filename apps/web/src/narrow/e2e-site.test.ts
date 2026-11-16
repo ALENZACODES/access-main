@@ -3,6 +3,7 @@ import { renderSarif } from './ci.js';
 import { PROFILES } from './profiles.js';
 import { totals } from './report.js';
 import { runAudit, type FullPage } from './run.js';
+import { selectChecks } from './select.js';
 
 /**
  * Real browser gates over a small site served from this process. They run when
@@ -50,6 +51,29 @@ const SITE: Record<string, string> = {
   '/bad-fonts': page({ title: 'Bad fonts', extra: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter">' }),
   '/bad-orient': page({ title: 'Bad orientation', extra: '<style>@media (orientation:landscape){#filters{display:none}}</style><button id="filters">Filters</button>' }),
   '/bad-drag': page({ title: 'Bad drag', extra: '<div draggable="true" style="min-height:44px">Drag me</div>' }),
+  '/bad-form': page({
+    title: 'Bad form',
+    extra:
+      '<input type="text" name="email" placeholder="Your email" required style="border:1px solid #767676">' +
+      '<input id="pw" type="password" autocomplete="off" aria-label="Password" onpaste="return false">',
+  }),
+  '/bad-status': page({
+    title: 'Bad status',
+    extra:
+      '<div class="toast">Saved to your device</div><div role="alert" aria-live="off">Nothing is read</div><div role="progressbar" style="min-height:8px"></div>',
+  }),
+  '/bad-media': page({ title: 'Bad media', extra: '<video autoplay loop src="data:video/mp4;base64,AAAA" style="width:100px;height:50px"></video>' }),
+  '/bad-bars':
+    page({ title: 'Bad bars', extra: '<div style="position:fixed;top:0;left:0;right:0;height:400px;background:#eee;z-index:5">Banner</div>' }),
+  '/bad-clip': page({ title: 'Bad clip', extra: '<p id="clip" style="width:60px;height:20px;overflow:hidden;white-space:nowrap">A very long place name that does not fit</p>' }),
+  '/bad-lang': page({ title: 'Bad lang', extra: '<p>Les heures d’ouverture sont affichées pour vous et pour votre visite cette semaine.</p>' }),
+  '/good-lang': page({ title: 'Good lang', extra: '<p lang="fr">Les heures d’ouverture sont affichées pour vous et pour votre visite cette semaine.</p>' }),
+  '/good-form': page({
+    title: 'Good form',
+    extra:
+      '<p>* = required</p><label for="em">Email *</label><input id="em" type="email" name="email" required autocomplete="email">' +
+      '<label for="pw2">Password</label><input id="pw2" type="password" autocomplete="current-password"><div role="status" id="msg"></div>',
+  }),
 };
 
 interface Served {
@@ -177,6 +201,84 @@ describe.skipIf(!enabled)('real browser gates over a served site', () => {
     expect(report.routes[0]?.entries.filter((e) => ['link-cue', 'non-text-contrast', 'dragging'].includes(e.check))).toEqual([]);
     expect(report.routes[0]?.checks.find((c) => c.check === 'link-cue')?.checked).toBe(1);
     expect(report.routes[0]?.checks.find((c) => c.check === 'non-text-contrast')?.checked).toBe(1);
+  }, 60_000);
+
+  it('fails a placeholder-only field and a password that blocks paste', async () => {
+    const f = failing(await run(['/bad-form']));
+    expect(f.some((x) => x.includes('forms/placeholder-only'))).toBe(true);
+    expect(f.some((x) => x.includes('auth/paste-blocked'))).toBe(true);
+    expect(f.some((x) => x.includes('auth/autocomplete-off'))).toBe(true);
+  }, 60_000);
+
+  it('asks about a required field with no mark and a text field that wants an email keyboard', async () => {
+    const report = await run(['/bad-form']);
+    const q = (report.routes[0]?.entries ?? []).filter((e) => e.status === 'unknown').map((e) => `${e.check}/${e.rule}`);
+    expect(q).toContain('forms/required-unmarked');
+    expect(q).toContain('forms/type-mismatch');
+  }, 60_000);
+
+  it('a form with labels, a note, types and autocomplete has no form or sign-in findings', async () => {
+    const report = await run(['/good-form']);
+    const e = (report.routes[0]?.entries ?? []).filter((x) => x.check === 'forms' || x.check === 'auth' || x.check === 'status');
+    expect(e.map((x) => `${x.check}/${x.rule}`)).toEqual([]);
+    expect(report.routes[0]?.checks.find((c) => c.check === 'forms')?.checked).toBeGreaterThanOrEqual(3);
+  }, 60_000);
+
+  it('finds a silent alert and an unnamed progress bar, and asks about a toast', async () => {
+    const report = await run(['/bad-status']);
+    const e = report.routes[0]?.entries.filter((x) => x.check === 'status').map((x) => `${x.rule}:${x.status}`) ?? [];
+    expect(e).toContain('live-conflict:fail');
+    expect(e).toContain('progress-unnamed:fail');
+    expect(e).toContain('toast-silent:unknown');
+  }, 60_000);
+
+  it('does not claim a video plays when the browser did not start it', async () => {
+    const report = await run(['/bad-media']);
+    const e = report.routes[0]?.entries.filter((x) => x.check === 'media') ?? [];
+    expect(report.routes[0]?.checks.find((c) => c.check === 'media')?.checked).toBe(1);
+    // The clip is not decodable, so the browser never plays it. Without a started video there is no sound failure.
+    expect(e.some((x) => x.rule === 'autoplay-sound' && x.status === 'fail')).toBe(false);
+    expect(e.some((x) => x.rule === 'no-captions')).toBe(true);
+  }, 60_000);
+
+  it('fails fixed bars that take most of a phone screen', async () => {
+    const f = failing(await run(['/bad-bars']));
+    expect(f.some((x) => x.includes('fixed-space/fixed-covers'))).toBe(true);
+  }, 60_000);
+
+  it('the good page has no fixed bar findings and no clipped text', async () => {
+    const report = await run(['/a']);
+    expect(report.routes[0]?.entries.filter((x) => x.check === 'fixed-space' || x.check === 'clipping')).toEqual([]);
+  }, 60_000);
+
+  it('fails text that its own box cuts off', async () => {
+    const f = failing(await run(['/bad-clip']));
+    expect(f.some((x) => x.includes('clipping/text-clipped'))).toBe(true);
+  }, 60_000);
+
+  it('turns a new check into SARIF as well', async () => {
+    const sarif = JSON.parse(renderSarif(await run(['/bad-form'])));
+    expect(sarif.runs[0].results.some((r: { ruleId: string; level: string }) => r.ruleId === 'auth/paste-blocked' && r.level === 'error')).toBe(true);
+  }, 60_000);
+
+  it('asks about French text in an English page, and not when the text says it is French', async () => {
+    const bad = (await run(['/bad-lang'])).routes[0]?.entries.filter((x) => x.check === 'lang-parts') ?? [];
+    expect(bad.map((x) => [x.rule, x.status])).toEqual([['lang-mismatch', 'unknown']]);
+    const good = (await run(['/good-lang'])).routes[0];
+    expect(good?.entries.filter((x) => x.check === 'lang-parts')).toEqual([]);
+    expect(good?.checks.find((c) => c.check === 'lang-parts')?.checked).toBe(1);
+  }, 60_000);
+
+  it('runs on every page of the good site without a finding', async () => {
+    const report = await run(['/a', '/b', '/c']);
+    expect(report.routes.flatMap((r) => r.entries.filter((x) => x.check === 'lang-parts'))).toEqual([]);
+  }, 60_000);
+
+  it('a selection leaves the browser results of other checks out and says so', async () => {
+    const report = selectChecks(await run(['/bad-form']), { only: ['auth'], skip: [] });
+    expect(report.routes[0]?.checks.map((c) => c.check)).toEqual(['auth']);
+    expect(report.skipped).toContain('forms');
+    expect(failing(report).every((x) => x.includes(' auth/'))).toBe(true);
   }, 60_000);
 
   it('turns a real failure into SARIF', async () => {

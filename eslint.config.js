@@ -9,7 +9,7 @@ export default tseslint.config(
     ignores: ["**/dist/**", "**/dev-dist/**", "**/node_modules/**", "playwright-report/**", "test-results/**"],
   },
   {
-    files: ["packages/budgets/scripts/**/*.mjs", "apps/web/scripts/**/*.mjs", "apps/web/**/*.mjs"],
+    files: ["packages/budgets/scripts/**/*.mjs", "scripts/**/*.mjs", "apps/web/scripts/**/*.mjs"],
     languageOptions: {
       globals: globals.node,
     },
@@ -36,6 +36,12 @@ export default tseslint.config(
     files: ["scripts/**/*.{js,mjs,cjs}", "deploy/**/*.{js,mjs,cjs}"],
     languageOptions: {
       globals: { ...globals.node },
+    },
+  },
+  {
+    files: ["apps/web/src/narrow/**/*.mjs"],
+    languageOptions: {
+      globals: globals.node,
     },
   },
 );

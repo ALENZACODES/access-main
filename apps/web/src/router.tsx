@@ -1,4 +1,3 @@
-import { lazy } from "react";
 import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import { Section } from "./modules/Section.tsx";
 import { optionalPage, optionalRoutes } from "./modules/optionalRoutes.ts";
@@ -8,6 +7,7 @@ import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { ProfilePage } from "./pages/ProfilePage.tsx";
 import { AppShell } from "./shell/AppShell.tsx";
+import { lazy } from "react";
 const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
 
 // Every route in the integration contract is lazy, so none is on the first-install path.

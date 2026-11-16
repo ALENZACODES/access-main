@@ -103,7 +103,7 @@ export function auditBudget(report: AuditReport, budget: Budget): CheckResult {
 export function applyBudget(report: AuditReport, budget: Budget): AuditReport {
   const result = auditBudget(report, budget);
   const next = makeReport([...report.routes, buildRouteAudit('budget', null, { budget: result })], new Date(report.generatedAt));
-  return { ...next, generatedAt: report.generatedAt, ...(report.waived ? { waived: report.waived } : {}) };
+  return { ...next, generatedAt: report.generatedAt, ...(report.waived ? { waived: report.waived } : {}), ...(report.skipped ? { skipped: report.skipped } : {}) };
 }
 
 /**
@@ -117,6 +117,11 @@ export function ratchet(report: AuditReport, old: Budget | null): Budget {
     if (check === 'budget') continue;
     const have = counts[check] ?? { fail: 0, unknown: 0 };
     const was = old?.checks[check];
+    // A check that did not run has no count, so its limit stays as it was.
+    if (report.skipped?.includes(check)) {
+      if (was) checks[check] = was;
+      continue;
+    }
     const next = was ? { fail: Math.min(was.fail, have.fail), unknown: Math.min(was.unknown, have.unknown) } : have;
     if (next.fail > 0 || next.unknown > 0 || was) checks[check] = next;
   }

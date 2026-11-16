@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { auditCopy, COPY_RULES } from './copylint.js';
 import { HELP_TEXT } from './cli.js';
 import { describeBudget } from './budget.js';
+import { describeSkipped } from './select.js';
 import { describeDiff, describeWaived, renderJunit } from './ci.js';
 import { describeTrend, appendRun, EMPTY_HISTORY, trend } from './history.js';
 import { HTML_RULES, htmlTextItems, lintHtml } from './htmllint.js';
@@ -94,6 +95,8 @@ describe('wording gates on everything a person can read', () => {
       strip(renderPanel('en', { kind: 'done', report: sampleReport })),
       strip(renderPanel('fr', { kind: 'done', report: sampleReport })),
       renderJunit(sampleReport, 'fr'),
+      describeSkipped(['forms', 'media'], 'en'),
+      describeSkipped(['forms', 'media'], 'fr'),
       describeBudget(sampleReport, { version: 1, checks: { contrast: { fail: 1, unknown: 0 } } }, 'en'),
       describeBudget(sampleReport, { version: 1, checks: { contrast: { fail: 1, unknown: 0 } } }, 'fr'),
       ...(['en', 'fr'] as const).map((l) => describeTrend(trend(appendRun(appendRun(EMPTY_HISTORY, sampleReport), makeReport([], new Date('2026-12-01T00:00:00Z')))), l)),
