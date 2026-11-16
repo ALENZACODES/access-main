@@ -14,3 +14,11 @@ export {
   type StorageEstimate,
   type StoredCell,
 } from "./regionDownload.ts";
+
+export {
+  PRESSURE_COPY,
+  createPressureController,
+  mountStoragePressurePanel,
+  pressureView,
+} from "./storagePressure.ts";
+export type { PressureController, PressureState, PressureView } from "./storagePressure.ts";

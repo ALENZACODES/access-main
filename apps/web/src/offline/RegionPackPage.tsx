@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
 import { offlineCatalog } from "./catalog.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { pressureView, type PressureState } from "./robust/index.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
 const source = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
@@ -57,6 +58,9 @@ export function OfflineRegionPage() {
     <p>{c.intro}</p>
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {error && <p role="alert">{error}</p>}
+    {error && (error.toLowerCase().includes("storage") || error.toLowerCase().includes("quota") || error.includes(c.storage)) ? (
+      <p role="status">{pressureView({ phase: "stopped", result: { regionId: "", available: [], missing: [], completed: false, reason: "quota" } }, language).message}</p>
+    ) : null}
     {message && <p role="status" tabIndex={-1}>{message}</p>}
     {manifest && <>
       <p>{c.built}: <time dateTime={manifest.builtAt}>{manifest.builtAt.slice(0, 10)}</time>. {c.counts}: {manifest.counts.records.toLocaleString(language)}.</p>
