@@ -75,7 +75,8 @@ body {
 
 .site-header :focus-visible { outline-color: var(--focus-on-dark); }
 
-.skip-link {
+.skip-link,
+.a11y-skip-link {
   position: absolute;
   left: 0.5rem;
   top: 0.5rem;
@@ -90,7 +91,9 @@ body {
 }
 
 .skip-link:focus,
-.skip-link:focus-visible { transform: none; }
+.skip-link:focus-visible,
+.a11y-skip-link:focus,
+.a11y-skip-link:focus-visible { transform: none; }
 
 .site-header {
   background: var(--header);
@@ -421,6 +424,7 @@ progress {
 @media print {
   .no-print,
   .skip-link,
+  .a11y-skip-link,
   header,
   nav,
   footer { display: none !important; }

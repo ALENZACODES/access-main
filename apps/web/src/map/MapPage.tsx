@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { panMapTo, silenceMapMotion, zoomMapBy } from "./camera.ts";
 import { FeatureList } from "./FeatureList.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { CachedPMTilesSource, tileArchiveUrl, warmRegionTiles } from "./tileCache.ts";
@@ -84,10 +85,6 @@ function fromProperties(props: Record<string, unknown>, lon: number, lat: number
 type MapInstance = import("maplibre-gl").Map;
 type MapModule = typeof import("maplibre-gl");
 
-function duration(): number {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 200;
-}
-
 function tileLayerName(name: string): Category | null {
   const lower = name.toLowerCase();
   if (lower.includes("washroom") || lower.includes("toilet")) return "washroom";
@@ -110,7 +107,9 @@ export function MapPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [libraryError, setLibraryError] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
   const listId = "map-place-list";
+  const mapControlsOff = libraryError || !mapReady;
 
   const visible = useMemo(() => places.filter((place) => enabled.includes(place.category) &&
     selectedNeeds.every((need) => needStatus(place, need) !== "no")), [places, enabled, selectedNeeds]);
@@ -167,6 +166,8 @@ export function MapPage() {
         });
         const activeMap = map;
         mapRef.current = activeMap;
+        setMapReady(true);
+        silenceMapMotion(activeMap);
         activeMap.getCanvas().tabIndex = -1;
         activeMap.getCanvas().setAttribute("aria-hidden", "true");
         activeMap.on("load", () => {
@@ -203,7 +204,7 @@ export function MapPage() {
         window.addEventListener("access:region-downloaded", onRegion);
         cleanupRegion = () => window.removeEventListener("access:region-downloaded", onRegion);
       } catch {
-        if (!disposed) { setLoading(false); setLibraryError(true); }
+        if (!disposed) { setLoading(false); setLibraryError(true); setMapReady(false); }
       }
     };
     let cleanupRegion = () => {};
@@ -215,6 +216,7 @@ export function MapPage() {
       if (maplibre && protocol) maplibre.removeProtocol("pmtiles");
       mapRef.current = null;
       layerIds.current = [];
+      setMapReady(false);
     };
   }, [refresh]);
 
@@ -232,7 +234,7 @@ export function MapPage() {
   const select = useCallback((id: string) => {
     setSelectedId(id);
     const place = places.find((candidate) => candidate.id === id);
-    if (place) mapRef.current?.easeTo({ center: [place.lon, place.lat], duration: duration() });
+    if (place && mapRef.current) panMapTo(mapRef.current, [place.lon, place.lat]);
   }, [places]);
 
   const listFeatures = useMemo(() => visible.map((place) => ({
@@ -265,16 +267,16 @@ export function MapPage() {
       <div className="map-legend" role="group" aria-label={t("map.legend")}>
         {(["yes", "no", "unknown"] as Status[]).map((state) => <span key={state} className={`map-legend-${state}`}><i aria-hidden="true" />{t(`map.${state}`)}</span>)}
       </div>
-      <div className="map-toolbar">
-        <button type="button" onClick={() => mapRef.current?.zoomIn({ duration: duration() })}>{t("map.zoomIn")}</button>
-        <button type="button" onClick={() => mapRef.current?.zoomOut({ duration: duration() })}>{t("map.zoomOut")}</button>
-        <button type="button" onClick={refresh}>{t("map.refresh")}</button>
+      <div className="map-toolbar" role="group" aria-label={t("map.viewControls")} aria-describedby={libraryError ? "map-library-error" : undefined}>
+        <button type="button" disabled={mapControlsOff} onClick={() => mapRef.current && zoomMapBy(mapRef.current, 1)}>{t("map.zoomIn")}</button>
+        <button type="button" disabled={mapControlsOff} onClick={() => mapRef.current && zoomMapBy(mapRef.current, -1)}>{t("map.zoomOut")}</button>
+        <button type="button" disabled={mapControlsOff} onClick={refresh}>{t("map.refresh")}</button>
       </div>
       <div className="map-columns">
         <div ref={canvas} className="map-viewport" aria-hidden="true" data-testid="map-viewport" />
         <section className="map-results" aria-label={t("map.list")}>
           <p role="status">{loading ? t("map.loading") : `${visible.length} ${t("map.records")}`}</p>
-          {libraryError && <p role="alert">{t("map.libraryUnavailable")}</p>}
+          {libraryError && <p id="map-library-error" role="alert">{t("map.libraryUnavailable")} {t("map.controlsUnavailable")}</p>}
           {error && <p role="alert">{t("map.unavailable")}</p>}
           {visible.length ? <FeatureList features={listFeatures as React.ComponentProps<typeof FeatureList>["features"]} locale={locale} selectedId={selectedId} onSelect={select} listId={listId} />
             : <p id={listId} tabIndex={-1}>{t("map.empty")}</p>}
