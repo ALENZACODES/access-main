@@ -6,6 +6,7 @@ export class FakeHost implements PanelHost {
   attrs: Record<string, string> = {};
   listeners: Record<'click' | 'change' | 'input', ((ev: unknown) => void)[]> = { click: [], change: [], input: [] };
   region = { innerHTML: '' };
+  announce = { innerHTML: '' };
   constructor(private readonly withRegion = true) {}
 
   setAttribute(n: string, v: string) {
@@ -18,7 +19,10 @@ export class FakeHost implements PanelHost {
     this.listeners[type] = this.listeners[type].filter((x) => x !== l);
   }
   querySelector(sel: string) {
-    return this.withRegion && sel === '[data-region="sources"]' ? this.region : null;
+    if (!this.withRegion) return null;
+    if (sel === '[data-region="sources"]') return this.region;
+    if (sel === '[data-region="announce"]') return this.announce;
+    return null;
   }
   fire(type: 'click' | 'change' | 'input', ev: unknown) {
     for (const l of [...this.listeners[type]]) l(ev);

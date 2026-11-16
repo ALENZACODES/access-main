@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Round 8: the review workload and age-band views, and the Markdown and checksum downloads, on the
- * live Data status page. Records are seeded on the device; nothing is fetched.
+ * Round 9: the review workload and age-band sections, the spoken list changes, and the Markdown and checksum
+ * downloads, all mounted on the live data status panel. Records are seeded on the device; nothing is fetched.
  */
 
 const DAY = 86_400_000;
@@ -41,7 +41,7 @@ test("Data status: the workload and age views read the saved records", async ({ 
   await page.goto("/data-status");
   await seed(page, ROWS);
   await page.reload();
-  const views = page.getByTestId("planning-views");
+  const views = page.getByRole("region", { name: "Data status panel" });
   await expect(views).toBeVisible();
   await expect(views.getByRole("heading", { name: "Review workload" })).toBeVisible();
   const weeks = views.getByRole("table", { name: "Sources to review, by week" });
@@ -60,7 +60,7 @@ test("Data status: the views and buttons switch to French with the real characte
   await seed(page, ROWS);
   await page.reload();
   await page.getByRole("button", { name: "Français" }).click();
-  const views = page.getByTestId("planning-views");
+  const views = page.getByRole("region", { name: "Panneau de l’état des données" });
   await expect(views.getByRole("heading", { name: "Charge de révision" })).toBeVisible();
   const text = (await views.evaluate((el) => el.textContent)) ?? "";
   expect(text).toContain("n’est pas planifiée");
@@ -90,4 +90,41 @@ test("Data status: the Markdown report and checksum list download from the saved
   const lines = sums.text.trimEnd().split("\n");
   expect(lines).toHaveLength(5);
   for (const line of lines) expect(line).toMatch(/^[0-9a-f]{64} {2}\S+$/);
+});
+
+test("Data status: a filter change is spoken as one short sentence, and the table is not a live region", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, ROWS);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  await expect(panel).toBeVisible();
+  const status = panel.locator('[data-region="announce"]');
+  await expect(status).toHaveAttribute("aria-live", "polite");
+  await expect(status).toHaveText("");
+  await expect(panel.locator('[data-region="sources"]')).not.toHaveAttribute("aria-live", /.*/);
+  await panel.getByLabel("Search by name").fill("old place");
+  await expect(status).toHaveText("1 source shown. Filters: name contains “old place”.");
+  await panel.getByRole("button", { name: "Clear filters" }).click();
+  await expect(status).toHaveText("4 sources shown. Filters cleared.");
+});
+
+test("Data status: the summary, next steps and licence table read the saved records, in both languages", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, ROWS);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  await expect(panel.getByRole("heading", { name: "At a glance" })).toBeVisible();
+  await expect(panel).toContainText("4 sources saved on this device, in 2 datasets.");
+  await expect(panel.getByRole("heading", { name: "What to do next" })).toBeVisible();
+  await expect(panel.getByRole("listitem").filter({ hasText: "Possibly out of date (1 item)" })).toBeVisible();
+  const licences = panel.getByRole("table", { name: "Sources by licence" });
+  await expect(licences.getByRole("row", { name: /^Open Government Licence – Ontario Open licence 4/ })).toBeVisible();
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("heading", { name: "En bref" })).toBeVisible();
+  await expect(fr.getByRole("heading", { name: "Prochaines étapes" })).toBeVisible();
+  await expect(fr.getByRole("table", { name: "Sources selon la licence" })).toBeVisible();
+  const text = (await fr.evaluate((el) => el.textContent)) ?? "";
+  expect(text).toContain("Par exemple : ");
+  expect(text).not.toMatch(/[A-Za-zÀ-ÿ]:(?!\/\/)/);
 });
