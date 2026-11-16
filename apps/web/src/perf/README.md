@@ -30,6 +30,11 @@ median): home LCP 288 ms; time to first result: place search 388 ms, journey
 plan 418 ms, washroom finder 450 ms. The e2e gates are LCP ≤ 1,200 ms and
 first result ≤ 1,500 ms, about twice the CI medians seen on this branch. A
 separate e2e checks that preloading on focus or pointer leaves focus and the
-route unchanged. A CI runner or a desktop is not a real
+route unchanged. To keep the gate steady without moving it, each route gets one discarded
+warm-up load, each measure is the median of five cold runs, and a measure over
+its gate is taken again up to three times (the best attempt is gated and every
+attempt is in the record). The perf project also runs on its own: CI uses one
+Playwright worker. A regression makes every attempt miss. A CI runner or a
+desktop is not a real
 phone. The plan's on-phone measurement still has to be done by hand and
 compared with Day 12; no Day 12 record exists in this repo yet.

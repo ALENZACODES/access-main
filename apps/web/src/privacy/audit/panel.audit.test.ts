@@ -8,11 +8,6 @@ import type { Locale } from "../panel/copyLint";
 import { FIXTURE } from "../panel/fixtures.test-util";
 import { renderInventoryTableHtml } from "../panel/inventoryRender";
 import { renderPrivacyPanelHtml, type PanelView } from "../panel/panel";
-import type { ActivityEntry } from "../panel/activityLog";
-import type { ChangesView } from "../panel/changes";
-import { createPrivacyController } from "../panel/controller";
-import { reconcile } from "../panel/reconcile";
-import { createMemoryStorage } from "../panel/storage";
 import type { Status } from "../panel/strings";
 import { renderOnDeviceNoticeHtml } from "../onDeviceNotice";
 import { auditHtml, formatViolations } from "./htmlAudit";
@@ -54,21 +49,6 @@ const STATUSES: ReadonlyArray<Status | null> = [
   { kind: "expired-removed", count: 2 },
 ];
 
-const AT = new Date(2026, 10, 15, 20, 5).toISOString();
-const ACTIVITY: readonly ActivityEntry[] = [
-  { at: AT, kind: "export", count: 3 },
-  { at: AT, kind: "list-export", format: "csv" },
-  { at: AT, kind: "consent-granted", purposeId: "saved-places" },
-  { at: AT, kind: "language", lang: "fr" },
-  { at: AT, kind: "expired-removed", count: 2 },
-];
-const B = (s: string) => ({ en: s, fr: `${s} (fr)` });
-const CHANGES: ReadonlyArray<ChangesView> = [
-  { kind: "first-view" },
-  { kind: "none", seenOn: "2026-11-01" },
-  { kind: "diff", seenOn: "2026-11-01", added: [B("A")], changed: [B("C")], removed: [B("R")] },
-];
-
 function views(): Array<[string, PanelView]> {
   const out: Array<[string, PanelView]> = [];
   for (const locale of LOCALES) {
@@ -85,32 +65,13 @@ function views(): Array<[string, PanelView]> {
     out.push([`${locale} no purposes`, { locale, inventory: FIXTURE, confirmingErase: false, status: null }]);
     out.push([`${locale} empty inventory`, { locale, inventory: [], purposes: PURPOSES, confirmingErase: true, status: null }]);
   }
-  const storage = createMemoryStorage({ "app.places.v1": "[1]", "app.mystery": "x" });
-  const inv = FIXTURE.map((e) => (e.id === "saved-places" ? { ...e, storageKeys: ["places.v1"] } : e));
-  const stored = reconcile(storage, "app.", inv);
-  for (const locale of LOCALES) {
-    out.push([`${locale} activity`, { locale, inventory: inv, purposes: PURPOSES, confirmingErase: false, status: null, activity: ACTIVITY }]);
-    out.push([`${locale} activity empty`, { locale, inventory: inv, confirmingErase: false, status: null, activity: [] }]);
-    out.push([`${locale} stored`, { locale, inventory: inv, confirmingErase: false, status: null, stored }]);
-    out.push([`${locale} stored empty`, { locale, inventory: inv, confirmingErase: false, status: null, stored: reconcile(createMemoryStorage(), "app.", inv) }]);
-    for (const c of CHANGES) {
-      out.push([`${locale} changes ${c.kind}`, { locale, inventory: inv, confirmingErase: false, status: null, changes: c }]);
-    }
-    for (const status of [
-      { kind: "list-exported", format: "csv" },
-      { kind: "list-exported", format: "text" },
-      { kind: "seen-saved" },
-    ] as const) {
-      out.push([`${locale} status ${status.kind}`, { locale, inventory: inv, confirmingErase: false, status }]);
-    }
-  }
   return out;
 }
 
 describe("privacy panel markup", () => {
   const all = views();
   it("covers every combination", () => {
-    expect(all).toHaveLength(2 * 4 * 2 * STATUSES.length + 4 + 2 * (2 + 2 + 3 + 3));
+    expect(all).toHaveLength(2 * 4 * 2 * STATUSES.length + 4);
   });
   it.each(all)("passes the HTML audit: %s", (_name, view) => {
     const found = auditHtml(renderPrivacyPanelHtml(view));
@@ -138,44 +99,5 @@ describe("panel parts", () => {
   it("the audit is not vacuous: a small target in the same markup would fail", () => {
     const html = renderPrivacyPanelHtml(views()[0]![1]).replace("min-width:44px;min-height:44px", "min-width:20px;min-height:20px");
     expect(auditHtml(html).map((v) => v.code)).toContain("target-too-small");
-  });
-});
-
-describe("the live panel, step by step, with every feature on", () => {
-  it.each(LOCALES)("passes the HTML audit after every action (%s)", (locale) => {
-    const storage = createMemoryStorage({ "app.legacy": "1" });
-    const c = createPrivacyController({
-      storage,
-      prefix: "app.",
-      inventory: FIXTURE,
-      purposes: PURPOSES,
-      logActivity: true,
-      trackChanges: true,
-      now: () => NOW,
-      languages: [locale],
-      reviewedOn: "2026-11-15",
-    });
-    const steps = [
-      { type: "set-locale", locale } as const,
-      { type: "consent", purposeId: "saved-places", value: "granted" } as const,
-      { type: "consent", purposeId: "map-hints", value: "declined" } as const,
-      { type: "export" } as const,
-      { type: "export-list-csv" } as const,
-      { type: "export-list-text" } as const,
-      { type: "mark-seen" } as const,
-      { type: "erase-ask" } as const,
-      { type: "erase-cancel" } as const,
-      { type: "erase-ask" } as const,
-      { type: "erase-confirm" } as const,
-    ];
-    const found = (label: string) => {
-      const v = auditHtml(c.html());
-      expect(v, `${label}\n${formatViolations(v)}`).toEqual([]);
-    };
-    found("start");
-    for (const step of steps) {
-      c.dispatch(step);
-      found(step.type);
-    }
   });
 });

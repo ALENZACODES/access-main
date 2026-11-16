@@ -20,8 +20,7 @@ export type ReadResult =
 export const MAX_TTL_DAYS = 3650;
 const DAY_MS = 86_400_000;
 
-/** The envelope stored under a key, or null if the value is not an envelope. */
-export function parseEnvelope(raw: string): Envelope | null {
+function parseEnvelope(raw: string): Envelope | null {
   try {
     const v: unknown = JSON.parse(raw);
     if (v === null || typeof v !== "object") return null;

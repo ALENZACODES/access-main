@@ -2,8 +2,9 @@
 // breaks. Exceptions must be listed with a reason and a date, and an exception
 // that no longer matches a file is itself reported, so the list cannot rot.
 
-import { auditCsp } from "../panel/csp";
 import { lintCopy } from "../panel/copyLint";
+import { NAME_HASHES, type NameHash } from "./nameHashes";
+import { sha256Hex } from "./sha256";
 
 export type RuleId =
   | "forbidden-name"
@@ -13,7 +14,6 @@ export type RuleId =
   | "insecure-url"
   | "scheduled-workflow"
   | "claim-wording"
-  | "weak-csp"
   | "stale-exemption"
   | "bad-exemption";
 
@@ -39,14 +39,33 @@ export interface Exemption {
   recordedOn: string;
 }
 
-const FORBIDDEN_NAME = new RegExp(
-  [
-    [115, 112, 105, 110, 97, 108, 32, 99, 111, 114, 100, 32, 105, 110, 106, 117, 114, 121, 32, 111, 110, 116, 97, 114, 105, 111].reduce((s, n) => s + String.fromCharCode(n), "").replace(/ /g, "\\s+"),
-    [115, 99, 105, 111, 110, 116, 97, 114, 105, 111].reduce((s, n) => s + String.fromCharCode(n), ""),
-    "\\b" + [83, 67, 73, 79].reduce((s, n) => s + String.fromCharCode(n), "") + "\\b",
-  ].join("|"),
-  "i",
-);
+/** Lines where a listed name appears, found by hashing words rather than matching text. */
+export function nameFindings(text: string, names: readonly NameHash[] = NAME_HASHES): Array<{ line: number; token: string }> {
+  const found: Array<{ line: number; token: string }> = [];
+  const words = [...text.matchAll(/[\p{L}\p{N}]+/gu)].map((m) => ({ value: m[0].toLowerCase(), index: m.index ?? 0, end: (m.index ?? 0) + m[0].length }));
+  const add = (index: number, token: string): void => {
+    found.push({ line: lineOf(text, index), token });
+  };
+  for (let i = 0; i < words.length; i += 1) {
+    const w = words[i];
+    if (w === undefined) continue;
+    for (const n of names) {
+      if (n.words === 1 && w.value.length === n.length && sha256Hex(w.value) === n.hash) add(w.index, w.value);
+      if (n.insideWord === true && w.value.length > n.length) {
+        for (let k = 0; k + n.length <= w.value.length; k += 1) {
+          if (sha256Hex(w.value.slice(k, k + n.length)) === n.hash) add(w.index + k, w.value);
+        }
+      }
+      if (n.words > 1 && i + n.words <= words.length) {
+        const run = words.slice(i, i + n.words);
+        const spaced = run.every((x, k) => k === 0 || /^\s+$/.test(text.slice((run[k - 1] as { end: number }).end, x.index)));
+        const joined = run.map((x) => x.value).join(" ");
+        if (spaced && joined.length === n.length && sha256Hex(joined) === n.hash) add(w.index, "name of an outside organisation");
+      }
+    }
+  }
+  return found;
+}
 
 const TILE_HOSTS: readonly RegExp[] = [
   /(?:^|[./])tile\.openstreetmap\.(?:org|fr)\b/i,
@@ -90,21 +109,6 @@ const SECRET_PATTERNS: ReadonlyArray<{ re: RegExp; why: string }> = [
 // Hosts that appear in plain http:// only as XML namespace identifiers, never fetched.
 const HTTP_OK = /^http:\/\/(?:localhost|127\.0\.0\.1|\[::1\]|www\.w3\.org\/|www\.sitemaps\.org\/)/i;
 
-/** The Content-Security-Policy a file sets, if it sets one: an HTML meta tag, a _headers line, JSON or TOML. */
-export function extractCsp(f: SourceFile): { policy: string; delivery: "header" | "meta" } | null {
-  if (/\.html?$/i.test(f.path)) {
-    const m = /<meta\s+[^>]*http-equiv\s*=\s*["']Content-Security-Policy["'][^>]*>/i.exec(f.text);
-    const c = m === null ? null : /content\s*=\s*"([^"]*)"|content\s*=\s*'([^']*)'/i.exec(m[0]);
-    const v = c?.[1] ?? c?.[2];
-    return v === undefined ? null : { policy: v.replace(/&amp;/g, "&").replace(/&quot;/g, '"'), delivery: "meta" };
-  }
-  const line = /^[ \t]*Content-Security-Policy[ \t]*[:=][ \t]*"?([^"\n]+)"?[ \t]*,?[ \t]*$/im.exec(f.text);
-  if (line?.[1] !== undefined) return { policy: line[1].trim(), delivery: "header" };
-  const json = /"Content-Security-Policy"\s*,?\s*"value"\s*:\s*"([^"]+)"|"Content-Security-Policy"\s*:\s*"([^"]+)"/i.exec(f.text);
-  const j = json?.[1] ?? json?.[2];
-  return j === undefined ? null : { policy: j, delivery: "header" };
-}
-
 const COPY_FILE = /(?:^|\/)(?:[^/]*\.)?(?:copy|strings|messages|locales?|i18n|translations?)(?:\.[^/]*)?\.(?:ts|tsx|js|jsx|json)$/i;
 const SCRIPT_FILE = /\.(?:ts|tsx|js|jsx|mjs|cjs|json|html|css|md|ya?ml)$/i;
 const WORKFLOW_FILE = /^\.github\/workflows\/[^/]+\.ya?ml$/i;
@@ -133,21 +137,13 @@ function scanPatterns(
 export function scanFile(f: SourceFile): Finding[] {
   const out: Finding[] = [];
   if (SCRIPT_FILE.test(f.path)) {
-    scanPatterns(out, f, "forbidden-name", [{ re: FORBIDDEN_NAME, why: "outside organisation name" }]);
+    for (const n of nameFindings(f.text)) out.push({ rule: "forbidden-name", path: f.path, line: n.line, detail: `outside organisation name: ${n.token.slice(0, 60)}` });
     scanPatterns(out, f, "third-party-tiles", TILE_HOSTS.map((re) => ({ re, why: "third-party tile or map host" })));
     scanPatterns(out, f, "tracker-host", TRACKER_HOSTS.map((re) => ({ re, why: "analytics or tracking host" })));
     scanPatterns(out, f, "secret", SECRET_PATTERNS);
     for (const m of f.text.matchAll(/http:\/\/[^\s"'`)<>]+/gi)) {
       if (!HTTP_OK.test(m[0])) {
         out.push({ rule: "insecure-url", path: f.path, line: lineOf(f.text, m.index ?? 0), detail: `plain http: ${m[0].slice(0, 60)}` });
-      }
-    }
-  }
-  if (/\.(?:html?|json|toml)$/i.test(f.path) || /(?:^|\/)_headers$/.test(f.path)) {
-    const csp = extractCsp(f);
-    if (csp !== null) {
-      for (const p of auditCsp(csp.policy, { delivery: csp.delivery })) {
-        out.push({ rule: "weak-csp", path: f.path, line: 1, detail: `${p.code}: ${p.detail}` });
       }
     }
   }

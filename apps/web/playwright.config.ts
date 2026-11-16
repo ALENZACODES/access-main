@@ -10,6 +10,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  // One worker in CI. The Day 22 perf project measures time under a 4x CPU
+  // slowdown, and a second worker running other tests at the same time would
+  // be part of what it measures.
+  workers: process.env.CI ? 1 : undefined,
   reporter: [[process.env.CI ? "github" : "list"], ["./e2e/regression-reporter.ts", { repository: "access-main", buildId }]],
   use: {
     baseURL: `http://127.0.0.1:${port}`,
@@ -18,8 +22,8 @@ export default defineConfig({
   },
   projects: [
     {
-      // Day 22 first-result gates need the runner to themselves. Other e2e
-      // files running in parallel push the medians over the 1,500 ms gate.
+      // Day 22 first-result record. Independent of the default project so a
+      // red perf gate does not skip the rest of e2e.
       name: "perf",
       use: { ...devices["Desktop Chrome"] },
       testMatch: "perf.spec.ts",
@@ -29,7 +33,6 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       testIgnore: ["release/**", "perf.spec.ts"],
-      dependencies: ["perf"],
     },
   ],
   webServer: {
