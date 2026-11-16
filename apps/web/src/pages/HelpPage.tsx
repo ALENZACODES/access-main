@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 import type { ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { TextInput } from "../design/fields.tsx";
@@ -9,17 +10,30 @@ import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
+import { bundledHelp } from "../packs/bundledToronto.ts";
 
 export function HelpPage() {
   const { t, i18n } = useTranslation();
+  const { id = "" } = useParams();
   const { profile } = useProfileState();
   const online = useOnline();
+  const locale = i18n.language.startsWith("fr") ? "fr" : "en";
   const [text, setText] = useState("");
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
-  useDocumentTitle(t("modules.helpTitle"));
+  const [packTitle, setPackTitle] = useState<string | null>(null);
+  const heading = packTitle ?? t("modules.helpTitle");
+  useDocumentTitle(heading);
 
   useEffect(() => {
+    let current = true;
+    if (!id) {
+      setPackTitle(null);
+    } else {
+      void bundledHelp(id).then((row) => {
+        if (current) setPackTitle(row ? row.name[locale] : null);
+      });
+    }
     void modules.help
       .list({
         locale: i18n.language.startsWith("fr") ? "fr" : "en",
@@ -29,11 +43,14 @@ export function HelpPage() {
         query,
       })
       .then((value: ModuleResult<unknown>) => setResult(value));
-  }, [i18n.language, online, profile, query]);
+    return () => {
+      current = false;
+    };
+  }, [id, locale, i18n.language, online, profile, query]);
 
   return (
     <div className="stack">
-      <h1>{t("modules.helpTitle")}</h1>
+      <h1>{heading}</h1>
       <section className="stack" aria-labelledby="help-privacy">
         <h2 id="help-privacy">{t("help.privacyTitle")}</h2>
         <p>{t("help.privacyBody")}</p>

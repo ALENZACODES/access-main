@@ -9,7 +9,7 @@ path list. A link crawl is not a substitute, because unlinked or not-found
 paths would be missed or scanned by accident. Parameter routes `/places/:id`
 and `/help/:id` are added from real ids in the bundled Toronto pack
 (`apps/web/public/packs/toronto/content.json`), in English and French at 320
-and 1280, and use the same fail-on-violation rule.
+and 1280, and use the same fail-on-violation rule. Each parameterized route must show the packed place or help name, so a not-found page cannot pass.
 
 Language is forced by writing `access.language` and `access.language.set` in
 `localStorage` before navigation (the keys `detectLanguage()` actually reads).

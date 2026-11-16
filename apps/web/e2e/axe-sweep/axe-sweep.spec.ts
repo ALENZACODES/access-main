@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { appRoutes } from "../a11y-input/helpers.ts";
-import { bundledTorontoPackPath, parameterizedRoutes } from "./parameterized-routes.ts";
+import { bundledTorontoPackPath, parameterizedRouteCases, parameterizedRoutes } from "./parameterized-routes.ts";
 
 /**
  * Residual Day 17 / P20 axe sweep: every live app route, in English and
@@ -18,7 +18,11 @@ import { bundledTorontoPackPath, parameterizedRoutes } from "./parameterized-rou
  */
 const ROUTES = appRoutes();
 const PARAM_ROUTES = parameterizedRoutes();
+const PARAM_CASES = parameterizedRouteCases();
 const SWEEP_ROUTES = [...ROUTES, ...PARAM_ROUTES];
+const PARAM_TITLE: Record<string, { en: string; fr: string }> = Object.fromEntries(
+  PARAM_CASES.map((entry) => [entry.route, entry.title]),
+);
 
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
@@ -126,6 +130,9 @@ test("axe sweep covers places/:id and help/:id from the bundled Toronto pack", (
     `/places/${encodeURIComponent(placeId as string)}`,
     `/help/${encodeURIComponent(helpId as string)}`,
   ]);
+  expect(PARAM_CASES[0]?.title.en.length, "place title").toBeGreaterThan(0);
+  expect(PARAM_CASES[1]?.title.en.length, "help title").toBeGreaterThan(0);
+  expect(PARAM_CASES[1]?.title.fr.length, "help French title").toBeGreaterThan(0);
   expect(SWEEP_ROUTES).toEqual([...appRoutes(), ...PARAM_ROUTES]);
 });
 
@@ -154,6 +161,13 @@ for (const language of ["en", "fr"] as const) {
           await expect(page.getByRole("link", { name: COPY[language].home, exact: true })).toBeVisible();
           await expect(page.getByRole("banner").getByRole("button", { name: COPY[language].switchTo })).toBeVisible();
           await expect(page.locator("main [role='status']").filter({ hasText: /^(Loading|Chargement)/ })).toHaveCount(0);
+          const expectedTitle = PARAM_TITLE[route]?.[language];
+          if (expectedTitle) {
+            await expect(
+              page.getByRole("heading", { level: 1, name: expectedTitle }),
+              `${route} must show the packed title, not a not-found page`,
+            ).toBeVisible();
+          }
 
           const result = await new AxeBuilder({ page }).withTags([...AXE_TAGS]).analyze();
           const hits: ViolationHit[] = result.violations.flatMap((violation) =>
