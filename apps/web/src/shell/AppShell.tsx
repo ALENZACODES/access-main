@@ -95,7 +95,7 @@ export function AppShell() {
 
   return (
     <>
-      <a className="skip-link" href="#main">{skipLinkLabel(language)}</a>
+      <a className="a11y-skip-link" href="#main">{skipLinkLabel(language)}</a>
       <header className="site-header">
         <div className="header-bar">
           <Link className="app-mark" to="/">{t("appName")}</Link>
