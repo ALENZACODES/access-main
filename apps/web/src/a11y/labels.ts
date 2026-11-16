@@ -3,7 +3,7 @@ export type Lang = 'en' | 'fr';
 
 export const SKIP_LINK: Readonly<Record<Lang, string>> = {
   en: 'Skip to main content',
-  fr: 'Passer au contenu principal',
+  fr: 'Aller au contenu principal',
 };
 
 export function skipLinkLabel(lang: string): string {

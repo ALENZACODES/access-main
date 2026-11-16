@@ -20,7 +20,7 @@ function vars(t: ThemeTokens): string {
   ].join(' ');
 }
 
-const INTERACTIVE = "a, button, input, select, textarea, summary, [role='button'], [tabindex]";
+const INTERACTIVE = "a, button, input, select, textarea, summary, [role='button'], [tabindex]:not([tabindex='-1'])";
 const TARGETS = "button, [role='button'], select, summary, nav a, input:not([type='hidden'], [type='checkbox'], [type='radio'])";
 
 /** Builds the shell-route stylesheet: focus-visible, 44px targets, spacing. */
@@ -28,7 +28,7 @@ export function buildA11yCss(): string {
   return `:root { ${vars(LIGHT)} }
 @media (prefers-color-scheme: dark) { :root { ${vars(DARK)} } }
 html { scroll-padding-block: 4rem; }
-body { color: var(--a11y-text); background: var(--a11y-bg); line-height: 1.5; }
+body { line-height: 1.5; }
 :is(${INTERACTIVE}):focus-visible {
   outline: ${FOCUS_RING_PX}px solid var(--a11y-focus-ring);
   outline-offset: ${FOCUS_OFFSET_PX}px;
