@@ -1,9 +1,13 @@
 import Dexie, { type Table } from "dexie";
-import type { FieldValue, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche } from "./types.ts";
-export type { FieldValue, IntegritySource, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche } from "./types.ts";
+import type { FieldValue, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche, WithheldPart } from "./types.ts";
+import { checkPackRecord, checkSearchHit } from "./failsafe.ts";
+export { checkPackRecord, checkSearchHit, ONTARIO_ENVELOPE, type DeviceCheck, type DeviceFaultCode } from "./failsafe.ts";
+export type { FieldValue, IntegritySource, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche, WithheldPart } from "./types.ts";
 
-interface CachedPart { sha256: string; records: PackRecord[]; search: SearchHit[]; bytes?: Uint8Array; }
-interface RegionEntry { id: string; hashes: string[]; }
+/** `dropped` counts lines or entries that failed the device check and are never shown. */
+interface CachedPart { sha256: string; records: PackRecord[]; search: SearchHit[]; bytes?: Uint8Array; dropped?: number; }
+/** `parts` remembers which path each stored hash was downloaded for, so a verified older copy can stand in until a newer one verifies. */
+interface RegionEntry { id: string; hashes: string[]; parts?: Array<{ path: string; sha256: string }>; }
 interface MetaEntry { id: string; manifest: PackManifest; }
 class PackDatabase extends Dexie {
   parts!: Table<CachedPart, string>;
@@ -55,27 +59,34 @@ function partsIn(manifest: PackManifest, cells: string[]): PackPart[] {
   return [...result.values()];
 }
 function validateRecord(value: unknown): value is PackRecord {
-  if (!value || typeof value !== "object") return false;
-  const record = value as Partial<PackRecord>;
-  return typeof record.id === "string" && typeof record.region === "string" && ["venue", "washroom", "transit", "path"].includes(record.tranche ?? "") && !!record.fields && typeof record.fields === "object";
+  return checkPackRecord(value).ok;
 }
 function validateHit(value: unknown): value is SearchHit {
-  if (!value || typeof value !== "object") return false;
-  const hit = value as Partial<SearchHit>;
-  return typeof hit.id === "string" && typeof hit.nameNorm === "string" && typeof hit.lat === "number" && typeof hit.lon === "number" && (hit.name === null || typeof hit.name === "string") && ["venue", "washroom", "transit", "path"].includes(hit.tranche ?? "");
+  return checkSearchHit(value);
 }
-async function parseGzip(bytes: Uint8Array, isSearch: boolean, part: string): Promise<CachedPart> {
+function inPackSources(manifest: PackManifest): Set<string> {
+  return new Set(manifest.sources.filter((source) => source.inWebPack).map((source) => source.sourceId));
+}
+/**
+ * Decompresses one part. A line that is not JSON, or a record or search entry
+ * that fails the device check, is dropped and counted; the rest of the part is
+ * kept. Only a part that does not decompress, or a search index that is not a
+ * JSON array, fails as a whole.
+ */
+async function parseGzip(bytes: Uint8Array, isSearch: boolean, part: string, sources?: ReadonlySet<string>): Promise<CachedPart> {
   if (typeof DecompressionStream === "undefined") throw new PackClientError("content", part);
   const stream = new Blob([new Uint8Array(bytes)]).stream().pipeThrough(new DecompressionStream("gzip"));
   const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
   const records: PackRecord[] = [];
   const search: SearchHit[] = [];
+  let dropped = 0;
   let pending = "";
   const consume = (line: string) => {
     if (!line.trim()) return;
-    const item: unknown = JSON.parse(line);
-    if (!validateRecord(item)) throw new PackClientError("content", part);
-    records.push(item);
+    let item: unknown;
+    try { item = JSON.parse(line); } catch { dropped++; return; }
+    if (checkPackRecord(item, sources).ok) records.push(item as PackRecord);
+    else dropped++;
   };
   try {
     for (;;) {
@@ -89,11 +100,15 @@ async function parseGzip(bytes: Uint8Array, isSearch: boolean, part: string): Pr
     }
     if (isSearch) {
       const parsed: unknown = JSON.parse(pending);
-      if (!Array.isArray(parsed) || !parsed.every(validateHit)) throw new PackClientError("content", part);
-      search.push(...parsed);
+      if (!Array.isArray(parsed)) throw new PackClientError("content", part);
+      for (const hit of parsed) { if (validateHit(hit)) search.push(hit); else dropped++; }
     } else consume(pending);
   } catch (error) { if (error instanceof PackClientError) throw error; throw new PackClientError("content", part); }
-  return { sha256: "", records, search };
+  return { sha256: "", records, search, dropped };
+}
+/** Items in a part, kept or dropped, to compare with the manifest count. */
+function itemCount(parsed: CachedPart, isSearch: boolean): number {
+  return (isSearch ? parsed.search.length : parsed.records.length) + (parsed.dropped ?? 0);
 }
 async function digest(bytes: Uint8Array): Promise<string> {
   const buffer = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes));
@@ -137,11 +152,9 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     }
     return [...cellBounds].filter(([, bbox]) => overlap(bbox, bounds(area))).map(([cell]) => cell).sort();
   }
-  async function fetchPart(part: PackPart, isSearch: boolean, onBytes?: (size: number) => void): Promise<CachedPart> {
-    const existing = await readPart(part.sha256);
-    if (existing) return existing;
+  async function fetchPartOnce(part: PackPart, isSearch: boolean, sources: ReadonlySet<string>, onBytes?: (size: number) => void, retry = false): Promise<CachedPart> {
     let response: Response;
-    try { response = await fetcher(`${url}${part.path}`); if (!response.ok) throw new Error("response"); }
+    try { response = await (retry ? fetcher(`${url}${part.path}`, { cache: "no-store" }) : fetcher(`${url}${part.path}`)); if (!response.ok) throw new Error("response"); }
     catch { throw new PackClientError("network", part.path); }
     const reader = response.body?.getReader();
     const chunks: Uint8Array[] = [];
@@ -159,11 +172,27 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     if ((await digest(bytes)) !== part.sha256.toLowerCase()) throw new PackClientError("sha256", part.path);
-    const parsed = await parseGzip(bytes, isSearch, part.path);
-    if ((isSearch ? parsed.search.length : parsed.records.length) !== part.count) throw new PackClientError("content", part.path);
+    const parsed = await parseGzip(bytes, isSearch, part.path, sources);
+    if (itemCount(parsed, isSearch) !== part.count) throw new PackClientError("content", part.path);
     parsed.sha256 = part.sha256;
     parsed.bytes = bytes;
     return parsed;
+  }
+  /**
+   * Fetches and checks one part. A part whose size or digest does not match
+   * is fetched once more without the HTTP cache; if it still does not match,
+   * the error is thrown and nothing is stored.
+   */
+  async function fetchPart(part: PackPart, isSearch: boolean, onBytes?: (size: number) => void): Promise<CachedPart> {
+    const existing = await readPart(part.sha256);
+    if (existing) return existing;
+    const sources = inPackSources(await manifest());
+    try {
+      return await fetchPartOnce(part, isSearch, sources, onBytes);
+    } catch (error) {
+      if (!(error instanceof PackClientError) || (error.code !== "bytes" && error.code !== "sha256")) throw error;
+      return fetchPartOnce(part, isSearch, sources, undefined, true);
+    }
   }
   async function storedCells(pack: PackManifest): Promise<string[]> {
     const entries = db ? await db.regions.toArray() : [...memoryRegions.values()];
@@ -176,11 +205,29 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       const stored = await readRegion(region.id);
       const missingHashes: string[] = [];
       for (const part of parts) if (!(await readPart(part.sha256))) missingHashes.push(part.sha256);
+      const missingCells = region.cells.filter((cell) => partsIn(pack, [cell]).some((part) => missingHashes.includes(part.sha256)));
+      const staleCells: string[] = [];
+      let droppedRecords = 0;
+      for (const cell of region.cells) {
+        for (const part of partsIn(pack, [cell])) {
+          const cached = await readPart(part.sha256);
+          if (cached) droppedRecords += cached.dropped ?? 0;
+          else if (part.sourceId && await lastKnownGood(part.path)) { if (!staleCells.includes(cell)) staleCells.push(cell); }
+        }
+      }
+      const cellSet = new Set(region.cells);
+      const unavailable: WithheldPart[] = [];
+      for (const item of pack.withheld ?? []) {
+        if (item.cell === null || !cellSet.has(item.cell)) continue;
+        if (item.sourceId && await lastKnownGood(item.path)) { if (!staleCells.includes(item.cell)) staleCells.push(item.cell); }
+        else unavailable.push({ ...item });
+      }
       return {
         id: region.id, label: region.label, cells: region.cells, bytes: parts.reduce((n, p) => n + p.bytes, 0),
         downloaded: !!stored && missingHashes.length === 0, verified: !!stored && missingHashes.length === 0,
-        missingCells: region.cells.filter((cell) => partsIn(pack, [cell]).some((part) => missingHashes.includes(part.sha256))),
+        missingCells,
         builtAt: pack.builtAt, count: parts.filter((part) => part.sourceId).reduce((n, p) => n + p.count, 0),
+        staleCells, droppedRecords, unavailable,
       };
     }));
   }
@@ -205,7 +252,7 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       pending.set(part.sha256, parsed);
     }
     // All parts must pass byte, digest, parse, and count validation before any write.
-    const entry = { id, hashes: parts.map((part) => part.sha256) };
+    const entry: RegionEntry = { id, hashes: parts.map((part) => part.sha256), parts: parts.map((part) => ({ path: part.path, sha256: part.sha256 })) };
     if (db) await db.transaction("rw", db.parts, db.regions, async () => {
       await db.parts.bulkPut([...pending.values()]);
       await db.regions.put(entry);
@@ -232,7 +279,13 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       received += part.bytes;
     }
     const previous = await readRegion(regionId);
-    const entry = { id: regionId, hashes: [...new Set([...(previous?.hashes ?? []), ...parts.map((part) => part.sha256)])] };
+    // Older copies stay listed (and stored) so they can still stand in for a path whose newer part has not verified.
+    const fresh = new Set(parts.map((part) => part.path));
+    const entry: RegionEntry = {
+      id: regionId,
+      hashes: [...new Set([...(previous?.hashes ?? []), ...parts.map((part) => part.sha256)])],
+      parts: [...(previous?.parts ?? []).filter((item) => !fresh.has(item.path)), ...parts.map((part) => ({ path: part.path, sha256: part.sha256 }))],
+    };
     if (db) await db.transaction("rw", db.parts, db.regions, async () => {
       await db.parts.bulkPut([...pending.values()]);
       await db.regions.put(entry);
@@ -258,14 +311,43 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       for (const hash of owned) if (!remaining.has(hash)) memoryParts.delete(hash);
     }
   }
+  /** The newest verified copy on the device for a part path, when the manifest's own copy is not stored. */
+  async function lastKnownGood(path: string): Promise<CachedPart | undefined> {
+    const entries = db ? await db.regions.toArray() : [...memoryRegions.values()];
+    for (const entry of entries) {
+      for (const item of [...(entry.parts ?? [])].reverse()) {
+        if (item.path !== path) continue;
+        const cached = await readPart(item.sha256);
+        if (cached) return cached;
+      }
+    }
+    return undefined;
+  }
   async function* records(tranche: Tranche, cell: string, signal?: AbortSignal): AsyncIterable<PackRecord> {
     const pack = await manifest();
+    const sources = inPackSources(pack);
     for (const part of pack.tranches[tranche]?.cells[cell]?.parts ?? []) {
       if (signal?.aborted) return;
-      if (!pack.sources.some((source) => source.sourceId === part.sourceId && source.inWebPack)) continue;
-      const cached = await readPart(part.sha256);
+      if (!part.sourceId || !sources.has(part.sourceId)) continue;
+      const cached = (await readPart(part.sha256)) ?? (await lastKnownGood(part.path));
       if (!cached) continue;
-      for (const record of cached.records) { if (signal?.aborted) return; yield record; }
+      // Checked again here so a copy stored by an older version of this client
+      // is held to the same rule; a record that fails is never yielded.
+      for (const record of cached.records) {
+        if (signal?.aborted) return;
+        if (checkPackRecord(record, sources).ok) yield record;
+      }
+    }
+    // A part the builder withheld from this pack: show the last verified copy on the device, if there is one.
+    for (const item of pack.withheld ?? []) {
+      if (signal?.aborted) return;
+      if (item.tranche !== tranche || item.cell !== cell || !item.sourceId || !sources.has(item.sourceId)) continue;
+      const cached = await lastKnownGood(item.path);
+      if (!cached) continue;
+      for (const record of cached.records) {
+        if (signal?.aborted) return;
+        if (checkPackRecord(record, sources).ok) yield record;
+      }
     }
   }
   async function search(text: string, opts: { near?: { lat: number; lon: number }; tranches?: Tranche[]; limit?: number }): Promise<SearchHit[]> {
@@ -322,11 +404,11 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       return { path: part.path, data: null, expectedBytes: part.bytes, expectedSha256: part.sha256, expectedCount: part.count, actualCount: null, structurallyValid: false, source };
     }
     const data = asBytes(stored.bytes);
-    const actualCount = isSearch ? stored.search.length : stored.records.length;
+    const actualCount = itemCount(stored, isSearch);
     let structurallyValid = stored.records.every(validateRecord) && stored.search.every(validateHit);
     if (data) {
       try {
-        const parsed = await parseGzip(data, isSearch, part.path);
+        const parsed = await parseGzip(data, isSearch, part.path, inPackSources(pack));
         const expectedItems = isSearch ? parsed.search : parsed.records;
         const storedItems = isSearch ? stored.search : stored.records;
         if (JSON.stringify(expectedItems) !== JSON.stringify(storedItems)) structurallyValid = false;
@@ -369,13 +451,13 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       if (copy.byteLength !== part.bytes) throw new PackClientError("bytes", part.path, part.bytes, copy.byteLength);
       if ((await digest(copy)) !== part.sha256.toLowerCase()) throw new PackClientError("sha256", part.path);
       const isSearch = !part.sourceId;
-      const parsed = await parseGzip(copy, isSearch, part.path);
-      if ((isSearch ? parsed.search.length : parsed.records.length) !== part.count) throw new PackClientError("content", part.path);
+      const parsed = await parseGzip(copy, isSearch, part.path, inPackSources(pack));
+      if (itemCount(parsed, isSearch) !== part.count) throw new PackClientError("content", part.path);
       parsed.sha256 = part.sha256;
       parsed.bytes = copy;
       pending.push(parsed);
     }
-    const entry = { id, hashes: expected.map((part) => part.sha256) };
+    const entry: RegionEntry = { id, hashes: expected.map((part) => part.sha256), parts: expected.map((part) => ({ path: part.path, sha256: part.sha256 })) };
     const nextHashes = new Set(entry.hashes);
     if (db) await db.transaction("rw", db.parts, db.regions, async () => {
       const previous = await db.regions.get(id);
