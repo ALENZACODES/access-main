@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import { BUILD_ID, CONTRACT_VERSION } from "../buildInfo.ts";
 import { summarizeStorage, type StorageSummary } from "../storage/repository.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { renderOnDeviceNoticeHtml } from "../privacy/onDeviceNotice/index.ts";
 
 export function AboutPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("fr") ? "fr" : "en";
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   useDocumentTitle(t("about.title"));
 
@@ -35,6 +37,20 @@ export function AboutPage() {
       </section>
       <p>{t("about.frenchNote")}</p>
       <p>{t("about.audit")}</p>
+
+      <div
+        dangerouslySetInnerHTML={{
+          __html: renderOnDeviceNoticeHtml({
+            locale,
+            items: [
+              { id: "profile", label: { en: "Profile", fr: "Profil" }, where: "on-device" },
+              { id: "cache", label: { en: "Cached records", fr: "Enregistrements en cache" }, where: "on-device" },
+              { id: "outbox", label: { en: "Contribution export drafts", fr: "Brouillons d’export de contribution" }, where: "on-device" },
+            ],
+            reviewedOn: "2026-11-15",
+          }),
+        }}
+      />
       <p>{t("about.notices")}</p>
     </div>
   );

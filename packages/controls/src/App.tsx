@@ -3,6 +3,7 @@ import { LANGS, t, type Lang } from "./i18n/catalog.ts";
 import { ControlShell, useAnnounce } from "./shell.tsx";
 import type { ActionId, ControlMode } from "./types.ts";
 import { ITEM_IDS, applyAction, describeNote, initialChooserState, itemName, pickIndex, type ChooserState } from "./widget.ts";
+import "./embedded.css";
 
 function ChooserWidget(props: { lang: Lang; state: ChooserState; onPick: (index: number) => string; onAction: (a: ActionId) => string }) {
   const { lang, state, onPick, onAction } = props;
@@ -59,15 +60,21 @@ function ChooserWidget(props: { lang: Lang; state: ChooserState; onPick: (index:
   );
 }
 
-export function App({ initialLang = "en", initialMode = "keyboard" }: { initialLang?: Lang; initialMode?: ControlMode }) {
+/**
+ * `embedded` mounts the chooser inside a host page (the web shell's Settings
+ * route): the host owns <main>, the h1, the page title and the document
+ * language, so the chooser renders a section with an h2 and leaves them alone.
+ */
+export function App({ initialLang = "en", initialMode = "keyboard", embedded = false }: { initialLang?: Lang; initialMode?: ControlMode; embedded?: boolean }) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const [state, setState] = useState<ChooserState>(initialChooserState);
   const stateRef = useRef<ChooserState>(initialChooserState);
 
   useEffect(() => {
+    if (embedded) return;
     document.documentElement.lang = lang;
     document.title = t(lang, "app.title");
-  }, [lang]);
+  }, [lang, embedded]);
 
   const commit = useCallback(
     (result: { state: ChooserState; note: Parameters<typeof describeNote>[1] }) => {
@@ -81,9 +88,11 @@ export function App({ initialLang = "en", initialMode = "keyboard" }: { initialL
   const onAction = useCallback((action: ActionId) => commit(applyAction(stateRef.current, action)), [commit]);
   const onPick = useCallback((index: number) => commit(pickIndex(stateRef.current, index)), [commit]);
 
+  const Root = embedded ? "section" : "main";
+  const Heading = embedded ? "h2" : "h1";
   return (
-    <main>
-      <h1>{t(lang, "app.title")}</h1>
+    <Root className={embedded ? "controls-embedded" : undefined} aria-label={embedded ? t(lang, "app.title") : undefined} lang={embedded ? lang : undefined}>
+      <Heading>{t(lang, "app.title")}</Heading>
       <p>{t(lang, "app.intro")}</p>
       <div role="group" aria-label={t(lang, "lang.label")} className="button-row">
         {LANGS.map((code) => (
@@ -96,6 +105,6 @@ export function App({ initialLang = "en", initialMode = "keyboard" }: { initialL
         <ChooserWidget lang={lang} state={state} onPick={onPick} onAction={onAction} />
       </ControlShell>
       <p className="note">{t(lang, "app.demoNote")}</p>
-    </main>
+    </Root>
   );
 }
