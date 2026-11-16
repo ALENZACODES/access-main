@@ -47,9 +47,9 @@ describe("state copy", () => {
       for (const s of strings(v)) {
         expect(s).not.toContain("'");
         expect(s).not.toMatch(/ [:;!?»]/);
-        expect(s).not.toMatch(/«(?! )/);
+        expect(s).not.toMatch(/«(?!\u202F)/);
         expect(s).not.toMatch(/(?<!\u202F)[;!?]/);
-        expect(s).not.toMatch(/(?<! ):/);
+        expect(s).not.toMatch(/(?<!\u00A0):/);
       }
     }
   });
