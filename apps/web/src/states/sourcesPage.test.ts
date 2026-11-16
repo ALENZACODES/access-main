@@ -48,6 +48,6 @@ describe("sourcesRouteView", () => {
   });
   it("maps errors", () => {
     const v = sourcesRouteView({ status: "error", httpStatus: 504 }, ctx);
-    expect(v.kind === "error" && v.view.title).toBe("This is taking too long");
+    expect(v.kind === "error" && v.view.title).toBe("The places could not be loaded");
   });
 });

@@ -89,7 +89,7 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
     const v = name ? EXTRA_ROUTES.getRouteError(name, kind, locale) : getErrorState(kind, locale);
     return page(route, v.title, renderStateView(v, { ...base, idPrefix: "err" }), 503, resolved);
   };
-  const failKind = load.status === "error" ? errorKindFromStatus(load.httpStatus, deps.connectivity.status === "online") : "unknown";
+  const failKind = load.status === "error" ? errorKindFromStatus(load.httpStatus, deps.connectivity.status === "online") : "data-load-failed";
 
   switch (route) {
     case "search": {

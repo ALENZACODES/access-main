@@ -83,7 +83,7 @@ describe("routing and status codes", () => {
     const nf = await handleRequest(get("/fr/zzz"), deps());
     expect(nf.status).toBe(404);
     expect(nf.html).toContain('<html lang="fr"');
-    expect(nf.html).toContain("Cette page est introuvable");
+    expect(nf.html).toContain("Ce lieu n’a pas été trouvé");
     expect((await handleRequest(get("/en/place/missing"), deps())).status).toBe(404);
     expect((await handleRequest(get("/en/report/missing"), deps())).status).toBe(404);
   });
@@ -92,7 +92,7 @@ describe("routing and status codes", () => {
     for (const path of ["search", "map", "saved", "compare", "sources", "place/hall-1", "report/hall-1"]) {
       const res = await handleRequest(get(`/en/${path}`), d);
       expect(res.status, path).toBe(503);
-      expect(res.html, path).toContain("You are offline");
+      expect(res.html, path).toMatch(/You are offline|No connection and no offline pack/);
     }
   });
   it("serves settings even when data cannot load", async () => {

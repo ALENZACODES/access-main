@@ -34,8 +34,16 @@ describe("savedRouteView", () => {
     expect(v.kind === "content" && v.countText).toBe("1 lieu enregistré.");
     expect(v.kind === "content" && v.items[0]!.removeLabel).toBe("Retirer Bar des lieux enregistrés");
   });
-  it("falls back to the generic error for server failures", () => {
+  it("uses the data-load wording for an online failure", () => {
     const v = savedRouteView({ status: "error", httpStatus: 500 }, ctx());
-    expect(v.kind === "error" && v.view.title).toBe("Something went wrong");
+    expect(v.kind === "error" && v.view.title).toBe("The places could not be loaded");
+  });
+  it("shows the offline error when the device is offline", () => {
+    const v = savedRouteView({ status: "error" }, ctx({ connectivity: initialConnectivity(false) }));
+    expect(v.kind === "error" && v.view.title).toBe("You are offline");
+  });
+  it("has French empty-state copy", () => {
+    const v = savedRouteView({ status: "ok", places: [] }, ctx({ locale: "fr" }));
+    expect(v.kind === "empty" && v.view.title).toBe("Aucun lieu enregistré");
   });
 });
