@@ -40,7 +40,7 @@ describe('auditedSourcesToCsv', () => {
   it('writes EN rows with Unknown for gaps', () => {
     const lines = auditedSourcesToCsv(audit.sources, 'en', false).trim().split('\r\n');
     expect(lines[0]).toBe('Dataset,Source,Link,Licence,Open licence,Retrieved,Status');
-    expect(lines[1]).toBe('"Places, central",Alpha,https://example.org/a,OGL-Ontario,Yes,2026-11-01,Recently updated');
+    expect(lines[1]).toBe('"Places, central",Alpha,https://example.org/a,OGL-Ontario,Yes,2026-11-01,Within the update limit');
     expect(lines[2]).toBe('"Places, central",Unknown,,Unknown,Unknown,Unknown,Update date unknown');
   });
 
@@ -48,7 +48,7 @@ describe('auditedSourcesToCsv', () => {
     const csv = auditedSourcesToCsv(audit.sources, 'fr');
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv).toContain('Date de récupération');
-    expect(csv).toContain('Mis à jour récemment');
+    expect(csv).toContain('Dans le délai de mise à jour');
     expect(csv).toContain('Inconnu');
   });
 });

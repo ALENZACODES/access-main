@@ -7,6 +7,8 @@
 import { badgeInlineStyle, buttonInlineStyle } from './a11y';
 import { buildAttributions, renderAttributionHtml } from './attribution';
 import { coverageTable, type AttributeDef } from './coverage';
+import { buildCompleteness, renderCompletenessHtml } from './completeness';
+import { renderBasisHtml } from './statusBasis';
 import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
@@ -276,9 +278,11 @@ export function renderDataStatusPanel(state: PanelState): string {
     datasetTable(audit, locale) +
     renderReviewHtml(buildReviewQueue(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
+    renderBasisHtml(audit, locale) +
     renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined) +
     `<div data-region="sources" aria-live="polite">${renderSourcesRegion(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined)}</div>` +
     coverageSection(state) +
+    renderCompletenessHtml(buildCompleteness(audit), locale) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale))
   );
 }

@@ -37,3 +37,15 @@ any other source file imports it statically, if `DataStatusPage` is imported
 statically, or if a module here touches `window`/`document` at load. It reads
 source text; bundle bytes and the LCP / first-result gates are measured by
 `npm run build` and `e2e/perf.spec.ts`, whose thresholds are unchanged.
+
+## Dates, unknown values and cross-surface consistency (round H)
+
+- **Dates** (`dateRules.ts`): only real calendar dates are read. `2026-02-31` is invalid, not March 3. A date-time must carry its own offset (`Z` or `±hh:mm`); one without it is invalid because its meaning would depend on the machine. Ages are whole calendar days (UTC). A record is stale only when its age is **more than** the limit.
+- **Future dates** stay Unknown and always carry the `future-date` issue, so the status and the issue list never disagree.
+- **Placeholders** (`unknownTokens.ts`): `N/A`, `TBD`, `unknown`, `inconnu`, `non disponible`, `-`, `?` and similar count as missing for the source, licence and date. Real text that merely contains such a word is kept.
+- **Status basis** (`statusBasis.ts`): every non-fresh status states its reason, with the retrieved date, the age and the limit for the dataset type. Shown in the page section "How statuses are decided".
+- **Completeness** (`completeness.ts`): UNKNOWN rate per field, overall and per dataset, on the page and at `/{locale}/data-status/completeness.json`. With nothing to measure the rate is `null`, never 0.
+- **Consistency** (`consistency.ts`, `invariants.ts`): one registry is rendered as the audit, summary, CSV, catalogue, source list, review queue, calendar, QA counts, completeness and credits, and the results are compared. `/{locale}/data-status/consistency.json` reports `consistent` and any problems. `invariants.ts` lists the rules a status must obey (for example: fresh needs an age within the limit; unknown names exactly one date issue; a licence status needs a recorded licence).
+- **Untranslated copy** (`untranslated.ts`): French messages identical to English, English marker words inside French text, and unfilled `{placeholders}`. The marker list leaves out words spelled the same in both languages.
+- **Fresh label**: "Within the update limit" / "Dans le délai de mise à jour". The old "Recently updated" overclaimed for records up to 180 days (730 for boundaries) old.
+- `fuzzKit.ts` generates seeded messy registries for tests only. A failing seed can be replayed.
