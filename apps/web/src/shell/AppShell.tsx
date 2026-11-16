@@ -18,6 +18,7 @@ const LINKS = [
   ["/finders", "nav.finders", false],
   ["/navigator", "nav.navigator", false],
   ["/games", "nav.games", false],
+  ["/more", "nav.more", false],
   ["/help", "nav.help", false],
   ["/settings", "nav.settings", false],
   ["/offline", "nav.offline", false],

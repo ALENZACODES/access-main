@@ -72,6 +72,8 @@ export interface PackSource {
   sourcesFor(record: PackRecord): PackSourceEntry[];
   regions(): Promise<RegionStatus[]>;
   downloadRegion(id: string, onProgress?: (done: number, total: number) => void): Promise<RegionStatus>;
+  /** Download and commit one cell of a region; resolves with its byte count. */
+  downloadCell?(regionId: string, cellId: string, onBytes?: (size: number) => void): Promise<number>;
   deleteRegion(id: string): Promise<void>;
   /**
    * On-device parts for a previously downloaded region, or null if this

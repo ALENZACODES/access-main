@@ -213,19 +213,49 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     else { for (const [key, value] of pending) memoryParts.set(key, value); memoryRegions.set(id, entry); }
     return (await regions()).find((value) => value.id === id)!;
   }
+  /**
+   * Download one cell of a region. Every part is checked for size, digest and
+   * record count before anything is written; the parts and the region entry are
+   * then written together, so a failed cell leaves earlier cells untouched.
+   * Resolves with the cell's byte count.
+   */
+  async function downloadCell(regionId: string, cellId: string, onBytes?: (size: number) => void): Promise<number> {
+    const pack = await manifest();
+    const region = pack.regions.find((item) => item.id === regionId);
+    if (!region || !region.cells.includes(cellId)) throw new PackClientError("missing", `${regionId}/${cellId}`);
+    const parts = partsIn(pack, [cellId]);
+    const pending = new Map<string, CachedPart>();
+    let received = 0;
+    for (const part of parts) {
+      if (await readPart(part.sha256)) { received += part.bytes; onBytes?.(part.bytes); continue; }
+      pending.set(part.sha256, await fetchPart(part, !part.sourceId, onBytes));
+      received += part.bytes;
+    }
+    const previous = await readRegion(regionId);
+    const entry = { id: regionId, hashes: [...new Set([...(previous?.hashes ?? []), ...parts.map((part) => part.sha256)])] };
+    if (db) await db.transaction("rw", db.parts, db.regions, async () => {
+      await db.parts.bulkPut([...pending.values()]);
+      await db.regions.put(entry);
+    });
+    else { for (const [key, value] of pending) memoryParts.set(key, value); memoryRegions.set(regionId, entry); }
+    return received;
+  }
   async function deleteRegion(id: string): Promise<void> {
     const pack = await manifest();
     const region = pack.regions.find((item) => item.id === id);
     if (!region) throw new PackClientError("missing", id);
+    // Older copies from a previous build are listed in the region entry; delete them too.
     if (db) await db.transaction("rw", db.parts, db.regions, async () => {
+      const owned = new Set([...partsIn(pack, region.cells).map((part) => part.sha256), ...((await db.regions.get(id))?.hashes ?? [])]);
       await db.regions.delete(id);
       const remaining = new Set((await db.regions.toArray()).flatMap((entry) => entry.hashes));
-      for (const hash of partsIn(pack, region.cells).map((part) => part.sha256)) if (!remaining.has(hash)) await db.parts.delete(hash);
+      for (const hash of owned) if (!remaining.has(hash)) await db.parts.delete(hash);
     });
     else {
+      const owned = new Set([...partsIn(pack, region.cells).map((part) => part.sha256), ...(memoryRegions.get(id)?.hashes ?? [])]);
       memoryRegions.delete(id);
       const remaining = new Set([...memoryRegions.values()].flatMap((entry) => entry.hashes));
-      for (const part of partsIn(pack, region.cells)) if (!remaining.has(part.sha256)) memoryParts.delete(part.sha256);
+      for (const hash of owned) if (!remaining.has(hash)) memoryParts.delete(hash);
     }
   }
   async function* records(tranche: Tranche, cell: string, signal?: AbortSignal): AsyncIterable<PackRecord> {
@@ -363,7 +393,7 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     }
     return (await regions()).find((value) => value.id === id)!;
   }
-  return { manifest, cellsFor, records, search, get, sourcesFor, regions, downloadRegion, deleteRegion, storedRegionIntegrity, fetchRegionPartBytes, commitCheckedRegion };
+  return { manifest, cellsFor, records, search, get, sourcesFor, regions, downloadRegion, downloadCell, deleteRegion, storedRegionIntegrity, fetchRegionPartBytes, commitCheckedRegion };
 }
 
 /** In-memory source for deterministic consumer tests, never used as production data. */
