@@ -18,8 +18,8 @@ export default defineConfig({
   },
   projects: [
     {
-      // Day 22 first-result gates need the runner to themselves. Other e2e
-      // files running in parallel push the medians over the 1,500 ms gate.
+      // Day 22 first-result record. Independent of the default project so a
+      // red perf gate does not skip the rest of e2e.
       name: "perf",
       use: { ...devices["Desktop Chrome"] },
       testMatch: "perf.spec.ts",
@@ -29,7 +29,6 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       testIgnore: ["release/**", "perf.spec.ts"],
-      dependencies: ["perf"],
     },
   ],
   webServer: {
