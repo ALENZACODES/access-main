@@ -37,7 +37,7 @@ async function registerTests() {
     mkdirSync(path.join(work, "packages", "big"), { recursive: true });
     mkdirSync(path.join(work, "other"), { recursive: true });
     writeFileSync(path.join(work, "README.md"), "root file, not in any listed package\n");
-    writeFileSync(path.join(work, "tsconfig.base.json"), "{ \"compilerOptions\": { \"strict\": true } }\n");
+    writeFileSync(path.join(work, "tsconfig.base.json"), '{ "compilerOptions": {} }\n');
     writeFileSync(path.join(work, "other", "skip.txt"), "not listed\n");
     writeFileSync(path.join(work, "packages", "alpha", "src", "index.ts"), "export const alpha = 1;\n");
     writeFileSync(path.join(work, "packages", "beta", "src", "index.ts"), "export const beta = 2;\n");
@@ -137,7 +137,7 @@ async function registerTests() {
     assert.equal(existsSync(path.join(outDir, "fixture-repo", "README.md")), false);
     assert.equal(existsSync(path.join(outDir, "fixture-repo", "other")), false);
     assert.equal(existsSync(path.join(outDir, "fixture-repo", ".git")), false);
-    assert.equal(readFileSync(path.join(outDir, "fixture-repo", "tsconfig.base.json"), "utf8"), "{ \"compilerOptions\": { \"strict\": true } }\n");
+    assert.equal(readFileSync(path.join(outDir, "fixture-repo", "tsconfig.base.json"), "utf8"), '{ "compilerOptions": {} }\n');
     assert.equal(readFileSync(path.join(outDir, ".gitignore"), "utf8"), "*\n");
     assert.equal(first.files, 3);
     assert.match(logs.at(-1), /3 files, \d+ bytes/);
@@ -159,11 +159,31 @@ async function registerTests() {
     assert.match(logs.at(-1), /already present/);
   });
 
-  test("--if-missing skips a fetch when pins are still PIN-AFTER-MERGE", () => {
+  test("--if-missing skips a fetch when every pin is still PIN-AFTER-MERGE", () => {
     const { logs, result, outDir } = run("unpinned-skip", lockText(fixtureEntry("alpha", { commit: UNPINNED })), { ifMissing: true });
     assert.equal(result().fetches, 0);
     assert.match(logs.at(-1), /PIN-AFTER-MERGE/);
     assert.equal(existsSync(path.join(outDir, "fixture-repo")), false);
+  });
+
+  test("--if-missing still fetches pinned packages when some entries are PIN-AFTER-MERGE", () => {
+    const { logs, result, outDir } = run(
+      "mixed-pins",
+      lockText(fixtureEntry("alpha"), fixtureEntry("beta", { commit: UNPINNED })),
+      { ifMissing: true },
+    );
+    const first = result();
+    assert.equal(first.fetches, 1);
+    assert.ok(existsSync(path.join(outDir, "fixture-repo", "packages", "alpha", "src", "index.ts")));
+    assert.equal(existsSync(path.join(outDir, "fixture-repo", "packages", "beta")), false);
+    assert.match(logs.join("\n"), /skipping 1 PIN-AFTER-MERGE package\(s\) \(@fixture\/beta\)/);
+    const again = run(
+      "mixed-pins",
+      lockText(fixtureEntry("alpha"), fixtureEntry("beta", { commit: UNPINNED })),
+      { ifMissing: true },
+    );
+    assert.equal(again.result().fetches, 0);
+    assert.match(again.logs.at(-1), /already present/);
   });
 
   test("a file over 5 MB is refused and removed", () => {

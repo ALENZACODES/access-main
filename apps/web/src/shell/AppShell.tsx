@@ -2,6 +2,7 @@ import { Component, useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { SHELL_CONTRACT_VERSION } from "@access/shared";
+import { skipLinkLabel } from "../a11y/index.ts";
 import { BUILD_ID } from "../buildInfo.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { ErrorActions } from "./ErrorActions.tsx";
@@ -17,6 +18,7 @@ const LINKS = [
   ["/finders", "nav.finders", false],
   ["/navigator", "nav.navigator", false],
   ["/games", "nav.games", false],
+  ["/more", "nav.more", false],
   ["/help", "nav.help", false],
   ["/settings", "nav.settings", false],
   ["/offline", "nav.offline", false],
@@ -93,7 +95,7 @@ export function AppShell() {
 
   return (
     <>
-      <a className="skip-link" href="#main">{t("skip")}</a>
+      <a className="a11y-skip-link" href="#main">{skipLinkLabel(language)}</a>
       <header className="site-header">
         <div className="header-bar">
           <Link className="app-mark" to="/">{t("appName")}</Link>

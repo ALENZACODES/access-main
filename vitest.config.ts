@@ -17,12 +17,15 @@ interface LanePackage {
 
 /** Same rule as apps/web/vite.config.ts: use the synced package when it is present. */
 const lock = JSON.parse(readFileSync(path.join(root, "lanes.lock.json"), "utf8")) as { packages: LanePackage[] };
+const UNLINKED = new Set(["@access-tools/games", "@access-tools/navigator"]);
 const laneAliases = Object.fromEntries(
   lock.packages.map((pkg) => {
     const repo = pkg.repo.split("/")[1];
     if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
-    const real = path.join(root, ".lanes", repo, ...pkg.path.split("/"), "src", "index.ts");
-    return [pkg.alias, existsSync(real) ? real : laneFallback];
+    const pkgRoot = path.join(root, ".lanes", repo, ...pkg.path.split("/"));
+    const real = path.join(pkgRoot, "src", "index.ts");
+    const resolved = UNLINKED.has(pkg.alias) ? laneFallback : existsSync(real) ? real : laneFallback;
+    return [pkg.alias, resolved];
   }),
 );
 

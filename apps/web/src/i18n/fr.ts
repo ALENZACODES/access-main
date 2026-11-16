@@ -28,6 +28,7 @@ export const fr: Messages = {
     finders: "Recherche",
     navigator: "Répertoire",
     games: "Jeux",
+    more: "Plus",
     help: "Aide",
     settings: "Réglages",
     data: "État des données",
@@ -150,6 +151,7 @@ export const fr: Messages = {
   modules: {
     ready: "Ces fiches viennent de la partie liée de the App. Chacune indique sa source, sa licence, sa date et son niveau. L'inconnu reste inconnu.",
     empty: "Aucune fiche n’est affichée.",
+    noMatches: "Aucune fiche correspondante n’a été trouvée. La recherche a été lancée dans la partie liée de the App. L’inconnu reste inconnu.",
     error: "Cette partie de the App n'a pas pu se charger. Aucune fiche n'est affichée. Réessayez plus tard.",
     contractError: "Cette partie de the App a fourni des fiches sans source, licence, date ou niveau. Aucune n'est donc affichée.",
     itemSource: "Source",

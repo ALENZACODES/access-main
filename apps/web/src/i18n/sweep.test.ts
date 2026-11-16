@@ -4,6 +4,8 @@ import indexHtml from "../../index.html?raw";
 import viteConfig from "../../vite.config.ts?raw";
 import { en } from "./en.ts";
 import { fr } from "./fr.ts";
+import { messages as featureMessages } from "../features/i18n.ts";
+import { hubText } from "../hub/i18n.ts";
 import { mapMessages } from "../map/i18n.ts";
 
 /**
@@ -25,8 +27,12 @@ function between(source: string, start: string, end: string): string {
 const SURFACES: Array<[string, string]> = [
   ...leaves(en).map(([key, text]): [string, string] => [`en.${key}`, text]),
   ...leaves(fr).map(([key, text]): [string, string] => [`fr.${key}`, text]),
+  ...leaves(hubText.en).map(([key, text]): [string, string] => [`hub.en.${key}`, text]),
+  ...leaves(hubText.fr).map(([key, text]): [string, string] => [`hub.fr.${key}`, text]),
   ...leaves(mapMessages.en).map(([key, text]): [string, string] => [`map.en.${key}`, text]),
   ...leaves(mapMessages.fr).map(([key, text]): [string, string] => [`map.fr.${key}`, text]),
+  ...leaves(featureMessages.en).map(([key, text]): [string, string] => [`features.en.${key}`, text]),
+  ...leaves(featureMessages.fr).map(([key, text]): [string, string] => [`features.fr.${key}`, text]),
   ["index.html", between(indexHtml, "<head>", "</head>")],
   ["webmanifest", between(viteConfig, "manifest: {", "icons:")],
 ];
@@ -48,8 +54,12 @@ describe("endorsement and overclaim sweep", () => {
     expect(SURFACES.length).toBeGreaterThan(400);
     expect(SURFACES.find(([where]) => where === "index.html")?.[1]).toContain("description");
     expect(SURFACES.find(([where]) => where === "webmanifest")?.[1]).toContain("description");
+    expect(SURFACES.some(([where]) => where.startsWith("hub.en."))).toBe(true);
+    expect(SURFACES.some(([where]) => where.startsWith("hub.fr."))).toBe(true);
     expect(SURFACES.some(([where]) => where.startsWith("map.en."))).toBe(true);
     expect(SURFACES.some(([where]) => where.startsWith("map.fr."))).toBe(true);
+    expect(SURFACES.some(([where]) => where.startsWith("features.en."))).toBe(true);
+    expect(SURFACES.some(([where]) => where.startsWith("features.fr."))).toBe(true);
   });
 
   it("finds no endorsement, verification, guarantee, live, medical, eligibility, or AI claim", () => {

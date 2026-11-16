@@ -16,7 +16,12 @@ export interface ItemView {
 
 /** Lane message keys are not shell strings. The shell chooses its own sentence for each state. The linked-records sentence is only used when the list is not empty. */
 export function statusKey(result: ModuleResult<unknown>): string {
-  if (result.availability === "ready") return result.items.length > 0 ? "modules.ready" : "modules.empty";
+  if (result.availability === "ready") {
+    if (result.items.length === 0) {
+      return result.messageKey === "finder.shell.noMatches" ? "modules.noMatches" : "modules.empty";
+    }
+    return "modules.ready";
+  }
   if (result.availability === "stub") return "modules.unavailable";
   return result.messageKey === "modules.contractError" ? "modules.contractError" : "modules.error";
 }

@@ -165,3 +165,17 @@ describe("direct clicks", () => {
     expect(announcement()).toBe("Choice cleared.");
   });
 });
+
+describe("embedded in the web shell", () => {
+  it("leaves <main>, the h1, the title and the document language to the host", () => {
+    document.documentElement.lang = "fr";
+    document.title = "Host";
+    render(<App embedded initialLang="fr" />);
+    expect(document.querySelector("main")).toBeNull();
+    expect(document.querySelector("h1")).toBeNull();
+    expect(screen.getByRole("heading", { level: 2, name: CATALOGS.fr["app.title"] })).toBeTruthy();
+    expect(screen.getByRole("region", { name: CATALOGS.fr["app.title"] })).toBeTruthy();
+    expect(document.documentElement.lang).toBe("fr");
+    expect(document.title).toBe("Host");
+  });
+});

@@ -23,12 +23,14 @@ function readRecords(dir: string): PackRecord[] {
       for (const line of text.split("\n")) if (line.trim()) found.push(JSON.parse(line));
     } else if (file.endsWith(".json")) {
       const data = JSON.parse(text) as unknown;
-      const record = data as Record<string, unknown>;
-      if (data && typeof data === "object" && !Array.isArray(data) && typeof record.id === "string" && typeof record.tranche === "string" && record.fields) {
-        found.push(data);
-      } else {
-        const list = Array.isArray(data) ? data : [record?.records, record?.venues].find(Array.isArray);
+      if (Array.isArray(data)) found.push(...data);
+      else if (data && typeof data === "object") {
+        const record = data as Record<string, unknown>;
+        const list = [record.records, record.venues].find(Array.isArray);
         if (Array.isArray(list)) found.push(...list);
+        else if (typeof record.id === "string" && typeof record.tranche === "string" && record.fields && typeof record.fields === "object") {
+          found.push(record);
+        }
       }
     }
   }
@@ -37,7 +39,7 @@ function readRecords(dir: string): PackRecord[] {
 
 function hasKnownName(record: PackRecord): boolean {
   const name = record.fields?.name;
-  return (record.tranche === "venue" || record.tranche === "transit") && !!name && typeof name.value === "string" && name.value !== "UNKNOWN" && name.value.trim() !== "" && (name.tier === 0 || name.tier === 1);
+  return !!name && typeof name.value === "string" && name.value !== "UNKNOWN" && name.value.trim() !== "" && (name.tier === 0 || name.tier === 1);
 }
 
 function sourceFor(record: PackRecord): PackSourceEntry {
@@ -75,26 +77,25 @@ function expectProvenance(result: ModuleResult<unknown>) {
   }
 }
 
-const lanesReady = existsSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../.lanes/access-maps/packages/places-shell/src/index.ts"));
+const here = path.dirname(fileURLToPath(import.meta.url));
+const mapsReady = existsSync(path.resolve(here, "../../../../.lanes/access-maps/packages/places-shell/src/index.ts"));
+const toolsReady = existsSync(path.resolve(here, "../../../../.lanes/access-tools/packages/finders/src/index.ts"));
+const helpReady = existsSync(path.resolve(here, "../../../../.lanes/access-help/packages/help/src/index.ts"));
+const registry = () => createLinkedModules(createFixtureSource(records, sources));
 
-describe.skipIf(!lanesReady)("linked registry over two real ODbL records", () => {
+describe("linked registry fixtures", () => {
   it("found two real records in the schema fixtures", () => {
     expect(records).toHaveLength(2);
     expect(sources.length).toBeGreaterThan(0);
   });
+});
 
-  const registry = () => createLinkedModules(createFixtureSource(records, sources));
-
+describe.skipIf(!mapsReady)("linked registry over two real ODbL records (maps)", () => {
   it("places: ready, with provenance", async () => {
     const result = await registry().places.search({ text: firstName }, ctx);
     expect(result.availability).toBe("ready");
     expect(result.items.length).toBeGreaterThan(0);
     expectProvenance(result);
-  });
-
-  it("finders: unavailable until the finder pack is wired, with no invented records", async () => {
-    const result = await registry().finders.search({ kind: "washroom", text: "" }, ctx);
-    expect(result).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
   });
 
   it("journey: unavailable until origin and destination coordinates are wired, with no invented trip", async () => {
@@ -114,16 +115,6 @@ describe.skipIf(!lanesReady)("linked registry over two real ODbL records", () =>
     expect(search).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
     const detail = await modules.places.get(records[0]!.id, ctx);
     expect(detail).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
-  });
-
-  it("navigator, games and help: ready", async () => {
-    const modules = registry();
-    const noQuery = { ...ctx, query: undefined };
-    expect((await modules.navigator.list(noQuery)).availability).toBe("ready");
-    expect((await modules.games.list(noQuery)).availability).toBe("ready");
-    const help = await modules.help.list(noQuery);
-    expect(help.availability).toBe("ready");
-    expectProvenance(help);
   });
 
   it("places.get returns the record with its sources, and nothing for an unknown id", async () => {
@@ -149,5 +140,37 @@ describe.skipIf(!lanesReady)("linked registry over two real ODbL records", () =>
     name!.licence = "";
     const result = await getPlaceDetail(createFixtureSource([broken], sources), broken.id);
     expect(result).toMatchObject({ availability: "error", items: [] });
+  });
+});
+
+describe.skipIf(!toolsReady)("linked registry over two real ODbL records (tools)", () => {
+  it("finders: ready, with provenance on any item", async () => {
+    const result = await registry().finders.search({ kind: "washroom", text: "" }, ctx);
+    expect(result.availability).toBe("ready");
+    expectProvenance(result);
+  });
+
+});
+
+describe("linked registry: games and navigator", () => {
+  it("stay unavailable until a sourced catalog or directory lands", async () => {
+    const modules = registry();
+    const noQuery = { ...ctx, query: undefined };
+    const nav = await modules.navigator.list(noQuery);
+    const games = await modules.games.list(noQuery);
+    expect(nav.availability).toBe("stub");
+    expect(games.availability).toBe("stub");
+    expect(nav.messageKey).toBe("modules.unavailable");
+    expect(games.messageKey).toBe("modules.unavailable");
+    expect(nav.items).toEqual([]);
+    expect(games.items).toEqual([]);
+  });
+});
+
+describe.skipIf(!helpReady)("linked registry over two real ODbL records (help)", () => {
+  it("help: ready, with provenance on any item", async () => {
+    const help = await registry().help.list({ ...ctx, query: undefined });
+    expect(help.availability).toBe("ready");
+    expectProvenance(help);
   });
 });

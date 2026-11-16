@@ -1,8 +1,9 @@
 import { createPackSource, fieldValue, type PackSource } from "@access-main/data-client";
 import { createPlacesModule } from "@access-maps/places-shell";
+import { createFindersModule } from "@access-tools/finders";
 import { helpShellModule } from "@access/help";
-import { emptyModuleResult, type ModuleRegistry, type ModuleResult, type PlacesModule } from "@access/shared";
-import { createFindersModule, createJourneyModule, gamesShellModule, navigatorShellModule } from "./lane-adapters.ts";
+import { emptyModuleResult, type FindersModule, type ModuleRegistry, type ModuleResult, type PlacesModule } from "@access/shared";
+import { createJourneyModule } from "./lane-adapters.ts";
 import { createModules } from "./stubs.ts";
 import type { PackRecord, PlaceDetail } from "./types.ts";
 
@@ -42,7 +43,6 @@ export async function getPlaceDetail(source: PackSource, id: string): Promise<Mo
   }
 }
 
-
 /** The places package is only ready when the data pack can be read. A missing or broken pack stays unavailable, with no invented records. */
 async function packIsAvailable(source: PackSource): Promise<boolean> {
   try {
@@ -61,6 +61,13 @@ function placesWithPack(source: PackSource, places: PlacesModule): PlacesModule 
   };
 }
 
+function findersWithPack(source: PackSource, finders: FindersModule): FindersModule {
+  return {
+    ...finders,
+    search: async (query, ctx) => (await packIsAvailable(source) ? finders.search(query, ctx) : emptyModuleResult("finders", "modules.unavailable")),
+  };
+}
+
 /** The six real modules over one shared data source. Every result goes through guardModules in createModules. */
 export function createLinkedModules(source: PackSource): ModuleRegistry {
   const get = (id: string) => getPlaceDetail(source, id);
@@ -68,9 +75,7 @@ export function createLinkedModules(source: PackSource): ModuleRegistry {
   const guarded = createModules({
     places,
     journey: createJourneyModule(source),
-    finders: createFindersModule(source),
-    navigator: navigatorShellModule,
-    games: gamesShellModule,
+    finders: findersWithPack(source, createFindersModule(source)),
     help: helpShellModule,
   });
   // `get` is checked by getPlaceDetail, so it is set again here in case the guard rebuilt the places module.
