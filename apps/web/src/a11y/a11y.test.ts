@@ -1,7 +1,9 @@
 /** @vitest-environment jsdom */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import mainSource from '../main.tsx?raw';
-import globalCss from '../styles/global.css?raw';
 import appShellSource from '../shell/AppShell.tsx?raw';
 import { en } from '../i18n/en.ts';
 import { fr } from '../i18n/fr.ts';
@@ -16,6 +18,8 @@ import {
   parseHex,
   skipLinkLabel,
 } from './index';
+
+const globalCss = readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../styles/global.css'), 'utf8');
 
 describe('contrastRatio', () => {
   it('is 21 for black on white and 1 for identical colours', () => {

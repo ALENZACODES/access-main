@@ -104,7 +104,7 @@ function pullGroup(group, outDir, remoteBase, index) {
     git(["config", "core.sparseCheckout", "true"], tmp);
     git(["config", "core.sparseCheckoutCone", "false"], tmp);
     mkdirSync(path.join(tmp, ".git", "info"), { recursive: true });
-    writeFileSync(path.join(tmp, ".git", "info", "sparse-checkout"), group.packages.map((pkg) => `/${pkg.path}/\n`).join(""));
+    writeFileSync(path.join(tmp, ".git", "info", "sparse-checkout"), group.packages.map((pkg) => `/${pkg.path}/\n`).join("") + "/tsconfig.base.json\n");
     git(["fetch", "-q", "--depth", "1", "--filter=blob:none", "origin", group.ref], tmp);
     git(["checkout", "-q", "FETCH_HEAD"], tmp);
     rmSync(path.join(tmp, ".git"), { recursive: true, force: true });
