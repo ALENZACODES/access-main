@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { expect, test, type Browser } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 
 /**
  * Day 22 performance record (P11). Measured in CI on every run.
@@ -137,11 +137,19 @@ test("start-up loads no on-demand chunk; focusing a nav link preloads only that 
   expect(requested.filter((path) => /\/assets\/maplibre-/.test(path)), "MapLibre is never preloaded").toEqual([]);
 });
 
-test("preloading on focus or pointer keeps focus and the current route", async ({ page }) => {
+async function announced(page: Page) {
+  return page.locator("[aria-live], [role='status'], [role='alert']").evaluateAll((nodes) =>
+    nodes.map((node) => `${node.getAttribute("role")}|${node.getAttribute("aria-live")}|${(node.textContent ?? "").trim()}`),
+  );
+}
+
+test("preloading on focus or pointer keeps focus and the current route, and announces nothing", async ({ page }) => {
   const requested: string[] = [];
   page.on("request", (request) => { if (request.url().endsWith(".js")) requested.push(new URL(request.url()).pathname); });
   await page.goto("/", { waitUntil: "networkidle" });
   const nav = page.getByRole("navigation");
+  const before = await announced(page);
+  expect(before.length).toBeGreaterThan(0);
   for (const [name, chunk] of [["Data status", /\/assets\/DataStatusPage-/], ["Settings", /\/assets\/featureScreens-/]] as const) {
     const link = nav.getByRole("link", { name, exact: true });
     await link.focus();
@@ -150,6 +158,7 @@ test("preloading on focus or pointer keeps focus and the current route", async (
     await page.waitForLoadState("networkidle");
     await expect(link).toBeFocused();
     await expect(page).toHaveURL(/\/$/);
+    expect(await announced(page)).toEqual(before);
   }
   const help = nav.getByRole("link", { name: "Help", exact: true });
   const focused = nav.getByRole("link", { name: "Settings", exact: true });
@@ -157,4 +166,5 @@ test("preloading on focus or pointer keeps focus and the current route", async (
   await page.waitForLoadState("networkidle");
   await expect(focused).toBeFocused();
   await expect(page).toHaveURL(/\/$/);
+  expect(await announced(page)).toEqual(before);
 });
