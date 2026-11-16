@@ -11,6 +11,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:failsafe": "vitest run src/failsafe.test.ts"
   }
 }
