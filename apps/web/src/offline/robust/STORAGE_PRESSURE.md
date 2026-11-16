@@ -1,6 +1,6 @@
 # Storage-pressure panel and retry
 
-For non-React hosts, import `mountStoragePressurePanel` from `offline/robust` to mount an opt-in
+Import `mountStoragePressurePanel` from `offline/robust` to mount an opt-in
 English/French status and retry control. Pass the existing region manifest,
 atomic cell store, first-party fetcher and storage estimator. Call the returned
 cleanup function on unmount. The control is at least 44 × 44 CSS pixels, uses a
@@ -8,13 +8,8 @@ native keyboard-operable button, and announces changes through a polite status
 region. The host must retain visible focus styling.
 
 Retries are serialised and only missing manifest cells are fetched. Quota
-pressure preserves saved cells and reports the remaining cells as not
-downloaded (UNKNOWN is kept for unlisted or unreadable cells); offline data is
-not evidence of accessibility.
-
-On the live `/offline` page, `RegionPackPage.tsx` renders `pressureView` for
-the region's last incomplete download result (quota, pause or failed cell):
-the guidance line plus saved and not-downloaded counts. Dataset source,
+pressure preserves saved cells and reports remaining cells as UNKNOWN;
+missing offline data is not evidence of accessibility. Dataset source,
 open licence and date remain mandatory in the manifest. No automated retry,
 background downloads or third-party tile requests are introduced.
 
@@ -43,36 +38,18 @@ retry and interruption:
 
 `vitest run apps/web/src/offline/robust/*.test.ts`
 
-## Round 4: source audit, local report and first-party storage
+## Device-local recovery and reports
 
-The existing `mountStoragePressurePanel` continues to use the mounted
-`mountOfflineDashboard` UI. A data-inclusion preflight blocks downloads of
-manifests with missing sources, unrecognised licences, invalid dates, duplicate
-identifiers, unsafe metadata or excessive sizes. The preflight does not
-establish physical accessibility; absent and unreadable cells remain UNKNOWN.
+The existing live `/offline` shell mounts `mountStoragePressurePanel`, which
+mounts the offline dashboard. It retains the main-branch pack downloader and
+ledger, including per-cell source, open licence and date. The dashboard audits
+the region manifest before offering manual downloads, and offers explicit
+metadata-only text and JSON reports. Recovery selection and cleanup controls
+are connected to this dashboard; they never run in the background.
 
-The panel now has explicit text and JSON report actions. Each report contains
-cell states and provenance but **never cell payload bytes**. Reports are
-assembled on the device and use a user-initiated file download; no telemetry or
-network upload is added. Native buttons meet the 44px minimum. The existing
-manual retry and stop controls remain unchanged.
+A missing, unreadable, unlisted or stale copy is not treated as available
+offline; downloaded content does not establish physical accessibility.
+The new IndexedDB metadata helper is separate from the pack payload store and
+must not be used to claim pack files were cached without the pack client.
 
-For deployments using first-party static cell files, the shell can call
-`mountFirstPartyOfflinePanel(root, manifest, "/offline/cells", "en")`.
-It opens an IndexedDB store with one transaction per saved cell and uses
-same-origin, no-redirect, bounded binary GETs only after the user initiates a
-download. `mountPersistentStoragePressurePanel` also exists for hosts with
-an existing first-party fetcher. Neither entry point performs a background
-retry, creates a scheduler or contacts a third-party map service.
-
-Unit tests exercise rejection paths for licences, source dates, unsafe IDs,
-quota-related IndexedDB failures, content-type mismatches, redirects, truncated
-responses, output report UNKNOWN states and bilingual copy. The
-`accessibilityGuard.test.ts` suite audits the actual mounted dashboard strings,
-and fails on missing translations, forbidden claims, and French punctuation
-violations. DOM controls are produced by `createOfflineAction` so the 44px rule
-is tested where those buttons are created.
-
-Run the offline test suite with the repository's Vitest configuration:
-
-`vitest run apps/web/src/offline/robust/*.test.ts`
+Run `npm run lint`, `npm run typecheck`, and `npm test` in a clean checkout.

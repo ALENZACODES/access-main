@@ -1,7 +1,7 @@
-import { mountOfflineDashboard } from "./offlineDashboard.ts";
-import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload.ts";
+import { mountOfflineDashboard } from "./offlineDashboard";
+import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload";
 
-/** User-facing download state. Cells not downloaded are named as such, never as available and never as UNKNOWN. */
+/** User-facing download state; missing cells never become availability claims. */
 export type PressureState =
   | { readonly phase: "idle" | "working"; readonly result: null }
   | { readonly phase: "stopped"; readonly result: DownloadResult };
@@ -15,9 +15,9 @@ export const PRESSURE_COPY = {
     quota: "Storage space is low. Free space, then retry missing cells.",
     interrupted: "Download interrupted. Retry missing cells.",
     error: "Download stopped. Retry missing cells.",
-    partial: "Cells not downloaded are not available offline.",
+    partial: "Missing cells remain UNKNOWN offline.",
     saved: "Saved cells",
-    missing: "Cells not downloaded",
+    missing: "UNKNOWN cells",
   },
   fr: {
     start: "Télécharger la région",
@@ -27,9 +27,9 @@ export const PRESSURE_COPY = {
     quota: "L’espace de stockage est insuffisant. Libérez de l’espace, puis réessayez les cellules manquantes.",
     interrupted: "Téléchargement interrompu. Réessayez les cellules manquantes.",
     error: "Téléchargement arrêté. Réessayez les cellules manquantes.",
-    partial: "Les cellules non téléchargées ne sont pas disponibles hors ligne.",
+    partial: "Les cellules manquantes restent INCONNUES hors ligne.",
     saved: "Cellules enregistrées",
-    missing: "Cellules non téléchargées",
+    missing: "Cellules INCONNUES",
   },
 } as const;
 
@@ -46,13 +46,10 @@ export function pressureView(state: PressureState, language: Language): Pressure
   if (state.phase === "working") {
     return { message: copy.working, details: "", action: copy.retry, disabled: true };
   }
-  if (state.phase === "idle" || state.result === null) {
+  if (state.phase === "idle") {
     return { message: "", details: "", action: copy.start, disabled: false };
   }
   const result = state.result;
-  if (result === null) {
-    return { message: copy.error, details: "", action: copy.retry, disabled: false };
-  }
   const message = result.completed ? copy.complete : result.reason === "quota" ? copy.quota :
     result.reason === "interrupted" ? copy.interrupted : copy.error;
   const separator = language === "fr" ? "\u00a0:" : ":";
@@ -124,7 +121,6 @@ export function createPressureController(
 /**
  * Explicit opt-in UI: hosts mount this panel beside their offline download control.
  * The host is responsible for first-party fetching and open-licence data selection.
- * Round 3 mounts the inventory dashboard through this same entry point.
  */
 export function mountStoragePressurePanel(
   root: HTMLElement,
@@ -133,56 +129,4 @@ export function mountStoragePressurePanel(
   language: Language,
 ): () => void {
   return mountOfflineDashboard(root, manifest, dependencies, language);
-}
-
-/**
- * Optional first-party persistent shell entry point. The host supplies a
- * first-party fetcher and capacity estimate. The database is opened only on
- * explicit mount and closed when the panel unmounts.
- */
-export async function mountPersistentStoragePressurePanel(
-  root: HTMLElement,
-  manifest: RegionManifest,
-  dependencies: Omit<DownloadDependencies, "store">,
-  language: Language,
-): Promise<() => void> {
-  const { openIndexedCellStore } = await import("./indexedCellStore");
-  const store = await openIndexedCellStore();
-  try {
-    const unmount = mountOfflineDashboard(root, manifest, { ...dependencies, store }, language);
-    return () => { unmount(); store.close(); };
-  } catch (error) {
-    store.close();
-    throw error;
-  }
-}
-
-/** Convenience shell integration requiring only a same-origin data directory. */
-export async function mountFirstPartyOfflinePanel(
-  root: HTMLElement,
-  manifest: RegionManifest,
-  basePath: string,
-  language: Language,
-): Promise<() => void> {
-  const { createFirstPartyCellFetcher } = await import("./firstPartyFetch");
-  const { openIndexedCellStore } = await import("./indexedCellStore");
-  const store = await openIndexedCellStore();
-  try {
-    const fetchCell = createFirstPartyCellFetcher({
-      basePath,
-      origin: root.ownerDocument.location.origin,
-      fetchFn: fetch,
-    });
-    const estimateStorage = async () => {
-      if (!navigator.storage?.estimate) return {};
-      return navigator.storage.estimate();
-    };
-    const unmount = mountOfflineDashboard(root, manifest, {
-      store, fetchCell, estimateStorage,
-    }, language);
-    return () => { unmount(); store.close(); };
-  } catch (error) {
-    store.close();
-    throw error;
-  }
 }
