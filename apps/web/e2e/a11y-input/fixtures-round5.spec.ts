@@ -483,7 +483,7 @@ const invalidNavigationCases = [
     code: "external-new-window",
   },
   {
-    name: "unnamed download link",
+    name: "negative fixture: unnamed download link",
     markup: `<a href="/report.txt" download></a>`,
     code: "unnamed-download",
   },

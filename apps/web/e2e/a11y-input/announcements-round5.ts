@@ -111,7 +111,7 @@ export async function exerciseSafeAnnouncement(page: Page): Promise<Announcement
     await expect.poll(async () => (await region.textContent())?.trim() || "").not.toBe(before);
     const after = (await region.textContent())?.trim() || "";
     if (!after) issues.push({ code: "announcement-empty", target: regionId, detail: "No announcement text" });
-    if (!(await trigger.evaluate((element) => element === document.activeElement))) {
+    if (!(await trigger.evaluate((node) => node === document.activeElement))) {
       issues.push({ code: "announcement-focus-stolen", target: name, detail: "Status update moved focus" });
     }
   }
