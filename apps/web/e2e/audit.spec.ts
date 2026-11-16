@@ -77,7 +77,15 @@ async function measure(page: Page) {
             for (const nested of Array.from(clone.querySelectorAll("input, select, textarea, button"))) {
               nested.replaceWith(document.createTextNode(" "));
             }
+            // innerText on a detached node is plain textContent, which drops the whitespace between
+            // block nodes ("onlyNothing"). Lay the clone out next to the label, off screen, so the
+            // browser puts back the breaks a reader sees, then remove it.
+            clone.setAttribute("aria-hidden", "true");
+            clone.style.position = "absolute";
+            clone.style.left = "-9999px";
+            associated.insertAdjacentElement("afterend", clone);
             label = clone.innerText;
+            clone.remove();
           }
         }
         // WCAG 2.5.8 counts the whole area that activates the control. When the input sits inside its
@@ -177,6 +185,7 @@ test("Day 17: every shell route is audited in English and French", async ({ page
   const controls: Control[] = [];
   const screens: Array<{ route: string; language: Language; firstStop: string; stops: number; noTrap: boolean; axe: string[] }> = [];
   const fail = (failure: Omit<Failure, "id">) => failures.push({ ...failure, id: `F${failures.length + 1}` });
+  expect(ROUTES.length, "the shell route list shrank, so routes may have dropped out of the audit").toBeGreaterThanOrEqual(31);
 
   for (const language of ["en", "fr"] as const) {
     if (language === "fr") {
