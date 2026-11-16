@@ -16,7 +16,21 @@ export default defineConfig({
     locale: "en-CA",
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: ["release/**", "axe-sweep/**"],
+    },
+    {
+      // The axe sweep is heavy. Running it after the default project keeps the
+      // Day 22 perf gates from competing with it for CPU on CI runners.
+      name: "axe-sweep",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: "axe-sweep/**/*.spec.ts",
+      dependencies: ["chromium"],
+    },
+  ],
   webServer: {
     command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}`,
