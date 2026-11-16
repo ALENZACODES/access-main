@@ -56,16 +56,20 @@ export function DataStatusPage() {
   // With no cached records the share is UNKNOWN, never 0.
   const unknownDates = entries.filter((entry) => badges.get(entry.id)?.ageDays === null).length;
   const unknownDateRate = formatRate(entries.length > 0 ? (unknownDates / entries.length) * 100 : null, locale);
-  const sourceRows = buildSourceList(
-    entries.map((entry) => ({
-      id: entry.provenance.source_name || entry.id,
-      name: entry.provenance.source_name,
-      licence: entry.provenance.licence,
-      retrievedAt: entry.provenance.retrieved_at ?? entry.provenance.source_date,
-    })),
-    locale,
-    now,
-  );
+  // One row per source and licence. The oldest retrieval is shown, so a stale
+  // record is never hidden behind a newer one; a missing date makes it Unknown.
+  const bySource = new Map<string, { id: string; name: string; licence: string; retrievedAt: string | null }>();
+  for (const entry of entries) {
+    const key = `${entry.provenance.source_name}\u0000${entry.provenance.licence}`;
+    const retrievedAt = entry.provenance.retrieved_at ?? null;
+    const current = bySource.get(key);
+    if (!current) {
+      bySource.set(key, { id: key, name: entry.provenance.source_name, licence: entry.provenance.licence, retrievedAt });
+    } else if (current.retrievedAt !== null && (retrievedAt === null || retrievedAt < current.retrievedAt)) {
+      current.retrievedAt = retrievedAt;
+    }
+  }
+  const sourceRows = buildSourceList([...bySource.values()], locale, now);
   const sourceListHtml = renderSourceListHtml(sourceRows, locale);
 
   return (

@@ -16,7 +16,10 @@ export interface SourceRow {
   name: string;
   url: string | null;
   licence: string;
-  /** true = on the open list, false = present but not on it, null = licence unknown. */
+  /**
+   * true = an open licence or accepted provider terms (Metrolinx AUA, LTC terms),
+   * false = a licence that is on neither list, null = licence unknown.
+   */
   licenceOpen: boolean | null;
   /** ISO date (YYYY-MM-DD) or the localized Unknown text. */
   retrieved: string;
@@ -89,7 +92,8 @@ export function buildSourceList(sources: readonly SourceInput[], locale: Locale,
       name: clean(s.name) ?? t.unknownSource,
       url: safeUrl(s.url),
       licence: licence ?? t.unknown,
-      licenceOpen: licence === null ? null : badge.licence === 'open',
+      // Accepted provider terms are not an open licence, but they are not a problem either.
+      licenceOpen: licence === null ? null : badge.licence !== 'unrecognised',
       retrieved: iso ?? t.unknown,
       retrievedIso: iso,
       state: badge.state,

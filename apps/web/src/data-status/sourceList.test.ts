@@ -22,6 +22,15 @@ describe('buildSourceList', () => {
     expect(a.issues).toContain('licence-unrecognised');
   });
 
+  it('does not flag accepted provider terms for review', () => {
+    const rows = buildSourceList([
+      { id: 'm', name: 'Metrolinx', licence: 'Metrolinx Access and Use Agreement (accepted 2026-11-15)', retrievedAt: '2026-11-10' },
+      { id: 'l', name: 'London Transit', licence: 'LTC Open Data Terms of Use', retrievedAt: '2026-11-10' },
+    ], 'en', NOW);
+    expect(rows.map((r) => r.licenceOpen)).toEqual([true, true]);
+    expect(renderSourceListHtml(rows, 'en')).not.toContain('Licence needs review');
+  });
+
   it('status label agrees with dataBadge (provenance consistency)', () => {
     for (const s of src) {
       const row = buildSourceList([s], 'fr', NOW)[0]!;

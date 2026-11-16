@@ -76,6 +76,14 @@ test("Data status: each cached record states its age, Unknown gaps and its licen
   await expect(undated).toContainText("Retrieval date unknown");
   await expect(page.locator("main")).not.toContainText(/recently updated/i);
   await expect(page.getByTestId("unknown-date-rate")).toHaveText("33.3%");
+
+  // Source list: one row per source and licence, accepted terms not flagged.
+  const table = page.getByRole("table", { name: "Data sources" });
+  await expect(table.getByRole("row")).toHaveCount(4);
+  const metrolinx = table.getByRole("row").filter({ hasText: "Metrolinx Access and Use Agreement" });
+  await expect(metrolinx).toContainText("Retrieved 200 days ago. May be out of date.");
+  await expect(table).not.toContainText("Licence needs review");
+  await expect(table.getByRole("row").filter({ hasText: "Open Government Licence" })).toContainText("Retrieval date unknown");
 });
 
 test("Data status in French: masculine « inconnu » for the rate, NBSP before colons", async ({ page }) => {
