@@ -122,7 +122,7 @@ export function describeList(state: ListState, locale: Locale): string {
  * Say only what changed. A page change alone says the page and the row count; a filter or sort
  * change says the new result, then the changed setting. No change at all repeats the full text.
  */
-export function describeChange(prev: ListState | null, next: ListState, locale: Locale): string {
+export function describeListChange(prev: ListState | null, next: ListState, locale: Locale): string {
   if (prev === null) return describeList(next, locale);
   const sentence = tx(locale, 'an.sentence');
   const filterChanged = JSON.stringify(prev.filters) !== JSON.stringify(next.filters);

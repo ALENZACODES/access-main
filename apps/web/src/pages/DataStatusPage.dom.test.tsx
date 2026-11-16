@@ -247,3 +247,146 @@ describe("accessibility of the new content", () => {
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
   });
 });
+
+describe("copy lives in the message tables", () => {
+  const source = import.meta.glob<string>("./DataStatusPage.tsx", { query: "?raw", import: "default", eager: true });
+
+  it("the page has no language-switched text of its own", () => {
+    const text = Object.values(source)[0] ?? "";
+    expect(text.length).toBeGreaterThan(1000);
+    const switched = text.match(/locale === "fr" \?\s*["'`][^"'`]*["'`]/g) ?? [];
+    // The only allowed one is the no-break space before a colon (punctuation, not wording).
+    expect(switched.filter((m) => !m.includes("\\u00A0:"))).toEqual([]);
+  });
+
+  it("shows the Downloads heading and intro from the table, in both languages", async () => {
+    seeds = [{ id: "a", title: "A", retrieved: daysAgo(3) }];
+    await view("en");
+    await sourceTable();
+    expect(screen.getByRole("heading", { name: "Downloads" })).toBeTruthy();
+    expect(screen.getByText("Files are made on this device from the saved records above.")).toBeTruthy();
+    cleanup();
+    await view("fr");
+    await sourceTable();
+    expect(screen.getByRole("heading", { name: "Télécharger" })).toBeTruthy();
+    expect(screen.getByText("Les fichiers sont créés sur cet appareil à partir des données enregistrées ci-dessus.")).toBeTruthy();
+  });
+});
+
+/** jsdom's Blob has no text(); read it the way a browser page would. */
+function readBlob(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
+}
+
+describe("planning views and extra downloads", () => {
+  const user = { click: (el: HTMLElement) => el.click() };
+  const saved: Blob[] = [];
+
+  beforeAll(() => {
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: (b: Blob) => (saved.push(b), "blob:test"), revokeObjectURL: () => undefined }));
+    HTMLAnchorElement.prototype.click = vi.fn();
+  });
+  afterEach(() => {
+    saved.length = 0;
+  });
+
+  it("shows the review workload and the age bands for saved records", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Old stop", retrieved: daysAgo(400) },
+      { id: "c", title: "Undated stop", retrieved: null },
+    ];
+    await view("en");
+    const planning = await screen.findByTestId("planning-views");
+    hasText(planning, "Review workload");
+    hasText(planning, "1 source is past its review date.");
+    hasText(planning, "1 source is not scheduled because its retrieved date is unknown.");
+    const ages = within(planning).getByRole("table", { name: "Sources by age of retrieved date" });
+    const rows = within(ages).getAllByRole("row").map((r) => cells(r));
+    expect(rows.find((r) => r[0] === "0 to 30 days")?.[1]).toBe("1");
+    expect(rows.find((r) => r[0] === "More than 365 days")?.[1]).toBe("1");
+    expect(rows.find((r) => r[0] === "Unknown date")?.[1]).toBe("1");
+  });
+
+  it("shows them in French, with the French table names", async () => {
+    seeds = [{ id: "a", title: "Arrêt", retrieved: daysAgo(3) }];
+    await view("fr");
+    const planning = await screen.findByTestId("planning-views");
+    hasText(planning, "Charge de révision");
+    expect(within(planning).getByRole("table", { name: "Sources selon l’âge de la date de récupération" })).toBeTruthy();
+    noText(planning, "Review workload");
+  });
+
+  it("leaves both out when nothing is saved", async () => {
+    seeds = [];
+    await view("en");
+    await sourceTable().catch(() => undefined);
+    expect(screen.queryByTestId("planning-views")).toBeNull();
+  });
+
+  it("has no axe violations with the planning views, in both languages", async () => {
+    seeds = [
+      { id: "a", title: "A", retrieved: daysAgo(3) },
+      { id: "b", title: "B", retrieved: daysAgo(500) },
+    ];
+    for (const lang of ["en", "fr"] as const) {
+      const { container } = await view(lang);
+      await screen.findByTestId("planning-views");
+      const results = await axe.run(container, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`), lang).toEqual([]);
+      cleanup();
+    }
+  });
+
+  it("saves the Markdown report from the same records", async () => {
+    seeds = [{ id: "a", title: "Fresh stop", retrieved: daysAgo(3) }];
+    await view("en");
+    await screen.findByTestId("planning-views");
+    user.click(screen.getByRole("button", { name: "Download the audit report (Markdown)" }));
+    expect(saved).toHaveLength(1);
+    const text = await readBlob(saved[0]!);
+    expect(text.startsWith("# Data status\n")).toBe(true);
+    expect(text).toContain("| Sources | 1 |");
+    expect(saved[0]!.type).toBe("text/markdown;charset=utf-8");
+  });
+
+  it("saves a checksum list that matches the saved files", async () => {
+    seeds = [{ id: "a", title: "Fresh stop", retrieved: daysAgo(3) }];
+    await view("fr");
+    await screen.findByTestId("planning-views");
+    user.click(screen.getByRole("button", { name: "Télécharger la liste des sommes de contrôle (texte)" }));
+    await waitFor(() => expect(saved).toHaveLength(1));
+    const text = await readBlob(saved[0]!);
+    const lines = text.trimEnd().split("\n");
+    expect(lines).toHaveLength(5);
+    for (const line of lines) expect(line).toMatch(/^[0-9a-f]{64} {2}[A-Za-z0-9._-]+$/);
+    expect(lines.map((l) => l.slice(66))).toEqual(["catalogue.json", "credits.txt", "data-sources.csv", "review-dates.ics", "summary.json"]);
+  });
+
+  it("says so, and saves nothing, when this browser cannot make checksums", async () => {
+    seeds = [{ id: "a", title: "A", retrieved: daysAgo(3) }];
+    vi.stubGlobal("crypto", {});
+    try {
+      await view("en");
+      await screen.findByTestId("planning-views");
+      user.click(screen.getByRole("button", { name: "Download the checksum list (text)" }));
+      await screen.findByText("Checksums cannot be made in this browser.");
+      expect(saved).toHaveLength(0);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: (b: Blob) => (saved.push(b), "blob:test"), revokeObjectURL: () => undefined }));
+    }
+  });
+
+  it("disables both extra downloads when nothing is saved", async () => {
+    seeds = [];
+    await view("en");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Download the audit report (Markdown)" }).hasAttribute("disabled")).toBe(true));
+    expect(screen.getByRole("button", { name: "Download the checksum list (text)" }).hasAttribute("disabled")).toBe(true);
+  });
+});
