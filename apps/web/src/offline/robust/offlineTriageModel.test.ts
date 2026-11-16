@@ -25,7 +25,7 @@ function setup() {
       files.set(cell, data);
     },
   };
-  const fetchCell = vi.fn(async (_region: string, _cell: RegionManifest["cells"][number]) => new Uint8Array([7, 8]));
+  const fetchCell = vi.fn(async (_region: string, _cell: RegionManifest["cells"][number]) => 2);
   const deps: DownloadDependencies = {
     store, fetchCell,
     estimateStorage: async () => ({ quota: 4_000_000, usage: 0 }),
@@ -77,13 +77,13 @@ describe("selected download through the mounted dashboard model", () => {
 
   it("excludes already saved cells from selected retries", async () => {
     const test = setup();
-    test.files.set("one", { data: new Uint8Array([2, 3]), provenance });
+    test.files.set("one", { bytes: 2, provenance });
     const model = createOfflineDashboardModel(manifest, test.deps);
     await model.refresh();
     await model.downloadSelected(["one", "two"]);
     expect(test.fetchCell).toHaveBeenCalledTimes(1);
     expect(test.fetchCell.mock.calls[0]?.[1].id).toBe("two");
-    expect(test.files.get("one")?.data).toEqual(new Uint8Array([2, 3]));
+    expect(test.files.get("one")?.bytes).toBe(2);
     model.dispose();
   });
 
@@ -167,7 +167,7 @@ describe("selected download through the mounted dashboard model", () => {
     const test = setup();
     let release: (() => void) | undefined;
     const gate = new Promise<void>((resolve) => { release = resolve; });
-    const fetchCell = vi.fn(async () => { await gate; return new Uint8Array([7, 8]); });
+    const fetchCell = vi.fn(async () => { await gate; return 2; });
     const model = createOfflineDashboardModel(manifest, { ...test.deps, fetchCell });
     await model.refresh();
     const first = model.downloadSelected(["one"]);
@@ -184,7 +184,7 @@ describe("selected download through the mounted dashboard model", () => {
     const test = setup();
     let release: (() => void) | undefined;
     const gate = new Promise<void>((resolve) => { release = resolve; });
-    const fetchCell = vi.fn(async () => { await gate; return new Uint8Array([7, 8]); });
+    const fetchCell = vi.fn(async () => { await gate; return 2; });
     const model = createOfflineDashboardModel(manifest, { ...test.deps, fetchCell });
     await model.refresh();
     const selected = model.downloadSelected(["one"]);

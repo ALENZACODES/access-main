@@ -4,8 +4,8 @@ import {
   firstPartyCellUrl,
   readBoundedBody,
   createFirstPartyCellFetcher,
-} from "./firstPartyFetch.ts";
-import { type RegionCell } from "./regionDownload.ts";
+} from "./firstPartyFetch";
+import { type RegionCell } from "./regionDownload";
 
 const origin = "https://app.example.test";
 const cell: RegionCell = {

@@ -1,4 +1,4 @@
-import { type RegionManifest, type Provenance } from "./regionDownload.ts";
+import { type RegionManifest, type Provenance } from "./regionDownload";
 
 /** Explicitly supported, redistributable data licences; no arbitrary URL trust. */
 export const OPEN_LICENCES = [
@@ -67,7 +67,7 @@ function canonicalDate(value: string): number | null {
 function forbiddenCharacters(value: string): boolean {
   // Controls and bidirectional overrides could misrepresent provenance.
   // Newlines also make local audit exports ambiguous.
-  return /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u.test(value);
+  return /[\p{Cc}\u202a-\u202e\u2066-\u2069]/u.test(value);
 }
 
 function identifierSafe(value: string): boolean {

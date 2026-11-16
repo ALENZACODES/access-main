@@ -3,8 +3,8 @@ import {
   MIN_TARGET_PX,
   createOfflineAction,
   auditOfflineCopy,
-} from "./accessibilityGuard.ts";
-import { DASHBOARD_COPY } from "./offlineCopy.ts";
+} from "./accessibilityGuard";
+import { DASHBOARD_COPY } from "./offlineCopy";
 
 function fakeDocument() {
   const created: Array<Record<string, unknown>> = [];
