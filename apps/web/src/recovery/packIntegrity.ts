@@ -124,3 +124,45 @@ export function packIntegrityCopy(locale: RecoveryLocale, status: "corrupt" | "u
         dismiss: "Dismiss",
       };
 }
+
+/** One stored pack part, as reported by the data client, for an integrity re-check. */
+export interface StoredPackPart {
+  readonly data: Uint8Array | null;
+  readonly expectedBytes: number;
+  readonly expectedSha256: string;
+  readonly expectedCount: number;
+  readonly actualCount: number | null;
+  readonly structurallyValid: boolean;
+  readonly source: RecoverySource;
+}
+
+/**
+ * Checks every stored part against the independently supplied size, digest and
+ * record count. Missing, unreadable or mismatched parts are corrupt. Parts
+ * without raw bytes cannot have their digest confirmed, so the result is
+ * unknown rather than complete.
+ */
+export async function checkStoredPackParts(
+  parts: readonly StoredPackPart[],
+  digest: Sha256 = browserSha256,
+): Promise<PackCheck> {
+  if (parts.length === 0) return { status: "unknown", reason: "metadata" };
+  let unknown: PackCheck | undefined;
+  for (const part of parts) {
+    if (part.actualCount === null || !part.structurallyValid || part.actualCount !== part.expectedCount) {
+      return { status: "corrupt", reason: "size" };
+    }
+    if (!part.data) {
+      unknown ??= { status: "unknown", reason: "digest-unavailable" };
+      continue;
+    }
+    const check = await checkPackIntegrity(part.data, {
+      byteLength: part.expectedBytes,
+      sha256: part.expectedSha256,
+      source: part.source,
+    }, digest);
+    if (check.status === "corrupt") return check;
+    if (check.status === "unknown") unknown = check;
+  }
+  return unknown ?? { status: "complete", source: parts[0]!.source };
+}

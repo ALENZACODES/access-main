@@ -292,6 +292,7 @@ export { RecoveryNotice, type RecoveryNoticeProps } from "./RecoveryNotice.tsx";
 export {
   browserSha256,
   checkPackIntegrity,
+  checkStoredPackParts,
   packIntegrityCopy,
   redownloadPack,
 } from "./packIntegrity.ts";
@@ -300,6 +301,7 @@ export type {
   PackManifest as IntegrityPackManifest,
   PackRedownloadResult,
   Sha256,
+  StoredPackPart,
 } from "./packIntegrity.ts";
 export { CorruptPackNotice } from "./CorruptPackNotice.tsx";
 export type { CorruptPackNoticeProps } from "./CorruptPackNotice.tsx";
