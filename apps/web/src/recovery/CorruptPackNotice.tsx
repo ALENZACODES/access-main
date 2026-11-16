@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { CSSProperties, ReactElement } from "react";
-import type { RecoveryLocale } from "./index.ts";
-import { packIntegrityCopy } from "./packIntegrity.ts";
+import type { RecoveryLocale } from "./index";
+import { packIntegrityCopy } from "./packIntegrity";
 
 export interface CorruptPackNoticeProps {
   readonly status: "corrupt" | "unknown";
