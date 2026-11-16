@@ -1,5 +1,6 @@
 /** Locale resolution and date display helpers (EN / FR). */
-import { parseIsoDate, type Locale } from './dataStatus';
+import { parseRetrieved } from './dateRules';
+import type { Locale } from './dataStatus';
 import { t } from './i18n';
 
 /** First language tag wins; `fr`, `fr-CA`, `FR_ca` -> fr; `en-US` -> en; anything else -> fallback. */
@@ -29,10 +30,9 @@ export function otherLocale(l: Locale): Locale {
 
 /** Long date for display ("November 1, 2026" / "1 novembre 2026"); Unknown when not a valid ISO date. */
 export function formatDisplayDate(iso: string | null | undefined, locale: Locale): string {
-  const ms = parseIsoDate(iso);
-  if (ms === null) return t(locale, 'unknown');
-  const day = (iso as string).trim().slice(0, 10);
-  const d = new Date(`${day}T00:00:00Z`);
+  const parsed = parseRetrieved(iso);
+  if (parsed === null) return t(locale, 'unknown');
+  const d = new Date(`${parsed.day}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return t(locale, 'unknown');
   return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-CA' : 'en-CA', {
     year: 'numeric',

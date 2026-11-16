@@ -74,14 +74,15 @@ export function buildCatalogue(audit: AuditResult, now: Date): Catalogue {
       { '@value': t('fr', 'page.title'), '@language': 'fr' },
     ],
     'dct:modified': { '@value': now.toISOString().slice(0, 10), '@type': 'xsd:date' },
-    'dcat:dataset': audit.datasets.map((d) => ({
+    'dcat:dataset': audit.datasets.map((d, i) => ({
       '@id': `urn:data-status:dataset:${encodeURIComponent(d.id)}`,
       '@type': 'dcat:Dataset',
       'dct:identifier': d.id,
       'dct:title': d.name,
       'ds:kind': d.kind,
       'ds:staleAfterDays': d.staleAfterDays,
-      'prov:wasDerivedFrom': audit.sources.filter((s) => s.datasetId === d.id).map(sourceEntry),
+      // Datasets that share an id (already reported as duplicates) list the shared sources once, under the first.
+      'prov:wasDerivedFrom': audit.datasets.findIndex((x) => x.id === d.id) === i ? audit.sources.filter((s) => s.datasetId === d.id).map(sourceEntry) : [],
     })),
   };
 }
