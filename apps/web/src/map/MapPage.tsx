@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { panMapTo, silenceMapMotion, zoomMapBy } from "./camera.ts";
 import { FeatureList } from "./FeatureList.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { useOnline } from "../shell/useOnline.ts";
+import { StateNotice, getRouteEmpty, getRouteError } from "../states/index.ts";
 import { CachedPMTilesSource, tileArchiveUrl, warmRegionTiles } from "./tileCache.ts";
 import "./map.css";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -106,6 +108,7 @@ export function MapPage() {
   const [selectedNeeds, setSelectedNeeds] = useState<Need[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const online = useOnline();
   const [libraryError, setLibraryError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const listId = "map-place-list";
@@ -277,9 +280,21 @@ export function MapPage() {
         <section className="map-results" aria-label={t("map.list")}>
           <p role="status">{loading ? t("map.loading") : `${visible.length} ${t("map.records")}`}</p>
           {libraryError && <p id="map-library-error" role="alert">{t("map.libraryUnavailable")} {t("map.controlsUnavailable")}</p>}
-          {error && <p role="alert">{t("map.unavailable")}</p>}
+          {/* Offline, the map's data cannot load: say so with the offline state. Online, a load
+              failure is not a pack download, so the map's own message is kept. */}
+          {error && !online ? (
+            <StateNotice
+              lang={locale}
+              view={getRouteError("map", "offline-no-pack", locale)}
+              onAction={{ retry: refresh }}
+            />
+          ) : error ? <p role="alert">{t("map.unavailable")}</p> : null}
           {visible.length ? <FeatureList features={listFeatures as React.ComponentProps<typeof FeatureList>["features"]} locale={locale} selectedId={selectedId} onSelect={select} listId={listId} />
-            : <p id={listId} tabIndex={-1}>{t("map.empty")}</p>}
+            : !loading && !error ? (
+              <div id={listId} tabIndex={-1}>
+                <StateNotice lang={locale} view={getRouteEmpty("map", locale)!} />
+              </div>
+            ) : <p id={listId} tabIndex={-1}>{t("map.empty")}</p>}
         </section>
         {selected && <aside className="map-detail" aria-label={t("map.selected")}>
           <h2>{selected.name}</h2>

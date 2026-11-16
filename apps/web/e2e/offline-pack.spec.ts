@@ -115,11 +115,11 @@ for (const language of ["en", "fr"] as const) {
     const download = page.getByRole("button", { name: language === "en" ? "Download" : "Télécharger" }).first();
     if (await download.isVisible()) {
       await download.click();
-      await expect(page.getByText(language === "en" ? "Download integrity checked" : "Intégrité du téléchargement vérifiée")).toBeVisible();
+      await expect(page.getByText(language === "en" ? "Download integrity checked" : "Intégrité du téléchargement contrôlée")).toBeVisible();
       await context.setOffline(true);
       await page.reload();
       await expect(page.getByRole("heading", { name: heading })).toBeVisible();
-      await expect(page.getByText(language === "en" ? "Downloaded, integrity checked" : "Téléchargée, intégrité vérifiée").first()).toBeVisible();
+      await expect(page.getByText(language === "en" ? "Downloaded, integrity checked" : "Téléchargée, intégrité contrôlée").first()).toBeVisible();
       await page.getByRole("button", { name: language === "en" ? "Delete" : "Supprimer" }).first().click();
       const keep = page.getByRole("button", { name: language === "en" ? "Keep" : "Conserver" });
       await expect(keep).toBeFocused();
