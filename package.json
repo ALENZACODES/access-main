@@ -27,11 +27,12 @@
     "lint": "eslint .",
     "pretest": "npm run lanes:ensure",
     "test": "vitest run && npm test --workspaces --if-present && npm run test:scripts",
-    "test:scripts": "node --test scripts/sync-lanes.test.mjs",
+    "test:scripts": "node --test scripts/sync-lanes.test.mjs scripts/release/check.test.mjs",
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "validate": "npm run validate -w @access-main/schema --",
     "count": "npm run count -w @access-main/schema --",
-    "postdemo": "node apps/web/scripts/postdemo.ts"
+    "postdemo": "node apps/web/scripts/postdemo.ts",
+    "verify": "npm run test --prefix scripts/release && node scripts/release/check.mjs --dir apps/web/dist"
   },
   "dependencies": {
     "ajv": "^8.17.1",

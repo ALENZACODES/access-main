@@ -24,6 +24,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - run: npm run verify
       - run: npm run check:web-precache -w @access-main/budgets
       - run: npm exec -w @access/web -- playwright install chromium
       - run: npm run test:e2e
