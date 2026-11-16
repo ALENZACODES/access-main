@@ -10,7 +10,8 @@
     "test:e2e": "playwright test",
     "verify:build": "node scripts/verify-build.ts",
     "check:dist-overclaim": "node scripts/check-dist-overclaim.mjs",
-    "postbuild": "node scripts/check-dist-overclaim.mjs"
+    "postbuild": "node scripts/check-dist-overclaim.mjs && node scripts/check-install-budget.ts",
+    "check:install-budget": "node scripts/check-install-budget.ts"
   },
   "dependencies": {
     "@access/shared": "*",

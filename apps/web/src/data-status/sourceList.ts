@@ -91,9 +91,10 @@ export function buildSourceList(sources: readonly SourceInput[], locale: Locale,
       id: s.id,
       name: clean(s.name) ?? t.unknownSource,
       url: safeUrl(s.url),
-      licence: licence ?? t.unknown,
+      // The string UNKNOWN is a recorded unknown licence, not an open one.
+      licence: badge.licence === 'unknown' ? t.unknown : (licence ?? t.unknown),
       // Accepted provider terms are not an open licence, but they are not a problem either.
-      licenceOpen: licence === null ? null : badge.licence !== 'unrecognised',
+      licenceOpen: badge.licence === 'unknown' || licence === null ? null : badge.licence !== 'unrecognised',
       retrieved: iso ?? t.unknown,
       retrievedIso: iso,
       state: badge.state,

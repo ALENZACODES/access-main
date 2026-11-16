@@ -25,6 +25,7 @@ export const en = {
     finders: "Finders",
     navigator: "Directory",
     games: "Games",
+    more: "More",
     help: "Help",
     settings: "Settings",
     data: "Data status",
@@ -73,6 +74,20 @@ export const en = {
     audit:
       "Automated checks run on this shell. They are not a full WCAG audit and they are not a test with assistive-technology users.",
     notices: "Runtime libraries include React Aria Components (Apache-2.0), i18next (MIT), Dexie (Apache-2.0), and Workbox with vite-plugin-pwa (MIT). Their names are credits, not endorsements.",
+  },
+  privacyNotice: {
+    title: "Where your data is kept",
+    whereOnDevice: "Stays on this device",
+    whereSentToServer: "Sent to a server",
+    whereUnknown: "Not known",
+    reviewed: "Last reviewed: {{date}}",
+    empty: "This list is empty. That does not mean no data is kept.",
+    dismiss: "Close",
+    itemProfile: "Profile",
+    itemCache: "Cached records",
+    itemOutbox: "Contribution export drafts",
+    itemLanguage: "Language choice",
+    itemGeolocation: "Optional geolocation",
   },
   storage: {
     cacheCount_one: "{{count}} record stored on this device",
@@ -145,6 +160,8 @@ export const en = {
   },
   modules: {
     ready: "These records come from the linked part of the App. Each one shows its source, licence, date, and tier. Unknown stays unknown.",
+    empty: "No records are shown.",
+    noMatches: "No matching records were found. The search ran on the linked part of the App. Unknown stays unknown.",
     error: "This part of the App could not load. No records are shown. Try again later.",
     contractError: "This part of the App returned records without a source, licence, date, or tier, so none are shown.",
     itemSource: "Source",
