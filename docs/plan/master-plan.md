@@ -72,10 +72,10 @@ Reachable from the shell after the integration round of 16 November (routes, pac
 | Lane | Reachable at | Not reachable yet |
 | --- | --- | --- |
 | Games | `/more/games`: 25 games and the dwell select setting. `/games` lists the 25 names | Dwell select outside the games |
-| Work and home | `/more/employment`: listings with the access record, commute check and referral summary | Housing unit and room depth finder and the barrier evidence form: `/more/housing` stays on the earlier pin until a repeated-landmark fault in the package is fixed |
+| Work and home | `/more/employment`: listings with the access record, commute check and referral summary. `/more/housing`: the housing finder, the unit and room depth finder and the on-device barrier evidence form | Real listings |
 | Auditors | `/more/auditors`: observations, programme, venue responses, cases and service summary | — |
-| Conditions | `/more/route-reports` (list; the form needs a place) and `/more/accessible-taxis` (zero records, shown as unknown) | A link from a place page to the report form; routing facts are not used by the journey route |
-| Peers | `/more/peers`: topic list only | The peer request flow: the package holds wording the post-build check rejects |
+| Conditions | `/more/route-reports` (list, and the form for a place opened from its place page) and `/more/accessible-taxis` (zero records, shown as unknown) | Routing facts are not used by the journey route |
+| Peers | `/more/peers` (topic list) and `/more/peer-request` (the request flow with itemised consent, crisis signposting and on-device history) | Routing to a real peer programme: the recorded routing table holds no streams |
 | Events | `/more/event-organiser` and `/more/event-plan` | The per-event access page and journey hand-off, which need an event record; `/more/events` still lists demonstration events without them |
 | Advocacy | `/settings/advocacy`: the evidence pack export, as before. `/more/reports`: report tables and indicators on the package's labelled demonstration set; saving files needs the evidence-export permission | Tables from real consented reports; none exist |
 

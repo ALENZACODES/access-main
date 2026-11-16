@@ -38,23 +38,19 @@ Every result still passes through `guardModules`. When a package is not in `.lan
 | Route | Package and screen | Data shown |
 | --- | --- | --- |
 | `/more/employment` | access-tools `employment`: `EmploymentView`, with the commute check and referral summary | Labelled demonstration listings |
-| `/more/housing` | access-tools `housing`: `HousingFinder`, at the earlier pin `8befe99` | Labelled demonstration rooms |
+| `/more/housing` | access-tools `housing`: `HousingFinder`, with the unit and room depth finder and the on-device barrier evidence form | Labelled demonstration rooms and units; the person's own reports, on the device |
 | `/more/diary` | access-tools `diary` | Not changed or inspected in this round |
 | `/more/auditors` | access-tools `auditors`: `App`, with the record, programme, venue, cases and service panels | Labelled fixtures and the person's own entries |
 | `/more/handoff` | access-tools `handoff` | Labelled demonstration records |
 | `/more/games` | access-tools `games`: `GamesApp`, 25 games, dwell select setting | Rounds and settings, on the device |
 | `/more/safety` | access-tools `safety` | Not changed or inspected in this round |
-| `/more/route-reports` | access-maps `conditions`: `RouteReportsList`, and `RouteReportForm` when a place in the data is given with `?place=<id>` | Reports saved on the device. None ship |
+| `/more/route-reports` | access-maps `conditions`: `RouteReportsList`, and `RouteReportForm` when a place in the data is given with `?place=<id>`. Each place page (`/places/:id`) links there with its id ("Report a route condition here") | Reports saved on the device. None ship |
 | `/more/accessible-taxis` | access-maps `conditions`: `WavFinder` over `datasets/wav-services.json` | The published list, which holds zero records |
-| `/more/peers` | access-help `peers`: topic list | Topic names only |
+| `/more/peers` | access-help `peers`: topic list, and a link to the request flow | Topic names only |
+| `/more/peer-request` | access-help `peers`: `PeerRequestFlow`, with the package's on-device history | The person's own request, on the device. The recorded routing table holds no streams, so every request routes to Unknown. Nothing is sent |
 | `/more/events` | access-help `event-access`: demonstration records | Labelled demonstration events |
 | `/more/event-organiser` | access-help `event-access`: `OrganiserForm` | The organiser's own answers, on the device |
 | `/more/event-plan` | access-help `outings`: `EventOutingPlanner` | Labelled sample events and the person's own plans |
 | `/more/reports` | access-main `advocacy`: `ReportsPanel` | The package's labelled demonstration set. Saving files needs the evidence-export permission |
 
-Not mounted, and the change each one needs in its own package:
-
-- **Housing depth finder and barrier evidence form** (access-tools `housing` at `72d5580`, still true at that commit). `DepthFinder.tsx` renders `<section className="room-facts" aria-labelledby=...>` for every room of every unit, and the room names repeat from unit to unit (axe reports "unit entry"), so the page has several region landmarks with the same name and fails the axe `landmark-unique` rule. Change that `<section>` to a `<div>` (the `<h4>` already labels it), or name each region with the unit as well. Then move the `housing` pin in `lanes.hub.json`.
-- **Peer request flow** (access-help `peers`, `PeerRequestFlow`, still true at `4870fa9`). `src/strings.ts` holds the sentence "The App is not affiliated with or endorsed by any organisation." The post-build wording check (`apps/web/scripts/check-dist-overclaim.mjs`) fails on the words "endorsed by" anywhere in the bundle. Reword it in both languages without those words, for example "No organisation has endorsed the App."
-- **Route report form from a place page.** The form needs a place the shell has already resolved. `/more/route-reports?place=<id>` accepts one, but no page links to it yet; the place page belongs to another lane.
-- **Games list default** (access-tools `games`, `src/shell.ts`). `gamesShellModule.list()` and `listGamesForShell()` without an argument still list only the first ten games (`CATALOG`). The shell passes `GAME_LIBRARY` itself, so `/games` lists all 25. Making `GAME_LIBRARY` the default in the package would let any other host get the full list.
+All four package blockers recorded here on 16 November are fixed at the source and mounted: the report tables (access-main #143), the peer request flow (access-help #66), the housing depth finder and evidence form (access-tools #74). The games package's own shell list now defaults to all 25 games (access-tools #75); the shell still passes `GAME_LIBRARY` explicitly.

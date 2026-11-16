@@ -553,11 +553,11 @@ The table above is dated 14 November. Since then seven feature packages merged, 
 
 | Idea | Route in the shell | What is still not reachable |
 | --- | --- | --- |
-| 2 Live Disruption Shield | `/more/route-reports` lists route-condition reports saved on the device; `/more/accessible-taxis` is the accessible-vehicle finder over a published list of zero records | Adding a report needs a place, and no place page links to the form yet. No live feed |
-| 3 Peer Connect | `/more/peers` lists the request topics | The request flow with consent and routing is built in access-help but not mounted: its text fails the shell's post-build wording check |
+| 2 Live Disruption Shield | `/more/route-reports` lists route-condition reports saved on the device, and each place page links to the report form for that place; `/more/accessible-taxis` is the accessible-vehicle finder over a published list of zero records | No live feed |
+| 3 Peer Connect | `/more/peers` lists the request topics; `/more/peer-request` is the request flow with itemised consent, crisis signposting and on-device history | Routing to a real peer programme (no streams are recorded); moderated community spaces |
 | 4 Service Navigation and Benefits | `/navigator` lists the dated signposting directory by name, with source, licence note, read date and tier | Links, summaries and search of the directory are in the package screen, which is not mounted; `/more/handoff` runs on demonstration records |
 | 6 Employment and Income | `/more/employment`: listing with workplace access record, commute check, referral summary | Real listings |
-| 7 Accessible Housing | `/more/housing`: the first housing finder | The unit and room depth finder and barrier evidence form: built in access-tools, not mounted because of a repeated-landmark fault |
+| 7 Accessible Housing | `/more/housing`: the housing finder, the unit and room depth finder and the on-device barrier evidence form, on labelled demonstration records | Real listings; social-housing signposting |
 | 8 Advocacy Engine | `/settings/advocacy` (evidence pack export) and `/more/reports` (suppressed report tables and indicators on the labelled demonstration set) | Real consented reports; none exist |
 | 11 Community Events and Social | `/more/events`, `/more/event-organiser` (organiser checklist), `/more/event-plan` (outing plan) | A per-event access page for a real event, and the journey join |
 | 12 Access Auditors and Venue Dashboard | `/more/auditors`: observations, volunteer programme, venue responses, correction cases | Publication of any audited value |
