@@ -1,6 +1,8 @@
+import { existsSync, readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { appRoutes } from "../a11y-input/helpers.ts";
+import { bundledTorontoPackPath, parameterizedRoutes } from "./parameterized-routes.ts";
 
 /**
  * Residual Day 17 / P20 axe sweep: every live app route, in English and
@@ -11,8 +13,12 @@ import { appRoutes } from "../a11y-input/helpers.ts";
  *
  * The route list is the live app list from P16's `appRoutes()` (router.tsx
  * plus the Settings and More tables it mounts), not a hand-copied subset.
+ * Parameter routes `/places/:id` and `/help/:id` are added from real ids in
+ * the bundled Toronto pack (`public/packs/toronto/content.json`).
  */
 const ROUTES = appRoutes();
+const PARAM_ROUTES = parameterizedRoutes();
+const SWEEP_ROUTES = [...ROUTES, ...PARAM_ROUTES];
 
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
@@ -103,6 +109,26 @@ test("axe sweep covers every live app route in EN and FR at 320 and 1280", () =>
   expect(VIEWPORTS.map((viewport) => viewport.width)).toEqual([320, 1280]);
 });
 
+test("axe sweep covers places/:id and help/:id from the bundled Toronto pack", () => {
+  const packPath = bundledTorontoPackPath();
+  expect(existsSync(packPath)).toBe(true);
+  const pack = JSON.parse(readFileSync(packPath, "utf8")) as {
+    places?: Array<{ id?: string }>;
+    help_numbers?: Array<{ id?: string }>;
+  };
+  const placeId = pack.places?.find((record) => typeof record.id === "string" && record.id.length > 0)?.id;
+  const helpId = pack.help_numbers?.find((record) => typeof record.id === "string" && record.id.length > 0)?.id;
+  expect(placeId, "the bundled pack must include a real place id").toEqual(expect.any(String));
+  expect(helpId, "the bundled pack must include a real help id").toEqual(expect.any(String));
+  expect(placeId).not.toContain(":id");
+  expect(helpId).not.toContain(":id");
+  expect(PARAM_ROUTES).toEqual([
+    `/places/${encodeURIComponent(placeId as string)}`,
+    `/help/${encodeURIComponent(helpId as string)}`,
+  ]);
+  expect(SWEEP_ROUTES).toEqual([...appRoutes(), ...PARAM_ROUTES]);
+});
+
 for (const language of ["en", "fr"] as const) {
   for (const viewport of VIEWPORTS) {
     test.describe(`axe sweep ${language} at ${viewport.width}px`, () => {
@@ -116,7 +142,7 @@ for (const language of ["en", "fr"] as const) {
         await forceLanguage(page, language);
       });
 
-      for (const route of ROUTES) {
+      for (const route of SWEEP_ROUTES) {
         test(`${route} has no unexpected axe violations`, async ({ page }) => {
           test.setTimeout(60_000);
           const response = await page.goto(route, { waitUntil: "domcontentloaded" });
@@ -127,6 +153,7 @@ for (const language of ["en", "fr"] as const) {
           await expect(page.getByRole("link", { name: COPY[language].skip })).toHaveCount(1);
           await expect(page.getByRole("link", { name: COPY[language].home, exact: true })).toBeVisible();
           await expect(page.getByRole("banner").getByRole("button", { name: COPY[language].switchTo })).toBeVisible();
+          await expect(page.locator("main [role='status']").filter({ hasText: /^(Loading|Chargement)/ })).toHaveCount(0);
 
           const result = await new AxeBuilder({ page }).withTags([...AXE_TAGS]).analyze();
           const hits: ViolationHit[] = result.violations.flatMap((violation) =>
