@@ -5,43 +5,43 @@
       "repo": "ALENZACODES/access-tools",
       "package": "employment",
       "alias": "@access-tools/employment",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "housing",
       "alias": "@access-tools/housing",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "safety",
       "alias": "@access-tools/safety",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "timing",
       "alias": "@access-tools/timing",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "diary",
       "alias": "@access-tools/diary",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "auditors",
       "alias": "@access-tools/auditors",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "handoff",
       "alias": "@access-tools/handoff",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     },
     {
       "repo": "ALENZACODES/access-help",
@@ -71,7 +71,7 @@
       "repo": "ALENZACODES/access-tools",
       "package": "games",
       "alias": "@hub/games",
-      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
+      "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44"
     }
   ]
 }
