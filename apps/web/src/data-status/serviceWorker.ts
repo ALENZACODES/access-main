@@ -7,13 +7,13 @@ import { cleanOldCaches, handleFetch, precacheAll, type CacheStorageLike, type O
 export interface SwEventLike {
   waitUntil(p: Promise<unknown>): void;
   respondWith?(p: Promise<ResponseLike>): void;
-  request?: RequestLike;
+  request?: RequestLike | undefined;
 }
 
 export interface SwScopeLike {
   addEventListener(type: 'install' | 'activate' | 'fetch', listener: (ev: SwEventLike) => void): void;
   skipWaiting?(): Promise<void>;
-  clients?: { claim(): Promise<void> };
+  clients?: { claim(): Promise<void> } | undefined;
   caches: CacheStorageLike;
 }
 

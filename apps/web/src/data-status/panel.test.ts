@@ -25,7 +25,7 @@ describe('QA report', () => {
   it('counts and items are localized and escaped', () => {
     const en = buildQaReport(audit, 'en');
     expect(en.counts.find((c) => c.key === 'qa.counts.notOpen')?.value).toBe(1);
-    expect(en.items[0]?.text).toContain('licence is not on the open list');
+    expect(en.items[0]?.text).toContain('licence not recognised');
     const html = renderQaReportHtml(en, 'en');
     expect(html).toContain('<h2 id="ds-qa-title">Data quality overview</h2>');
     expect(html).toContain('Places &lt;A&gt; / b');
@@ -91,7 +91,7 @@ describe('renderDataStatusPanel', () => {
     expect(html).toContain('<td>50.0%</td>');
     expect(structureProblems(html)).toEqual([]);
     const none = renderDataStatusPanel({ ...base, locale: 'fr', attributes: [{ key: 'k', label: { en: 'F', fr: 'C' } }], attributeRecords: [] });
-    expect(none).toContain('<td>Inconnue</td><td>Inconnue</td>');
+    expect(none).toContain('<td>Inconnu</td><td>Inconnu</td>');
   });
 
   it('shows the saved-copy notice with a readable date', () => {
@@ -143,7 +143,7 @@ describe('mountDataStatusPanel', () => {
     expect(host.attrs).toMatchObject({ lang: 'en', role: 'region', 'aria-label': 'Data quality overview' });
     locale = 'fr';
     host.click('recalculate');
-    expect(host.attrs.lang).toBe('fr');
+    expect(host.attrs['lang']).toBe('fr');
     expect(host.innerHTML).toContain('Aperçu de la qualité des données');
   });
 

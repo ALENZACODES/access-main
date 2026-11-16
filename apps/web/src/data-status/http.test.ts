@@ -56,10 +56,10 @@ describe('handleDataStatus: routing', () => {
   it('redirects an unprefixed path to the visitor’s language, keeping the query', async () => {
     const fr = await ok(get('/data-status?state=stale', { 'Accept-Language': 'fr-CA,fr;q=0.9' }));
     expect(fr.status).toBe(302);
-    expect(fr.headers.location).toBe('/fr/data-status?state=stale');
-    expect(fr.headers.vary).toBe('Accept-Language');
-    expect((await ok(get('/data-status'))).headers.location).toBe('/en/data-status');
-    expect((await ok(get('/data-status/sources.csv', { 'accept-language': 'fr' }))).headers.location).toBe('/fr/data-status/sources.csv');
+    expect(fr.headers['location']).toBe('/fr/data-status?state=stale');
+    expect(fr.headers['vary']).toBe('Accept-Language');
+    expect((await ok(get('/data-status'))).headers['location']).toBe('/en/data-status');
+    expect((await ok(get('/data-status/sources.csv', { 'accept-language': 'fr' }))).headers['location']).toBe('/fr/data-status/sources.csv');
   });
 
   it('honours a custom base path', async () => {
@@ -82,7 +82,7 @@ describe('handleDataStatus: HTML page', () => {
     expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
     expect(res.headers['content-security-policy']).not.toContain('script-src');
     expect(res.headers['content-length']).toBe(String(new TextEncoder().encode(res.body).length));
-    expect(res.headers.etag).toMatch(/^W\/"[0-9a-f]{8}-\d+"$/);
+    expect(res.headers['etag']).toMatch(/^W\/"[0-9a-f]{8}-\d+"$/);
     for (const k of Object.keys(res.headers)) expect(k).toBe(k.toLowerCase());
   });
 
@@ -164,11 +164,14 @@ describe('handleDataStatus: downloads', () => {
   it('summary: valid JSON that keeps unknown values null and applies thresholds', async () => {
     const res = await ok(get('/en/data-status/summary.json?stale_places=2000'));
     expect(res.headers['content-type']).toBe('application/json; charset=utf-8');
-    const json = JSON.parse(res.body);
+    const json = JSON.parse(res.body) as {
+      sources: { sourceId: string; state: string }[];
+      datasets: { id: string; staleAfterDays: number }[];
+    };
     expect(validateSummary(json)).toEqual([]);
-    expect(json.sources.find((s: any) => s.sourceId === 'c')).toMatchObject({ licence: null, retrieved: null, state: 'unknown' });
-    expect(json.sources.find((s: any) => s.sourceId === 'b').state).toBe('fresh');
-    expect(json.datasets.find((d: any) => d.id === 'p').staleAfterDays).toBe(2000);
+    expect(json.sources.find((s) => s.sourceId === 'c')).toMatchObject({ licence: null, retrieved: null, state: 'unknown' });
+    expect(json.sources.find((s) => s.sourceId === 'b')?.state).toBe('fresh');
+    expect(json.datasets.find((d) => d.id === 'p')?.staleAfterDays).toBe(2000);
   });
 });
 
@@ -179,23 +182,23 @@ describe('handleDataStatus: HTTP behaviour', () => {
     expect(head.status).toBe(200);
     expect(head.body).toBe('');
     expect(head.headers['content-length']).toBe(get1.headers['content-length']);
-    expect(head.headers.etag).toBe(get1.headers.etag);
+    expect(head.headers['etag']).toBe(get1.headers['etag']);
   });
 
   it('rejects other methods with 405 and an Allow header, localized', async () => {
     const res = await ok(get('/fr/data-status', {}, 'POST'));
     expect(res.status).toBe(405);
-    expect(res.headers.allow).toBe('GET, HEAD');
+    expect(res.headers['allow']).toBe('GET, HEAD');
     expect(res.body).toContain('Cette page n’accepte que les requêtes GET et HEAD.');
   });
 
   it('answers 304 when If-None-Match matches, 200 when it does not', async () => {
     const first = await ok(get('/en/data-status'));
-    const etag = first.headers.etag!;
+    const etag = first.headers['etag']!;
     const hit = await ok(get('/en/data-status', { 'If-None-Match': etag }));
     expect(hit.status).toBe(304);
     expect(hit.body).toBe('');
-    expect(hit.headers.etag).toBe(etag);
+    expect(hit.headers['etag']).toBe(etag);
     expect((await ok(get('/en/data-status', { 'if-none-match': `W/"other", ${etag}` }))).status).toBe(304);
     expect((await ok(get('/en/data-status', { 'if-none-match': '*' }))).status).toBe(304);
     expect((await ok(get('/en/data-status', { 'if-none-match': 'W/"nope"' }))).status).toBe(200);
@@ -204,7 +207,7 @@ describe('handleDataStatus: HTTP behaviour', () => {
   it('the ETag changes when the content changes', async () => {
     const a = await ok(get('/en/data-status'));
     const b = await ok(get('/en/data-status'), ctx({ now: () => new Date('2027-06-01T00:00:00Z') }));
-    expect(a.headers.etag).not.toBe(b.headers.etag);
+    expect(a.headers['etag']).not.toBe(b.headers['etag']);
   });
 
   it('rejects very long URLs with 414', async () => {
@@ -226,7 +229,7 @@ describe('handleDataStatus: HTTP behaviour', () => {
       expect(res.status).toBe(503);
       expect(res.headers['retry-after']).toBe('60');
       expect(res.headers['cache-control']).toBe('no-store');
-      expect(res.headers.etag).toBeUndefined();
+      expect(res.headers['etag']).toBeUndefined();
       expect(res.body).toContain('Les données n’ont pas pu être chargées');
       expect(res.body).toContain('href="/fr/data-status?state=stale"');
       expect(describeProblems(auditHtml(res.body, { document: true }))).toEqual([]);

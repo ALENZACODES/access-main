@@ -43,7 +43,7 @@ describe('coverageTable', () => {
     const fr = coverageTable(rows, attrs, 'fr')[0]!;
     expect(fr.unknownShare.text).toBe('50,0\u00A0%');
     const none = coverageTable([{}, {}], attrs, 'fr')[0]!;
-    expect(none.yesOfKnown).toMatchObject({ known: false, text: 'Inconnue' });
+    expect(none.yesOfKnown).toMatchObject({ known: false, text: 'Inconnu' });
     expect(coverageTable([], attrs, 'en')[0]?.unknownShare.known).toBe(false);
   });
 });

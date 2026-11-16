@@ -71,19 +71,19 @@ export function validateSummary(v: unknown): string[] {
   const out: string[] = [];
   if (v === null || typeof v !== 'object') return ['not an object'];
   const s = v as Record<string, unknown>;
-  if (s.schemaVersion !== SUMMARY_SCHEMA_VERSION) out.push('schemaVersion');
-  if (typeof s.generatedAt !== 'string' || Number.isNaN(Date.parse(s.generatedAt))) out.push('generatedAt');
-  if (s.totals === null || typeof s.totals !== 'object') out.push('totals');
-  if (!Array.isArray(s.datasets)) out.push('datasets');
-  if (!Array.isArray(s.sources)) out.push('sources');
+  if (s['schemaVersion'] !== SUMMARY_SCHEMA_VERSION) out.push('schemaVersion');
+  if (typeof s['generatedAt'] !== 'string' || Number.isNaN(Date.parse(s['generatedAt']))) out.push('generatedAt');
+  if (s['totals'] === null || typeof s['totals'] !== 'object') out.push('totals');
+  if (!Array.isArray(s['datasets'])) out.push('datasets');
+  if (!Array.isArray(s['sources'])) out.push('sources');
   else {
-    (s.sources as Record<string, unknown>[]).forEach((x, i) => {
-      if (!STATES.includes(x.state as string)) out.push(`sources[${i}].state`);
-      if (x.licence !== null && typeof x.licence !== 'string') out.push(`sources[${i}].licence`);
-      if (x.licenceOpen !== null && typeof x.licenceOpen !== 'boolean') out.push(`sources[${i}].licenceOpen`);
-      if (x.retrieved !== null && !(typeof x.retrieved === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.retrieved))) out.push(`sources[${i}].retrieved`);
-      if (x.licence === null && x.licenceOpen !== null) out.push(`sources[${i}].licenceOpen-must-be-null-when-licence-unknown`);
-      if (x.retrieved === null && x.state !== 'unknown') out.push(`sources[${i}].state-must-be-unknown-when-date-unknown`);
+    (s['sources'] as Record<string, unknown>[]).forEach((x, i) => {
+      if (!STATES.includes(x['state'] as string)) out.push(`sources[${i}].state`);
+      if (x['licence'] !== null && typeof x['licence'] !== 'string') out.push(`sources[${i}].licence`);
+      if (x['licenceOpen'] !== null && typeof x['licenceOpen'] !== 'boolean') out.push(`sources[${i}].licenceOpen`);
+      if (x['retrieved'] !== null && !(typeof x['retrieved'] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x['retrieved']))) out.push(`sources[${i}].retrieved`);
+      if (x['licence'] === null && x['licenceOpen'] !== null) out.push(`sources[${i}].licenceOpen-must-be-null-when-licence-unknown`);
+      if (x['retrieved'] === null && x['state'] !== 'unknown') out.push(`sources[${i}].state-must-be-unknown-when-date-unknown`);
     });
   }
   return out;

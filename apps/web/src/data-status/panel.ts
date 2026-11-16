@@ -22,6 +22,10 @@ import { diffRegistries, renderChangesHtml, type Change } from './registryDiff';
 import { createSnapshot, type Snapshot, type SnapshotStore } from './snapshot';
 import { escapeHtml } from './sourceList';
 import { renderThresholdsHtml, serializeViewState, type Thresholds } from './thresholds';
+import { buildReviewQueue, renderReviewHtml } from './reviewDue';
+import { ariaSort, applySort, nextSort, type SortKey } from './sorting';
+import { DEFAULT_PAGE_SIZE, PAGE_SIZES, paginate } from './paging';
+import { buildQuery, type TableView } from './tableView';
 
 export type SnapshotNote = 'none' | 'unreadable' | null;
 
@@ -30,25 +34,27 @@ export interface PanelState {
   locale: Locale;
   now: Date;
   /** Set only when the shown data came from the saved copy. */
-  snapshotSavedAt?: string | null;
-  snapshotNote?: SnapshotNote;
-  attributes?: readonly AttributeDef[];
+  snapshotSavedAt?: string | null | undefined;
+  snapshotNote?: SnapshotNote | undefined;
+  attributes?: readonly AttributeDef[] | undefined;
   /** Raw attribute values per record, used for the coverage table. */
-  attributeRecords?: readonly Readonly<Record<string, unknown>>[];
-  filters?: Filters;
+  attributeRecords?: readonly Readonly<Record<string, unknown>>[] | undefined;
+  filters?: Filters | undefined;
   /** Changes against the saved copy; null or undefined hides the section. */
-  changes?: readonly Change[] | null;
+  changes?: readonly Change[] | null | undefined;
   /** Plain-text notices shown at the top (already localized). */
-  notices?: readonly string[];
+  notices?: readonly string[] | undefined;
   /** Staleness thresholds in days per dataset type (defaults apply to the rest). */
-  thresholds?: Thresholds;
+  thresholds?: Thresholds | undefined;
   /** Saved totals from earlier visits; shown when present. */
-  history?: readonly HistoryEntry[] | null;
+  history?: readonly HistoryEntry[] | null | undefined;
   /**
    * Server-rendered mode: filters become a GET form and downloads become links,
    * so the page works without scripts. Hrefs are paths without a query string.
    */
-  staticView?: { action: string; csvHref: string; creditsHref: string; summaryHref: string };
+  staticView?: { action: string; csvHref: string; creditsHref: string; summaryHref: string; icsHref?: string; catalogueHref?: string };
+  /** Sort and page of the sources table; used in server-rendered mode, where headings and pager are links. */
+  table?: TableView | undefined;
 }
 
 const esc = escapeHtml;
@@ -77,14 +83,51 @@ function datasetTable(audit: AuditResult, locale: Locale): string {
   return scrollable(t(locale, 'tbl.datasets'), table);
 }
 
-export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date): string {
+export interface RegionNav {
+  /** Page path (no query); headings and pager links point here. */
+  action: string;
+  thresholds: Thresholds;
+  table: TableView;
+}
+
+const LINK_STYLE = 'display:inline-flex;align-items:center;min-width:44px;min-height:44px';
+
+function sortHeading(locale: Locale, key: SortKey, label: MessageKey, nav: RegionNav | undefined, filters: Filters): string {
+  const text = esc(t(locale, label));
+  if (!nav) return `<th scope="col">${text}</th>`;
+  const current = nav.table.sort;
+  const next = nextSort(current, key);
+  const href = nav.action + buildQuery({ filters, thresholds: nav.thresholds }, { sort: next, paging: { ...nav.table.paging, page: 1 } });
+  const dir = ariaSort(current, key);
+  const arrow = dir === null ? '' : `<span aria-hidden="true">${dir === 'ascending' ? ' \u25B2' : ' \u25BC'}</span>`;
+  return `<th scope="col"${dir === null ? '' : ` aria-sort="${dir}"`}><a href="${esc(href)}" style="${LINK_STYLE}">${text}${arrow}</a></th>`;
+}
+
+function pager(locale: Locale, nav: RegionNav, filters: Filters, page: number, pages: number): string {
+  if (pages <= 1) return '';
+  const go = (n: number) => esc(nav.action + buildQuery({ filters, thresholds: nav.thresholds }, { ...nav.table, paging: { ...nav.table.paging, page: n } }));
+  const prev =
+    page > 1
+      ? `<a href="${go(page - 1)}" rel="prev" style="${LINK_STYLE}">${esc(t(locale, 'pg.prev'))}</a>`
+      : `<span aria-disabled="true" style="${LINK_STYLE};color:#4B5563">${esc(t(locale, 'pg.prev'))}</span>`;
+  const next =
+    page < pages
+      ? `<a href="${go(page + 1)}" rel="next" style="${LINK_STYLE}">${esc(t(locale, 'pg.next'))}</a>`
+      : `<span aria-disabled="true" style="${LINK_STYLE};color:#4B5563">${esc(t(locale, 'pg.next'))}</span>`;
+  return `<nav aria-label="${esc(t(locale, 'pg.nav'))}">${prev} <span>${esc(t(locale, 'pg.status', { page, pages }))}</span> ${next}</nav>`;
+}
+
+export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav): string {
   const unknown = t(locale, 'unknown');
-  const shown = applyFilters(audit.sources, filters);
+  const matched = applyFilters(audit.sources, filters);
   const total = audit.sources.length;
-  const count = `<p>${esc(tCount(locale, 'flt.result', locale === 'fr' ? shown.length : total, { shown: shown.length, total }))}</p>`;
-  if (shown.length === 0) {
+  const count = `<p>${esc(tCount(locale, 'flt.result', locale === 'fr' ? matched.length : total, { shown: matched.length, total }))}</p>`;
+  if (matched.length === 0) {
     return count + (audit.sources.length === 0 ? '' : `<p>${esc(t(locale, 'flt.noMatch'))}</p>`);
   }
+  const sorted = nav ? applySort(matched, nav.table.sort, locale) : matched;
+  const slice = nav ? paginate(sorted, nav.table.paging) : null;
+  const shown = slice ? slice.items : sorted;
   const rows = shown
     .map((s) => {
       const label = esc(`${s.datasetName} / ${s.name ?? t(locale, 'unknownName')}`);
@@ -103,12 +146,15 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
       );
     })
     .join('');
+  const heads =
+    sortHeading(locale, 'source', 'tbl.source', nav, filters) +
+    sortHeading(locale, 'licence', 'tbl.licence', nav, filters) +
+    sortHeading(locale, 'retrieved', 'tbl.retrieved', nav, filters) +
+    sortHeading(locale, 'status', 'tbl.status', nav, filters);
   const table =
-    `<table><caption>${esc(t(locale, 'tbl.sources'))}</caption><thead><tr>` +
-    `<th scope="col">${esc(t(locale, 'tbl.source'))}</th><th scope="col">${esc(t(locale, 'tbl.licence'))}</th>` +
-    `<th scope="col">${esc(t(locale, 'tbl.retrieved'))}</th><th scope="col">${esc(t(locale, 'tbl.status'))}</th>` +
-    `</tr></thead><tbody>${rows}</tbody></table>`;
-  return count + scrollable(t(locale, 'tbl.sources'), table);
+    `<table><caption>${esc(t(locale, 'tbl.sources'))}</caption><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table>`;
+  const help = nav ? `<p>${esc(t(locale, 'sort.help'))}</p>` : '';
+  return count + help + scrollable(t(locale, 'tbl.sources'), table) + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '');
 }
 
 const FIELD_STYLE = 'min-height:44px;min-width:44px;font:inherit';
@@ -120,6 +166,8 @@ function option(value: string, label: string, selected: boolean): string {
 export interface FilterFormOptions {
   action: string;
   thresholds?: Thresholds;
+  /** Sort and page size are kept when filters change; the page number restarts. */
+  table?: TableView;
 }
 
 export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions): string {
@@ -146,11 +194,18 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
   if (!form) {
     return controls + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
   }
-  const hidden = Object.entries(form.thresholds ?? {})
-    .map(([k, v]) => `<input type="hidden" name="stale_${esc(k)}" value="${esc(String(v))}">`)
-    .join('');
+  const sort = form.table?.sort ?? null;
+  const size = form.table?.paging.size ?? DEFAULT_PAGE_SIZE;
+  const hidden =
+    Object.entries(form.thresholds ?? {})
+      .map(([k, v]) => `<input type="hidden" name="stale_${esc(k)}" value="${esc(String(v))}">`)
+      .join('') +
+    (sort ? `<input type="hidden" name="sort" value="${esc(sort.key)}">` + (sort.dir === 'desc' ? '<input type="hidden" name="dir" value="desc">' : '') : '');
+  const sizeField = form.table
+    ? field('ds-f-size', 'pg.size', `<select id="ds-f-size" name="size" style="${FIELD_STYLE}">${PAGE_SIZES.map((n) => option(String(n), String(n), n === size)).join('')}</select>`)
+    : '';
   return (
-    `<form method="get" action="${esc(form.action)}">${controls}${hidden}` +
+    `<form method="get" action="${esc(form.action)}">${controls}${sizeField}${hidden}` +
     `<button type="submit" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.apply'))}</button> ` +
     `<a href="${esc(form.action)}" style="display:inline-flex;align-items:center;min-width:44px;min-height:44px">${esc(t(locale, 'flt.reset'))}</a>` +
     `</fieldset></form>`
@@ -204,8 +259,12 @@ export function renderDataStatusPanel(state: PanelState): string {
   const notices = (state.notices ?? []).map((n) => `<p role="status">${esc(n)}</p>`).join('');
   const sv = state.staticView;
   const query = serializeViewState({ filters, thresholds });
+  const thrQuery = serializeViewState({ filters: NO_FILTERS, thresholds });
   const actions = sv
-    ? `<div>${downloadLink(sv.csvHref + query, t(locale, 'act.exportCsv'))} ${downloadLink(sv.creditsHref, t(locale, 'dl.credits'))} ${downloadLink(sv.summaryHref, t(locale, 'dl.summary'))}</div>`
+    ? `<div>${downloadLink(sv.csvHref + query, t(locale, 'act.exportCsv'))} ${downloadLink(sv.creditsHref, t(locale, 'dl.credits'))} ${downloadLink(sv.summaryHref + thrQuery, t(locale, 'dl.summary'))}` +
+      (sv.icsHref ? ` ${downloadLink(sv.icsHref + thrQuery, t(locale, 'dl.ics'))}` : '') +
+      (sv.catalogueHref ? ` ${downloadLink(sv.catalogueHref + thrQuery, t(locale, 'dl.catalogue'))}` : '') +
+      `</div>`
     : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))}</div>`;
   return (
     notices +
@@ -215,9 +274,10 @@ export function renderDataStatusPanel(state: PanelState): string {
     (state.changes ? renderChangesHtml(state.changes, locale) : '') +
     (state.history ? renderHistoryHtml(state.history, locale) : '') +
     datasetTable(audit, locale) +
+    renderReviewHtml(buildReviewQueue(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
-    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds } : undefined) +
-    `<div data-region="sources" aria-live="polite">${renderSourcesRegion(audit, locale, filters, state.now)}</div>` +
+    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined) +
+    `<div data-region="sources" aria-live="polite">${renderSourcesRegion(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined)}</div>` +
     coverageSection(state) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale))
   );
@@ -243,22 +303,22 @@ export interface PanelHost {
 export interface MountOptions {
   getRecords: () => readonly DatasetRecord[];
   getLocale: () => Locale;
-  now?: () => Date;
-  store?: SnapshotStore;
-  attributes?: readonly AttributeDef[];
-  getAttributeRecords?: () => readonly Readonly<Record<string, unknown>>[];
+  now?: (() => Date) | undefined;
+  store?: SnapshotStore | undefined;
+  attributes?: readonly AttributeDef[] | undefined;
+  getAttributeRecords?: (() => readonly Readonly<Record<string, unknown>>[]) | undefined;
   /** Called with the CSV text and a file name when the export button is used. */
-  onExport?: (csv: string, filename: string) => void;
+  onExport?: ((csv: string, filename: string) => void) | undefined;
   /** Starting filters (for example parsed from the URL). */
-  initialFilters?: Filters;
+  initialFilters?: Filters | undefined;
   /** Staleness thresholds in days per dataset type (for example parsed from the URL). */
-  thresholds?: Thresholds;
+  thresholds?: Thresholds | undefined;
   /** On-device history of totals; today's totals are recorded when live data loads. */
-  history?: HistoryStore;
+  history?: HistoryStore | undefined;
   /** Called with the new query string ('' or '?state=…', thresholds included) after filters change. */
-  onFiltersChange?: (search: string) => void;
+  onFiltersChange?: ((search: string) => void) | undefined;
   /** Extra localized notices, for example files that could not be read. */
-  getNotices?: (locale: Locale) => readonly string[];
+  getNotices?: ((locale: Locale) => readonly string[]) | undefined;
 }
 
 export interface MountedPanel {

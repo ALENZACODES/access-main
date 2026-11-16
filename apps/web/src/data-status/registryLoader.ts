@@ -54,11 +54,11 @@ function readSource(raw: unknown, path: string, issues: LoadIssue[], opts: LoadO
     issues.push({ severity: 'error', code: 'not-object', path });
     return null;
   }
-  if (typeof raw.id !== 'string' || raw.id.trim() === '') {
+  if (typeof raw['id'] !== 'string' || raw['id'].trim() === '') {
     issues.push({ severity: 'error', code: 'missing-id', path: `${path}.id` });
     return null;
   }
-  const out: SourceInput = { id: raw.id };
+  const out: SourceInput = { id: raw['id'] };
   for (const f of SOURCE_TEXT_FIELDS) {
     const v = raw[f];
     if (v === undefined || v === null) continue;
@@ -80,7 +80,7 @@ function readSource(raw: unknown, path: string, issues: LoadIssue[], opts: LoadO
 
 export function parseRegistry(input: unknown, opts: LoadOptions = {}): RegistryLoadResult {
   const issues: LoadIssue[] = [];
-  const list = Array.isArray(input) ? input : isObj(input) && Array.isArray(input.datasets) ? input.datasets : null;
+  const list = Array.isArray(input) ? input : isObj(input) && Array.isArray(input['datasets']) ? input['datasets'] : null;
   if (list === null) {
     issues.push({ severity: 'error', code: 'not-array', path: '' });
     return { records: [], issues, usable: false };
@@ -92,29 +92,29 @@ export function parseRegistry(input: unknown, opts: LoadOptions = {}): RegistryL
       issues.push({ severity: 'error', code: 'not-object', path });
       return;
     }
-    if (typeof raw.id !== 'string' || raw.id.trim() === '') {
+    if (typeof raw['id'] !== 'string' || raw['id'].trim() === '') {
       issues.push({ severity: 'error', code: 'missing-id', path: `${path}.id` });
       return;
     }
-    if (!isDatasetKind(raw.kind)) {
+    if (!isDatasetKind(raw['kind'])) {
       issues.push({ severity: 'error', code: 'bad-kind', path: `${path}.kind` });
       return;
     }
-    if (!Array.isArray(raw.sources)) {
+    if (!Array.isArray(raw['sources'])) {
       issues.push({ severity: 'error', code: 'bad-sources', path: `${path}.sources` });
       return;
     }
     let name = '';
-    if (typeof raw.name === 'string') name = raw.name;
-    else if (raw.name !== undefined && raw.name !== null) {
+    if (typeof raw['name'] === 'string') name = raw['name'];
+    else if (raw['name'] !== undefined && raw['name'] !== null) {
       issues.push({ severity: 'error', code: 'bad-field', path: `${path}.name` });
     }
     const sources: SourceInput[] = [];
-    raw.sources.forEach((s: unknown, j: number) => {
+    raw['sources'].forEach((s: unknown, j: number) => {
       const read = readSource(s, `${path}.sources[${j}]`, issues, opts);
       if (read !== null) sources.push(read);
     });
-    records.push({ id: raw.id, name, kind: raw.kind, sources });
+    records.push({ id: raw['id'], name, kind: raw['kind'], sources });
   });
   return { records, issues, usable: true };
 }

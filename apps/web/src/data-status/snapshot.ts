@@ -62,23 +62,23 @@ const optStr = (v: unknown) => v === undefined || v === null || typeof v === 'st
 function validSource(v: unknown): boolean {
   return (
     isObj(v) &&
-    typeof v.id === 'string' &&
-    optStr(v.name) &&
-    optStr(v.url) &&
-    optStr(v.source) &&
-    optStr(v.licence) &&
-    optStr(v.retrievedAt)
+    typeof v['id'] === 'string' &&
+    optStr(v['name']) &&
+    optStr(v['url']) &&
+    optStr(v['source']) &&
+    optStr(v['licence']) &&
+    optStr(v['retrievedAt'])
   );
 }
 
 function validRecord(v: unknown): boolean {
   return (
     isObj(v) &&
-    typeof v.id === 'string' &&
-    typeof v.name === 'string' &&
-    isDatasetKind(v.kind) &&
-    Array.isArray(v.sources) &&
-    v.sources.every(validSource)
+    typeof v['id'] === 'string' &&
+    typeof v['name'] === 'string' &&
+    isDatasetKind(v['kind']) &&
+    Array.isArray(v['sources']) &&
+    v['sources'].every(validSource)
   );
 }
 
@@ -90,13 +90,13 @@ export function parseSnapshot(text: string): ParseResult {
     return { ok: false, reason: 'not-json' };
   }
   if (!isObj(raw)) return { ok: false, reason: 'bad-shape' };
-  if (raw.version !== SNAPSHOT_VERSION) return { ok: false, reason: 'bad-version' };
-  if (typeof raw.savedAt !== 'string' || typeof raw.checksum !== 'string' || !Array.isArray(raw.records)) {
+  if (raw['version'] !== SNAPSHOT_VERSION) return { ok: false, reason: 'bad-version' };
+  if (typeof raw['savedAt'] !== 'string' || typeof raw['checksum'] !== 'string' || !Array.isArray(raw['records'])) {
     return { ok: false, reason: 'bad-shape' };
   }
-  if (!raw.records.every(validRecord)) return { ok: false, reason: 'bad-shape' };
-  if (parseIsoDate(raw.savedAt) === null) return { ok: false, reason: 'bad-date' };
-  if (checksumOf(raw.records, raw.savedAt) !== raw.checksum) return { ok: false, reason: 'checksum-mismatch' };
+  if (!raw['records'].every(validRecord)) return { ok: false, reason: 'bad-shape' };
+  if (parseIsoDate(raw['savedAt']) === null) return { ok: false, reason: 'bad-date' };
+  if (checksumOf(raw['records'], raw['savedAt']) !== raw['checksum']) return { ok: false, reason: 'checksum-mismatch' };
   return { ok: true, snapshot: raw as unknown as Snapshot };
 }
 

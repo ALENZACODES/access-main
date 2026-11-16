@@ -3,7 +3,7 @@ import type { Locale } from './dataStatus';
 import { t, type MessageKey } from './i18n';
 
 export type PluralCategory = 'one' | 'other';
-export type PluralBase = 'flt.result';
+export type PluralBase = 'flt.result' | 'due.overdue' | 'due.in';
 
 const RULES: Readonly<Record<Locale, Intl.PluralRules>> = {
   en: new Intl.PluralRules('en-CA'),

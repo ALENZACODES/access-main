@@ -1,6 +1,7 @@
 /** Filter model for the source list. Deep-linkable via the query string; invalid values are ignored. */
 import type { AuditedSource } from './datasetRegistry';
 import type { FreshnessState } from './dataStatus';
+import { foldText, matchesQuery } from './searchText';
 import { DATASET_KINDS, isDatasetKind, type DatasetKind } from './freshnessPolicy';
 
 export interface Filters {
@@ -15,13 +16,7 @@ export const MAX_QUERY_LENGTH = 100;
 const STATES: readonly FreshnessState[] = ['fresh', 'stale', 'unknown'];
 
 export function normaliseQuery(raw: string): string {
-  return raw
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, MAX_QUERY_LENGTH);
+  return foldText(raw).slice(0, MAX_QUERY_LENGTH).trim();
 }
 
 export function parseFilters(search: string): Filters {
@@ -63,8 +58,7 @@ export function applyFilters(sources: readonly AuditedSource[], f: Filters): Aud
     if (f.kind !== 'any' && s.kind !== f.kind) return false;
     if (f.onlyIssues && !needsReview(s)) return false;
     if (q === '') return true;
-    const hay = normaliseQuery([s.datasetName, s.name ?? '', s.sourceId, s.licence ?? ''].join(' '));
-    return hay.includes(q);
+    return matchesQuery([s.datasetName, s.name ?? '', s.sourceId, s.licence ?? ''].join(' '), q);
   });
 }
 

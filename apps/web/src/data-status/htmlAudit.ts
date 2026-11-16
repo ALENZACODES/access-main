@@ -37,7 +37,7 @@ export interface HtmlProblem {
 
 export interface HtmlAuditOptions {
   /** Treat the input as a complete document (checks lang, title, viewport, landmarks, h1). Default: auto-detect. */
-  document?: boolean;
+  document?: boolean | undefined;
 }
 
 const VAGUE = /^(here|click here|more|read more|link|ici|cliquez ici|lire la suite|plus|lien)$/i;

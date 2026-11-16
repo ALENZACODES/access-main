@@ -82,7 +82,7 @@ describe('installServiceWorker', () => {
     const f = fakeScope();
     installServiceWorker(f.scope, config());
     expect((await f.fire('fetch')).hadRespondWith).toBe(false);
-    expect((await f.fire('fetch', { request: undefined, respondWith: undefined })).hadRespondWith).toBe(false);
+    expect((await f.fire('fetch', {})).hadRespondWith).toBe(false);
   });
 
   it('works when skipWaiting and clients are not available', async () => {

@@ -8,7 +8,14 @@
  *   GET /{en|fr}/data-status/sources.csv  -> CSV of the sources the filters show
  *   GET /{en|fr}/data-status/credits.txt  -> plain-text credits for every source
  *   GET /{en|fr}/data-status/summary.json -> language-neutral summary (unknown stays null)
+ *   GET /{en|fr}/data-status/review.ics   -> calendar file of review dates (Unknown dates get no event)
+ *   GET /{en|fr}/data-status/catalogue.json -> DCAT JSON-LD catalogue of datasets and sources
+ *   Page query: state, kind, q, issues, stale_<type>, sort, dir, page, size
  */
+import { buildCatalogue, catalogueToJson } from './catalogue';
+import { buildIcs } from './ics';
+import { buildReviewQueue } from './reviewDue';
+import { parseTableView } from './tableView';
 import { buildAttributions, renderAttributionText } from './attribution';
 import { auditedSourcesToCsv } from './csv';
 import { auditRegistry, type DatasetRecord } from './datasetRegistry';
@@ -56,12 +63,14 @@ const BASE_HEADERS = {
   'cross-origin-opener-policy': 'same-origin',
 } as const;
 
-type Kind = 'html' | 'csv' | 'credits' | 'summary';
+type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue';
 const SUFFIX: Readonly<Record<string, Kind>> = {
   '': 'html',
   '/sources.csv': 'csv',
   '/credits.txt': 'credits',
   '/summary.json': 'summary',
+  '/review.ics': 'ics',
+  '/catalogue.json': 'catalogue',
 };
 
 function header(req: DsRequest, name: string): string | undefined {
@@ -91,7 +100,7 @@ export function matchRoute(url: string, basePath: string = DEFAULT_BASE_PATH): R
   }
   let path = parsed.pathname;
   if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json)?$/.exec(path);
+  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json)?$/.exec(path);
   if (!m || (m[2] ?? '') !== basePath) return null;
   return { locale: (m[1] as Locale | undefined) ?? null, kind: SUFFIX[m[3] ?? ''] as Kind, pathname: path, search: parsed.search };
 }
@@ -100,7 +109,7 @@ function respond(req: DsRequest, status: number, headers: Record<string, string>
   const etag = `W/"${fnv1a32(body)}-${byteLength(body)}"`;
   const all: Record<string, string> = { ...BASE_HEADERS, ...headers };
   if (status === 200) {
-    all.etag = etag;
+    all['etag'] = etag;
     all['content-length'] = String(byteLength(body));
     const inm = header(req, 'if-none-match');
     if (inm && inm.split(',').some((v) => v.trim() === etag || v.trim() === '*')) {
@@ -172,6 +181,15 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
       );
     case 'credits':
       return respond(req, 200, { ...common, 'content-type': 'text/plain; charset=utf-8' }, `${renderAttributionText(buildAttributions(audit.sources, locale), locale)}\n`);
+    case 'ics':
+      return respond(
+        req,
+        200,
+        { ...common, 'content-type': 'text/calendar; charset=utf-8', 'content-disposition': 'attachment; filename="review-dates.ics"' },
+        buildIcs(buildReviewQueue(audit, now), now, locale),
+      );
+    case 'catalogue':
+      return respond(req, 200, { ...common, 'content-type': 'application/ld+json; charset=utf-8' }, catalogueToJson(buildCatalogue(audit, now)));
     case 'summary':
       return respond(req, 200, { ...common, 'content-type': 'application/json; charset=utf-8' }, summaryToJson(buildSummary(audit, now)));
     default:
@@ -186,8 +204,9 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
           pathname: prefix,
           filters: view.filters,
           thresholds: view.thresholds,
+          table: parseTableView(route.search),
           loadIssues: ctx.loadIssues,
-          staticView: { action: prefix, csvHref: `${prefix}/sources.csv`, creditsHref: `${prefix}/credits.txt`, summaryHref: `${prefix}/summary.json` },
+          staticView: { action: prefix, csvHref: `${prefix}/sources.csv`, creditsHref: `${prefix}/credits.txt`, summaryHref: `${prefix}/summary.json`, icsHref: `${prefix}/review.ics`, catalogueHref: `${prefix}/catalogue.json` },
         }),
       );
   }

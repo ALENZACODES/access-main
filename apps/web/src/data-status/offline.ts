@@ -53,7 +53,7 @@ export interface OfflineConfig {
 
 export const DEFAULT_PREFIX = 'data-status';
 export const DEFAULT_TIMEOUT_MS = 4000;
-const DATA_PATH = /(\/(sources\.csv|credits\.txt|summary\.json)|\/registry\.json)$/;
+const DATA_PATH = /(\/(sources\.csv|credits\.txt|summary\.json|review\.ics|catalogue\.json)|\/registry\.json)$/;
 
 export type RequestClass = 'bypass' | 'navigation' | 'data' | 'asset';
 
@@ -134,7 +134,7 @@ export interface FetchOutcome {
   response: ResponseLike;
   source: 'network' | 'cache' | 'offline-page' | 'bypass';
   /** Work that may continue after the response is sent (pass to waitUntil). */
-  background?: Promise<void>;
+  background?: Promise<void> | undefined;
 }
 
 export async function handleFetch(req: RequestLike, storage: CacheStorageLike, c: OfflineConfig): Promise<FetchOutcome> {

@@ -164,7 +164,8 @@ describe('navigation: network first, saved copy when the network fails', () => {
 
   it('a full storage does not break serving', async () => {
     const t = setup(() => html('live'));
-    (await t.storage.open('data-status-v1')) && (t.cache()!.failPut = true);
+    await t.storage.open('data-status-v1');
+    t.cache()!.failPut = true;
     const out = await handleFetch(nav('/en/data-status'), t.storage, t.config);
     expect((out.response as FakeResponse).body).toBe('live');
   });

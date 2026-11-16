@@ -15,12 +15,16 @@ export const PAGE_CSS =
   '.ds-skip{position:absolute;left:-9999px}.ds-skip:focus{position:static;display:inline-block;min-height:44px;line-height:44px}' +
   '.ds-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}' +
   'th,td{padding:8px;border:1px solid #4B5563;text-align:left;vertical-align:top}' +
-  'a{color:#1D4ED8}';
+  'a{color:#1D4ED8}' +
+  'nav[aria-label] span[aria-disabled]{cursor:not-allowed}' +
+  '@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}' +
+  '@media (forced-colors:active){:focus-visible{outline:3px solid Highlight}a{color:LinkText}th,td{border-color:CanvasText}}' +
+  '@media print{.ds-skip,header,nav[aria-label] a,form{display:none}.ds-scroll{overflow:visible}a{color:#000;text-decoration:underline}thead{display:table-header-group}tr{break-inside:avoid}}';
 
 export interface PageOptions extends PanelState {
   /** Path of this page, used to build the language-switch link. Defaults to "/data-status". */
-  pathname?: string;
-  loadIssues?: readonly LoadIssue[];
+  pathname?: string | undefined;
+  loadIssues?: readonly LoadIssue[] | undefined;
 }
 
 export function renderDataStatusPage(opts: PageOptions): string {

@@ -56,8 +56,13 @@ describe('snapshot round trip', () => {
   });
 });
 
+interface SnapshotJson {
+  records: { kind: string; name: string; sources: { licence: unknown }[] }[];
+  [key: string]: unknown;
+}
+
 describe('parseSnapshot failures', () => {
-  const good = () => JSON.parse(serializeSnapshot(createSnapshot(records, SAVED))) as Record<string, any>;
+  const good = () => JSON.parse(serializeSnapshot(createSnapshot(records, SAVED))) as SnapshotJson;
 
   it('rejects non-JSON, wrong shapes and versions', () => {
     expect(parseSnapshot('{')).toEqual({ ok: false, reason: 'not-json' });
@@ -69,17 +74,17 @@ describe('parseSnapshot failures', () => {
 
   it('rejects invalid records', () => {
     const g = good();
-    g.records[0].kind = 'medical';
+    g.records[0]!.kind = 'medical';
     expect(parseSnapshot(JSON.stringify(g))).toEqual({ ok: false, reason: 'bad-shape' });
     const h = good();
-    h.records[0].sources[0].licence = 42;
+    h.records[0]!.sources[0]!.licence = 42;
     expect(parseSnapshot(JSON.stringify(h))).toEqual({ ok: false, reason: 'bad-shape' });
   });
 
   it('rejects bad dates and tampered content', () => {
     expect(parseSnapshot(JSON.stringify({ ...good(), savedAt: 'yesterday' }))).toEqual({ ok: false, reason: 'bad-date' });
     const g = good();
-    g.records[0].name = 'Changed';
+    g.records[0]!.name = 'Changed';
     expect(parseSnapshot(JSON.stringify(g))).toEqual({ ok: false, reason: 'checksum-mismatch' });
   });
 });
