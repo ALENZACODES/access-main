@@ -172,6 +172,14 @@ export function RecoveryCenter({
         inspectionDate={inspectionDate}
         onInspect={() => { void refresh(); }}
       />
+      <RecoveryQueuePanel
+        locale={locale}
+        records={inventory}
+        inspected={hasInspected && !checking && !inventoryFailure}
+        inspectionDate={inspectionDate}
+        onInspect={() => { void refresh(); }}
+        saveFile={saveFile}
+      />
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>
