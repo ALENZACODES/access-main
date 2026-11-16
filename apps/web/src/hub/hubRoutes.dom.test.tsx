@@ -3,7 +3,7 @@ import "fake-indexeddb/auto";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { MemoryRouter, useRoutes } from "react-router-dom";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { initI18n } from "../i18n/index.ts";
 import { hubText } from "./i18n.ts";
 import { hubRoutes } from "./routes.tsx";
@@ -13,6 +13,9 @@ import { ROUTE_REPORTS_KEY, readDeviceReports } from "./RouteReportsPage.tsx";
  * The More routes added for the packages merged on 16 November. Each one is rendered through the real
  * route table, in English and in French, with the real package code from .lanes (npm test syncs it first).
  */
+const consent = vi.hoisted(() => ({ status: "denied" as "granted" | "denied" | "unavailable" }));
+vi.mock("../features/consent.ts", () => ({ consentStatus: async () => consent.status }));
+
 const i18n = initI18n();
 
 function Table() {
@@ -34,6 +37,7 @@ beforeAll(() => {
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  consent.status = "denied";
 });
 
 type Key = keyof typeof hubText.en.hub;
@@ -44,6 +48,7 @@ const NEW_ROUTES: Array<{ path: string; key: Key; mark: string }> = [
   { path: "accessible-taxis", key: "wav", mark: "#wav-finder-heading" },
   { path: "event-organiser", key: "eventOrganiser", mark: "#org-title" },
   { path: "event-plan", key: "eventPlan", mark: "#ep-start" },
+  { path: "reports", key: "reports", mark: "#reports-heading" },
 ];
 
 describe("new More routes mount their package in both languages", () => {
@@ -132,5 +137,22 @@ describe("route condition reports", () => {
     await waitFor(() => expect(container.querySelector("#route-reports-heading")).not.toBeNull(), { timeout: 15000 });
     await screen.findByText(hubText.fr.hub.routeReportsPlaceMissing, { exact: false }, { timeout: 15000 });
     expect(container.querySelector("#route-report-form-heading")).toBeNull();
+  }, 60000);
+});
+
+describe("report tables", () => {
+  it("labels the demonstration set and does not save files without permission", async () => {
+    const created = vi.fn(() => "blob:test");
+    Object.assign(URL, { createObjectURL: created, revokeObjectURL: vi.fn() });
+    const { container } = await open("en", "/more/reports");
+    await waitFor(() => expect(container.querySelector("#reports-heading")).not.toBeNull(), { timeout: 15000 });
+    expect(screen.getByText(hubText.en.hub.demonstration)).toBeTruthy();
+    expect(screen.getByText(hubText.en.hub.reportsNote)).toBeTruthy();
+    const buttons = [...container.querySelectorAll("button")];
+    expect(buttons.length).toBeGreaterThan(0);
+    for (const button of buttons) button.click();
+    await screen.findByText(hubText.en.hub.reportsExportBlocked, { exact: false });
+    expect(created).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: hubText.en.hub.reportsConsentLink }).getAttribute("href")).toBe("/settings/consent");
   }, 60000);
 });

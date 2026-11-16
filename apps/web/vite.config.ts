@@ -111,7 +111,12 @@ const hubAliases = (
   .map(([find, repo, pkg, entry = "src/index.ts"]) => ({
     find,
     replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
-  }));
+  }))
+  .concat([
+    // This repository's own advocacy package: the report tables screen and its labelled demonstration set.
+    { find: "@hub/advocacy-reports", replacement: path.join(repoRoot, "packages/advocacy/src/ui/ReportsPanel.tsx") },
+    { find: "@hub/advocacy-demo", replacement: path.join(repoRoot, "packages/advocacy/src/reports/demo.ts") },
+  ]);
 
 /** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
 function buildManifest(): Plugin {

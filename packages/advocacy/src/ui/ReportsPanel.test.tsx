@@ -48,12 +48,20 @@ describe("report tables", () => {
     expect(screen.getByText("These rows cover a whole larger region: demo-area-east.")).toBeTruthy();
   });
 
-  it("puts a wide table in a labelled box that can take keyboard focus", () => {
-    render(<ReportsPanel lang="en" input={input} options={options} logs={noLogs} />);
-    const box = screen.getByRole("group", { name: "Parking, 2026-10" });
-    expect(box.getAttribute("tabindex")).toBe("0");
-    box.focus();
-    expect(document.activeElement).toBe(box);
+  it("fits every table to its width with no scrolling box, so only the controls take keyboard focus", () => {
+    const { container } = render(<ReportsPanel lang="en" input={input} options={options} logs={noLogs} />);
+    const tables = screen.getAllByRole("table");
+    expect(tables.length).toBeGreaterThanOrEqual(6);
+    for (const table of tables) {
+      expect(table.style.width).toBe("100%");
+      expect(table.style.overflowWrap).toBe("anywhere");
+      expect(table.closest("[tabindex]")).toBeNull();
+    }
+    // Every focus stop is a native control: no group, box or table is focusable.
+    const focusable = [...container.querySelectorAll<HTMLElement>("[tabindex]:not([tabindex='-1']), a[href], button, input, select, textarea, summary")];
+    expect(focusable.length).toBeGreaterThan(0);
+    for (const el of focusable) expect(["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA", "SUMMARY"]).toContain(el.tagName);
+    expect(screen.queryByRole("group", { name: "Parking, 2026-10" })).toBeNull();
   });
 
   it("exports the five files from the keyboard-operable button and announces it", () => {
