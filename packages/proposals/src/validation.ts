@@ -45,6 +45,6 @@ export function assertUnverifiedDraft(
   value: unknown,
 ): asserts value is UnverifiedDraft {
   if (!isUnverifiedDraft(value)) {
-    throw new Error("Invalid unverified draft");
+    throw new Error("Invalid pending draft");
   }
 }
