@@ -33,3 +33,4 @@ export {
   type ValidationResult,
 } from "./validate.ts";
 export { LANGS, t, type Lang, type MessageKey } from "./i18n/index.ts";
+export * as reports from "./reports/index.ts";
