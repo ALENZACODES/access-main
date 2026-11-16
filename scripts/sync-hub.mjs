@@ -79,6 +79,9 @@ function alreadySynced() {
 }
 
 if (alreadySynced()) {
+  // A package folder can also be listed in lanes.lock.json. scripts/sync-lanes.mjs writes it as
+  // it is in its repository, so the demotion is applied again here. It changes nothing the second time.
+  for (const pkg of lock.packages) demoteNestedMains(path.join(outDir, pkg.repo.split("/")[1], "packages", pkg.package));
   process.exit(0);
 }
 

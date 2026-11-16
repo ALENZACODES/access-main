@@ -546,3 +546,18 @@ Statuses describe code already in the four public repositories. Unmerged pull re
 | 13 | Play and Rehab Games | access-tools | partial | [#9](https://github.com/ALENZACODES/access-maps/issues/9)3 | Ten of the 50 prototype games ship with keyboard, tap, and switch. Gaze is not built. The remaining 40 games are not started. |
 | 14 | Voice-First and Full Accessibility | access-main | partial | [#9](https://github.com/ALENZACODES/access-maps/issues/9)4 | English and French catalogues, axe checks, and switch and voice controls on tools screens exist. French is still a draft. Offline packs are only in an unmerged pull request. Eye-gaze and control-mode parity are not done. |
 | 15 | Trust Platform | access-main | partial | [#9](https://github.com/ALENZACODES/access-maps/issues/9)5 | Shared schema, validator, counting rules, verification tiers, licence notes, and a privacy-assessment draft exist. The ingest pipeline is only in an unmerged access-maps pull request. The consent engine and the legal determination are not done. |
+
+### Reachable from the shell (16 November 2026)
+
+The table above is dated 14 November. Since then seven feature packages merged, and an integration round gave them routes in the shell. This table says only what a person can open in the App today. All data on these routes is demonstration, sample, or the person's own entries on the device.
+
+| Idea | Route in the shell | What is still not reachable |
+| --- | --- | --- |
+| 2 Live Disruption Shield | `/more/route-reports` lists route-condition reports saved on the device; `/more/accessible-taxis` is the accessible-vehicle finder over a published list of zero records | Adding a report needs a place, and no place page links to the form yet. No live feed |
+| 3 Peer Connect | `/more/peers` lists the request topics | The request flow with consent and routing is built in access-help but not mounted: its text fails the shell's post-build wording check |
+| 6 Employment and Income | `/more/employment`: listing with workplace access record, commute check, referral summary | Real listings |
+| 7 Accessible Housing | `/more/housing`: the first housing finder | The unit and room depth finder and barrier evidence form: built in access-tools, not mounted because of a repeated-landmark fault |
+| 8 Advocacy Engine | `/settings/advocacy` (evidence pack) and `/more/reports` (suppressed report tables and indicators) | Real consented reports |
+| 11 Community Events and Social | `/more/events`, `/more/event-organiser` (organiser checklist), `/more/event-plan` (outing plan) | A per-event access page for a real event, and the journey join |
+| 12 Access Auditors and Venue Dashboard | `/more/auditors`: observations, volunteer programme, venue responses, correction cases | Publication of any audited value |
+| 13 Play and Rehab Games | `/more/games`: 19 of the 50 games, with dwell select | The other 31 games; gaze |
