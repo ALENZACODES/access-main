@@ -1,5 +1,16 @@
 /** Recovery states never imply that partial data is complete. */
 export type RecoveryLocale = "en" | "fr";
+
+/** Public error-recovery API consumed by offline and feature screens. */
+export {
+  classifyRecoveryError,
+  classifyPackDownloadError,
+  runRecoverable,
+} from "./classify.ts";
+export type { RecoveryResult } from "./classify.ts";
+export { RecoveryNotice } from "./RecoveryNotice.tsx";
+export type { RecoveryNoticeProps } from "./RecoveryNotice.tsx";
+
 export type RecoveryOperation = "pack" | "download" | "export";
 export type RecoveryReason =
   | "offline"
@@ -285,23 +296,91 @@ export function getRecoveryMessage(
   };
 }
 
-export { classifyPackDownloadError, classifyRecoveryError, runRecoverable, type RecoveryResult } from "./classify.ts";
-export { RecoveryNotice, type RecoveryNoticeProps } from "./RecoveryNotice.tsx";
-
-
 export {
   browserSha256,
   checkPackIntegrity,
   checkStoredPackParts,
   packIntegrityCopy,
   redownloadPack,
-} from "./packIntegrity.ts";
+} from "./packIntegrity";
 export type {
   PackCheck,
-  PackManifest as IntegrityPackManifest,
+  PackManifest,
   PackRedownloadResult,
   Sha256,
   StoredPackPart,
-} from "./packIntegrity.ts";
-export { CorruptPackNotice } from "./CorruptPackNotice.tsx";
-export type { CorruptPackNoticeProps } from "./CorruptPackNotice.tsx";
+} from "./packIntegrity";
+export { CorruptPackNotice } from "./CorruptPackNotice";
+export type { CorruptPackNoticeProps } from "./CorruptPackNotice";
+
+// Public recovery shell and the local, fail-closed operations it mounts.
+export { RecoveryCenter } from "./RecoveryCenter";
+export type { RecoveryCenterProps } from "./RecoveryCenter";
+export {
+  canOpenPack,
+  inspectInstalledPacks,
+  inspectPack,
+  inventoryCopy,
+  isSafePackId,
+  knownPackIds,
+  openCheckedPack,
+} from "./packInventory";
+export type {
+  LocalPackRecord,
+  LocalPackState,
+  LocalPackStore,
+  PackAvailability,
+  PackProblem,
+  StoredPack,
+  OpenPackResult,
+} from "./packInventory";
+export {
+  DEFAULT_MAX_PACK_BYTES,
+  PackDownloadSession,
+  downloadCopy,
+} from "./downloadSession";
+export type {
+  ChunkSource,
+  DownloadOutcome,
+  DownloadPhase,
+  DownloadSnapshot,
+  SessionOptions,
+} from "./downloadSession";
+export { createRecoveryExport, exportCopy, saveRecoveryExport } from "./recoveryExport";
+export type {
+  RecoveryExportEnvelope,
+  RecoveryExportRecord,
+  RecoveryExportResult,
+  SaveTextFile,
+} from "./recoveryExport";
+
+export { RecoveryWorkbench } from "./RecoveryWorkbench";
+export type { RecoveryWorkbenchProps } from "./RecoveryWorkbench";
+export { diagnoseInventory, diagnosticsCopy, isOpenLicence, parseCalendarDate, sourceDiagnostics } from "./recoveryDiagnostics";
+export type { DiagnosticCode, DiagnosticFinding, DiagnosticOptions, DiagnosticSeverity, DiagnosticSummary } from "./recoveryDiagnostics";
+export { actionsCopy, actionEligibleForDownload, proposeRecoveryActions, reconcileRecoveryActions, transitionRecoveryAction } from "./recoveryActions";
+export type { ActionKind, ActionPlan, ActionPriority, ActionStatus, ActionTransition, RecoveryActionItem } from "./recoveryActions";
+export { appendReviewEvent, clearReviewLog, compareInspections, comparisonCopy, emptyReviewLog } from "./recoveryComparison";
+export type { ChangeKind, LocalReviewLog, PackChange, PackComparison, ReviewEvent } from "./recoveryComparison";
+
+export { RecoveryQueuePanel } from "./RecoveryQueuePanel";
+export type { RecoveryQueuePanelProps } from "./RecoveryQueuePanel";
+
+
+// Portable, user-initiated recovery planning APIs.
+export { planPackRepairs, repairPolicyCopy } from "./recoveryPolicy";
+export type { RepairPolicyOptions, RepairPolicyResult, RepairRecommendation, RepairPriority, RepairKind, PolicyFinding, PolicyFlag } from "./recoveryPolicy";
+export { calculateStorageBudget, countBatchStages, createRecoveryBatch, parseQuotaInput, reconcileRecoveryBatch, recoveryBatchCopy, updateRecoveryBatch } from "./recoveryBatch";
+export type { BatchStage, BatchDecision, BatchItem, RecoveryBatch, BatchTransition, BatchUpdate, StorageBudget } from "./recoveryBatch";
+export { appendLedgerEvent, emptyRecoveryLedger, recoveryLedgerCopy, summarizeLedger, validLedger } from "./recoveryLedger";
+export type { RecoveryLedger, LedgerAction, LedgerOutcome } from "./recoveryLedger";
+export { createLocalPlanExport, planExportCopy, saveLocalPlanExport } from "./recoveryPlanExport";
+export type { LocalPlanDocument, LocalPlanEntry, PlanExportResult, SaveRecoveryPlan } from "./recoveryPlanExport";
+export { inspectRecoveryPlan, planImportCopy } from "./recoveryPlanImport";
+export type { ImportIssue, ImportFinding, ImportResult, ImportLimits } from "./recoveryPlanImport";
+export { compareRecoveryPlan, filterPlanDeltas, planComparisonCopy, summarizePlanChanges } from "./recoveryPlanCompare";
+export type { PlanComparison, PlanDelta, PlanChange, ComparisonFilter } from "./recoveryPlanCompare";
+export { buildRecoverySteps, filterRecoverySteps, recoveryStepCopy } from "./recoveryPlanSteps";
+export { makePlanDiffExport, planDiffCopy, savePlanDiff } from "./recoveryPlanDiffExport";
+export { RecoveryPlanReview } from "./RecoveryPlanReview";
+export type { RecoveryPlanReviewProps } from "./RecoveryPlanReview";
