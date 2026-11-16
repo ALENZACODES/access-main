@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { loadFeaturePackage, type FeaturePackage } from "./packages.ts";
 import { consentGranted, consentStatus, type ConsentCheck } from "./consent.ts";
 import { Message } from "./Message.tsx";
+import { classifyRecoveryError, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
 import type { Entry } from "./routes.tsx";
 
 function PackageView({ moduleName, exportName, props = {} }: {
@@ -114,21 +115,24 @@ function SyncScreen(): ReactNode {
 }
 
 function AdvocacyScreen(): ReactNode {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [observations, setObservations] = useState("");
   const [error, setError] = useState("");
+  const [failure, setFailure] = useState<RecoveryFailure | null>(null);
+  const language = i18n.language.startsWith("fr") ? "fr" : "en";
+  const invalid = () => Object.assign(new Error("invalid"), { name: "DataError" });
   async function exportPack(): Promise<void> {
-    setError("");
+    setError(""); setFailure(null);
     if (!(await consentGranted("advocacy-export"))) { setError(t("features.exportBlocked")); return; }
     try {
       const pkg = await loadFeaturePackage("advocacy");
       if (!pkg || typeof pkg.buildEvidencePack !== "function" || typeof pkg.serialisePack !== "function") { setError(t("features.pending")); return; }
       const input: unknown = JSON.parse(observations);
-      if (!Array.isArray(input)) throw Error("invalid");
+      if (!Array.isArray(input)) throw invalid();
       const result = (pkg.buildEvidencePack as (input: unknown) => unknown)(input) as Record<string, unknown>;
       const validPack = result.pack;
       if (!validPack || (typeof pkg.validatePack === "function" &&
-        !(pkg.validatePack as (value: unknown) => { valid: boolean })(validPack).valid)) throw Error("invalid");
+        !(pkg.validatePack as (value: unknown) => { valid: boolean })(validPack).valid)) throw invalid();
       const content = (pkg.serialisePack as (pack: unknown) => string)(validPack);
       const blob = new Blob([content], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -137,7 +141,7 @@ function AdvocacyScreen(): ReactNode {
       anchor.download = "evidence-pack.json";
       anchor.click();
       URL.revokeObjectURL(url);
-    } catch { setError(t("features.exportError")); }
+    } catch (cause) { setFailure(classifyRecoveryError("export", cause)); }
   }
   return <section><p>{t("features.advocacyDesc")}</p>
     <label htmlFor="advocacy-observations">{t("features.exportInput")}</label>
@@ -145,6 +149,8 @@ function AdvocacyScreen(): ReactNode {
     <p><button type="button" style={{ minHeight: 44 }} onClick={() => { void exportPack(); }}>
       {t("features.export")}</button></p>
     {error && <p role="alert">{error}</p>}
+    {failure && <RecoveryNotice failure={failure} locale={language} onRetry={() => { void exportPack(); }}
+      onCheckInput={() => document.getElementById("advocacy-observations")?.focus()} onDismiss={() => setFailure(null)} />}
   </section>;
 }
 
