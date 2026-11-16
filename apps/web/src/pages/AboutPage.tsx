@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { BUILD_ID, CONTRACT_VERSION } from "../buildInfo.ts";
 import { summarizeStorage, type StorageSummary } from "../storage/repository.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { aboutNoticeItems } from "../privacy/onDeviceNotice/index.ts";
 import {
   adaptElement,
   browserDownload,
@@ -14,37 +15,47 @@ import {
 } from "../privacy/panel/index.ts";
 
 const PRIVACY_STORAGE_PREFIX = "access.";
+const REVIEWED_ON = "2026-11-15";
 
-const ABOUT_INVENTORY: readonly InventoryEntry[] = [
-  {
-    id: "profile",
-    label: { en: "Profile", fr: "Profil" },
-    where: "on-device",
-    purpose: { en: "Remember settings on this device", fr: "Conserver les réglages sur cet appareil" },
-    keptFor: { en: "Until you erase them", fr: "Jusqu’à ce que vous les effaciez" },
-    source: { en: "Written for the App by the project team", fr: "Rédigé pour l’App par l’équipe du projet" },
-    recordedOn: "2026-11-15",
-  },
-  {
-    id: "cache",
-    label: { en: "Cached records", fr: "Enregistrements en cache" },
-    where: "on-device",
-    purpose: { en: "Read records again without another download", fr: "Relire les enregistrements sans nouveau téléchargement" },
-    keptFor: { en: "Until you erase them", fr: "Jusqu’à ce que vous les effaciez" },
-    source: { en: "Written for the App by the project team", fr: "Rédigé pour l’App par l’équipe du projet" },
-    recordedOn: "2026-11-15",
-  },
-  {
-    id: "outbox",
-    label: { en: "Contribution export drafts", fr: "Brouillons d’export de contribution" },
-    where: "on-device",
-    purpose: { en: "Keep a file you can export yourself", fr: "Conserver un fichier que vous pouvez exporter vous-même" },
-    keptFor: { en: "Until you erase them", fr: "Jusqu’à ce que vous les effaciez" },
-    source: { en: "Written for the App by the project team", fr: "Rédigé pour l’App par l’équipe du projet" },
-    recordedOn: "2026-11-15",
-  },
-];
+const INVENTORY_SOURCE = {
+  en: "Written for the App by the project team",
+  fr: "Rédigé pour l’App par l’équipe du projet",
+} as const;
 
+const INVENTORY_KEPT_FOR = {
+  en: "Until you erase them",
+  fr: "Jusqu’à ce que vous les effaciez",
+} as const;
+
+/** Purpose text for each About-page inventory id from aboutNoticeItems(). */
+const INVENTORY_PURPOSE: Record<string, { en: string; fr: string }> = {
+  profile: { en: "Remember settings on this device", fr: "Conserver les réglages sur cet appareil" },
+  cache: { en: "Read records again without another download", fr: "Relire les enregistrements sans nouveau téléchargement" },
+  outbox: { en: "Keep a file you can export yourself", fr: "Conserver un fichier que vous pouvez exporter vous-même" },
+  language: {
+    en: "Remember the language you chose on this device",
+    fr: "Conserver la langue que vous avez choisie sur cet appareil",
+  },
+  geolocation: {
+    en: "Show your position on maps on this device. The App does not upload it",
+    fr: "Afficher votre position sur les cartes sur cet appareil. L’App ne l’envoie pas",
+  },
+};
+
+/**
+ * The panel renders #62's on-device notice from this same inventory, so the
+ * five About items stay on the page without a second notice (which would
+ * duplicate the privacy-on-device-title id).
+ */
+const ABOUT_INVENTORY: readonly InventoryEntry[] = aboutNoticeItems().map((item) => ({
+  id: item.id,
+  label: item.label,
+  ...(item.where !== undefined ? { where: item.where } : {}),
+  ...(INVENTORY_PURPOSE[item.id] !== undefined ? { purpose: INVENTORY_PURPOSE[item.id] } : {}),
+  keptFor: INVENTORY_KEPT_FOR,
+  source: INVENTORY_SOURCE,
+  recordedOn: REVIEWED_ON,
+}));
 
 export function AboutPage() {
   const { t, i18n } = useTranslation();
@@ -95,7 +106,7 @@ function PrivacyPanelHost({ locale }: { locale: "en" | "fr" }) {
       prefix: PRIVACY_STORAGE_PREFIX,
       inventory: ABOUT_INVENTORY,
       now: () => new Date(),
-      reviewedOn: "2026-11-15",
+      reviewedOn: REVIEWED_ON,
       languages: [locale],
     });
     const mounted = mountPrivacyPanel(adaptElement(host), controller, { onExport: browserDownload });

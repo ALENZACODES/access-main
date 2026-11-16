@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DISPLAY_TIERS, tierMessageKey, type CacheEntry } from "@access/shared";
+import { DEFAULT_STALE_AFTER_DAYS, buildSourceList, dataBadge, formatRate, renderSourceListHtml, type DataBadge } from "../data-status/index.ts";
 import { Button } from "../design/Button.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
 import { ErrorActions } from "../shell/ErrorActions.tsx";
@@ -44,6 +45,32 @@ export function DataStatusPage() {
   }, []);
 
   const dateLocale = i18n.language.startsWith("fr") ? "fr-CA" : "en-CA";
+  const locale = i18n.language.startsWith("fr") ? "fr" : "en";
+  const now = new Date();
+  // One badge per cached record: its age, a provenance line with Unknown for gaps, and its licence kind.
+  const badges = new Map<string, DataBadge>(entries.map((entry) => [entry.id, dataBadge({
+    source: entry.provenance.source_name,
+    licence: entry.provenance.licence,
+    retrievedAt: entry.provenance.retrieved_at,
+  }, locale, now)]));
+  // With no cached records the share is UNKNOWN, never 0.
+  const unknownDates = entries.filter((entry) => badges.get(entry.id)?.ageDays === null).length;
+  const unknownDateRate = formatRate(entries.length > 0 ? (unknownDates / entries.length) * 100 : null, locale);
+  // One row per source and licence. The oldest retrieval is shown, so a stale
+  // record is never hidden behind a newer one; a missing date makes it Unknown.
+  const bySource = new Map<string, { id: string; name: string; licence: string; retrievedAt: string | null }>();
+  for (const entry of entries) {
+    const key = `${entry.provenance.source_name}\u0000${entry.provenance.licence}`;
+    const retrievedAt = entry.provenance.retrieved_at ?? null;
+    const current = bySource.get(key);
+    if (!current) {
+      bySource.set(key, { id: key, name: entry.provenance.source_name, licence: entry.provenance.licence, retrievedAt });
+    } else if (current.retrievedAt !== null && (retrievedAt === null || retrievedAt < current.retrievedAt)) {
+      current.retrievedAt = retrievedAt;
+    }
+  }
+  const sourceRows = buildSourceList([...bySource.values()], locale, now);
+  const sourceListHtml = renderSourceListHtml(sourceRows, locale);
 
   return (
     <div className="stack">
@@ -108,6 +135,13 @@ export function DataStatusPage() {
         <p>{summary ? t("storage.cacheCount", { count: summary.cacheCount }) : t("home.checking")}</p>
         <p>{summary?.newestStoredAt ? t("data.asOf", { date: summary.newestStoredAt }) : t("data.noAsOf")}</p>
         {summary && summary.cacheCount === 0 ? <p>{t("data.cacheEmpty")}</p> : null}
+        <dl className="review-list">
+          <div>
+            <dt>{t("data.qualityRate")}</dt>
+            <dd data-testid="unknown-date-rate" aria-label={unknownDateRate.ariaLabel}>{unknownDateRate.text}</dd>
+          </div>
+        </dl>
+        <p>{t("data.qualityRule", { days: DEFAULT_STALE_AFTER_DAYS })}</p>
         {entries.length > 0 ? (
           <ul className="record-list">
             {entries.map((entry) => (
@@ -115,8 +149,12 @@ export function DataStatusPage() {
                 <p>
                   <strong>{entry.title}</strong> · {entry.kind}
                 </p>
+                <p>{badges.get(entry.id)?.provenanceLine}</p>
+                <p className={`freshness freshness-${badges.get(entry.id)?.state ?? "unknown"}`}>{badges.get(entry.id)?.label}</p>
+                {badges.get(entry.id)?.licence === "terms" ? <p>{t("data.licenceTerms")}</p> : null}
+                {badges.get(entry.id)?.licence === "unrecognised" ? <p>{t("data.licenceUnrecognised")}</p> : null}
+                {badges.get(entry.id)?.licence === "unknown" ? <p>{t("data.licenceUnknown")}</p> : null}
                 <p>
-                  {entry.provenance.source_name} · {entry.provenance.licence} · {entry.provenance.source_date} ·{" "}
                   {String(entry.provenance.tier)}
                   {entry.provenance.prototype_label ? ` · ${entry.provenance.prototype_label}` : ""}
                 </p>
@@ -142,6 +180,12 @@ export function DataStatusPage() {
           <p role="status" tabIndex={-1} ref={clearedRef}>{t("data.cleared")}</p>
         ) : null}
       </section>
+      {sourceRows.length > 0 ? (
+        <section className="stack" aria-labelledby="source-list-title">
+          <h2 id="source-list-title">{locale === "fr" ? "Sources et licences" : "Sources and licences"}</h2>
+          <div dangerouslySetInnerHTML={{ __html: sourceListHtml }} />
+        </section>
+      ) : null}
       <section className="stack" aria-labelledby="legend-title">
         <h2 id="legend-title">{t("data.legendTitle")}</h2>
         <dl className="review-list">

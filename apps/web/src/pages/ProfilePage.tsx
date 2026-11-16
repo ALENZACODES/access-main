@@ -10,6 +10,7 @@ import { PreferenceFields } from "../profile/PreferenceFields.tsx";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { ErrorActions } from "../shell/ErrorActions.tsx";
+import { RecoveryNotice, runRecoverable, type RecoveryFailure } from "../recovery/index.ts";
 import { exportProfileJson, exportProfileText, StorageError } from "../storage/repository.ts";
 
 export function ProfilePage() {
@@ -19,6 +20,7 @@ export function ProfilePage() {
   const [issues, setIssues] = useState<FieldIssue[]>([]);
   const [status, setStatus] = useState<"idle" | "saved" | "deleted" | "withdrawn" | "error">("idle");
   const [confirming, setConfirming] = useState<"withdraw" | "delete" | null>(null);
+  const [exportFailure, setExportFailure] = useState<{ failure: RecoveryFailure; retry: () => void } | null>(null);
   const withdrawRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const loaded = useRef(false);
@@ -67,14 +69,23 @@ export function ProfilePage() {
     }
   };
 
-  const download = (filename: string, contents: string, type: string) => {
-    const blob = new Blob([contents], { type });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+  /** Builds and saves an export file; a failure shows the export recovery notice with a retry. */
+  const download = (filename: string, build: () => string, type: string) => {
+    setExportFailure(null);
+    void runRecoverable("export", async () => {
+      const blob = new Blob([build()], { type });
+      const url = URL.createObjectURL(blob);
+      try {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }).then((result) => {
+      if (!result.ok) setExportFailure({ failure: result.failure, retry: () => download(filename, build, type) });
+    });
   };
 
   const consentError = issues.some((issue) => issue.field === "consent" || issue.field === "consent_records")
@@ -144,12 +155,12 @@ export function ProfilePage() {
         <div className="button-row">
           <Button
             variant="secondary"
-            onPress={() => profile && download("the-app-preferences.txt", exportProfileText(profile, exportPhrases(language)), "text/plain")}
+            onPress={() => profile && download("the-app-preferences.txt", () => exportProfileText(profile, exportPhrases(language)), "text/plain")}
             isDisabled={!profile}
           >
             {t("profile.export")}
           </Button>
-          <Button variant="secondary" onPress={() => profile && download("the-app-preferences.json", exportProfileJson(profile), "application/json")} isDisabled={!profile}>
+          <Button variant="secondary" onPress={() => profile && download("the-app-preferences.json", () => exportProfileJson(profile), "application/json")} isDisabled={!profile}>
             {t("profile.exportJson")}
           </Button>
           <Button ref={withdrawRef} variant="secondary" onPress={() => setConfirming("withdraw")} isDisabled={!activeConsent}>
@@ -157,6 +168,14 @@ export function ProfilePage() {
           </Button>
           <Button ref={deleteRef} variant="secondary" onPress={() => setConfirming("delete")} isDisabled={!profile}>{t("profile.delete")}</Button>
         </div>
+        {exportFailure ? (
+          <RecoveryNotice
+            failure={exportFailure.failure}
+            locale={language}
+            onRetry={exportFailure.retry}
+            onDismiss={() => setExportFailure(null)}
+          />
+        ) : null}
       </section>
       {confirming === "withdraw" ? (
         <ConfirmDialog
