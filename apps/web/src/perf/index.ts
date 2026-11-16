@@ -16,3 +16,4 @@ export {
   type LazyChunk,
   type LazyChunkStatus,
 } from "./lazy-chunk.ts";
+export { preloadRoute, routeChunks, routePage, type ChunkedRoute } from "./routeChunks.ts";

@@ -134,6 +134,11 @@ export default defineConfig({
           ) {
             return "react-aria";
           }
+          if (id.includes("/node_modules/react-aria/")) return "react-aria";
+          // Schema validation (Settings feature packages) and ZIP export (Contribute) are only used
+          // on those routes. In their own chunks they stay out of the start-up preload set.
+          if (/\/node_modules\/(ajv|ajv-formats|fast-uri|fast-deep-equal|json-schema-traverse|require-from-string)\//.test(id)) return "ajv";
+          if (id.includes("/node_modules/fflate/")) return "fflate";
           if (id.includes("/react-dom/")) return "react-dom";
           if (id.includes("/react-router") || id.includes("/@remix-run/")) return "router";
           if (id.includes("/i18next") || id.includes("/react-i18next/")) return "i18n";

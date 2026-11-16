@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { SHELL_CONTRACT_VERSION } from "@access/shared";
 import { skipLinkLabel } from "../a11y/index.ts";
 import { BUILD_ID } from "../buildInfo.ts";
+import { preloadRoute } from "../perf/routeChunks.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { ErrorActions } from "./ErrorActions.tsx";
 import { UpdatePrompt } from "./UpdatePrompt.tsx";
@@ -111,7 +112,7 @@ export function AppShell() {
           <ul className="nav-list">
             {LINKS.map(([to, key, end]) => (
               <li key={to}>
-                <NavLink to={to} end={end} className="nav-link">{t(key)}</NavLink>
+                <NavLink to={to} end={end} className="nav-link" onFocus={() => preloadRoute(to)} onPointerEnter={() => preloadRoute(to)}>{t(key)}</NavLink>
               </li>
             ))}
           </ul>

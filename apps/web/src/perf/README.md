@@ -1,38 +1,32 @@
-# Web performance helpers
+# Web performance (P11)
 
-`install-budget.ts` checks the **inclusive 4,141,875-byte install limit**
-using actual file sizes from a complete production install manifest:
+## What is wired
 
-```ts
-import { assertInstallBudget } from "./install-budget";
-assertInstallBudget([
-  { path: "index.html", bytes: 875 },
-  { path: "assets/app.js", bytes: 4_141_000 },
-]);
-```
+| Piece | Where it runs |
+| --- | --- |
+| First-install budget guard (`install-budget.ts`) | `scripts/check-install-budget.ts`, run by `postbuild`, so CI's `npm run build` step fails above **4,141,875 B** |
+| Route chunks (`lazy-chunk.ts`, `routeChunks.ts`) | `src/router.tsx` (About, Profile, module pages, place detail, Help, Data status, Build card, Offline) and the nav links in `shell/AppShell.tsx` (preload on focus or pointer) |
+| Vendor split | `vite.config.ts`: schema validation (`ajv` family, only Settings feature packages) and ZIP export (`fflate`, only Contribute) get their own chunks, so they are no longer in the start-up preload |
+| Day 22 timing and LCP | `e2e/perf.spec.ts`, in CI's e2e step; writes `test-results/perf/day22-performance.json` |
 
-Include **every installed asset**, including lazy chunks, offline files and
-service workers. Sizes are raw installed bytes, not gzip/Brotli estimates.
-Duplicate paths, invalid sizes and excess bytes fail closed. For untrusted
-parsed JSON use `assertInstallBudgetFromJson(value)`.
+## First install versus on demand
 
-**Integration required:** Generate a complete manifest from the production
-build and invoke the guard during build verification. This scoped helper does
-not automatically modify existing build scripts; omitted assets cannot be
-detected by the guard.
+The first install is every file in the service-worker precache plus `sw.js`
+and its Workbox runtime. On-demand downloads are **outside** the cap: offline
+region packs (`packs/`), data files (`data/`), PMTiles, and the MapLibre chunk
+that only `/map` requests. The guard fails if any of them is ever precached,
+and prints their size separately. `@access-main/budgets`
+(`check:web-precache`) still checks the per-file and precache limits.
 
-`lazy-chunk.ts` provides `createLazyChunk`, `lazyImport`, `lazyExport` and
-`preloadChunks`. Imports start only on an explicit `load()` or `preload()`;
-concurrent calls share one request, successes are cached and failures may be
-retried. `reset()` invalidates the cache but does not cancel an in-flight
-request. Stale completions cannot overwrite newer state.
+## Measured on this branch
 
-```ts
-import { lazyImport } from "./lazy-chunk";
-const feature = lazyImport(() => import("./optional-feature"));
-// Call feature.load() only when the optional feature is requested.
-```
+Start-up JS (modulepreload set on `/`): about 827,000 B before the split,
+665,229 B after (vendor chunk 240,918 B → 8,688 B; `ajv` 150,790 B now loads
+only with Settings packages).
 
-The example import path is illustrative; supply a real feature module at the
-integration point. Lazy loading does not exempt installed chunks from the
-byte limit. Run `apps/web/src/perf/*.test.ts` with the repo's Vitest runner.
+Day 22 record from a local run (Playwright Chromium, 390×844, CPU 4×
+slowdown, local production build, no network throttling, 3 cold runs,
+median): home LCP 288 ms; time to first result: place search 388 ms, journey
+plan 418 ms, washroom finder 450 ms. A CI runner or a desktop is not a real
+phone. The plan's on-phone measurement still has to be done by hand and
+compared with Day 12; no Day 12 record exists in this repo yet.
