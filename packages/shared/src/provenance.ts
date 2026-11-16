@@ -1,4 +1,6 @@
+import { REFUSED_LABEL_NOT_IN_PROTOTYPE } from "./protocolFields.ts";
 import {
+  REFUSED_PROTOTYPE_LABEL,
   canonicalTierFromForeign,
   isPrototypeLabel,
   prototypeTierRefusal,
@@ -70,8 +72,8 @@ export function validateProvenance(provenance: Provenance | undefined, fieldPref
     issues.push({ field: `${fieldPrefix}.retrieved_at`, code: "invalid_date" });
   }
   const rawTier = provenance.tier as unknown;
-  if (rawTier === "VERIFIED") {
-    issues.push({ field: `${fieldPrefix}.tier`, code: "verified_not_in_prototype" });
+  if (rawTier === REFUSED_PROTOTYPE_LABEL) {
+    issues.push({ field: `${fieldPrefix}.tier`, code: REFUSED_LABEL_NOT_IN_PROTOTYPE });
   } else if (rawTier === "COMMUNITY-REPORTED" || rawTier === "UNKNOWN" || rawTier === "unknown") {
     issues.push({ field: `${fieldPrefix}.tier`, code: rawTier === "COMMUNITY-REPORTED" ? "tier_not_in_prototype" : "invalid_tier" });
   }
