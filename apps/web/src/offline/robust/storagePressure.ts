@@ -1,5 +1,5 @@
-import { mountOfflineDashboard } from "./offlineDashboard.ts";
-import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload.ts";
+import { mountOfflineDashboard } from "./offlineDashboard";
+import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload";
 
 /** User-facing download state. Cells not downloaded are named as such, never as available and never as UNKNOWN. */
 export type PressureState =
@@ -46,10 +46,10 @@ export function pressureView(state: PressureState, language: Language): Pressure
   if (state.phase === "working") {
     return { message: copy.working, details: "", action: copy.retry, disabled: true };
   }
-  if (state.phase === "idle" || state.result === null) {
+  if (state.phase !== "stopped" || state.result === null) {
     return { message: "", details: "", action: copy.start, disabled: false };
   }
-  const result = state.result;
+  const result: DownloadResult = state.result;
   const message = result.completed ? copy.complete : result.reason === "quota" ? copy.quota :
     result.reason === "interrupted" ? copy.interrupted : copy.error;
   const separator = language === "fr" ? "\u00a0:" : ":";
@@ -121,7 +121,6 @@ export function createPressureController(
 /**
  * Explicit opt-in UI: hosts mount this panel beside their offline download control.
  * The host is responsible for first-party fetching and open-licence data selection.
- * Round 3 mounts the inventory dashboard through this same entry point.
  */
 export function mountStoragePressurePanel(
   root: HTMLElement,
