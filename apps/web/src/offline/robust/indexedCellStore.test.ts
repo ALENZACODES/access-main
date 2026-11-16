@@ -4,8 +4,8 @@ import {
   openCellDatabase,
   openIndexedCellStore,
   removeListedCell,
-} from "./indexedCellStore.ts";
-import { type StoredCell } from "./regionDownload.ts";
+} from "./indexedCellStore";
+import { type StoredCell } from "./regionDownload";
 
 const provenance = {
   source: "Open municipal data", licence: "CC BY 4.0", date: "2026-01-01",
@@ -117,22 +117,21 @@ describe("persistent first-party IndexedDB cell storage", () => {
     expect(await store.get("region", "missing")).toBeUndefined();
   });
 
-  it("copies input bytes so mutation after put cannot change stored data", async () => {
+  it("persists byte counts and attribution without payload arrays", async () => {
     const fake = fakeDatabase();
     const store = createIndexedCellStore(fake.database);
-    const original = new Uint8Array([1, 2, 3]);
-    await store.put("r", "a", { bytes: original.byteLength, provenance });
-    original[0] = 99;
-    expect((await store.get("r", "a"))?.bytes).toBe(3);
+    await store.put("r", "a", { bytes: 3, provenance });
+    expect(await store.get("r", "a")).toEqual({ bytes: 3, provenance });
+    expect(fake.records.get("r\u0000a")?.bytes).toBe(3);
   });
 
-  it("returns a copy that can be changed without altering persistence", async () => {
+  it("returns distinct record values for different writes", async () => {
     const fake = fakeDatabase();
     const store = createIndexedCellStore(fake.database);
     await store.put("r", "a", saved);
-    const read = await store.get("r", "a");
-    if (read === undefined) throw new Error("Expected saved cell");
     expect((await store.get("r", "a"))?.bytes).toBe(4);
+    await store.put("r", "a", { bytes: 2, provenance });
+    expect((await store.get("r", "a"))?.bytes).toBe(2);
   });
 
   it("never confuses identical cell IDs in different regions", async () => {

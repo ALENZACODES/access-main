@@ -1,4 +1,4 @@
-import { DASHBOARD_COPY } from "./offlineCopy.ts";
+import { DASHBOARD_COPY } from "./offlineCopy";
 
 export const MIN_TARGET_PX = 44;
 
@@ -44,7 +44,7 @@ export function auditOfflineCopy(
   }
   for (const language of [english, french]) {
     for (const value of Object.values(language)) {
-      if (/(?:verified|vérifié(?:e|s|es)?|real-time|partnership|guarantee(?:d|s)?|aaa-conformant)/iu.test(value)) {
+      if (/\b(?:verified|vérifié(?:e|s|es)?|real-time|partnership|guarantee(?:d|s)?|aaa-conformant)\b/i.test(value)) {
         findings.push("disallowed-claim");
       }
     }
