@@ -55,6 +55,31 @@ const slimLaneAliases = Object.fromEntries([
   slimLane("@access/help/shell", "access-help", "packages/help", "src/shell.ts", path.resolve(root, "apps/web/src/modules/help-shell-fallback.ts")),
 ]);
 
+/** More hub packages, synced by scripts/sync-hub.mjs. Same list as hubAliases in apps/web/vite.config.ts. */
+const hubAliases = (
+  [
+    ["@access-tools/employment", "access-tools", "employment"],
+    ["@access-tools/housing", "access-tools", "housing"],
+    ["@access-tools/safety", "access-tools", "safety"],
+    ["@access-tools/timing", "access-tools", "timing"],
+    ["@access-tools/diary", "access-tools", "diary"],
+    ["@access-tools/auditors", "access-tools", "auditors"],
+    ["@access-tools/handoff", "access-tools", "handoff"],
+    ["@hub/handoff-fixtures", "access-tools", "handoff", "src/fixtures.ts"],
+    ["@access/peers", "access-help", "peers"],
+    ["@access/event-access", "access-help", "event-access"],
+    ["@hub/event-access-ui", "access-help", "event-access", "src/ui/index.ts"],
+    ["@access/outings", "access-help", "outings"],
+    ["@access-maps/conditions", "access-maps", "conditions"],
+    ["@hub/wav-dataset", "access-maps", "conditions", "datasets/wav-services.json"],
+    ["@hub/games", "access-tools", "games"],
+  ] as Array<[string, string, string] | [string, string, string, string]>
+)
+  .map(([find, repo, pkg, entry = "src/index.ts"]) => ({
+    find: new RegExp(`^${find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
+    replacement: path.join(root, ".lanes", repo, "packages", pkg, entry),
+  }));
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -64,6 +89,7 @@ export default defineConfig({
       ...Object.entries(slimLaneAliases).map(([find, replacement]) => ({ find, replacement })),
       placeLaneAlias(),
       ...Object.entries(laneAliases).map(([find, replacement]) => ({ find, replacement })),
+      ...hubAliases,
     ],
   },
   test: {

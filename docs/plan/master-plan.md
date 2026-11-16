@@ -26,7 +26,7 @@ Rules that do not bend:
 
 | Repository | Role | State |
 | --- | --- | --- |
-| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Several lane packages are pinned in `lanes.lock.json`; four access-maps entries still read `PIN-AFTER-MERGE`. |
+| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Every entry in `lanes.lock.json` is pinned to a merged commit. |
 | access-maps | Open-data pipeline, journey engine, map interface, conditions | Imports are in place with tier 0 and tier 1 values only. Verified (tier 2–3) total is 0. |
 | access-tools | Place pages, search, finders, directory, games, importers | Place pages and finders run on labelled fixtures. Ten of fifty games ship. |
 | access-help | Help centre, onboarding, glossary, peers, events, the cross-repository test harness | Built on demonstration and sample data. French is a draft. |
@@ -67,7 +67,19 @@ Seven feature lanes each landed one pull request:
 | Events | access-help `packages/event-access`, `packages/outings` | #58 (merged) | Per-event access record, organiser checklist, journey hand-off, outing planner |
 | Advocacy | access-main `packages/advocacy` | #127 (merged) | Aggregation with primary and complementary suppression, evidence packs, indicators |
 
-None of the seven is reachable from the shell yet. That is Phase B.
+Reachable from the shell after the integration round of 16 November (routes, packages and data are listed in [`docs/repo-map.md`](../repo-map.md)):
+
+| Lane | Reachable at | Not reachable yet |
+| --- | --- | --- |
+| Games | `/more/games`: 19 games and the dwell select setting | Dwell select outside the games |
+| Work and home | `/more/employment`: listings with the access record, commute check and referral summary | Housing unit and room depth finder and the barrier evidence form: `/more/housing` stays on the earlier pin until a repeated-landmark fault in the package is fixed |
+| Auditors | `/more/auditors`: observations, programme, venue responses, cases and service summary | — |
+| Conditions | `/more/route-reports` (list; the form needs a place) and `/more/accessible-taxis` (zero records, shown as unknown) | A link from a place page to the report form; routing facts are not used by the journey route |
+| Peers | `/more/peers`: topic list only | The peer request flow: the package holds wording the post-build check rejects |
+| Events | `/more/event-organiser` and `/more/event-plan` | The per-event access page and journey hand-off, which need an event record; `/more/events` still lists demonstration events without them |
+| Advocacy | `/settings/advocacy`: the evidence pack export, as before | The report tables and indicators (`ReportsPanel`): its focusable scrolling boxes fail the shell's Day 17 route audit |
+
+Each route was checked in English and French by unit tests and by browser accessibility and keyboard tests. Every record these routes show is demonstration, sample or the person's own entry; none is a verified accessibility fact.
 
 ## 3. Phases
 

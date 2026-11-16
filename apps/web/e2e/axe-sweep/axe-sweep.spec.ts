@@ -6,8 +6,8 @@ const ROUTES = appRoutes();
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 test("P20 route inventory is derived from app routes", () => {
-  expect(ROUTES).toHaveLength(32);
-  expect(new Set(ROUTES).size).toBe(32);
+  expect(ROUTES).toHaveLength(37);
+  expect(new Set(ROUTES).size).toBe(37);
   expect(ROUTES).toContain("/dev/narrow");
   expect(ROUTES).toContain("/places");
   expect(ROUTES).toContain("/help");

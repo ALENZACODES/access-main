@@ -97,11 +97,17 @@ const hubAliases = (
     ["@hub/handoff-fixtures", "access-tools", "handoff", "src/fixtures.ts"],
     ["@access/peers", "access-help", "peers"],
     ["@access/event-access", "access-help", "event-access"],
+    ["@hub/event-access-ui", "access-help", "event-access", "src/ui/index.ts"],
+    ["@access/outings", "access-help", "outings"],
+    ["@access-maps/conditions", "access-maps", "conditions"],
+    ["@hub/wav-dataset", "access-maps", "conditions", "datasets/wav-services.json"],
+    ["@hub/games", "access-tools", "games"],
   ] as Array<[string, string, string] | [string, string, string, string]>
-).map(([find, repo, pkg, entry = "src/index.ts"]) => ({
-  find,
-  replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
-}));
+)
+  .map(([find, repo, pkg, entry = "src/index.ts"]) => ({
+    find,
+    replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
+  }));
 
 /** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
 function buildManifest(): Plugin {

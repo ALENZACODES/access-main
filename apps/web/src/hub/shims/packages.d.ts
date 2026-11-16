@@ -44,3 +44,74 @@ declare module "@hub/handoff-fixtures" {
   export const demonstrationRecords: readonly unknown[];
   export const demonstrationHandoff: unknown;
 }
+
+declare module "@hub/games" {
+  import type { ComponentType } from "react";
+  export interface HubGamesSettings {
+    playerId: string;
+    language: "en" | "fr";
+    [key: string]: unknown;
+  }
+  export interface HubGamesRound {
+    roundId: string;
+    [key: string]: unknown;
+  }
+  export const GamesApp: ComponentType<{
+    settings: HubGamesSettings;
+    rounds: HubGamesRound[];
+    onSettings: (settings: HubGamesSettings) => void;
+    onRound: (round: HubGamesRound) => void;
+    onResetStreak: () => void;
+  }>;
+  export const GAME_LIBRARY: readonly { id: string; name: string }[];
+  export function defaultSettings(playerId: string): HubGamesSettings;
+  export function openGamesDatabase(): Promise<IDBDatabase>;
+  export function readSettings(db: IDBDatabase, playerId: string): Promise<HubGamesSettings>;
+  export function writeSettings(db: IDBDatabase, input: unknown): Promise<HubGamesSettings>;
+  export function readRounds(db: IDBDatabase): Promise<HubGamesRound[]>;
+  export function writeRound(db: IDBDatabase, input: unknown): Promise<HubGamesRound>;
+  export function deleteGamesData(db: IDBDatabase): Promise<void>;
+}
+
+declare module "@access-maps/conditions" {
+  import type { ComponentType } from "react";
+  export type HubLocationRef = { type: "feature"; feature_id: string };
+  export interface HubRouteReport {
+    id: string;
+    [key: string]: unknown;
+  }
+  export interface HubReportGroup {
+    id: string;
+    [key: string]: unknown;
+  }
+  export const RouteReportsList: ComponentType<{ groups: readonly HubReportGroup[]; language?: "en" | "fr" }>;
+  export const RouteReportForm: ComponentType<{
+    language?: "en" | "fr";
+    location: HubLocationRef;
+    locationLabel: string;
+    sourceId: string;
+    licence: string;
+    reporterRef: string | null;
+    newId: () => string;
+    onSave: (report: HubRouteReport) => void;
+  }>;
+  export function corroborateReports(reports: readonly HubRouteReport[], now: Date): HubReportGroup[];
+  export function validateReport(input: unknown): { ok: true; report: HubRouteReport } | { ok: false };
+  export const WavFinder: ComponentType<{ records: readonly unknown[]; language?: "en" | "fr" }>;
+  export function loadWavDataset(input: unknown, kind?: "dataset" | "fixture"): unknown[];
+}
+
+declare module "@hub/wav-dataset" {
+  const dataset: { format: string; version: number; records: unknown[] };
+  export default dataset;
+}
+
+declare module "@hub/event-access-ui" {
+  import type { ComponentType } from "react";
+  export const OrganiserForm: ComponentType<{ lang: "en" | "fr"; today: string }>;
+}
+
+declare module "@access/outings" {
+  import type { ComponentType } from "react";
+  export const EventOutingPlanner: ComponentType<{ lang: "en" | "fr"; today?: string }>;
+}
