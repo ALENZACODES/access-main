@@ -193,7 +193,7 @@ export function rewriteTemplateDisplayParts(text) {
       if (quote !== null) {
         if (char === '\\') { cursor += 2; continue; }
         if (char === quote) quote = null;
-      } else if (char === '\"' || char === "'") {
+      } else if (char === '"' || char === "'") {
         quote = char;
       } else if (char === '`') {
         // An interpolated nested template is not safe for this pass.
