@@ -1,4 +1,5 @@
-import { escapeHtml, renderBody, type AuditReport } from './report.js';
+import { renderSarif } from './ci.js';
+import { escapeHtml, renderBody, renderJson, type AuditReport } from './report.js';
 import { selfAudit } from './run.js';
 import type { Lang } from './types.js';
 
@@ -16,6 +17,8 @@ export interface PanelOptions {
   /** Produces the report. Defaults to auditing the current document. */
   readonly run?: () => Promise<AuditReport> | AuditReport;
   readonly now?: () => Date;
+  /** Puts text on the clipboard. Defaults to the browser clipboard when there is one. */
+  readonly copy?: (text: string) => Promise<void>;
 }
 
 type State =
@@ -35,9 +38,14 @@ const TEXT = {
   running: { en: 'Running the audit…', fr: 'Audit en cours…' },
   error: { en: 'The audit could not run', fr: 'L’audit n’a pas pu s’exécuter' },
   switchTo: { en: 'Français', fr: 'English' },
+  copyJson: { en: 'Copy report (JSON)', fr: 'Copier le rapport (JSON)' },
+  copySarif: { en: 'Copy report (SARIF)', fr: 'Copier le rapport (SARIF)' },
+  copied: { en: 'Copied.', fr: 'Copié.' },
+  noClipboard: { en: 'Copying is not available in this browser.', fr: 'La copie n’est pas disponible dans ce navigateur.' },
+  copyFailed: { en: 'Copying failed.', fr: 'La copie a échoué.' },
 } as const;
 
-export function renderPanel(lang: Lang, state: State): string {
+export function renderPanel(lang: Lang, state: State, notice = ''): string {
   const other: Lang = lang === 'en' ? 'fr' : 'en';
   let status: string;
   let body = '';
@@ -52,8 +60,11 @@ export function renderPanel(lang: Lang, state: State): string {
       status = `${TEXT.error[lang]}${lang === 'fr' ? '\u00A0' : ''}: ${state.message}`;
       break;
     case 'done':
-      status = '';
-      body = renderBody(state.report, lang);
+      status = notice;
+      body =
+        `<p><button type="button" data-action="copy-json" style="min-height:44px;min-width:44px">${escapeHtml(TEXT.copyJson[lang])}</button> ` +
+        `<button type="button" data-action="copy-sarif" style="min-height:44px;min-width:44px">${escapeHtml(TEXT.copySarif[lang])}</button></p>` +
+        renderBody(state.report, lang);
       break;
   }
   return (
@@ -73,22 +84,51 @@ export function renderPanel(lang: Lang, state: State): string {
 export function mountNarrowPanel(opts: PanelOptions): { getLang(): Lang } {
   let lang = opts.lang;
   let state: State = { kind: 'idle' };
+  let notice = '';
   const run = opts.run ?? (() => selfAudit((opts.now ?? (() => new Date()))()));
+
+  const copy =
+    opts.copy ??
+    ((text: string): Promise<void> => {
+      const nav = (globalThis as unknown as { navigator?: { clipboard?: { writeText(t: string): Promise<void> } } }).navigator;
+      return nav?.clipboard ? nav.clipboard.writeText(text) : Promise.reject(new Error('no clipboard'));
+    });
+  const hasClipboard =
+    opts.copy !== undefined || (globalThis as unknown as { navigator?: { clipboard?: unknown } }).navigator?.clipboard !== undefined;
 
   const render = (focusAction?: string): void => {
     opts.root.setAttribute?.('lang', lang);
-    opts.root.innerHTML = renderPanel(lang, state);
+    opts.root.innerHTML = renderPanel(lang, state, notice);
     if (focusAction) opts.root.querySelector?.(`[data-action="${focusAction}"]`)?.focus?.();
   };
 
   opts.root.addEventListener('click', (e) => {
     const target = e.target as { getAttribute?(n: string): string | null };
     const action = target.getAttribute?.('data-action') ?? null;
-    if (action === 'lang-en' || action === 'lang-fr') {
+    if ((action === 'copy-json' || action === 'copy-sarif') && state.kind === 'done') {
+      const report = state.report;
+      const text = action === 'copy-json' ? renderJson(report) : renderSarif(report);
+      if (!hasClipboard) {
+        notice = TEXT.noClipboard[lang];
+        render(action);
+        return;
+      }
+      void (async (): Promise<void> => {
+        try {
+          await copy(text);
+          notice = TEXT.copied[lang];
+        } catch {
+          notice = TEXT.copyFailed[lang];
+        }
+        render(action);
+      })();
+    } else if (action === 'lang-en' || action === 'lang-fr') {
       lang = action === 'lang-fr' ? 'fr' : 'en';
+      notice = '';
       render(`lang-${lang === 'fr' ? 'en' : 'fr'}`);
     } else if (action === 'run' && state.kind !== 'running') {
       state = { kind: 'running' };
+      notice = '';
       render('run');
       void (async (): Promise<void> => {
         try {

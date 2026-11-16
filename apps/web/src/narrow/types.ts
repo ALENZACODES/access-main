@@ -22,7 +22,12 @@ export type CheckId =
   | 'motion'
   | 'static-html'
   | 'copy'
-  | 'provenance';
+  | 'provenance'
+  | 'link-cue'
+  | 'non-text-contrast'
+  | 'dragging'
+  | 'consistency'
+  | 'waiver';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -43,6 +48,11 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   'static-html': null,
   copy: null,
   provenance: null,
+  'link-cue': '1.4.1',
+  'non-text-contrast': '1.4.11',
+  dragging: '2.5.7',
+  consistency: '3.2.3',
+  waiver: null,
 };
 
 export const CHECK_ORDER: readonly CheckId[] = [
@@ -63,6 +73,11 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'static-html',
   'copy',
   'provenance',
+  'link-cue',
+  'non-text-contrast',
+  'dragging',
+  'consistency',
+  'waiver',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -83,6 +98,11 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   'static-html': { en: 'Page markup', fr: 'Balisage de la page' },
   copy: { en: 'Wording rules', fr: 'Règles de rédaction' },
   provenance: { en: 'Data sources and licences', fr: 'Sources et licences des données' },
+  'link-cue': { en: 'Links not shown by colour alone', fr: 'Liens non signalés par la couleur seule' },
+  'non-text-contrast': { en: 'Control boundary contrast', fr: 'Contraste des bordures de contrôles' },
+  dragging: { en: 'Dragging alternatives', fr: 'Alternatives au glisser-déposer' },
+  consistency: { en: 'Consistency across pages', fr: 'Cohérence entre les pages' },
+  waiver: { en: 'Waivers', fr: 'Dérogations' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */

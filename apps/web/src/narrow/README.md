@@ -21,8 +21,13 @@ measure reports UNKNOWN, never a pass.
 | keyboard | 2.1.1, 2.1.2 | presses real Tab: trap is a failure, unreached controls and odd order are UNKNOWN |
 | focus-visible | 2.4.7 | compares outline, shadow, border, colours and pseudo-elements before and after focus |
 | motion | none | with reduced motion on, running animations fail; endless ones are UNKNOWN |
-| static-html | several | 18 markup rules (lang, title, viewport, headings, alt, names, ids, landmarks) on a file or the live page |
+| static-html | several | 31 markup rules (lang, title, viewport, headings, alt, names, ids, landmarks) on a file or the live page |
 | copy | none | words the App does not use in user copy fail; claims needing a person to read them are UNKNOWN |
+| link-cue | 1.4.1 | an in-text link with no underline, border or weight change needs 3:1 against the text around it |
+| non-text-contrast | 1.4.11 | text fields, selects and text areas: a border or fill that is 3:1 against the page |
+| dragging | 2.5.7 | draggable elements are always UNKNOWN: a person must confirm a single-pointer way |
+| consistency | 3.2.3 | across routes: navigation order and help placement fail; missing help, repeated titles and a changed language are UNKNOWN |
+| waiver | none | problems with a waivers file: expired or malformed fail, one that matches nothing is UNKNOWN |
 | provenance | none | data records need source name, https URL, licence and retrieved date |
 
 ### Profiles
@@ -30,6 +35,31 @@ measure reports UNKNOWN, never a pass.
 `--profiles all` repeats the page checks in narrow (320x640, default), landscape
 (640x320), dark, reduced-motion and forced-colors. Contrast is skipped under
 forced colors, where the browser picks the colours. The keyboard walk runs once.
+
+### CI outputs, baselines and waivers
+
+```
+npx tsx apps/web/src/narrow/bin.mjs --html dist/index.html --out reports/narrow \
+  --format sarif,junit --baseline narrow-baseline.json --waivers narrow-waivers.json
+```
+
+- `--format sarif,junit` writes `narrow-audit.sarif` (SARIF 2.1.0, for code
+  scanning) and `narrow-audit.junit.xml` next to the JSON and HTML reports. A
+  failure is an error. An UNKNOWN is a note in SARIF and a skipped test in JUnit,
+  never a pass.
+- `--write-baseline FILE` saves the failing keys. With `--baseline FILE` the run
+  exits 1 only for failures that are not in the file, and prints what is new and
+  what was fixed. Keys are route, check, rule and element id, so an element id
+  that moves with the markup shows up as one fixed and one new. UNKNOWN entries
+  are not hidden: `--strict-unknown` still counts them.
+- `--waivers FILE` takes `{"waivers":[{"check","rule?","route?","id?","reason","expires","owner?"}]}`.
+  `route` and `id` accept `*`. A reason needs 10 characters and `expires` is the
+  last valid day (YYYY-MM-DD, UTC). A waiver covers failures only; it never
+  touches an UNKNOWN. Waived failures stay in the report under their own heading.
+  An expired or malformed waiver is a failure, and one that matches nothing is an
+  UNKNOWN, so stale exceptions do not pile up.
+- The in-app panel has buttons that copy the report as JSON or SARIF. Without a
+  clipboard it says so.
 
 ### Data records (assumed shape)
 
@@ -97,4 +127,10 @@ Exit code 0 when no check failed, 1 when one failed, 2 on a usage or run error.
 - The copy check cannot judge meaning. A clean result is not a content review.
 - Nothing here is registered in the app shell or a CI workflow. Those live
   outside this folder and need a line each: mount `narrowRoute`, and run the CLI.
+- Cross-page checks need two or more routes in one run. They compare the first
+  profile of each route. Help is found by words (help, aide, support, contact),
+  so a help link with other wording is not seen.
+- The link check reads colours and a few cues, not hover or focus styles.
+- The field check looks at text fields, selects and text areas. Checkboxes,
+  radio buttons and icon buttons are not measured.
 - Only the first 3000 elements of a page are read.

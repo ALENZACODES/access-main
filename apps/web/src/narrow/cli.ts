@@ -1,3 +1,4 @@
+import { applyWaivers, describeDiff, describeWaived, diffAgainstBaseline, makeBaseline, parseBaseline, parseWaivers, renderJunit, renderSarif } from './ci.js';
 import { auditCopy, auditCopyDict } from './copylint.js';
 import { htmlTextItems, lintHtml } from './htmllint.js';
 import { auditI18n, flattenDict } from './i18n.js';
@@ -25,7 +26,14 @@ export interface CliArgs {
   readonly allowLicences: readonly string[];
   readonly requireFacts: readonly string[];
   readonly keyboardMax: number | null;
+  /** Extra files to write into --out: sarif and junit. */
+  readonly formats: readonly string[];
+  readonly baselineFile: string | null;
+  readonly writeBaselineFile: string | null;
+  readonly waiversFile: string | null;
 }
+
+export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit'];
 
 export type ParsedArgs =
   | { readonly ok: true; readonly args: CliArgs }
@@ -36,6 +44,7 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FILE ...] [--data FILE]\n' +
   '                    [--allow-licence ID ...] [--require-fact KEY ...] [--strict-unknown]\n' +
+  '                    [--format sarif,junit] [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
   '\n' +
@@ -43,6 +52,7 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FICHIER ...] [--data FICHIER]\n' +
   '                    [--allow-licence ID ...] [--require-fact CLÉ ...] [--strict-unknown]\n' +
+  '                    [--format sarif,junit] [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
 
@@ -59,6 +69,10 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let dataFile: string | null = null;
   let profiles: string | null = null;
   let keyboardMax: number | null = null;
+  let formats: string[] = [];
+  let baselineFile: string | null = null;
+  let writeBaselineFile: string | null = null;
+  let waiversFile: string | null = null;
   let offline = false;
   let strictUnknown = false;
   let help = false;
@@ -133,6 +147,29 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         if (typeof got !== 'string') return got;
         requireFacts.push(got);
         break;
+      case '--baseline':
+        got = need(a, next(), 'a file', 'un fichier');
+        if (typeof got !== 'string') return got;
+        baselineFile = got;
+        break;
+      case '--write-baseline':
+        got = need(a, next(), 'a file', 'un fichier');
+        if (typeof got !== 'string') return got;
+        writeBaselineFile = got;
+        break;
+      case '--waivers':
+        got = need(a, next(), 'a file', 'un fichier');
+        if (typeof got !== 'string') return got;
+        waiversFile = got;
+        break;
+      case '--format': {
+        const list = (next() ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+        if (list.length === 0 || list.some((x) => !OUTPUT_FORMATS.includes(x))) {
+          return fail(`--format must be a list of: ${OUTPUT_FORMATS.join(', ')}.`, `--format doit être une liste parmi\u00A0: ${OUTPUT_FORMATS.join(', ')}.`);
+        }
+        formats = [...new Set(list)];
+        break;
+      }
       case '--profiles': {
         const v = next();
         if (!v || !selectProfiles(v)) return fail('--profiles must be all or a list of known profile ids.', '--profiles doit valoir all ou une liste d’identifiants de profil connus.');
@@ -156,11 +193,12 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     if (offlineOnly && htmlFiles.length === 0 && dataFile === null && enFile === null) {
       return fail('Nothing to audit. Give --route, --html, --data or --en and --fr.', 'Rien à auditer. Indiquez --route, --html, --data ou --en et --fr.');
     }
+    if (formats.length > 0 && outDir === null) return fail('--format needs --out.', '--format demande --out.');
     if ((enFile === null) !== (frFile === null)) return fail('Give both --en and --fr, or neither.', 'Indiquez --en et --fr ensemble, ou aucun des deux.');
   }
   return {
     ok: true,
-    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax },
+    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile },
   };
 }
 
@@ -241,11 +279,34 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       const strings = i18n ? [buildRouteAudit('strings', null, stringChecks(i18n.en, i18n.fr))] : [];
       report = makeReport([...strings, ...extra], deps.now());
     }
+    let waivedText = '';
+    if (args.waiversFile !== null) {
+      const parsedWaivers = parseWaivers(await deps.readText(args.waiversFile));
+      const applied = applyWaivers(report, parsedWaivers.waivers, deps.now(), parsedWaivers.problems);
+      report = applied.waived.length > 0 ? { ...applied.report, waived: applied.waived } : applied.report;
+      waivedText = describeWaived(applied.waived, args.lang);
+    }
     deps.log(renderText(report, args.lang));
+    if (waivedText) deps.log(waivedText);
     if (args.outDir !== null) {
       const dir = args.outDir.replace(/\/+$/, '');
       await deps.writeText(`${dir}/narrow-audit.json`, renderJson(report));
       await deps.writeText(`${dir}/narrow-audit.${args.lang}.html`, renderHtml(report, args.lang));
+      if (args.formats.includes('sarif')) await deps.writeText(`${dir}/narrow-audit.sarif`, renderSarif(report));
+      if (args.formats.includes('junit')) await deps.writeText(`${dir}/narrow-audit.junit.xml`, renderJunit(report, args.lang));
+    }
+    if (args.writeBaselineFile !== null) await deps.writeText(args.writeBaselineFile, JSON.stringify(makeBaseline(report), null, 2) + '\n');
+    if (args.baselineFile !== null) {
+      const base = parseBaseline(await deps.readText(args.baselineFile));
+      if (!base.ok) {
+        deps.log(`${base.error.en} / ${base.error.fr}`);
+        return 2;
+      }
+      const diff = diffAgainstBaseline(report, base.value);
+      deps.log(describeDiff(diff, args.lang));
+      for (const item of diff.added) deps.log(`  + ${item.route} ${item.entry.check}${item.entry.rule ? '/' + item.entry.rule : ''} ${item.entry.id}`);
+      const unknownFails = args.strictUnknown && totals(report.routes).unknown > 0;
+      return diff.added.length > 0 || unknownFails ? 1 : 0;
     }
     return exitCode(report, args.strictUnknown);
   } catch (err) {

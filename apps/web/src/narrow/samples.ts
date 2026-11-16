@@ -1,3 +1,5 @@
+import { applyWaivers, parseWaivers } from './ci.js';
+import { auditConsistency } from './consistency.js';
 import { auditContrast } from './contrast.js';
 import { auditCopy, COPY_RULES } from './copylint.js';
 import { auditFocusObscured } from './focus.js';
@@ -7,8 +9,9 @@ import { auditKeyboard } from './keyboard.js';
 import { auditLanguage, auditNames } from './names.js';
 import { offlineCheckResult } from './offline.js';
 import { auditMotion } from './profiles.js';
+import { auditControlBoundaries, auditDragging, auditLinkCues, type PageFacts } from './probes.js';
 import { auditProvenance } from './provenance.js';
-import { entriesFromFindings } from './report.js';
+import { buildRouteAudit, entriesFromFindings, makeReport } from './report.js';
 import { auditTargetSpacing } from './spacing.js';
 import { auditTextSpacing } from './textspacing.js';
 import type { Entry, Rect } from './types.js';
@@ -25,7 +28,27 @@ export function sampleEntries(): Entry[] {
     '<html><head></head><body><h1>a</h1><h3>b</h3><img src="a.png"><button></button><input type="email">' +
     '<p id="d"></p><p id="d"></p><div tabindex="2"></div><div aria-hidden="true"><button>x</button></div>' +
     '<button aria-labelledby="zz">x</button><a href="/x">click here</a><iframe></iframe><video autoplay></video>' +
-    '<button style="width:20px">go</button><main></main><main></main></body></html>';
+    '<button style="width:20px">go</button><main></main><main></main>' +
+    '<table><tr><td>a</td></tr></table><table><tr><th>A</th></tr><tr><td>1</td></tr></table>' +
+    '<input type="radio" name="r"><input type="radio" name="r"><a href="/y"><button>in</button></a><h2></h2>' +
+    '<svg role="img"></svg><svg></svg><video src="v.mp4"></video><meta http-equiv="refresh" content="5">' +
+    '<input autocomplete="e-mail"><li>x</li><p lang="english">x</p><nav></nav><nav></nav>' +
+    '<button accesskey="a">a</button><button accesskey="a">b</button></body></html>';
+  const facts = (over: Partial<PageFacts>): PageFacts => ({
+    title: 'T', lang: 'en', links: [], controls: [], draggables: [], nav: ['A', 'B'], help: { text: 'Help', region: 'footer', afterMain: true }, truncated: false, ...over,
+  });
+  const light = ['rgb(255, 255, 255)'];
+  const waiverReport = makeReport([buildRouteAudit('/x', 320, { contrast: { checked: 1, entries: [{ check: 'contrast', id: 'a', status: 'fail', message: { en: 'e', fr: 'f' } }] } })], new Date('2026-11-15T00:00:00Z'));
+  const badWaivers = parseWaivers(JSON.stringify({ waivers: [{ check: 'contrast', reason: 'no', expires: 'x' }] }));
+  const waiverEntries = applyWaivers(
+    waiverReport,
+    [
+      { check: 'contrast', id: 'zzz', reason: 'matches nothing at all', expires: '2027-01-01' },
+      { check: 'target-size', reason: 'expired long ago for sure', expires: '2020-01-01' },
+    ],
+    new Date('2026-11-15T00:00:00Z'),
+    badWaivers.problems,
+  ).report.routes.flatMap((r) => (r.route === 'waivers' ? r.entries : []));
   const allCopy = COPY_RULES.map((r, i) => ({ id: `r${i}`, text: SAMPLE_TEXT[r.id] ?? '' }));
   return [
     ...Object.values(
@@ -93,6 +116,24 @@ export function sampleEntries(): Entry[] {
     }).focusVisible.entries,
     ...auditMotion({ running: 2, infinite: 1, ids: ['div#a'] }, true).entries,
     ...auditMotion({ running: 2, infinite: 1, ids: ['div#a'] }, false).entries,
+    ...auditLinkCues([
+      { id: 'a', text: 'x', color: 'rgb(60, 60, 60)', parentColor: 'rgb(0, 0, 0)', decoration: 'none', weight: 400, parentWeight: 400, borderBottomWidth: 0, bgLayers: light, bgImage: false },
+      { id: 'b', text: 'y', color: 'rgb(60, 60, 60)', parentColor: 'rgb(0, 0, 0)', decoration: 'none', weight: 400, parentWeight: 400, borderBottomWidth: 0, bgLayers: [], bgImage: true },
+    ]).entries,
+    ...auditControlBoundaries([
+      { id: 'a', fill: 'rgba(0, 0, 0, 0)', sides: [{ color: 'rgb(230, 230, 230)', width: 1 }], bgLayers: light, bgImage: false },
+      { id: 'b', fill: 'rgba(0, 0, 0, 0)', sides: [], bgLayers: [], bgImage: true },
+    ]).entries,
+    ...auditDragging(['div[0]']).entries,
+    ...auditConsistency([
+      { route: '/a', facts: facts({}) },
+      {
+        route: '/b',
+        facts: facts({ nav: ['B', 'A'], help: { text: 'Aide', region: 'header', afterMain: false }, lang: 'fr' }),
+      },
+      { route: '/c', facts: facts({ help: null }) },
+    ]).entries,
+    ...waiverEntries,
   ];
 }
 

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { auditCopy, COPY_RULES } from './copylint.js';
-import { htmlTextItems, lintHtml } from './htmllint.js';
+import { HELP_TEXT } from './cli.js';
+import { describeDiff, describeWaived, renderJunit } from './ci.js';
+import { HTML_RULES, htmlTextItems, lintHtml } from './htmllint.js';
 import { frTypographyIssues } from './i18n.js';
 import { renderPanel } from './panel.js';
 import { auditProvenance } from './provenance.js';
 import { buildRouteAudit, makeReport, renderBody, renderHtml, SCOPE_NOTE } from './report.js';
-import { HELP_TEXT } from './cli.js';
 import { sampleEntries } from './samples.js';
-import { CHECK_LABELS, type CheckResult, type Entry } from './types.js';
+import { CHECK_LABELS, CHECK_ORDER, type CheckResult, type Entry } from './types.js';
 
 /**
  * Gates. Each one throws when a check finds a failure or an unknown, so a
@@ -80,6 +81,20 @@ describe('wording gates on everything a person can read', () => {
       gate('panel', auditCopy([{ id: `panel:${lang}`, text: strip(renderPanel(lang, { kind: 'idle' })) }]));
     }
   });
+  it('no message, label or help text uses the words verify, verified or their French forms', () => {
+    const everything = [
+      ...sampleEntries().flatMap((e) => [e.message.en, e.message.fr]),
+      ...Object.values(CHECK_LABELS).flatMap((l) => [l.en, l.fr]),
+      HELP_TEXT,
+      describeDiff({ added: [], fixed: [], known: 0 }, 'en'),
+      describeDiff({ added: [], fixed: [], known: 0 }, 'fr'),
+      ...['en', 'fr'].map((l) => describeWaived([{ route: '/', entry: sampleEntries()[0] as Entry, reason: 'x', expires: '2027-01-01' }], l as 'en' | 'fr')),
+      strip(renderPanel('en', { kind: 'done', report: sampleReport })),
+      strip(renderPanel('fr', { kind: 'done', report: sampleReport })),
+      renderJunit(sampleReport, 'fr'),
+    ];
+    for (const text of everything) expect(text, text).not.toMatch(/verif|vérifi|real-time|temps réel|partnership|partenariat|guarantee|garanti/i);
+  });
   it('a text with a banned claim fails the gate', () => {
     expect(() => gate('copy', auditCopy([{ id: 'x', text: 'Verified, real-time access' }]))).toThrow(/claim-checked/);
   });
@@ -107,9 +122,11 @@ describe('French typography gate', () => {
 describe('coverage of the sample set', () => {
   it('has an entry for every check that produces messages', () => {
     const checks = new Set(sampleEntries().map((e) => e.check));
-    for (const c of ['reflow', 'target-size', 'target-spacing', 'contrast', 'name', 'label-in-name', 'language', 'focus-obscured', 'text-spacing', 'i18n', 'offline', 'keyboard', 'focus-visible', 'motion', 'static-html', 'copy', 'provenance']) {
-      expect(checks.has(c as never), c).toBe(true);
-    }
+    for (const c of CHECK_ORDER) expect(checks.has(c), c).toBe(true);
+  });
+  it('has an entry for every markup rule', () => {
+    const rules = new Set(sampleEntries().filter((e) => e.check === 'static-html').map((e) => e.rule));
+    for (const r of HTML_RULES) expect(rules.has(r), r).toBe(true);
   });
   it('has both languages for every entry', () => {
     for (const e of sampleEntries()) {

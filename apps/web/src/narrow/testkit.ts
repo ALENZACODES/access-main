@@ -18,6 +18,12 @@ export interface Style {
   boxShadow: string;
   borderTopColor: string;
   borderTopWidth: string;
+  borderRightColor: string;
+  borderRightWidth: string;
+  borderBottomColor: string;
+  borderBottomWidth: string;
+  borderLeftColor: string;
+  borderLeftWidth: string;
   textDecorationLine: string;
   content: string;
 }
@@ -73,6 +79,12 @@ const DEFAULT_STYLE: Style = {
   boxShadow: 'none',
   borderTopColor: 'rgb(0, 0, 0)',
   borderTopWidth: '0px',
+  borderRightColor: 'rgb(0, 0, 0)',
+  borderRightWidth: '0px',
+  borderBottomColor: 'rgb(0, 0, 0)',
+  borderBottomWidth: '0px',
+  borderLeftColor: 'rgb(0, 0, 0)',
+  borderLeftWidth: '0px',
   textDecorationLine: 'none',
   content: 'normal',
 };
@@ -164,6 +176,7 @@ export interface DomOptions {
   innerWidth?: number;
   html?: string;
   doctype?: boolean;
+  title?: string;
   animations?: Array<{ iterations: number; target?: string }>;
 }
 
@@ -212,6 +225,7 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
         opts.html ?? '<html lang="en"><head><title>t</title></head><body><main><h1>x</h1></main></body></html>',
     },
     doctype: opts.doctype === false ? null : {},
+    title: opts.title ?? '',
     getAnimations: () =>
       (opts.animations ?? []).map((a) => ({
         playState: 'running',

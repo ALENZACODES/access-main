@@ -1,3 +1,4 @@
+import { extraHtmlRules } from './htmlextra.js';
 import { clip, type CheckResult, type Entry, type EntryStatus } from './types.js';
 
 /**
@@ -153,11 +154,26 @@ export type HtmlRule =
   | 'target-inline'
   | 'aria-hidden-focus'
   | 'iframe-title'
-  | 'autoplay';
+  | 'autoplay'
+  | 'table-headers'
+  | 'table-caption'
+  | 'fieldset-legend'
+  | 'nested-interactive'
+  | 'empty-heading'
+  | 'svg-name'
+  | 'media-captions'
+  | 'meta-refresh'
+  | 'autocomplete-token'
+  | 'list-structure'
+  | 'lang-part'
+  | 'landmark-label'
+  | 'accesskey-dup';
 
 export const HTML_RULES: readonly HtmlRule[] = [
   'doctype', 'lang', 'title', 'viewport', 'headings', 'img-alt', 'name', 'label', 'dup-id', 'aria-ref',
   'tabindex', 'autocomplete', 'main', 'link-text', 'target-inline', 'aria-hidden-focus', 'iframe-title', 'autoplay',
+  'table-headers', 'table-caption', 'fieldset-legend', 'nested-interactive', 'empty-heading', 'svg-name', 'media-captions',
+  'meta-refresh', 'autocomplete-token', 'list-structure', 'lang-part', 'landmark-label', 'accesskey-dup',
 ];
 
 const MESSAGES: Readonly<Record<HtmlRule, { en: string; fr: string }>> = {
@@ -188,9 +204,22 @@ const MESSAGES: Readonly<Record<HtmlRule, { en: string; fr: string }>> = {
   'aria-hidden-focus': { en: 'A focusable control is inside aria-hidden content.', fr: 'Un contrôle focalisable se trouve dans un contenu aria-hidden.' },
   'iframe-title': { en: 'The iframe has no title.', fr: 'L’iframe n’a pas de titre.' },
   autoplay: { en: 'Media starts playing with sound.', fr: 'Le média démarre avec du son.' },
+  'table-headers': { en: 'The data table has no header cells (th).', fr: 'Le tableau de données n’a pas de cellules d’en-tête (th).' },
+  'table-caption': { en: 'The table has no caption or name. Check that its purpose is clear.', fr: 'Le tableau n’a ni légende ni nom. Contrôlez que son objet est clair.' },
+  'fieldset-legend': { en: 'Related radio buttons are not in a named group.', fr: 'Des boutons radio liés ne sont pas dans un groupe nommé.' },
+  'nested-interactive': { en: 'A control is inside another control.', fr: 'Un contrôle se trouve dans un autre contrôle.' },
+  'empty-heading': { en: 'The heading is empty.', fr: 'Le titre est vide.' },
+  'svg-name': { en: 'The graphic has no accessible name.', fr: 'Le graphique n’a pas de nom accessible.' },
+  'media-captions': { en: 'The media may need captions. Check by hand.', fr: 'Le média pourrait nécessiter des sous-titres. À contrôler à la main.' },
+  'meta-refresh': { en: 'The page reloads or redirects by itself after a delay.', fr: 'La page se recharge ou redirige d’elle-même après un délai.' },
+  'autocomplete-token': { en: 'The autocomplete value is not a valid token.', fr: 'La valeur autocomplete n’est pas un jeton valide.' },
+  'list-structure': { en: 'A list item is not inside a list.', fr: 'Un élément de liste n’est pas dans une liste.' },
+  'lang-part': { en: 'The lang attribute is not a valid language code.', fr: 'L’attribut lang n’est pas un code de langue valide.' },
+  'landmark-label': { en: 'Repeated landmarks need different names.', fr: 'Les repères répétés doivent avoir des noms différents.' },
+  'accesskey-dup': { en: 'The access key is used more than once.', fr: 'La touche d’accès est utilisée plus d’une fois.' },
 };
 
-const REVIEW: ReadonlySet<HtmlRule> = new Set<HtmlRule>(['autocomplete', 'link-text']);
+const REVIEW: ReadonlySet<HtmlRule> = new Set<HtmlRule>(['autocomplete', 'link-text', 'table-caption', 'media-captions']);
 
 const GENERIC_LINKS = new Set([
   'click here', 'here', 'read more', 'more', 'learn more', 'link', 'cliquez ici', 'ici', 'en savoir plus', 'lire la suite', 'plus',
@@ -344,6 +373,7 @@ export function lintHtml(html: string, opts: { readonly fragment?: boolean } = {
       }
     }
   }
+  for (const h of extraHtmlRules(nodes)) add(h.rule, nodeId(h.node), h.status, h.extra);
   return { checked: nodes.length, entries };
 }
 

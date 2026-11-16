@@ -35,6 +35,10 @@ describe('parseArgs', () => {
         allowLicences: [],
         requireFacts: [],
         keyboardMax: null,
+        formats: [],
+        baselineFile: null,
+        writeBaselineFile: null,
+        waiversFile: null,
       },
     });
   });
@@ -184,6 +188,75 @@ describe('runCli with files only', () => {
   });
 });
 
+describe('runCli with CI options', () => {
+  const BAD = '<html><body><img src="a.png"></body></html>';
+  async function noBrowser(): Promise<never> {
+    throw new Error('browser launched');
+  }
+  const waivers = (list: unknown[]): string => JSON.stringify({ waivers: list });
+  it('parses the CI flags and rejects bad ones', () => {
+    expect(parseArgs(['--html', 'a.html', '--out', 'o', '--format', 'sarif,junit,sarif', '--baseline', 'b.json', '--write-baseline', 'w.json', '--waivers', 'v.json'])).toMatchObject({
+      ok: true,
+      args: { formats: ['sarif', 'junit'], baselineFile: 'b.json', writeBaselineFile: 'w.json', waiversFile: 'v.json' },
+    });
+    expect(parseArgs(['--html', 'a.html', '--format', 'pdf', '--out', 'o']).ok).toBe(false);
+    expect(parseArgs(['--html', 'a.html', '--format', 'sarif']).ok).toBe(false);
+    expect(parseArgs(['--html', 'a.html', '--baseline']).ok).toBe(false);
+  });
+  it('writes SARIF and JUnit next to the other reports', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('bad.html', BAD);
+    expect(await runCli(['--html', 'bad.html', '--out', 'o', '--format', 'sarif,junit'], d.deps)).toBe(1);
+    expect([...d.files.keys()].sort()).toEqual(['bad.html', 'o/narrow-audit.en.html', 'o/narrow-audit.json', 'o/narrow-audit.junit.xml', 'o/narrow-audit.sarif']);
+    expect(JSON.parse(d.files.get('o/narrow-audit.sarif') ?? '{}').version).toBe('2.1.0');
+    expect(d.files.get('o/narrow-audit.junit.xml')).toContain('<failure');
+  });
+  it('a baseline from the same run makes the next run pass, and a new failure fails it', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('bad.html', BAD);
+    expect(await runCli(['--html', 'bad.html', '--write-baseline', 'base.json'], d.deps)).toBe(1);
+    expect(await runCli(['--html', 'bad.html', '--baseline', 'base.json'], d.deps)).toBe(0);
+    expect(d.logs.join('\n')).toContain('0 new failures');
+    d.files.set('bad.html', BAD + '<button></button>');
+    expect(await runCli(['--html', 'bad.html', '--baseline', 'base.json'], d.deps)).toBe(1);
+    expect(d.logs.join('\n')).toContain('1 new failures');
+  });
+  it('a baseline does not hide unknowns when strict', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('u.html', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>t</title></head><body><main><h1>x</h1><a href="/a">here</a></main></body></html>');
+    expect(await runCli(['--html', 'u.html', '--write-baseline', 'b.json'], d.deps)).toBe(0);
+    expect(await runCli(['--html', 'u.html', '--baseline', 'b.json', '--strict-unknown'], d.deps)).toBe(1);
+  });
+  it('rejects a broken baseline file with exit 2', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('bad.html', BAD);
+    d.files.set('b.json', '{"nope":1}');
+    expect(await runCli(['--html', 'bad.html', '--baseline', 'b.json'], d.deps)).toBe(2);
+  });
+  it('a waiver turns a failure into a listed exception, and the run passes', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('bad.html', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>t</title></head><body><main><h1>x</h1><img src="a.png"></main></body></html>');
+    d.files.set('w.json', waivers([{ check: 'static-html', rule: 'img-alt', reason: 'Decorative image, fix in ticket 12', expires: '2026-12-31' }]));
+    expect(await runCli(['--html', 'bad.html', '--waivers', 'w.json', '--out', 'o'], d.deps)).toBe(0);
+    expect(d.logs.join('\n')).toContain('1 failures waived');
+    expect(JSON.parse(d.files.get('o/narrow-audit.json') ?? '{}').waived).toHaveLength(1);
+    expect(d.files.get('o/narrow-audit.en.html')).toContain('Failures covered by a waiver');
+  });
+  it('an expired waiver fails the run', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('bad.html', BAD);
+    d.files.set('w.json', waivers([{ check: 'static-html', rule: 'img-alt', reason: 'Decorative image, fix in ticket 12', expires: '2026-11-01' }]));
+    expect(await runCli(['--html', 'bad.html', '--waivers', 'w.json'], d.deps)).toBe(1);
+    expect(d.logs.join('\n')).toContain('expired on 2026-11-01');
+  });
+  it('an invalid waivers file fails the run instead of being ignored', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('good.html', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>t</title></head><body><main><h1>x</h1></main></body></html>');
+    d.files.set('w.json', waivers([{ check: 'contrast', reason: 'no', expires: '2026-12-31' }]));
+    expect(await runCli(['--html', 'good.html', '--waivers', 'w.json'], d.deps)).toBe(1);
+  });
+});
+
 describe('exitCode', () => {
   const unknownOnly = makeReport(
     [buildRouteAudit('/', 320, { contrast: { checked: 1, entries: [{ check: 'contrast', id: 'a', status: 'unknown', message: { en: 'e', fr: 'f' } }] } })],
@@ -266,6 +339,55 @@ describe('panel', () => {
     expect(calls).toBe(1);
     expect(root.innerHTML).toContain('&lt;boom&gt;');
     expect(root.innerHTML).not.toContain('<boom>');
+  });
+
+  it('copies the report as JSON or SARIF and says so, in both languages', async () => {
+    const root = new FakeRoot();
+    const copied: string[] = [];
+    mountNarrowPanel({ root, lang: 'en', run: () => report, copy: async (t) => void copied.push(t) });
+    root.click('run');
+    await tick();
+    expect(root.innerHTML).toContain('data-action="copy-json"');
+    root.click('copy-json');
+    await tick();
+    root.click('copy-sarif');
+    await tick();
+    expect(JSON.parse(copied[0] ?? '{}').tool.name).toBe('narrow-audit');
+    expect(JSON.parse(copied[1] ?? '{}').version).toBe('2.1.0');
+    expect(root.innerHTML).toContain('Copied.');
+    expect(root.focused.at(-1)).toBe('[data-action="copy-sarif"]');
+    root.click('lang-fr');
+    expect(root.innerHTML).not.toContain('Copied.');
+  });
+
+  it('reports a failed copy and a missing clipboard instead of claiming success', async () => {
+    const root = new FakeRoot();
+    mountNarrowPanel({
+      root,
+      lang: 'fr',
+      run: () => report,
+      copy: async () => {
+        throw new Error('denied');
+      },
+    });
+    root.click('run');
+    await tick();
+    root.click('copy-json');
+    await tick();
+    expect(root.innerHTML).toContain('La copie a échoué.');
+    expect(root.innerHTML).not.toContain('Copié.');
+    const bare = new FakeRoot();
+    mountNarrowPanel({ root: bare, lang: 'en', run: () => report });
+    bare.click('run');
+    await tick();
+    bare.click('copy-json');
+    expect(bare.innerHTML).toContain('Copying is not available in this browser.');
+  });
+
+  it('the copy buttons exist only once there is a report', () => {
+    expect(renderPanel('en', { kind: 'idle' })).not.toContain('copy-json');
+    expect(renderPanel('en', { kind: 'done', report })).toContain('copy-sarif');
+    expect((renderPanel('en', { kind: 'done', report }).match(/min-height:44px/g) ?? []).length).toBeGreaterThanOrEqual(4);
   });
 
   it('defaults to auditing the live document', async () => {

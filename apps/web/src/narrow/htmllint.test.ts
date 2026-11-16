@@ -30,6 +30,27 @@ const FIXTURES: ReadonlyArray<readonly [HtmlRule, string, string]> = [
   ['aria-hidden-focus', doc('<div aria-hidden="true"><button>Go</button></div>'), doc('<div aria-hidden="true"><span>x</span></div>')],
   ['iframe-title', doc('<iframe src="x"></iframe>'), doc('<iframe src="x" title="Map"></iframe>')],
   ['autoplay', doc('<video autoplay></video>'), doc('<video autoplay muted></video>')],
+  ['table-headers', doc('<table><tr><td>a</td></tr></table>'), doc('<table aria-label="Hours"><tr><th>Day</th></tr><tr><td>Mon</td></tr></table>')],
+  ['table-caption', doc('<table><tr><th>Day</th></tr><tr><td>Mon</td></tr></table>'), doc('<table><caption>Hours</caption><tr><th>Day</th></tr><tr><td>Mon</td></tr></table>')],
+  [
+    'fieldset-legend',
+    doc('<input type="radio" name="r" aria-label="A"><input type="radio" name="r" aria-label="B">'),
+    doc('<fieldset><legend>Pick</legend><input type="radio" name="r" aria-label="A"><input type="radio" name="r" aria-label="B"></fieldset>'),
+  ],
+  ['nested-interactive', doc('<a href="/x"><button>Go</button></a>'), doc('<a href="/x">Go</a><button>Stop</button>')],
+  ['empty-heading', doc('<h2></h2>'), doc('<h2>Hours</h2><h2><img src="a" alt="Logo"></h2>')],
+  ['svg-name', doc('<svg role="img"></svg>'), doc('<svg role="img" aria-label="Map"></svg><svg aria-hidden="true"></svg>')],
+  ['media-captions', doc('<video src="a.mp4"></video>'), doc('<video src="a.mp4"><track kind="captions" src="c.vtt"></video>')],
+  ['meta-refresh', doc('', { head: HEAD + '<meta http-equiv="refresh" content="5;url=/x">' }), doc('', { head: HEAD + '<meta http-equiv="refresh" content="0;url=/x">' })],
+  ['autocomplete-token', doc('<label>Mail <input autocomplete="e-mail"></label>'), doc('<label>Mail <input autocomplete="email"></label>')],
+  ['list-structure', doc('<li>a</li>'), doc('<ul><li>a</li></ul>')],
+  ['lang-part', doc('<p lang="english">a</p>'), doc('<p lang="fr-CA">a</p>')],
+  [
+    'landmark-label',
+    doc('<nav><a href="/a">A</a></nav><nav><a href="/b">B</a></nav>'),
+    doc('<nav aria-label="Main"><a href="/a">A</a></nav><nav aria-label="Footer"><a href="/b">B</a></nav>'),
+  ],
+  ['accesskey-dup', doc('<button accesskey="s">A</button><button accesskey="S">B</button>'), doc('<button accesskey="s">A</button><button accesskey="t">B</button>')],
 ];
 
 describe('parseHtml', () => {

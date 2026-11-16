@@ -186,11 +186,41 @@ describe('runAudit and selfAudit', () => {
     });
     expect(log.filter((l) => l.startsWith('goto'))).toEqual(['goto http://localhost:5173/', 'goto http://localhost:5173/map']);
     expect(log[0]).toBe('viewport 320');
-    expect(report.routes.map((r) => r.route)).toEqual(['/', 'map', 'strings']);
+    expect(report.routes.map((r) => r.route)).toEqual(['/', 'map', 'site', 'strings']);
     expect(report.routes[2]?.viewportWidth).toBeNull();
+    expect(report.routes[3]?.viewportWidth).toBeNull();
     expect(report.routes[0]?.checks.some((c) => c.check === 'focus-obscured')).toBe(true);
     expect(report.routes[0]?.checks.some((c) => c.check === 'offline')).toBe(false);
     expect(dom?.world.styleElements).toBe(0);
+  });
+
+  it('compares pages with each other and reports navigation that changes order', async () => {
+    const navSpec = (order: string[]): Spec[] => [
+      { tag: 'nav', children: order.map((t) => ({ tag: 'a', text: t, attrs: { href: `/${t}` }, interactive: true })) },
+      { tag: 'main', children: [{ tag: 'h1', text: 'x' }] },
+    ];
+    const specs = [navSpec(['Map', 'Tools', 'About']), navSpec(['Tools', 'Map', 'About'])];
+    let n = 0;
+    const p: AuditPage = {
+      async setViewportSize() {},
+      async goto() {
+        dom?.uninstall();
+        dom = installDom(specs[n++] as Spec[], { title: `Page ${n}` });
+      },
+      async reload() {},
+      async evaluate(fn, arg) {
+        return fn(arg);
+      },
+    };
+    const report = await runAudit({ page: p, baseUrl: 'http://x', routes: ['/a', '/b'], now: NOW });
+    const site = report.routes.find((r) => r.route === 'site');
+    expect(site?.entries.map((e) => [e.id, e.rule, e.status])).toEqual([['/b', 'nav-order', 'fail']]);
+    expect(totals(report.routes).failed).toBeGreaterThan(0);
+  });
+
+  it('a single route has no site comparison', async () => {
+    const report = await runAudit({ page: livePage([]), baseUrl: 'http://x', routes: ['/'], now: NOW });
+    expect(report.routes.map((r) => r.route)).toEqual(['/']);
   });
 
   it('selfAudit reads the live document without probing focus', () => {

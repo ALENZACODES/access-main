@@ -52,12 +52,21 @@ export interface RouteAudit {
   readonly truncated: boolean;
 }
 
+/** A failure that a dated waiver covers. It is listed, not hidden. */
+export interface WaivedItem {
+  readonly route: string;
+  readonly entry: Entry;
+  readonly reason: string;
+  readonly expires: string;
+}
+
 export interface AuditReport {
   readonly generatedAt: string;
   readonly tool: { readonly name: string; readonly version: string };
   readonly routes: readonly RouteAudit[];
   readonly scopeNote: LocalizedText;
   readonly references: readonly Reference[];
+  readonly waived?: readonly WaivedItem[];
 }
 
 export const TOOL = { name: 'narrow-audit', version: '0.2.0' } as const;
@@ -151,6 +160,8 @@ const L = {
   sources: { en: 'Sources', fr: 'Sources' },
   criterion: { en: 'WCAG', fr: 'WCAG' },
   stringsRoute: { en: 'Strings', fr: 'Chaînes' },
+  waived: { en: 'Failures covered by a waiver', fr: 'Anomalies couvertes par une dérogation' },
+  until: { en: 'until', fr: 'jusqu’au' },
 } as const;
 
 const colon = (lang: Lang): string => (lang === 'fr' ? `${NBSP}:` : ':');
@@ -185,6 +196,13 @@ export function renderText(report: AuditReport, lang: Lang): string {
     if (r.entries.length === 0) lines.push(`  ${L.none[lang]}`);
     for (const e of r.entries) {
       lines.push(`  [${L[e.status][lang]}] ${checkTitle(e.check, lang)}${ruleTag(e)} ${e.id}${colon(lang)} ${e.message[lang]}`);
+    }
+  }
+  if (report.waived && report.waived.length > 0) {
+    lines.push('');
+    lines.push(`${L.waived[lang]}${colon(lang)} ${report.waived.length}`);
+    for (const w of report.waived) {
+      lines.push(`  ${w.route} ${checkTitle(w.entry.check, lang)}${ruleTag(w.entry)} ${w.entry.id} (${L.until[lang]} ${w.expires})${colon(lang)} ${w.reason}`);
     }
   }
   lines.push('');
@@ -231,6 +249,16 @@ export function renderBody(report: AuditReport, lang: Lang): string {
     }
     out.push('</section>');
   });
+  if (report.waived && report.waived.length > 0) {
+    out.push(`<h2>${escapeHtml(L.waived[lang])}</h2><ul>`);
+    for (const w of report.waived) {
+      out.push(
+        `<li>${escapeHtml(w.route)} ${escapeHtml(checkTitle(w.entry.check, lang))}${escapeHtml(ruleTag(w.entry))} <code>${escapeHtml(w.entry.id)}</code> ` +
+          `(${escapeHtml(L.until[lang])} ${escapeHtml(w.expires)})${colon(lang)} ${escapeHtml(w.reason)}</li>`,
+      );
+    }
+    out.push('</ul>');
+  }
   out.push(`<h2>${escapeHtml(L.sources[lang])}</h2><ul>`);
   for (const ref of report.references) {
     out.push(`<li>${escapeHtml(ref.title)}, ${escapeHtml(ref.date)}, <a href="${escapeHtml(ref.url)}" style="display:inline-block;min-height:44px;line-height:44px">${escapeHtml(ref.url)}</a></li>`);
