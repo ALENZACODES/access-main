@@ -5,7 +5,6 @@ import type { Exemption } from "./repoAudit";
 
 const WHY_NS = "A Dublin Core namespace identifier. It names a vocabulary term and is never fetched";
 const WHY_HTTP = "Test input that proves a plain http address is rejected, so it has to contain one";
-const WHY_OTHER_LANE = "Existing wording in another lane's file, left as it is on main. That lane owns the change; this lane does not edit it";
 
 const WHY_OTHER_FIXTURE = "Test input or sample in another lane's checks that proves a banned host or a plain http address is rejected, so it has to contain one";
 
