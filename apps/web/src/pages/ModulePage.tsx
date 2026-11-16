@@ -11,7 +11,7 @@ import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
-import { StateNotice, ERROR_KINDS, getRouteEmpty, getRouteError, getState, type EmptyKind, type ErrorKind } from "../states/index.ts";
+import { PackPlaces, StateNotice, ERROR_KINDS, getRouteEmpty, getRouteError, getState, type EmptyKind, type ErrorKind } from "../states/index.ts";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -56,6 +56,17 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
     void getPack(OFFLINE_PACK_ID).then((pack) => { if (active) setPackStored(pack !== null); });
     return () => { active = false; };
   }, [online]);
+  // Places in the pack stored on this device. A missing, unreadable or unsupported pack shows nothing here.
+  const [packPlaces, setPackPlaces] = useState<unknown>(null);
+  useEffect(() => {
+    if (id !== "places") return;
+    let active = true;
+    getPack(OFFLINE_PACK_ID).then(
+      (pack) => { if (active) setPackPlaces(pack?.content?.places ?? null); },
+      () => { if (active) setPackPlaces(null); },
+    );
+    return () => { active = false; };
+  }, [id]);
   const copy = COPY[id];
   useDocumentTitle(t(copy.title));
 
@@ -198,6 +209,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
           ))}
         </ul>
       ) : null}
+      {id === "places" && packPlaces !== null ? <PackPlaces places={packPlaces} locale={locale} /> : null}
       <p>{t("data.liveBody")}</p>
     </div>
   );

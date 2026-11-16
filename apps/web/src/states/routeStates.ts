@@ -74,7 +74,7 @@ export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
   search: {
     label: { en: "Search", fr: "Recherche" },
     empty: "search-no-results",
-    errors: ["offline-no-pack", "pack-download-failed", "data-load-failed"],
+    errors: ["offline-no-pack", "pack-download-failed", "data-load-failed", "pack-unreadable"],
   },
   place: {
     label: { en: "Place details", fr: "Fiche du lieu" },

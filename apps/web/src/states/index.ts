@@ -16,6 +16,7 @@ export {
   type StateView,
 } from "./stateCopy.ts";
 export { StateNotice } from "./StateNotice.tsx";
+export { PackPlaces } from "./PackPlaces.tsx";
 
 export {
   ROUTE_IDS,
@@ -92,3 +93,12 @@ export * from "./renderPages";
 export * from "./router";
 export * from "./pageShell";
 export * from "./app";
+export * from "./resilience";
+export * from "./securityHeaders";
+export * from "./serviceWorker";
+export * from "./manifest";
+export * from "./exportData";
+export * from "./coverage";
+export * from "./packGeo.ts";
+export * from "./packPlaces.ts";
+export * from "./packPlacesView.ts";

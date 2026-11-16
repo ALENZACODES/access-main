@@ -35,3 +35,29 @@ export function parseNear(value: string | null): GeoPoint | null {
   const lon = Number(m[2]);
   return isValidPoint(lat, lon) ? { lat, lon } : null;
 }
+
+export interface NearQuery {
+  readonly near: GeoPoint | null;
+  /** Raw text for redisplay in the form, cleaned and length-limited. */
+  readonly input: { readonly lat: string; readonly lon: string };
+  /** True when a point was supplied but is not a valid latitude and longitude. */
+  readonly error: boolean;
+}
+
+const cleanField = (s: string | null): string => (s ?? "").replace(/[^\d.,\-+eE\s]/g, "").trim().slice(0, 20);
+
+/** Read a point from `near=lat,lon` or from separate `lat` and `lon` parameters. */
+export function nearFromQuery(q: URLSearchParams): NearQuery {
+  const combined = q.get("near");
+  const lat = cleanField(q.get("lat"));
+  const lon = cleanField(q.get("lon"));
+  if (combined !== null && combined.trim() !== "") {
+    const p = parseNear(combined);
+    return p
+      ? { near: p, input: { lat: String(p.lat), lon: String(p.lon) }, error: false }
+      : { near: null, input: { lat: "", lon: "" }, error: true };
+  }
+  if (lat === "" && lon === "") return { near: null, input: { lat: "", lon: "" }, error: false };
+  const p = parseNear(`${lat.replace(",", ".")},${lon.replace(",", ".")}`);
+  return { near: p, input: { lat, lon }, error: p === null };
+}

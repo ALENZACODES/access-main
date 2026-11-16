@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PREFERENCES, assertAccessibleHtml, auditHtml, compareRouteView, initialConnectivity, mapRouteView, renderCompareRoute,
-  renderConfirmation, renderCorrectionForm, renderMapRoute, renderSettingsForm, renderSourcesRoute, sourcesRouteView, validateCorrection,
+  renderConfirmation, renderCorrectionForm, renderCoverageRoute, renderMapRoute, renderOfflinePage, coverageRouteView, renderSettingsForm, renderSourcesRoute, sourcesRouteView, validateCorrection,
   type Locale, type RenderOptions, type Theme,
 } from "./index";
 import { LOC_PROV, mkRecord } from "./testHelpers";
@@ -106,5 +106,48 @@ describe("renderSettingsForm", () => {
   it("catches a missing label if one is removed", () => {
     const html = renderSettingsForm(DEFAULT_PREFERENCES, opts("en", "light")).replace(/<label for="settings-motion"[^>]*>[^<]*<\/label>/, "");
     expect(auditHtml(html, "en").map((v) => v.code)).toContain("form-label");
+  });
+});
+
+describe("map near form markup", () => {
+  const render = (nearError: boolean, locale: Locale = "en", theme: Theme = "light") =>
+    renderMapRoute(
+      mapRouteView({ status: "ok", places }, { locale, connectivity: initialConnectivity(true), near: null, nearError, nearInput: { lat: "x<y", lon: "" } }),
+      opts(locale, theme),
+    );
+  it("is a GET form with labelled decimal inputs and passes the audit", () => {
+    const html = render(false);
+    expect(html).toContain('<form method="get"');
+    expect(html).toMatch(/<label for="map-lat"[^>]*>Latitude<\/label><input id="map-lat" name="lat" type="text" inputmode="decimal"/);
+    for (const [l, t] of combos) assertAccessibleHtml(render(false, l, t), l);
+  });
+  it("links the error to both inputs and escapes the redisplayed text", () => {
+    const html = render(true);
+    expect(html.match(/aria-invalid="true" aria-describedby="map-near-err"/g)).toHaveLength(2);
+    expect(html).toContain('id="map-near-err"');
+    expect(html).toContain('value="x&lt;y"');
+    for (const [l, t] of combos) assertAccessibleHtml(render(true, l, t), l);
+  });
+});
+
+describe("coverage and offline renderers", () => {
+  it("coverage passes the audit and writes UNKNOWN counts in bold text, not colour alone", () => {
+    for (const [locale, theme] of combos) {
+      for (const connectivity of conns) {
+        for (const list of [places, []]) {
+          const html = renderCoverageRoute(coverageRouteView({ status: "ok", places: list, dropped: 1 }, { locale, connectivity, today: "2026-11-15" }), opts(locale, theme));
+          assertAccessibleHtml(html, locale);
+        }
+        assertAccessibleHtml(renderCoverageRoute(coverageRouteView({ status: "error" }, { locale, connectivity, today: "2026-11-15" }), opts(locale, theme)), locale);
+      }
+    }
+    const html = renderCoverageRoute(coverageRouteView({ status: "ok", places }, { locale: "en", connectivity: initialConnectivity(true), today: "2026-11-15" }), opts("en", "light"));
+    expect(html).toContain("<caption>Reported and UNKNOWN details by feature</caption>");
+    expect(html.match(/<th scope="row">/g)).toHaveLength(6);
+  });
+  it("offline page passes the audit in every combination", () => {
+    for (const [locale, theme] of combos) {
+      assertAccessibleHtml(renderOfflinePage(opts(locale, theme), [{ href: "/x", label: "Saved" }]), locale);
+    }
   });
 });

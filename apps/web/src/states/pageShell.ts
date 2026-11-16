@@ -25,11 +25,12 @@ export function themeFor(p: Preferences): Theme {
   return p.theme === "dark" ? "dark" : "light";
 }
 
-const NAV: readonly { readonly route: RouteName; readonly label: "nav.search" | "nav.map" | "nav.saved" | "nav.compare" | "nav.sources" | "nav.settings" }[] = [
+const NAV: readonly { readonly route: RouteName; readonly label: "nav.search" | "nav.map" | "nav.saved" | "nav.compare" | "nav.coverage" | "nav.sources" | "nav.settings" }[] = [
   { route: "search", label: "nav.search" },
   { route: "map", label: "nav.map" },
   { route: "saved", label: "nav.saved" },
   { route: "compare", label: "nav.compare" },
+  { route: "coverage", label: "nav.coverage" },
   { route: "sources", label: "nav.sources" },
   { route: "settings", label: "nav.settings" },
 ];
@@ -58,7 +59,7 @@ export function renderPage(o: PageOptions): string {
   return (
     `<!doctype html><html lang="${L}" style="${rootStyle(o.preferences)}"><head><meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">` +
-    `<title>${escapeHtml(title)}</title><style>${css}</style></head>` +
+    `<title>${escapeHtml(title)}</title><meta name="theme-color" content="${pal.roles.body.bg}"><link rel="manifest" href="/manifest.webmanifest"><script src="/register-sw.js" defer></script><style>${css}</style></head>` +
     `<body style="${styleFor("body", theme)}">` +
     `<a class="skip" href="#main" style="${link}">${escapeHtml(message("nav.skip", L))}</a>` +
     `<header style="${styleFor("body", theme)}"><nav aria-label="${escapeHtml(message("nav.main", L))}"><ul style="list-style:none;margin:0;padding:0">${nav}</ul></nav>` +

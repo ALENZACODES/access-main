@@ -143,7 +143,136 @@ const DEFS = {
     en: "Details are reported by their sources and may be incomplete or out of date. UNKNOWN means no detail is recorded.",
     fr: "Les détails sont signalés par leurs sources et peuvent être incomplets ou périmés. INCONNU signifie qu'aucun détail n'est enregistré.",
   },
+  "nav.coverage": { en: "Coverage", fr: "Couverture" },
+  "coverage.heading": { en: "Data coverage", fr: "Couverture des données" },
+  "coverage.intro": {
+    en: "How many details are reported for each feature, and how many are UNKNOWN.",
+    fr: "Nombre de détails signalés pour chaque caractéristique, et nombre de détails INCONNUS.",
+  },
+  "coverage.caption": { en: "Reported and UNKNOWN details by feature", fr: "Détails signalés et INCONNUS par caractéristique" },
+  "coverage.colFeature": { en: "Feature", fr: "Caractéristique" },
+  "coverage.colYes": { en: "Yes", fr: "Oui" },
+  "coverage.colNo": { en: "No", fr: "Non" },
+  "coverage.colPartial": { en: "Partly", fr: "En partie" },
+  "coverage.colUnknown": { en: "UNKNOWN", fr: "INCONNU" },
+  "coverage.colShare": { en: "Reported", fr: "Signalé" },
+  "coverage.places": {
+    en: { one: "{n} place is listed.", other: "{n} places are listed." },
+    fr: { one: "{n} lieu est répertorié.", other: "{n} lieux sont répertoriés." },
+  },
+  "coverage.located": {
+    en: "{n} with a recorded location, {m} with location UNKNOWN.",
+    fr: "{n} avec un emplacement enregistré, {m} avec emplacement INCONNU.",
+  },
+  "coverage.stale": {
+    en: { one: "{n} place has details retrieved more than a year ago.", other: "{n} places have details retrieved more than a year ago." },
+    fr: { one: "{n} lieu a des détails consultés il y a plus d'un an.", other: "{n} lieux ont des détails consultés il y a plus d'un an." },
+  },
+  "coverage.sources": {
+    en: { one: "{n} source recorded. Latest retrieval: {date}.", other: "{n} sources recorded. Latest retrieval: {date}." },
+    fr: { one: "{n} source enregistrée. Dernière consultation : {date}.", other: "{n} sources enregistrées. Dernière consultation : {date}." },
+  },
+  "coverage.dropped": {
+    en: { one: "{n} record could not be shown because it was incomplete.", other: "{n} records could not be shown because they were incomplete." },
+    fr: { one: "{n} fiche n'a pas pu être affichée, car elle était incomplète.", other: "{n} fiches n'ont pas pu être affichées, car elles étaient incomplètes." },
+  },
+  "coverage.empty": { en: "No places are listed yet.", fr: "Aucun lieu n'est encore répertorié." },
+  "export.text": { en: "Plain-text version", fr: "Version en texte brut" },
+  "export.csv": { en: "Download as CSV", fr: "Télécharger en CSV" },
+  "offline.body": {
+    en: "This page is not saved on this device. Places you saved and pages you visited recently still work.",
+    fr: "Cette page n'est pas enregistrée sur cet appareil. Les lieux enregistrés et les pages consultées récemment fonctionnent toujours.",
+  },
+  "map.near.legend": { en: "Sort by distance from a point", fr: "Trier selon la distance à partir d'un point" },
+  "map.near.lat": { en: "Latitude", fr: "Latitude" },
+  "map.near.lon": { en: "Longitude", fr: "Longitude" },
+  "map.near.submit": { en: "Sort by distance", fr: "Trier par distance" },
+  "map.near.privacy": {
+    en: "The point is used only to sort this list. It is not saved.",
+    fr: "Le point sert uniquement à trier cette liste. Il n'est pas enregistré.",
+  },
+  "map.near.error": {
+    en: "Enter a latitude from -90 to 90 and a longitude from -180 to 180.",
+    fr: "Saisissez une latitude de -90 à 90 et une longitude de -180 à 180.",
+  },
   "place.showSource": { en: "Show source", fr: "Afficher la source" },
+  "pack.heading": { en: "Places saved on this device", fr: "Lieux enregistrés sur cet appareil" },
+  "pack.intro": {
+    en: "These places come from the offline pack on this device. Each one shows what OpenStreetMap contributors tagged and when it was retrieved. A tag is a report, not a measurement.",
+    fr: "Ces lieux proviennent du pack hors ligne de cet appareil. Chacun montre ce que les contributeurs d’OpenStreetMap ont indiqué et la date de consultation. Une indication est un signalement, pas une mesure.",
+  },
+  "pack.search": { en: "Search by name, address or kind", fr: "Rechercher par nom, adresse ou type" },
+  "pack.tagLabel": { en: "Wheelchair tag", fr: "Indication pour fauteuil roulant" },
+  "pack.tag.any": { en: "Any", fr: "Toutes" },
+  "pack.tag.yes": { en: "Yes", fr: "Oui" },
+  "pack.tag.limited": { en: "Limited", fr: "Limité" },
+  "pack.tag.no": { en: "No", fr: "Non" },
+  "pack.tag.designated": { en: "Designated", fr: "Réservé" },
+  "pack.tag.unknown": { en: "UNKNOWN", fr: "INCONNUE" },
+  "pack.tagOption": { en: "{label} ({n})", fr: "{label} ({n})" },
+  "pack.tagLine": {
+    en: "OpenStreetMap wheelchair tag: {value} (reported)",
+    fr: "Indication OpenStreetMap pour fauteuil roulant : {value} (signalée)",
+  },
+  "pack.tagLineUnknown": {
+    en: "OpenStreetMap wheelchair tag: UNKNOWN",
+    fr: "Indication OpenStreetMap pour fauteuil roulant : INCONNUE",
+  },
+  "pack.count": {
+    en: { one: "{n} place shown.", other: "{n} places shown." },
+    fr: { one: "{n} lieu affiché.", other: "{n} lieux affichés." },
+  },
+  "pack.unknownHidden": {
+    en: {
+      one: "{n} more place has an UNKNOWN wheelchair tag and is not shown. Choose UNKNOWN to see it.",
+      other: "{n} more places have an UNKNOWN wheelchair tag and are not shown. Choose UNKNOWN to see them.",
+    },
+    fr: {
+      one: "{n} autre lieu a une indication INCONNUE et n’est pas affiché. Choisissez INCONNUE pour le voir.",
+      other: "{n} autres lieux ont une indication INCONNUE et ne sont pas affichés. Choisissez INCONNUE pour les voir.",
+    },
+  },
+  "pack.dropped": {
+    en: {
+      one: "{n} record in the pack could not be shown because it was incomplete.",
+      other: "{n} records in the pack could not be shown because they were incomplete.",
+    },
+    fr: {
+      one: "{n} fiche du pack n’a pas pu être affichée parce qu’elle était incomplète.",
+      other: "{n} fiches du pack n’ont pas pu être affichées parce qu’elles étaient incomplètes.",
+    },
+  },
+  "pack.nameUnknown": { en: "Name UNKNOWN", fr: "Nom INCONNU" },
+  "pack.category": { en: "Kind as tagged: {value}", fr: "Type indiqué : {value}" },
+  "pack.categoryUnknown": { en: "Kind as tagged: UNKNOWN", fr: "Type indiqué : INCONNU" },
+  "pack.address": { en: "Address: {value}", fr: "Adresse : {value}" },
+  "pack.addressUnknown": { en: "Address: UNKNOWN", fr: "Adresse : INCONNUE" },
+  "pack.note": { en: "Note from contributors: {text}", fr: "Note des contributeurs : {text}" },
+  "pack.stale": {
+    en: "Retrieved over a year ago. This may be out of date.",
+    fr: "Consulté il y a plus d’un an. Ces renseignements peuvent être périmés.",
+  },
+  "pack.noSource": {
+    en: "No usable source is recorded, so the tag is shown as UNKNOWN.",
+    fr: "Aucune source utilisable n’est consignée, donc l’indication est INCONNUE.",
+  },
+  "pack.osmCredit": {
+    en: "© OpenStreetMap contributors",
+    fr: "© OpenStreetMap contributors",
+  },
+  "pack.nearLegend": { en: "Sort by distance from a point", fr: "Trier selon la distance à partir d’un point" },
+  "pack.lat": { en: "Latitude", fr: "Latitude" },
+  "pack.lon": { en: "Longitude", fr: "Longitude" },
+  "pack.nearHelp": {
+    en: "Optional. The point is used only to sort this list. It is not saved.",
+    fr: "Facultatif. Le point sert uniquement à trier cette liste. Il n’est pas enregistré.",
+  },
+  "pack.nearError": {
+    en: "Enter a latitude from -90 to 90 and a longitude from -180 to 180.",
+    fr: "Saisissez une latitude de -90 à 90 et une longitude de -180 à 180.",
+  },
+  "pack.distance": { en: "{d} away", fr: "à {d}" },
+  "pack.openSource": { en: "Open the source page for {name}", fr: "Ouvrir la page source de {name}" },
 } as const satisfies Record<string, Entry>;
 
 export type MessageId = keyof typeof DEFS;
