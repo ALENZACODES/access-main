@@ -40,7 +40,9 @@ describe("validateInventory", () => {
     expect(p.every((x) => x.code === "empty-text")).toBe(true);
   });
   it("does not require purpose or retention: absent means unknown", () => {
-    const { purpose: _p, keptFor: _k, ...bare } = base;
+    const bare: InventoryEntry = { ...base };
+    delete bare.purpose;
+    delete bare.keptFor;
     expect(validateInventory([bare])).toEqual([]);
   });
   it("rejects a purpose that is present but blank", () => {
