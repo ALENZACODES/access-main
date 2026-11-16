@@ -1,5 +1,5 @@
-import type { RecoveryLocale, RecoverySource } from "./index.ts";
-import { classifyRecoveryError } from "./classify.ts";
+import type { RecoveryLocale, RecoverySource } from "./index";
+import { classifyRecoveryError } from "./classify";
 
 /** Integrity information must come from an independently supplied manifest. */
 export interface PackManifest {

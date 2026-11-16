@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { checkPackIntegrity, checkStoredPackParts, packIntegrityCopy, redownloadPack } from "./packIntegrity.ts";
-import type { PackManifest } from "./packIntegrity.ts";
+import { checkPackIntegrity, checkStoredPackParts, packIntegrityCopy, redownloadPack } from "./packIntegrity";
+import type { PackManifest } from "./packIntegrity";
 
 const data = new TextEncoder().encode("abc");
 const manifest: PackManifest = {
