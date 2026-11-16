@@ -9,7 +9,7 @@ export type Locale = 'en' | 'fr';
 export const MIN_TARGET_PX = 44;
 export const DEFAULT_STALE_AFTER_DAYS = 180;
 
-/** Open licences accepted for displayed data (SPDX-style ids). Anything else is flagged. */
+/** Open licences accepted for displayed data (SPDX-style ids). */
 export const OPEN_LICENCES: readonly string[] = [
   'CC0-1.0',
   'CC-BY-4.0',
@@ -20,6 +20,39 @@ export const OPEN_LICENCES: readonly string[] = [
   'OGL-Canada-2.0',
   'OGL-Ontario',
 ];
+
+/**
+ * Provider terms the project has accepted for a named source. They permit the
+ * use shown in the app but are not open licences, so they are labelled as
+ * terms of use, never flagged as a problem and never called open.
+ */
+export const ACCEPTED_TERMS: readonly RegExp[] = [
+  /^metrolinx access and use agreement\b/i,
+  /^ogl-ontario-metrolinx\b/i,
+  /^ltc open data terms of use\b/i,
+];
+
+const OPEN_NAMES: readonly RegExp[] = [
+  /^cc0\b/i,
+  /^cc[- ]by(?:[- ]sa)?[- ]4\.0$/i,
+  /^odbl\b/i,
+  /^odc[- ]by\b/i,
+  /^pddl\b/i,
+  /^ogl\b/i,
+  /^open government licen[cs]e\b/i,
+  /^licence du gouvernement ouvert\b/i,
+];
+
+/** 'unknown' when no licence is recorded; 'unrecognised' is not a claim that it is closed. */
+export type LicenceKind = 'open' | 'terms' | 'unrecognised' | 'unknown';
+
+export function licenceKind(licence: string | null | undefined): LicenceKind {
+  const value = clean(licence);
+  if (value === null || value.toUpperCase() === 'UNKNOWN') return 'unknown';
+  if (ACCEPTED_TERMS.some((pattern) => pattern.test(value))) return 'terms';
+  if (OPEN_LICENCES.includes(value) || OPEN_NAMES.some((pattern) => pattern.test(value))) return 'open';
+  return 'unrecognised';
+}
 
 export interface Provenance {
   source?: string | null;
@@ -34,7 +67,7 @@ export type ProvenanceIssue =
   | 'missing-date'
   | 'invalid-date'
   | 'future-date'
-  | 'licence-not-open';
+  | 'licence-unrecognised';
 
 export type FreshnessState = 'fresh' | 'stale' | 'unknown';
 
@@ -46,6 +79,9 @@ export interface RateDisplay {
 
 export interface DataBadge {
   state: FreshnessState;
+  /** Whole days since retrieval; null when the date is missing, invalid or in the future. */
+  ageDays: number | null;
+  licence: LicenceKind;
   label: string;
   provenanceLine: string;
   ariaLabel: string;
@@ -59,23 +95,31 @@ const DAY_MS = 86_400_000;
 const STRINGS = {
   en: {
     unknown: 'Unknown',
-    rateUnknown: 'Rate unknown',
+    rateUnknown: 'Unknown',
+    rateUnknownSpoken: 'unknown',
     rate: 'Rate',
-    fresh: 'Recently updated',
-    stale: 'May be out of date',
-    noDate: 'Update date unknown',
+    today: 'Retrieved today',
+    oneDay: 'Retrieved 1 day ago',
+    days: 'Retrieved {n} days ago',
+    stale: 'May be out of date.',
+    noDate: 'Retrieval date unknown',
     source: 'Source',
     licence: 'Licence',
     retrieved: 'Retrieved',
     colon: ': ',
   },
   fr: {
+    // Source, licence and date are feminine in French: « Inconnue ».
     unknown: 'Inconnue',
-    rateUnknown: 'Taux inconnu',
+    // Taux is masculine: « Taux : inconnu ».
+    rateUnknown: 'Inconnu',
+    rateUnknownSpoken: 'inconnu',
     rate: 'Taux',
-    fresh: 'Mis à jour récemment',
-    stale: 'Possiblement périmé',
-    noDate: 'Date de mise à jour inconnue',
+    today: 'Récupéré aujourd’hui',
+    oneDay: 'Récupéré il y a 1 jour',
+    days: 'Récupéré il y a {n} jours',
+    stale: 'Possiblement périmé.',
+    noDate: 'Date de récupération inconnue',
     source: 'Source',
     licence: 'Licence',
     retrieved: 'Date de récupération',
@@ -96,7 +140,7 @@ function clean(v: string | null | undefined): string | null {
 export function formatRate(value: unknown, locale: Locale): RateDisplay {
   const s = STRINGS[locale];
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) {
-    return { known: false, text: s.unknown, ariaLabel: s.rateUnknown };
+    return { known: false, text: s.rateUnknown, ariaLabel: `${s.rate}${s.colon}${s.rateUnknownSpoken}` };
   }
   const n = value.toFixed(1);
   const text = locale === 'fr' ? `${n.replace('.', ',')}${NBSP}%` : `${n}%`;
@@ -109,6 +153,14 @@ export function parseIsoDate(value: string | null | undefined): number | null {
   if (v === null || !/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2})?)?$/.test(v)) return null;
   const t = Date.parse(v);
   return Number.isNaN(t) ? null : t;
+}
+
+/** Whole days since retrieval, or null when unknown (missing, invalid or future date). */
+export function ageInDays(retrievedAt: string | null | undefined, now: Date): number | null {
+  const t = parseIsoDate(retrievedAt);
+  if (t === null) return null;
+  const age = Math.floor((now.getTime() - t) / DAY_MS);
+  return age < 0 ? null : age;
 }
 
 /** Freshness: invalid or future dates are 'unknown', never 'fresh'. */
@@ -129,7 +181,7 @@ export function checkProvenance(p: Provenance, now: Date): ProvenanceIssue[] {
   if (clean(p.source) === null) issues.push('missing-source');
   const lic = clean(p.licence);
   if (lic === null) issues.push('missing-licence');
-  else if (!OPEN_LICENCES.includes(lic)) issues.push('licence-not-open');
+  else if (licenceKind(lic) === 'unrecognised') issues.push('licence-unrecognised');
   if (clean(p.retrievedAt) === null) issues.push('missing-date');
   else {
     const t = parseIsoDate(p.retrievedAt);
@@ -159,13 +211,18 @@ export function dataBadge(
 ): DataBadge {
   const s = STRINGS[locale];
   const state = freshness(p.retrievedAt, now, staleAfterDays);
-  const label = state === 'fresh' ? s.fresh : state === 'stale' ? s.stale : s.noDate;
+  const ageDays = ageInDays(p.retrievedAt, now);
+  // The label states the age; it never says "recent" for data that may be months old.
+  const age = ageDays === null ? s.noDate : ageDays === 0 ? s.today : ageDays === 1 ? s.oneDay : s.days.replace('{n}', String(ageDays));
+  const label = state === 'stale' ? `${age}. ${s.stale}` : age;
   const line = provenanceLine(p, locale);
   return {
     state,
+    ageDays,
+    licence: licenceKind(p.licence),
     label,
     provenanceLine: line,
-    ariaLabel: `${label}. ${line}`,
+    ariaLabel: `${label.replace(/\.$/, '')}. ${line}`,
     issues: checkProvenance(p, now),
     minTargetPx: MIN_TARGET_PX,
   };

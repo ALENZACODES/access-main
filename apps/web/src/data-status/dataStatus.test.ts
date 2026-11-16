@@ -5,6 +5,7 @@ import {
   dataBadge,
   formatRate,
   freshness,
+  licenceKind,
   provenanceLine,
 } from './index';
 
@@ -27,7 +28,10 @@ describe('formatRate', () => {
     const r = formatRate(12.5, 'fr');
     expect(r.text).toBe('12,5\u00A0%');
     expect(r.ariaLabel).toBe('Taux\u00A0: 12,5\u00A0%');
-    expect(formatRate(null, 'fr').text).toBe('Inconnue');
+    // Taux is masculine: the visible text and the spoken label agree.
+    expect(formatRate(null, 'fr').text).toBe('Inconnu');
+    expect(formatRate(null, 'fr').ariaLabel).toBe('Taux\u00A0: inconnu');
+    expect(formatRate(null, 'en').ariaLabel).toBe('Rate: unknown');
   });
 });
 
@@ -50,7 +54,7 @@ describe('provenance', () => {
   it('flags missing and non-open items', () => {
     expect(checkProvenance(good, NOW)).toEqual([]);
     expect(checkProvenance({}, NOW)).toEqual(['missing-source', 'missing-licence', 'missing-date']);
-    expect(checkProvenance({ ...good, licence: 'Proprietary' }, NOW)).toEqual(['licence-not-open']);
+    expect(checkProvenance({ ...good, licence: 'Proprietary' }, NOW)).toEqual(['licence-unrecognised']);
     expect(checkProvenance({ ...good, retrievedAt: 'soon' }, NOW)).toEqual(['invalid-date']);
     expect(checkProvenance({ ...good, retrievedAt: '2027-01-01' }, NOW)).toEqual(['future-date']);
   });
@@ -77,7 +81,8 @@ describe('dataBadge', () => {
   it('stale badge carries label, provenance and 44px target', () => {
     const b = dataBadge({ ...good, retrievedAt: '2025-01-01' }, 'en', NOW);
     expect(b.state).toBe('stale');
-    expect(b.label).toBe('May be out of date');
+    expect(b.label).toBe('Retrieved 683 days ago. May be out of date.');
+    expect(b.ageDays).toBe(683);
     expect(b.ariaLabel).toContain('Retrieved: 2025-01-01');
     expect(b.minTargetPx).toBeGreaterThanOrEqual(MIN_TARGET_PX);
   });
@@ -91,7 +96,43 @@ describe('dataBadge', () => {
 
   it('missing date is unknown, not fresh', () => {
     expect(dataBadge({ source: 'x', licence: 'CC0-1.0' }, 'fr', NOW).label).toBe(
-      'Date de mise à jour inconnue',
+      'Date de récupération inconnue',
     );
+  });
+
+  it('never calls data up to 180 days old "recent"; it states the age', () => {
+    const b = dataBadge({ ...good, retrievedAt: '2026-05-19' }, 'en', NOW);
+    expect(b.state).toBe('fresh');
+    expect(b.label).toBe('Retrieved 180 days ago');
+    expect(b.label).not.toMatch(/recent/i);
+    expect(dataBadge({ ...good, retrievedAt: '2026-05-19' }, 'fr', NOW).label).toBe('Récupéré il y a 180\u00a0jours');
+    expect(dataBadge({ ...good, retrievedAt: '2026-11-15' }, 'en', NOW).label).toBe('Retrieved today');
+    expect(dataBadge({ ...good, retrievedAt: '2026-11-14' }, 'fr', NOW).label).toBe('Récupéré il y a 1\u00a0jour');
+  });
+});
+
+describe('licenceKind', () => {
+  it('treats the Metrolinx agreement and the LTC terms as accepted terms, not a problem', () => {
+    for (const licence of [
+      'Metrolinx Access and Use Agreement (accepted 2026-11-15)',
+      'OGL-Ontario-Metrolinx-1.0',
+      'LTC Open Data Terms of Use',
+    ]) {
+      expect(licenceKind(licence)).toBe('terms');
+      expect(checkProvenance({ ...good, licence }, NOW)).toEqual([]);
+      expect(dataBadge({ ...good, licence }, 'en', NOW).licence).toBe('terms');
+    }
+  });
+
+  it('recognises open licences by id or by name', () => {
+    for (const licence of ['CC-BY-4.0', 'CC BY 4.0', 'ODbL-1.0', 'Open Government Licence – Toronto', 'OGL-Canada-2.0']) {
+      expect(licenceKind(licence)).toBe('open');
+    }
+  });
+
+  it('keeps a missing or UNKNOWN licence unknown, and never calls an unlisted one closed', () => {
+    expect(licenceKind(undefined)).toBe('unknown');
+    expect(licenceKind('UNKNOWN')).toBe('unknown');
+    expect(licenceKind('Proprietary')).toBe('unrecognised');
   });
 });

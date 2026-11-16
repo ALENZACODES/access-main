@@ -1,15 +1,22 @@
-# data-status
+# Data-QA display helpers (P6)
 
-Pure helpers for showing data quality in the App (EN + FR).
+Wired into the live **/data-status** page (`pages/DataStatusPage.tsx`):
 
-- `formatRate(value, locale)`: a rate is shown only if it is a finite number in 0..100. Anything else (null, undefined, NaN, text, out of range) shows **Unknown** / **Inconnue**, never 0.
-- `freshness(retrievedAt, now, staleAfterDays = 180)`: `fresh`, `stale` or `unknown`. Missing, malformed or future dates are `unknown`, never `fresh`.
-- `checkProvenance(p, now)`: lists issues (missing source/licence/date, invalid or future date, licence not in `OPEN_LICENCES`).
-- `provenanceLine(p, locale)`: one consistent line `Source: … · Licence: … · Retrieved: …`; gaps show Unknown, nothing is guessed.
-- `dataBadge(p, locale, now)`: label, provenance line, `ariaLabel`, issues and `minTargetPx` (44) for any interactive badge built on it.
+- Each cached record gets a `dataBadge()`: a provenance line (`Source`,
+  `Licence`, `Retrieved`, with Unknown for any gap, never blank or guessed),
+  an age label and a licence kind.
+- The age label states the age ("Retrieved 12 days ago"). Data older than
+  180 days adds "May be out of date." Nothing is ever called "recent".
+  Missing, invalid or future dates read "Retrieval date unknown".
+- `licenceKind()`: `open`, `terms`, `unrecognised` or `unknown`. Accepted
+  provider terms (Metrolinx Access and Use Agreement, OGL-Ontario-Metrolinx,
+  LTC Open Data Terms of Use) are `terms`: shown as "Used under the
+  provider’s terms of use. Not an open licence." and never flagged. An unlisted
+  licence is `unrecognised`, which is not a claim that it is closed.
+- `formatRate()` shows the share of cached records with no usable retrieval
+  date. With no records it is Unknown, never 0. French uses « Inconnu » for
+  the masculine « taux » (visible text and spoken label agree) and
+  « Inconnue » for source, licence and date.
 
-`now` is always passed in so results are testable. FR strings use ’, U+00A0 before `:` and `%`.
-
-Every dataset shown through these helpers must record source, licence (open only) and retrieval date; this module displays them and never fills them in.
-
-Run: `npx vitest run apps/web/src/data-status`
+`e2e/data-status-quality.spec.ts` seeds records and checks the page in English
+and French.

@@ -1,5 +1,9 @@
 export {
+  ACCEPTED_TERMS,
   DEFAULT_STALE_AFTER_DAYS,
+  ageInDays,
+  licenceKind,
+  type LicenceKind,
   MIN_TARGET_PX,
   OPEN_LICENCES,
   checkProvenance,
