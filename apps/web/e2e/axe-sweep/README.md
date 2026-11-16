@@ -1,21 +1,26 @@
 # EN/FR axe route sweep
 
-`axe-sweep.spec.ts` is a Playwright-discovered test. It starts at the site
-root and common English/French URL variants, follows same-origin HTML links,
-and runs axe with WCAG 2.0/2.1 A/AA and 2.2 AA rule tags on each reachable
-page. It asserts that both `html[lang="en"]` and `html[lang="fr"]` are seen.
-Failures include the route, axe rule, and up to five affected targets.
+`axe-sweep.spec.ts` is a Playwright-discovered test. It runs axe with WCAG
+2.0/2.1 A/AA and 2.2 AA rule tags on every shell `ROUTES` entry, in English
+and in French, at 320px and at 1280px. That matrix is required: a link crawl
+is not a substitute, because unlinked or not-found paths would be missed or
+scanned by accident.
 
-**Run:** From the web workspace, run its existing Playwright test command
-with `apps/web/e2e/axe-sweep/axe-sweep.spec.ts` as the test path (adjust the
-path relative to the Playwright config's `testDir`). Set Playwright's
-`use.baseURL` to the running local App, and ensure `@playwright/test` and
-`@axe-core/playwright` are installed in that workspace. Optionally set
-`AXE_SWEEP_EN_URL` and `AXE_SWEEP_FR_URL` to the real locale entry points;
-relative URLs are resolved against `use.baseURL`.
+Language is forced by writing `access.language` and `access.language.set` in
+`localStorage` before navigation (the keys `detectLanguage()` actually reads).
+Path prefixes such as `/fr` and `?lang=fr` are not used, because the shell
+ignores them. Each French run also asserts `html[lang]` and visible French
+copy (the skip link, Accueil, and the English language button) so a single
+French page cannot pass the suite. Each run also asserts `window.innerWidth`
+so a missed 320px viewport fails.
 
-The scan follows public links, not authenticated, hidden, or action-only
-routes. It does not infer accessibility from missing information and is not
-a substitute for keyboard, switch, or assistive-technology testing. If the
-site has more than 60 discovered URLs, the test fails rather than silently
-claiming full coverage. No external tile server is requested by the test.
+Failures include the route, language, viewport, axe rule, and target. An
+explicit, documented allowlist may waive a known leftover when each entry has
+a reason; an empty allowlist means every violation fails CI. These checks do
+not prove WCAG 2.2 AA and are not a substitute for keyboard, switch, or
+assistive-technology testing.
+
+**Run:** From the repository root, `npm run test:e2e -w @access/web -- e2e/axe-sweep/axe-sweep.spec.ts`
+(or the workspace's existing Playwright command with that path). Playwright's
+`use.baseURL` must point at the local App, and `@playwright/test` and
+`@axe-core/playwright` must be installed in that workspace.
