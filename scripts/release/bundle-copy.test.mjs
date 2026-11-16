@@ -82,3 +82,10 @@ test('integration: replacement characters are refused in JS irrespective of lexi
     assert.ok((await inspectRelease(folder)).issues.some((value) => value.includes('U+FFFD')));
   });
 });
+
+test('minified CSV and interpolated template syntax remains inspectable', () => {
+  const js = 'const rows=[["a","b"]]; const csv=rows.map(x=>x.join(",")).join("\\r\\n"); const f=n=>`\\uFEFF${n}`;';
+  assert.equal(extractShippedStrings(js).error, null);
+  assert.deepEqual(findForbiddenShippedCopy(js, BANNED_PATTERNS).issues, []);
+  assert.ok(findForbiddenShippedCopy(js + 'const alert="Vérifiez";', BANNED_PATTERNS).issues.length > 0);
+});
