@@ -16,7 +16,22 @@ export default defineConfig({
     locale: "en-CA",
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      // Day 22 first-result gates need the runner to themselves. Other e2e
+      // files running in parallel push the medians over the 1,500 ms gate.
+      name: "perf",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: "perf.spec.ts",
+      fullyParallel: false,
+    },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: ["release/**", "perf.spec.ts"],
+      dependencies: ["perf"],
+    },
+  ],
   webServer: {
     command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}`,
