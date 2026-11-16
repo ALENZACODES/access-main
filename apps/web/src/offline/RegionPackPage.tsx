@@ -176,11 +176,10 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
       }, controller.signal);
       setResults((current) => ({ ...current, [id]: result }));
       await refresh();
-      if (result.completed) {
-        setMessage(c.complete);
-        // Committed cells alone do not establish a fresh stored-byte check.
-        setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
-      }
+      // A download changes what is stored, so an earlier "Check again" result no longer applies.
+      // The region line returns to the stored state; only an explicit check sets a checked status.
+      setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; });
+      if (result.completed) setMessage(c.complete);
       else if (result.reason === "download-error") {
         // Digest, size or record-count mismatches use the recovery notice.
         // A failed fetch that still saved earlier cells stays a partial result
@@ -189,11 +188,10 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         if (classified.reason === "invalid-data") setFailure({ region: id, failure: classified });
         else setError(downloadResultText(language, result));
       } else setError(downloadResultText(language, result));
-      if (!result.completed) setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
     } catch (cause) {
       // Recovery copy names the cause and the next step; raw error text is never shown.
       setFailure({ region: id, failure: classifyPackDownloadError(cause, navigator.onLine) });
-      setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
+      setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; });
       await refresh().catch(() => undefined);
     } finally { abortRef.current = null; setBusy(null); }
   }
