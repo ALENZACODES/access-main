@@ -20,20 +20,20 @@ export const STRINGS: Record<Lang, UiStrings> = {
   en: {
     title: "Quick checks for this trip",
     intro:
-      "One tap per question. Answers stay on this device as unverified drafts until you export a file. Nothing is sent or published.",
+      "One tap per question. Answers stay on this device as drafts not yet reviewed until you export a file. Nothing is sent or published.",
     yes: "Yes",
     no: "No",
     unknown: "I could not check",
-    draftLabel: "Unverified draft",
+    draftLabel: "Draft not yet reviewed",
     saved: "Saved on this device. Not shared.",
     notChecked: "Not answered",
     exportButton: "Export drafts as a file",
     exportDone: "File created. You choose where to send it.",
     nothingToExport: "No drafts to export yet.",
-    localCount: "{n} unverified drafts on this device",
+    localCount: "{n} drafts not yet reviewed on this device",
   },
   fr: {
-    title: "V\u00e9rifications rapides pour ce trajet",
+    title: "Contrôles rapides pour ce trajet",
     intro:
       "Un geste par question. Les r\u00e9ponses restent sur cet appareil comme brouillons non v\u00e9rifi\u00e9s jusqu’\u00e0 l’exportation d’un fichier. Rien n’est envoy\u00e9 ni publi\u00e9.",
     yes: "Oui",
