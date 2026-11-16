@@ -51,6 +51,12 @@ measure reports UNKNOWN, never a pass.
 | locale | none | every finding is UNKNOWN: month-first or am and pm dates and times and comma-grouped numbers in French text, a currency symbol first in French, day-first dates, decimal commas and a currency symbol last in English text, and any date that reads two ways |
 | sensory | 1.3.3 | every finding is UNKNOWN: an instruction that points at a colour, shape, place, size or sound ("the green button", "the menu on the left", "when you hear the beep"); a sentence that also quotes the label is left alone |
 | headings | 2.4.6, 2.4.2 | every finding is UNKNOWN: a heading that is a placeholder or only numbers, one that repeats on the page, over 14 words, that ends in a full stop or is all capitals; a placeholder page title, and a title that shares no word with the main heading (an empty heading and a missing title are static-html rules) |
+| handlers | 2.1.1, 2.5.2 | every finding is UNKNOWN, read from inline attributes only: a click handler on an element the keyboard cannot reach or with no key handler, a handler that acts when the pointer goes down, a hover handler with no focus handler, a double click, a title that holds words the text does not (handlers added by script are not seen) |
+| typography | 1.4.8 | good practice, not conformance (the criterion is level AAA); every finding is UNKNOWN: text under 12px, justified text, lines over 80 characters, line spacing under 1.2, an italic passage of 40 words or more |
+| order | 1.3.2, 2.4.3 | a flex container in row-reverse or column-reverse, or children moved with order, are UNKNOWN; the message counts the focusable controls inside |
+| generated | 1.3.1 | words or an icon font glyph added with content on ::before or ::after are UNKNOWN |
+| lookalike | 1.3.1 | every finding is UNKNOWN, read from the markup: a paragraph that holds only a short bold line (looks like a heading), three or more paragraphs or lines that start with bullets or numbers (look like a list), an empty paragraph used as space |
+| regions | 1.3.1 | text blocks and controls with no landmark above them are UNKNOWN, and only when the page has at least one landmark (a page with none is the static-html rule) |
 | text-zoom | 1.4.4 | a box that starts to cut text off when the base text size is doubled fails; text sized in px does not follow the base size, so a clean result is not a pass |
 | budget | none | per-check limits for teams that cannot fix everything at once |
 | provenance | none | data records need source name, https URL, licence and retrieved date |

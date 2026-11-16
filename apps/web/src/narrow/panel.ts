@@ -19,6 +19,10 @@ export interface PanelOptions {
   readonly now?: () => Date;
   /** Puts text on the clipboard. Defaults to the browser clipboard when there is one. */
   readonly copy?: (text: string) => Promise<void>;
+  /** False when the host page already renders the h1, so the panel does not add a second one. Default true. */
+  readonly heading?: boolean;
+  /** Called with the new language when the person switches it inside the panel, so the host can keep its own heading in step. */
+  readonly onLang?: (lang: Lang) => void;
 }
 
 type State =
@@ -45,7 +49,7 @@ const TEXT = {
   copyFailed: { en: 'Copying failed.', fr: 'La copie a échoué.' },
 } as const;
 
-export function renderPanel(lang: Lang, state: State, notice = ''): string {
+export function renderPanel(lang: Lang, state: State, notice = '', heading = true): string {
   const other: Lang = lang === 'en' ? 'fr' : 'en';
   let status: string;
   let body = '';
@@ -68,7 +72,7 @@ export function renderPanel(lang: Lang, state: State, notice = ''): string {
       break;
   }
   return (
-    `<h1>${escapeHtml(TEXT.title[lang])}</h1>` +
+    (heading ? `<h1>${escapeHtml(TEXT.title[lang])}</h1>` : '') +
     `<p>${escapeHtml(TEXT.intro[lang])}</p>` +
     `<p><button type="button" data-action="run" style="min-height:44px;min-width:44px">${escapeHtml(TEXT.run[lang])}</button> ` +
     `<button type="button" data-action="lang-${other}" lang="${other}" style="min-height:44px;min-width:44px">${escapeHtml(TEXT.switchTo[lang])}</button></p>` +
@@ -98,7 +102,7 @@ export function mountNarrowPanel(opts: PanelOptions): { getLang(): Lang } {
 
   const render = (focusAction?: string): void => {
     opts.root.setAttribute?.('lang', lang);
-    opts.root.innerHTML = renderPanel(lang, state, notice);
+    opts.root.innerHTML = renderPanel(lang, state, notice, opts.heading !== false);
     if (focusAction) opts.root.querySelector?.(`[data-action="${focusAction}"]`)?.focus?.();
   };
 
@@ -125,6 +129,7 @@ export function mountNarrowPanel(opts: PanelOptions): { getLang(): Lang } {
     } else if (action === 'lang-en' || action === 'lang-fr') {
       lang = action === 'lang-fr' ? 'fr' : 'en';
       notice = '';
+      opts.onLang?.(lang);
       render(`lang-${lang === 'fr' ? 'en' : 'fr'}`);
     } else if (action === 'run' && state.kind !== 'running') {
       state = { kind: 'running' };
