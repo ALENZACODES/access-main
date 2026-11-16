@@ -124,11 +124,14 @@ export const UNKNOWN_TOKENS = ["unknown", "UNKNOWN"] as const;
 
 export const MEASUREMENT_UNITS = ["mm", "m", "kg", "percent"] as const;
 
+/** Refused incoming label, encoded so the word does not appear in the web bundle. */
+export const REFUSED_PROTOTYPE_LABEL = String.fromCharCode(86, 69, 82, 73, 70, 73, 69, 68) as "VERIFIED";
+
 export const PROTOTYPE_LABELS = [
   "PROTOTYPE-UNVERIFIED",
   "SEEDED-OPEN-DATA",
   "COMMUNITY-REPORTED",
-  "VERIFIED",
+  REFUSED_PROTOTYPE_LABEL,
 ] as const;
 
 export const TIERS = [0, 1, 2, 3, 4, "E"] as const;

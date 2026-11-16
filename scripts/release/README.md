@@ -17,3 +17,17 @@ node scripts/release/check.mjs --dir path/to/dist --budget 4141875
 
 The root `npm run verify` runs these checks after `npm run build`. CI calls
 `npm run verify` on pull requests and on pushes to `main`.
+
+## User-facing verification wording
+
+The checker fails when user-facing text contains *verified*, *verify*,
+*vérifié*, *vérifiée*, or *vérifier* in any ordinary form, including
+"not verified", "unverified", and "verified source". Reword the App's copy
+rather than weakening the check.
+
+Source maps (`.map`) are not scanned for wording; they are still counted in
+the byte budget.
+
+The only allowlisted token is the exact machine label `PROTOTYPE-UNVERIFIED`.
+Reword user copy (including About, banners, and phrases such as
+"unverified records") rather than adding tokens to the allowlist.

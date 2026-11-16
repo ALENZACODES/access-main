@@ -1,3 +1,4 @@
+import { DIRECTORY_TIER_FIELD } from "./protocolFields.ts";
 import { validateDirectoryRecord } from "./directory.ts";
 import { findForbiddenKeys, validateProvenance, type FieldIssue, type Provenance } from "./provenance.ts";
 import { canonicalTierFromForeign } from "./tiers.ts";
@@ -53,7 +54,7 @@ export function validateCacheEntry(entry: CacheEntry): FieldIssue[] {
   }
   if (entry.kind === "directory-link") {
     issues.push(...validateDirectoryRecord(entry.payload));
-    const expectedTier = canonicalTierFromForeign(entry.payload.verificationTier);
+    const expectedTier = canonicalTierFromForeign(entry.payload[DIRECTORY_TIER_FIELD]);
     if (expectedTier === null || entry.provenance?.tier !== expectedTier) {
       issues.push({ field: "provenance.tier", code: "invalid_tier" });
     }

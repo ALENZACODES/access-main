@@ -56,3 +56,40 @@ test('rejects an empty release directory and invalid arguments', async () => {
   assert.throws(() => parseArgs(['--budget', '-1', '--dir', 'dist']), /Invalid budget/);
   assert.throws(() => parseArgs([]), /--dir requis/);
 });
+
+
+test('rejects every user-facing form of verified and vérifier, including denials', async () => {
+  const samples = {
+    'en-verified.html': 'This place is verified.',
+    'en-not.html': 'This source is not verified.',
+    'en-source.html': 'verified source',
+    'en-unverified.html': 'Records are unverified.',
+    'en-verify.html': 'Click Verify to continue.',
+    'fr-verifie.html': 'Ce lieu est vérifié.',
+    'fr-verifiee.html': 'Source vérifiée.',
+    'fr-verifier.html': 'Veuillez vérifier la fiche.',
+  };
+  await withRelease(samples, async (dir) => {
+    const issues = (await inspectRelease(dir)).issues.join('\n');
+    for (const name of Object.keys(samples)) {
+      assert.match(issues, new RegExp(name + ': prohibited user-facing'));
+    }
+  });
+});
+
+test('allows only the exact PROTOTYPE-UNVERIFIED label, not other tokens or copy', async () => {
+  await withRelease({
+    'allowed.js': 'const label = "PROTOTYPE-UNVERIFIED";',
+    'verified-token.js': 'const label = "VERIFIED";',
+    'claims.js': 'const n = { verifiedClaims: 1 };',
+    'about.html': 'Stored records that still say verified: 0. This prototype refuses that label.',
+    'banner.html': 'How this shell handles unverified records.',
+  }, async (dir) => {
+    const issues = (await inspectRelease(dir)).issues.join('\n');
+    assert.ok(!issues.includes('allowed.js'), issues);
+    assert.match(issues, /verified-token\.js: prohibited user-facing/);
+    assert.match(issues, /claims\.js: prohibited user-facing/);
+    assert.match(issues, /about\.html: prohibited user-facing/);
+    assert.match(issues, /banner\.html: prohibited user-facing/);
+  });
+});

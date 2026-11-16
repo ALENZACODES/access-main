@@ -83,7 +83,7 @@ describe("device storage", () => {
 
   it("rejects a live-status cache entry, a verified tier, and a record with no licence", async () => {
     await expect(putCacheEntry({ ...entry, provenance: { ...entry.provenance, tier: 4 } })).rejects.toThrow(/live_status_not_cached/);
-    await expect(putCacheEntry({ ...entry, provenance: { ...entry.provenance, tier: 3 } })).rejects.toThrow(/verified_not_in_prototype/);
+    await expect(putCacheEntry({ ...entry, provenance: { ...entry.provenance, tier: 3 } })).rejects.toThrow(/refused_label_not_in_prototype/);
     await expect(putCacheEntry({ ...entry, id: "bad", provenance: { ...entry.provenance, licence: "" } })).rejects.toThrow(/missing_licence/);
     await putCacheEntry(entry);
     expect((await summarizeStorage()).cacheCount).toBe(1);

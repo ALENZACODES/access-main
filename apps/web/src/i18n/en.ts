@@ -2,13 +2,13 @@ export const en = {
   appName: "the App",
   skip: "Skip to main content",
   prototypeBanner:
-    "Prototype. Every record is unverified. Each shows its source, licence, date, and verification tier. Unknown stays unknown.",
+    "Prototype. Every record is a prototype sample. Each shows its source, licence, date, and tier. Unknown stays unknown.",
   noEndorsement:
     "No organisation has endorsed the App.",
   noMedical: "the App does not give medical advice, clinical intervals, or benefits eligibility decisions.",
   noEligibility: "Directory entries are links to official pages. the App does not decide whether you qualify.",
   footer: {
-    prototype: "Prototype. Every record is unverified. Source, licence, date, and tier are shown with it.",
+    prototype: "Prototype. Every record is a prototype sample. Source, licence, date, and tier are shown with it.",
     build: "Build {{id}}",
     contract: "Shell contract {{version}}",
     online: "Online",
@@ -57,7 +57,7 @@ export const en = {
     finders: "Washroom, parking, charging, and repair search will not treat a municipal flag as a measurement.",
     navigator: "A services directory of links. It will not say whether you qualify for a program.",
     games: "Games hub. Not therapy, not an assessment, and not medical advice.",
-    help: "How this shell handles privacy, language, and unverified records.",
+    help: "How this shell handles privacy, language, and prototype records.",
     data: "What is stored on this device, and what is not.",
   },
   about: {
@@ -67,7 +67,7 @@ export const en = {
       "Preferences, including mobility choices, stay in this browser's storage. This shell has no account and no upload.",
     countsTitle: "Records in this shell",
     countsIntro: "These counts are read from this device. They are not a coverage claim.",
-    verified: "Stored records that still say verified: {{count}}. This prototype refuses that label.",
+    refusedLabelCount: "Stored records that still carry a refused confirmation label: {{count}}. This prototype does not use that label.",
     frenchNote:
       "French shell text is a prototype translation. It still needs review by a qualified French-language reviewer. Beyond the shell, content is English in this prototype.",
     audit:
@@ -123,7 +123,7 @@ export const en = {
     asOf: "As of {{date}}",
     noAsOf: "No as-of date, because nothing is cached.",
     refusedTiers:
-      "This prototype cache refuses tier 2, tier 3, tier 4, a community-reported label, and a verified label.",
+      "This prototype cache refuses tier 2, tier 3, tier 4, a community-reported label, and a confirmation label.",
   },
   tiers: {
     unknown: "Unknown. The record does not state a tier.",
@@ -133,10 +133,10 @@ export const en = {
     tier3: "Trained surveyor, with evidence. Not stored on a prototype record.",
     tier4: "Live feed. This shell does not keep live status offline.",
     tierE: "Desk check of an official page. Not an eligibility decision.",
-    prototypeUnverified: "Prototype label. The record stays unverified.",
+    prototypeLabel: "Prototype label. The record stays a prototype sample.",
     seededOpenData: "Seeded from open data. Not a measurement by the App.",
     communityReported: "Community-reported label. Not stored on a prototype record.",
-    verifiedClaim: "Verified label. A prototype record cannot carry it.",
+    refusedClaimLabel: "Confirmation label. A prototype record cannot carry it.",
   },
   modules: {
     ready: "These records come from the linked part of the App. Each one shows its source, licence, date, and tier. Unknown stays unknown.",
@@ -171,7 +171,7 @@ export const en = {
     resultCount_other: "{{count}} results",
     placesTitle: "Places",
     placesBody:
-      "Place pages will show a source, a licence, a date, and a verification tier on every record. Nothing is loaded. Unknown stays unknown.",
+      "Place pages will show a source, a licence, a date, and a tier on every record. Nothing is loaded. Unknown stays unknown.",
     journeyTitle: "Journey",
     journeyBody:
       "Door-to-door planning for travel in Ontario is not connected. Route preferences in settings stay on this device and are not sent anywhere. Live elevator status is unavailable. An offline plan, when one exists, will show an as-of time.",
@@ -256,9 +256,9 @@ export const en = {
     privacyTitle: "Where preferences go",
     privacyBody:
       "Mobility preferences stay in this browser. You can export or delete them in settings. the App does not ask for your location when you save settings.",
-    tiersTitle: "What unverified means",
+    tiersTitle: "What these records are",
     tiersBody:
-      "A name on a map is not a promise. Every prototype record is unverified. Source, licence, date, and tier say where a fact came from. They do not make it verified. Unknown stays unknown.",
+      "A name on a map is not a promise. Every prototype record is a sample. Source, licence, date, and tier say where a fact came from. They do not confirm the fact. Unknown stays unknown.",
     languageTitle: "Language",
     languageBody:
       "English and French are available for the shell. French text is a prototype translation pending review. Switch language from the header. The choice remains in this browser.",
@@ -418,9 +418,9 @@ export const en = {
     noDate: "No date",
     undated_one: "{{count}} cached record has no source date.",
     undated_other: "{{count}} cached records have no source date.",
-    verificationTitle: "Verification position",
-    verificationBody: "No record in this prototype is verified. Tier 3 and the verified label are refused.",
-    verifiedCount: "Cached records that still claim verified: {{count}}.",
+    labelPolicyTitle: "How records are labelled",
+    labelPolicyBody: "No record in this prototype carries a confirmation label. Tier 3 and that label are refused.",
+    refusedLabelCount: "Cached records that still carry a refused confirmation label: {{count}}.",
     modulesTitle: "Parts of the App in this build",
     modulesCaption: "Whether each part answered as connected",
     part: "Part",
@@ -439,7 +439,7 @@ export const en = {
     honestyTitle: "Statements to deliver",
     honestyIntro: "Say each of these during the demonstration.",
     honestyPrototype: "the App is a prototype for evaluation.",
-    honestyUnverified: "No data shown is verified. Unknown stays unknown.",
+    honestyNoConfirmation: "No data shown carries a confirmation label. Unknown stays unknown.",
     honestyOutage: "Any elevator outage shown is demonstration data, not live status.",
     honestyMedical: "the App does not give medical advice.",
     honestyFrench: "French covers the shell only, and it is a prototype translation pending review.",

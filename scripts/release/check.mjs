@@ -16,8 +16,42 @@ export const BANNED_PATTERNS = Object.freeze([
   new RegExp(['sci', 'ontario'].join(''), 'i'),
   new RegExp(['sc', 'io'].join(''), 'i'),
   /aaa[ -]?conformant/i,
-  /verified(?:ly)?\s+(?:accessible|access|compliance|conformant)/i,
 ]);
+
+/**
+ * Every user-facing form of verify / verified / vérifier / vérifié(e)(s),
+ * including "not verified", "unverified", and "verified source".
+ * Applied after non-user-facing allowlisted tokens are masked.
+ */
+export const USER_FACING_VERIF_PATTERN =
+  /unverified|verif(?:y|ied|iable|ication|ying|ies)?|vérifi(?:er|é|ée|és|ées|able|cation|ant|a)/giu;
+
+/**
+ * Machine tokens that may remain in the bundle. None of these is user-facing copy.
+ * Tokens are removed before the user-facing pattern runs, and must be exact.
+ */
+// The only permitted token in a release is this exact machine label.
+export const ALLOWLISTED_TOKENS = Object.freeze([
+  'PROTOTYPE-UNVERIFIED',
+]);
+
+export function maskAllowlistedTokens(content) {
+  let masked = content;
+  for (const token of ALLOWLISTED_TOKENS) {
+    if (token && masked.includes(token)) {
+      masked = masked.split(token).join(' '.repeat(token.length));
+    }
+  }
+  return masked;
+}
+
+export function findUserFacingVerif(content) {
+  const masked = maskAllowlistedTokens(content);
+  return masked.match(USER_FACING_VERIF_PATTERN) ?? [];
+}
+
+/** Source maps are not shown to people using the App; still counted in the budget. */
+const WORDING_SKIP_EXTENSIONS = new Set(['.map']);
 
 export async function inspectRelease(directory, { budgetBytes = DEFAULT_BUDGET_BYTES } = {}) {
   if (!Number.isSafeInteger(budgetBytes) || budgetBytes < 0) {
@@ -55,7 +89,8 @@ export async function inspectRelease(directory, { budgetBytes = DEFAULT_BUDGET_B
     const bytes = await readFile(file);
     totalBytes += bytes.byteLength;
     const name = relative(root, file).split('\\').join('/');
-    if (!TEXT_EXTENSIONS.has(extname(file).toLowerCase())) continue;
+    const ext = extname(file).toLowerCase();
+    if (!TEXT_EXTENSIONS.has(ext)) continue;
     let content;
     try {
       content = encoder.decode(bytes);
@@ -66,10 +101,16 @@ export async function inspectRelease(directory, { budgetBytes = DEFAULT_BUDGET_B
     if (content.includes('\uFFFD')) {
       issues.push(`${name}: replacement character U+FFFD / caractère de remplacement U+FFFD`);
     }
+    if (WORDING_SKIP_EXTENSIONS.has(ext)) continue;
     for (const pattern of BANNED_PATTERNS) {
       if (pattern.test(content)) {
         issues.push(`${name}: prohibited release text / texte de publication interdit (${pattern.source})`);
       }
+    }
+    const verifHits = findUserFacingVerif(content);
+    if (verifHits.length > 0) {
+      const unique = [...new Set(verifHits.map((hit) => hit.toLowerCase()))].join(', ');
+      issues.push(`${name}: prohibited user-facing verification wording / formulation de confirmation interdite (${unique})`);
     }
   }
   if (totalBytes > budgetBytes) {

@@ -4,14 +4,14 @@ export const fr: Messages = {
   appName: "the App",
   skip: "Aller au contenu principal",
   prototypeBanner:
-    "Prototype. Chaque enregistrement est non vérifié. Chacun indique sa source, sa licence, sa date et son niveau de vérification. L'inconnu reste inconnu.",
+    "Prototype. Chaque enregistrement est un échantillon de prototype. Chacun indique sa source, sa licence, sa date et son niveau. L’inconnu reste inconnu.",
   noEndorsement:
     "Aucune organisation n'a approuvé the App.",
   noMedical: "the App ne donne pas de conseil médical, d'intervalle clinique, ni de décision d'admissibilité à une prestation.",
   noEligibility:
     "Les entrées du répertoire sont des liens vers des pages officielles. the App ne tranche pas l'admissibilité.",
   footer: {
-    prototype: "Prototype. Chaque enregistrement est non vérifié. La source, la licence, la date et le niveau l'accompagnent.",
+    prototype: "Prototype. Chaque enregistrement est un échantillon de prototype. La source, la licence, la date et le niveau l’accompagnent.",
     build: "Version {{id}}",
     contract: "Contrat de l'interface {{version}}",
     online: "En ligne",
@@ -52,7 +52,7 @@ export const fr: Messages = {
     hasProfile: "Les préférences sont enregistrées sur cet appareil.",
     editProfile: "Modifier les réglages",
     areasTitle: "Parties de the App",
-    checking: "Vérification de cet appareil…",
+    checking: "Contrôle de cet appareil…",
   },
   areas: {
     places: "Les fiches de lieux n'afficheront que des enregistrements avec une source, une licence, une date et un niveau.",
@@ -61,7 +61,7 @@ export const fr: Messages = {
       "La recherche de toilettes, de stationnement, de recharge et de réparation ne prendra pas un indicateur municipal pour une mesure.",
     navigator: "Un répertoire de liens vers des services. Il ne tranche pas l'admissibilité à un programme.",
     games: "Carrefour de jeux. Pas une thérapie, pas une évaluation, et pas un conseil médical.",
-    help: "Comment cette interface traite la vie privée, la langue et les enregistrements non vérifiés.",
+    help: "Comment cette interface traite la vie privée, la langue et les enregistrements de prototype.",
     data: "Ce qui est stocké sur cet appareil, et ce qui ne l'est pas.",
   },
   about: {
@@ -71,12 +71,12 @@ export const fr: Messages = {
       "Les préférences, y compris les choix de mobilité, restent dans la mémoire de ce navigateur. Cette interface n'a pas de compte et n'envoie rien.",
     countsTitle: "Enregistrements dans cette interface",
     countsIntro: "Ces nombres sont lus sur cet appareil. Ils ne décrivent pas une couverture.",
-    verified:
-      "Enregistrements stockés qui disent encore vérifiés\u202f: {{count}}. Ce prototype refuse cette étiquette.",
+    refusedLabelCount:
+      "Enregistrements stockés qui portent encore une étiquette de confirmation refusée\u00a0: {{count}}. Ce prototype n’utilise pas cette étiquette.",
     frenchNote:
       "Le texte français de l'interface est une traduction provisoire. Il doit encore être révisé par une personne qualifiée. Au-delà de l'interface, le contenu est en anglais dans ce prototype.",
     audit:
-      "Des vérifications automatiques couvrent cette interface. Elles ne constituent pas un audit WCAG complet, ni un essai avec des personnes qui utilisent une technologie d'assistance.",
+      "Des contrôles automatiques couvrent cette interface. Ils ne constituent pas un audit WCAG complet, ni un essai avec des personnes qui utilisent une technologie d’assistance.",
     notices:
       "Les bibliothèques d'exécution comprennent React Aria Components (Apache-2.0), i18next (MIT), Dexie (Apache-2.0), et Workbox avec vite-plugin-pwa (MIT). Ces noms sont des crédits, pas des appuis.",
   },
@@ -122,7 +122,7 @@ export const fr: Messages = {
     storageUnavailable: "Ce navigateur n'a pas autorisé le stockage sur l'appareil.",
     storageNext:
       "Les préférences et les enregistrements en cache ne peuvent pas être gardés dans ce navigateur pour le moment. La navigation privée ou un disque plein peuvent en être la cause. Vous pouvez quand même lire l'aide, ou réessayer.",
-    storageRetry: "Vérifier le stockage de nouveau",
+    storageRetry: "Contrôler le stockage de nouveau",
     storageHelp: "Lire où vont les préférences",
     wifi: "Préférence Wi-Fi pour les futurs téléchargements\u202f: {{value}}.",
     wifiOn: "Wi-Fi seulement",
@@ -132,7 +132,7 @@ export const fr: Messages = {
     asOf: "En date du {{date}}",
     noAsOf: "Pas de date, parce que rien n'est en cache.",
     refusedTiers:
-      "Le cache de ce prototype refuse le niveau 2, le niveau 3, le niveau 4, une étiquette signalée par la communauté et une étiquette vérifiée.",
+      "Le cache de ce prototype refuse le niveau 2, le niveau 3, le niveau 4, une étiquette signalée par la communauté et une étiquette de confirmation.",
   },
   tiers: {
     unknown: "Inconnu. L'enregistrement n'indique pas de niveau.",
@@ -141,11 +141,11 @@ export const fr: Messages = {
     tier2: "Signalement par un pair. Non stocké sur un enregistrement de prototype.",
     tier3: "Relevé par une personne formée, avec des preuves. Non stocké sur un enregistrement de prototype.",
     tier4: "Flux en direct. Cette interface ne conserve pas l'état en direct hors ligne.",
-    tierE: "Vérification au bureau d'une page officielle. Pas une décision d'admissibilité.",
-    prototypeUnverified: "Étiquette de prototype. L'enregistrement reste non vérifié.",
+    tierE: "Contrôle au bureau d’une page officielle. Pas une décision d’admissibilité.",
+    prototypeLabel: "Étiquette de prototype. L’enregistrement reste un échantillon de prototype.",
     seededOpenData: "Amorcé à partir de données ouvertes. Pas une mesure de the App.",
     communityReported: "Étiquette signalée par la communauté. Non stockée sur un enregistrement de prototype.",
-    verifiedClaim: "Étiquette vérifiée. Un enregistrement de prototype ne peut pas la porter.",
+    refusedClaimLabel: "Étiquette de confirmation. Un enregistrement de prototype ne peut pas la porter.",
   },
   modules: {
     ready: "Ces fiches viennent de la partie liée de the App. Chacune indique sa source, sa licence, sa date et son niveau. L'inconnu reste inconnu.",
@@ -180,7 +180,7 @@ export const fr: Messages = {
     resultCount_other: "{{count}} résultats",
     placesTitle: "Lieux",
     placesBody:
-      "Les fiches de lieux afficheront une source, une licence, une date et un niveau de vérification sur chaque enregistrement. Rien n'est chargé. L'inconnu reste inconnu.",
+      "Les fiches de lieux afficheront une source, une licence, une date et un niveau sur chaque enregistrement. Rien n’est chargé. L’inconnu reste inconnu.",
     journeyTitle: "Trajet",
     journeyBody:
       "La planification de porte à porte pour les déplacements en Ontario n'est pas branchée. Les préférences d'itinéraire des réglages restent sur cet appareil et ne sont envoyées nulle part. L'état des ascenseurs en direct n'est pas disponible. Un plan hors ligne, quand il existera, affichera une date.",
@@ -230,10 +230,10 @@ export const fr: Messages = {
       "Aucun trajet n'est dans ces données. La planification des trajets n'est pas reliée à cette version, donc il n'y a rien à enregistrer pour l'instant.",
     helpTitle: "Numéros d'aide",
     helpSource: "Comparé à la page officielle le {{date}}.",
-    elevatorTitle: "État des ascenseurs, dernière vérification",
+    elevatorTitle: "État des ascenseurs, dernier contrôle",
     elevatorLead:
-      "Ce sont des copies des avis de panne de l'exploitant au moment où les données ont été préparées. Elles ne sont pas en direct et peuvent être périmées. Vérifiez auprès de l'exploitant avant de compter sur un ascenseur.",
-    elevatorItem: "{{station}}. Dernière vérification le {{date}}.",
+      "Ce sont des copies des avis de panne de l’exploitant au moment où les données ont été préparées. Elles ne sont pas en direct et peuvent être périmées. Contrôlez auprès de l’exploitant avant de compter sur un ascenseur.",
+    elevatorItem: "{{station}}. Dernier contrôle le {{date}}.",
     elevatorSource: "Source\u202f: {{name}}. Licence\u202f: {{licence}}. Récupéré le {{date}}. Niveau 0, copie enregistrée.",
     reportTitle: "Signaler un problème pour un lieu enregistré",
     reportPlace: "Lieu",
@@ -258,20 +258,20 @@ export const fr: Messages = {
       "Aucune donnée n'est enregistrée sur cet appareil. Pour les obtenir de nouveau, connectez-vous au réseau et choisissez Télécharger les données de Toronto.",
     unknown: "Inconnu",
     errors: {
-      network: "Les données n'ont pas pu être téléchargées. Vérifiez la connexion et réessayez. Rien n'a été enregistré.",
-      manifest_invalid: "La liste des données n'a pas passé ses vérifications. Rien n'a été enregistré.",
+      network: "Les données n’ont pas pu être téléchargées. Contrôlez la connexion et réessayez. Rien n’a été enregistré.",
+      manifest_invalid: "La liste des données n’a pas passé ses contrôles. Rien n’a été enregistré.",
       size_mismatch: "La taille téléchargée ne correspond pas à la liste. Rien n'a été enregistré.",
       hash_mismatch: "Le téléchargement ne correspond pas à la liste. Rien n'a été enregistré.",
-      content_invalid: "Une fiche du téléchargement n'a pas passé ses vérifications. Rien n'a été enregistré.",
+      content_invalid: "Une fiche du téléchargement n’a pas passé ses contrôles. Rien n’a été enregistré.",
     },
   },
   help: {
     privacyTitle: "Où vont les préférences",
     privacyBody:
       "Les préférences de mobilité restent dans ce navigateur. Vous pouvez les exporter ou les supprimer dans les réglages. the App ne demande pas votre position quand vous enregistrez les réglages.",
-    tiersTitle: "Ce que signifie non vérifié",
+    tiersTitle: "Ce que sont ces enregistrements",
     tiersBody:
-      "Un nom sur une carte n'est pas une promesse. Chaque enregistrement de prototype est non vérifié. La source, la licence, la date et le niveau disent d'où vient un fait. Ils ne le rendent pas vérifié. L'inconnu reste inconnu.",
+      "Un nom sur une carte n’est pas une promesse. Chaque enregistrement de prototype est un échantillon. La source, la licence, la date et le niveau disent d’où vient un fait. Ils ne confirment pas le fait. L’inconnu reste inconnu.",
     languageTitle: "Langue",
     languageBody:
       "L'anglais et le français sont disponibles pour l'interface. Le texte français est une traduction provisoire en attente de révision. Changez la langue dans l'en-tête. Le choix reste dans ce navigateur.",
@@ -391,14 +391,14 @@ export const fr: Messages = {
     motionAllow: "Autoriser le mouvement",
   },
   errors: {
-    summary: "Vérifiez les champs ci-dessous. Rien n'a été enregistré.",
+    summary: "Contrôlez les champs ci-dessous. Rien n’a été enregistré.",
     not_positive: "Entrez un nombre supérieur à zéro, ou laissez le champ vide.",
     not_integer: "Utilisez un nombre entier, ou laissez le champ vide.",
     not_a_number: "Entrez un nombre, ou laissez le champ vide.",
     too_large: "Ce nombre dépasse ce que cette interface enregistre. Laissez le champ vide ou essayez un nombre plus petit.",
     too_long: "Utilisez un nom de municipalité ou de région plus court.",
     looks_like_contact: "Entrez une municipalité ou une région. N'entrez pas de numéro de téléphone, d'adresse courriel ou d'adresse web.",
-    generic: "Vérifiez cette valeur.",
+    generic: "Contrôlez cette valeur.",
     consent_required: "Le consentement est requis avant d'enregistrer ces préférences. Cochez la case, ou quittez la page sans enregistrer.",
   },
   update: {
@@ -436,9 +436,9 @@ export const fr: Messages = {
     noDate: "Sans date",
     undated_one: "{{count}} enregistrement en cache n'a pas de date de source.",
     undated_other: "{{count}} enregistrements en cache n'ont pas de date de source.",
-    verificationTitle: "Position sur la vérification",
-    verificationBody: "Aucun enregistrement de ce prototype n'est vérifié. Le niveau 3 et l'étiquette vérifié sont refusés.",
-    verifiedCount: "Enregistrements en cache qui disent encore vérifié\u202f: {{count}}.",
+    labelPolicyTitle: "Position sur l’étiquetage",
+    labelPolicyBody: "Aucun enregistrement de ce prototype ne porte une étiquette de confirmation. Le niveau 3 et cette étiquette sont refusés.",
+    refusedLabelCount: "Enregistrements en cache qui portent encore une étiquette de confirmation refusée\u00a0: {{count}}.",
     modulesTitle: "Parties de the App dans cette version",
     modulesCaption: "Si chaque partie a répondu comme connectée",
     part: "Partie",
@@ -446,7 +446,7 @@ export const fr: Messages = {
     stateConnected: "Connectée",
     stateNotConnected: "Non connectée dans cette version",
     stateError: "N'a pas répondu",
-    stateChecking: "Vérification en cours",
+    stateChecking: "Contrôle en cours",
     journeysNote: "Les trajets de démonstration ne peuvent être montrés que si Trajet est connecté. Sinon, utilisez la solution de repli.",
     fallbackTitle: "Solution de repli hors ligne",
     fallbackReady: "Prête. Un service worker contrôle cette page, donc l'interface peut se rouvrir sans réseau.",
@@ -457,7 +457,7 @@ export const fr: Messages = {
     honestyTitle: "Déclarations à faire",
     honestyIntro: "Dites chacune de ces phrases pendant la démonstration.",
     honestyPrototype: "the App est un prototype à évaluer.",
-    honestyUnverified: "Aucune donnée montrée n'est vérifiée. L'inconnu reste inconnu.",
+    honestyNoConfirmation: "Aucune donnée montrée ne porte une étiquette de confirmation. L’inconnu reste inconnu.",
     honestyOutage: "Toute panne d'ascenseur montrée est une donnée de démonstration, pas un état en direct.",
     honestyMedical: "the App ne donne pas de conseil médical.",
     honestyFrench: "Le français couvre l'interface seulement, et c'est une traduction provisoire en attente de révision.",
@@ -465,7 +465,7 @@ export const fr: Messages = {
   },
   notFound: {
     title: "Page introuvable",
-    body: "Cette adresse ne fait pas partie de the App. Vérifiez l'adresse, ou utilisez l'un de ces liens.",
+    body: "Cette adresse ne fait pas partie de the App. Contrôlez l’adresse, ou utilisez l’un de ces liens.",
     home: "Aller à l'accueil",
     help: "Ouvrir l'aide",
   },

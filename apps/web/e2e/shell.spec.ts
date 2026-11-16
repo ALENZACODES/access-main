@@ -29,7 +29,7 @@ test.beforeEach(async ({ page }) => {
 test("home shows the prototype, the build, and a skip link", { annotation: { type: "check", description: "D25-build" } }, async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "the App" })).toBeVisible();
-  await expect(page.getByRole("note").filter({ hasText: "Prototype. Every record is unverified" })).toBeVisible();
+  await expect(page.getByRole("note").filter({ hasText: "Prototype. Every record is a prototype sample" })).toBeVisible();
   await expect(page.getByText("No organisation has endorsed the App.").first()).toBeVisible();
   await expect(page.getByText(`Build ${process.env.VITE_BUILD_ID || "e2e"}`).first()).toBeVisible();
   await page.keyboard.press("Tab");
@@ -107,7 +107,7 @@ async function seedCachedRecord(page: Page) {
         tx.objectStore("cacheEntries").put({
           id: "rec-e2e",
           kind: "place",
-          title: "Unverified sample",
+          title: "Prototype sample",
           stored_at: "2026-11-13T12:00:00.000Z",
           provenance: {
             source_name: "Example open data",
@@ -148,7 +148,7 @@ async function expectClearCacheFocus(
   await page.keyboard.press("Escape");
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(clear).toBeFocused();
-  await expect(page.getByText("Unverified sample")).toBeVisible();
+  await expect(page.getByText("Prototype sample")).toBeVisible();
 
   await clear.click();
   await page.getByRole("alertdialog").getByRole("button", { name: copy.cancel, exact: true }).click();
@@ -159,7 +159,7 @@ async function expectClearCacheFocus(
   const cleared = page.getByText(copy.cleared);
   await expect(cleared).toBeVisible();
   await expect(cleared).toBeFocused();
-  await expect(page.getByText("Unverified sample")).toHaveCount(0);
+  await expect(page.getByText("Prototype sample")).toHaveCount(0);
   await expect(clear).toBeDisabled();
 }
 

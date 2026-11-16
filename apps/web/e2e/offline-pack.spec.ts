@@ -92,12 +92,12 @@ test.skip("Day 11: legacy Toronto pack page French render is no longer mounted a
   await expect(page.getByRole("button", { name: "Télécharger les données de Toronto" })).toBeVisible();
   await page.getByRole("button", { name: "Télécharger les données de Toronto" }).click();
   await expect(page.getByText(/^Téléchargement terminé\./)).toBeVisible();
-  await expect(page.getByText(/Dernière vérification le/).first()).toBeVisible();
+  await expect(page.getByText(/Dernier contrôle le/).first()).toBeVisible();
   await axeClean(page, "french");
 });
 
 // The fixture is served by the same-origin test server at data/pack/v1/.
-// Tests do not label demonstration data as verified real-world accessibility facts.
+// Tests do not label demonstration data as confirmed real-world accessibility facts.
 for (const language of ["en", "fr"] as const) {
   test(`offline regions keyboard and accessibility (${language})`, async ({ page, context }) => {
     await page.goto("/offline");
@@ -115,11 +115,11 @@ for (const language of ["en", "fr"] as const) {
     const download = page.getByRole("button", { name: language === "en" ? "Download" : "Télécharger" }).first();
     if (await download.isVisible()) {
       await download.click();
-      await expect(page.getByText(language === "en" ? "Download integrity checked" : "Intégrité du téléchargement vérifiée")).toBeVisible();
+      await expect(page.getByText(language === "en" ? "Download integrity checked" : "Intégrité du téléchargement contrôlée")).toBeVisible();
       await context.setOffline(true);
       await page.reload();
       await expect(page.getByRole("heading", { name: heading })).toBeVisible();
-      await expect(page.getByText(language === "en" ? "Downloaded, integrity checked" : "Téléchargée, intégrité vérifiée").first()).toBeVisible();
+      await expect(page.getByText(language === "en" ? "Downloaded, integrity checked" : "Téléchargée, intégrité contrôlée").first()).toBeVisible();
       await page.getByRole("button", { name: language === "en" ? "Delete" : "Supprimer" }).first().click();
       const keep = page.getByRole("button", { name: language === "en" ? "Keep" : "Conserver" });
       await expect(keep).toBeFocused();
