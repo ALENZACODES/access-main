@@ -30,7 +30,7 @@ describe('summaryToJson', () => {
   it('is pretty JSON ending in a newline that parses back identically', () => {
     const text = summaryToJson(summary);
     expect(text.endsWith('\n')).toBe(true);
-    expect(text).toContain('\n  "schemaVersion": 1');
+    expect(text).toContain('\n  "schemaVersion": 2');
     expect(JSON.parse(text)).toEqual(JSON.parse(JSON.stringify(summary)));
   });
 });
@@ -59,8 +59,64 @@ describe('validateSummary', () => {
     copy.sources[i]!.licenceOpen = false;
     copy.sources[i]!.state = 'fresh';
     expect(validateSummary(copy)).toEqual([
+      `sources[${i}].ageDays-required-when-state-known`,
       `sources[${i}].licenceOpen-must-be-null-when-licence-unknown`,
       `sources[${i}].state-must-be-unknown-when-date-unknown`,
     ]);
+  });
+
+  describe('version 2: age and limit are stated', () => {
+    const copy = () => JSON.parse(summaryToJson(summary)) as { sources: Record<string, unknown>[] };
+    const known = () => summary.sources.findIndex((s) => s.ageDays !== null);
+    const unknown = () => summary.sources.findIndex((s) => s.ageDays === null);
+
+    it('every source has ageDays and limitDays, null age exactly when the state is unknown', () => {
+      for (const s of summary.sources) {
+        expect(Number.isInteger(s.limitDays) && s.limitDays >= 1).toBe(true);
+        expect(s.ageDays === null).toBe(s.state === 'unknown');
+      }
+      expect(validateSummary(copy())).toEqual([]);
+    });
+
+    it('rejects an age on an unknown source', () => {
+      const c = copy();
+      c.sources[unknown()]!.ageDays = 3;
+      expect(validateSummary(c).join()).toContain('ageDays-must-be-null-when-unknown');
+    });
+
+    it('rejects a missing, negative, fractional or non-numeric age and limit', () => {
+      for (const [field, value] of [['ageDays', -1], ['ageDays', 1.5], ['ageDays', '3'], ['limitDays', 0], ['limitDays', null], ['limitDays', '180']] as const) {
+        const c = copy();
+        c.sources[known()]![field] = value;
+        expect(validateSummary(c).join(), `${field}=${String(value)}`).toContain(`.${field}`);
+      }
+    });
+
+    it('rejects a state that its own numbers contradict', () => {
+      const c = copy();
+      const i = known();
+      c.sources[i]!.state = 'fresh';
+      c.sources[i]!.ageDays = 400;
+      c.sources[i]!.limitDays = 180;
+      expect(validateSummary(c).join()).toContain('state-fresh-but-age-over-limit');
+      c.sources[i]!.state = 'stale';
+      c.sources[i]!.ageDays = 10;
+      expect(validateSummary(c).join()).toContain('state-stale-but-age-within-limit');
+    });
+
+    it('accepts exactly the limit as fresh and one more day as stale', () => {
+      const c = copy();
+      const i = known();
+      Object.assign(c.sources[i]!, { state: 'fresh', ageDays: 180, limitDays: 180 });
+      expect(validateSummary(c)).toEqual([]);
+      Object.assign(c.sources[i]!, { state: 'stale', ageDays: 181, limitDays: 180 });
+      expect(validateSummary(c)).toEqual([]);
+    });
+
+    it('rejects a version-1 summary', () => {
+      const c = JSON.parse(summaryToJson(summary)) as { schemaVersion: number };
+      c.schemaVersion = 1;
+      expect(validateSummary(c)).toContain('schemaVersion');
+    });
   });
 });

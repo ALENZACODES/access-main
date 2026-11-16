@@ -6,6 +6,8 @@ import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { routePage } from "./perf/routeChunks.ts";
 import { AppShell } from "./shell/AppShell.tsx";
+import { lazy } from "react";
+const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
 
 // Every route in the integration contract is lazy, so none is on the first-install path.
 // Home and onboarding stay in the entry chunk: they are the first screens. The rest
@@ -49,6 +51,7 @@ export const routes: RouteObject[] = [
       { path: "contribute", element: <Section><ContributePage /></Section> },
       { path: "settings/*", element: <Section><SettingsRoutes /></Section> },
       { path: "more/*", element: <Section><MoreRoutes /></Section> },
+      { path: "dev/narrow", element: <Section><NarrowAuditPage /></Section> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
