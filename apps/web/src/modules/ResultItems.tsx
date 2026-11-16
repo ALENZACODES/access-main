@@ -16,7 +16,12 @@ export interface ItemView {
 
 /** Lane message keys are not shell strings. The shell chooses its own sentence for each state. */
 export function statusKey(result: ModuleResult<unknown>): string {
-  if (result.availability === "ready") return "modules.ready";
+  if (result.availability === "ready") {
+    if (result.items.length === 0 && result.messageKey === "finder.shell.noMatches") {
+      return "modules.noMatches";
+    }
+    return "modules.ready";
+  }
   if (result.availability === "stub") return "modules.unavailable";
   return result.messageKey === "modules.contractError" ? "modules.contractError" : "modules.error";
 }

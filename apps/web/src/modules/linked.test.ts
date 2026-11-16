@@ -137,11 +137,20 @@ describe.skipIf(!toolsReady)("linked registry over two real ODbL records (tools)
     expectProvenance(result);
   });
 
-  it("navigator and games: ready", async () => {
+});
+
+describe("linked registry: games and navigator", () => {
+  it("stay unavailable until a sourced catalog or directory lands", async () => {
     const modules = registry();
     const noQuery = { ...ctx, query: undefined };
-    expect((await modules.navigator.list(noQuery)).availability).toBe("ready");
-    expect((await modules.games.list(noQuery)).availability).toBe("ready");
+    const nav = await modules.navigator.list(noQuery);
+    const games = await modules.games.list(noQuery);
+    expect(nav.availability).toBe("stub");
+    expect(games.availability).toBe("stub");
+    expect(nav.messageKey).toBe("modules.unavailable");
+    expect(games.messageKey).toBe("modules.unavailable");
+    expect(nav.items).toEqual([]);
+    expect(games.items).toEqual([]);
   });
 });
 

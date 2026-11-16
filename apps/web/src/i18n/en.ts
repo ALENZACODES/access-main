@@ -141,6 +141,7 @@ export const en = {
   },
   modules: {
     ready: "These records come from the linked part of the App. Each one shows its source, licence, date, and tier. Unknown stays unknown.",
+    noMatches: "No matching records were found. The search ran on the linked part of the App. Unknown stays unknown.",
     error: "This part of the App could not load. No records are shown. Try again later.",
     contractError: "This part of the App returned records without a source, licence, date, or tier, so none are shown.",
     itemSource: "Source",

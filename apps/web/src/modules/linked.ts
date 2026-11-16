@@ -2,8 +2,6 @@ import { createPackSource, fieldValue, type PackSource } from "@access-main/data
 import { createJourneyModule } from "@access-maps/journey-data";
 import { createPlacesModule } from "@access-maps/places-shell";
 import { createFindersModule } from "@access-tools/finders";
-import { gamesShellModule } from "@access-tools/games";
-import { navigatorShellModule } from "@access-tools/navigator";
 import { helpShellModule } from "@access/help";
 import type { ModuleRegistry, ModuleResult } from "@access/shared";
 import { createModules } from "./stubs.ts";
@@ -52,8 +50,6 @@ export function createLinkedModules(source: PackSource): ModuleRegistry {
     places: { ...createPlacesModule(source), get },
     journey: createJourneyModule(source),
     finders: createFindersModule(source),
-    navigator: navigatorShellModule,
-    games: gamesShellModule,
     help: helpShellModule,
   });
   // `get` is checked by getPlaceDetail, so it is set again here in case the guard rebuilt the places module.

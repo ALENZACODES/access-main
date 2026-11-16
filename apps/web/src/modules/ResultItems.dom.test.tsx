@@ -6,7 +6,7 @@ import { I18nextProvider } from "react-i18next";
 import type { DirectoryRecord, Provenance } from "@access/shared";
 import records from "../../../../packages/shared/src/fixtures/access-tools-directory.json" with { type: "json" };
 import { initI18n } from "../i18n/index.ts";
-import { ResultItems, toItemView } from "./ResultItems.tsx";
+import { ResultItems, statusKey, toItemView } from "./ResultItems.tsx";
 
 const PROVENANCE: Provenance = {
   source_name: "Synthetic test source",
@@ -75,5 +75,28 @@ describe("ResultItems", () => {
   it("renders nothing for an empty list", async () => {
     const screen = await view("en", <ResultItems id="places" items={[]} />);
     expect(screen.container.innerHTML).toBe("");
+  });
+
+  it("maps a ready zero-hit finder search to an honest no-matches sentence", () => {
+    expect(
+      statusKey({
+        moduleId: "finders",
+        availability: "ready",
+        items: [],
+        messageKey: "finder.shell.noMatches",
+        asOf: null,
+        liveStatus: "unavailable",
+      }),
+    ).toBe("modules.noMatches");
+    expect(
+      statusKey({
+        moduleId: "finders",
+        availability: "ready",
+        items: [{ id: "p1" }],
+        messageKey: "modules.ready",
+        asOf: "2026-11-01",
+        liveStatus: "unavailable",
+      }),
+    ).toBe("modules.ready");
   });
 });
