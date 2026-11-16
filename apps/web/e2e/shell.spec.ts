@@ -78,15 +78,17 @@ test("module pages do not invent places and axe is clean", { annotation: [{ type
   expect(await page.evaluate(() => (window as unknown as { __geo?: boolean }).__geo ?? false)).toBe(false);
 
   await page.goto("/places");
-  await expect(page.getByText("This part of the App is not available yet. No records are shown.")).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Text to look for" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
+  await expect(page.getByText("These records come from the linked part of the App. Each one shows its source, licence, date, and tier. Unknown stays unknown.")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Text to look for" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Search" })).toBeEnabled();
   await expect(page.getByText("access-maps")).toBeHidden();
+  await expect(page.getByText("Toronto City Hall")).toHaveCount(0);
 
   await page.goto("/finders");
-  await expect(page.getByRole("radio", { name: "Washroom" })).toBeDisabled();
+  await expect(page.getByRole("radio", { name: "Washroom" })).toBeEnabled();
+  await expect(page.getByText("Toronto City Hall")).toHaveCount(0);
   await page.goto("/journey");
-  await expect(page.getByRole("button", { name: "Plan this journey" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Plan this journey" })).toBeEnabled();
   await page.goto("/help");
   await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
 });
