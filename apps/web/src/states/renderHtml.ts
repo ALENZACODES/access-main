@@ -6,7 +6,7 @@
  * escaped. htmlAudit.ts checks the output.
  */
 import type { Locale, StateView } from "./stateCopy";
-import { MIN_TARGET_PX, type PaletteRole, styleFor, type Theme } from "./contrast";
+import { MIN_TARGET_PX, STATE_PALETTE, type PaletteRole, styleFor, type Theme } from "./contrast";
 import { message } from "./messages";
 import type { OfflineBanner } from "./offline";
 import type { PlaceRouteView } from "./placeRoute";
@@ -19,6 +19,8 @@ export interface RenderOptions {
   /** Prefix that keeps element ids unique when several views share a page. */
   readonly idPrefix?: string;
   readonly theme?: Theme;
+  /** Builds the link target for a place id; when absent, names are plain text. */
+  readonly placeHref?: (id: string) => string;
 }
 
 export function escapeHtml(s: string): string {
@@ -31,6 +33,20 @@ export function escapeHtml(s: string): string {
 }
 
 const TARGET = `min-width:${MIN_TARGET_PX}px;min-height:${MIN_TARGET_PX}px`;
+
+/** Link colours come from the AA-checked palette (focus ring colour on the body background). */
+export function linkStyle(theme: Theme): string {
+  const pal = STATE_PALETTE[theme];
+  return `display:inline-flex;align-items:center;min-height:${MIN_TARGET_PX}px;color:${pal.focusRing};background:${pal.roles.body.bg}`;
+}
+
+export function renderLink(href: string, label: string, theme: Theme, extra = ""): string {
+  return `<a href="${escapeHtml(href)}"${extra} style="${linkStyle(theme)}">${escapeHtml(label)}</a>`;
+}
+
+function nameOrLink(name: string, id: string | null, opts: RenderOptions): string {
+  return id !== null && opts.placeHref ? renderLink(opts.placeHref(id), name, opts.theme ?? "light") : escapeHtml(name);
+}
 
 function button(action: string, label: string, theme: Theme, extra = ""): string {
   return `<button type="button" data-action="${escapeHtml(action)}"${extra} style="${TARGET};${styleFor("button", theme)}">${escapeHtml(label)}</button>`;
@@ -108,7 +124,7 @@ function renderCard(c: PlaceCard, opts: RenderOptions, id: string): string {
   const extra =
     (c.matchedText ? `<p>${escapeHtml(c.matchedText)}</p>` : "") +
     (c.unknownText ? `<p><strong style="${styleFor("unknown", theme)}">${escapeHtml(c.unknownText)}</strong></p>` : "");
-  return `<article lang="${opts.locale}" aria-labelledby="${id}-h" style="${styleFor("body", theme)}"><h3 id="${id}-h">${escapeHtml(c.name)}</h3><p>${escapeHtml(c.countsText)}</p>${extra}</article>`;
+  return `<article lang="${opts.locale}" aria-labelledby="${id}-h" style="${styleFor("body", theme)}"><h3 id="${id}-h">${nameOrLink(c.name, c.id, opts)}</h3><p>${escapeHtml(c.countsText)}</p>${extra}</article>`;
 }
 
 export function renderSearchRoute(v: SearchRouteView, opts: RenderOptions): string {
@@ -143,7 +159,7 @@ export function renderSavedRoute(v: SavedRouteView, opts: RenderOptions): string
   const items = v.items
     .map(
       (it, i) =>
-        `<li>${renderPlaceSummary(it.summary, opts, `${prefix}-item-${i}`)}${button("remove-saved", it.removeLabel, theme, ` data-index="${i}"`)}</li>`,
+        `<li>${it.id !== null && opts.placeHref ? `<p>${renderLink(opts.placeHref(it.id), it.summary.name, theme)}</p>` : ""}${renderPlaceSummary(it.summary, opts, `${prefix}-item-${i}`)}${button("remove-saved", it.removeLabel, theme, ` data-index="${i}"`)}</li>`,
     )
     .join("");
   const inner = `<h2 id="${prefix}-h">${escapeHtml(v.heading)}</h2><p role="status">${escapeHtml(v.countText)}</p><ul>${items}</ul>`;

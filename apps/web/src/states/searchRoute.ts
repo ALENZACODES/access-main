@@ -22,6 +22,7 @@ export interface SearchContext {
 }
 
 export interface PlaceCard {
+  readonly id: string | null;
   readonly name: string;
   readonly countsText: string;
   readonly matchedText: string | null;
@@ -52,7 +53,9 @@ function toCard(m: PlaceMatch, ctx: SearchContext): PlaceCard {
   const summary = summarizePlace(m.place, locale, today);
   const labels = (ids: readonly PlaceMatch["matched"][number][]): string =>
     listJoin(locale, ids.map((id) => featureLabel(id, locale)));
+  const rawId = (m.place as { readonly id?: unknown }).id;
   return {
+    id: typeof rawId === "string" ? rawId : null,
     name: m.place.name,
     countsText: summary.countsText,
     matchedText: m.matched.length > 0 ? message("place.matchedFor", locale, { features: labels(m.matched) }) : null,

@@ -17,6 +17,7 @@ export interface SavedContext {
 }
 
 export interface SavedItem {
+  readonly id: string | null;
   readonly summary: PlaceSummary;
   readonly removeLabel: string;
   readonly removeTargetPx: number;
@@ -26,6 +27,11 @@ export type SavedRouteView =
   | { readonly kind: "content"; readonly heading: string; readonly countText: string; readonly items: readonly SavedItem[]; readonly banner: OfflineBanner | null }
   | { readonly kind: "empty"; readonly view: RouteStateView; readonly banner: OfflineBanner | null }
   | { readonly kind: "error"; readonly view: RouteStateView };
+
+function idOf(p: PlaceReport): string | null {
+  const id = (p as { readonly id?: unknown }).id;
+  return typeof id === "string" ? id : null;
+}
 
 export function savedRouteView(load: SavedLoad, ctx: SavedContext): SavedRouteView {
   const { locale, connectivity, today } = ctx;
@@ -41,6 +47,7 @@ export function savedRouteView(load: SavedLoad, ctx: SavedContext): SavedRouteVi
   const items: SavedItem[] = [...load.places]
     .sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name)))
     .map((p) => ({
+      id: idOf(p),
       summary: summarizePlace(p, locale, today),
       removeLabel: message("saved.remove", locale, { name: p.name }),
       removeTargetPx: MIN_TOUCH_TARGET_PX,
