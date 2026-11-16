@@ -67,6 +67,8 @@ export function RecoveryCenter({
   const transferHeading = useId();
   const exportHeading = useId();
   const [inventory, setInventory] = useState<LocalPackRecord[]>([]);
+  const [previousInventory, setPreviousInventory] = useState<LocalPackRecord[] | null>(null);
+  const [inspectionDate, setInspectionDate] = useState("");
   const [checking, setChecking] = useState(false);
   const [inventoryFailure, setInventoryFailure] = useState(false);
   const [hasInspected, setHasInspected] = useState(false);
@@ -89,7 +91,9 @@ export function RecoveryCenter({
     try {
       // No cached ready status is reused across a manual refresh.
       const records = await inspectInstalledPacks(store);
+      setPreviousInventory(hasInspected ? inventory : null);
       setInventory(records);
+      setInspectionDate(new Date().toISOString().slice(0, 10));
       setHasInspected(true);
     } catch {
       setInventory([]);
@@ -160,6 +164,14 @@ export function RecoveryCenter({
           ))}
         </ul>
       </section>
+      <RecoveryWorkbench
+        locale={locale}
+        records={inventory}
+        previous={previousInventory}
+        inspected={hasInspected && !checking && !inventoryFailure}
+        inspectionDate={inspectionDate}
+        onInspect={() => { void refresh(); }}
+      />
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>
