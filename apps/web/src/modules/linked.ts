@@ -1,11 +1,8 @@
 import { createPackSource, fieldValue, type PackSource } from "@access-main/data-client";
-import { createJourneyModule } from "@access-maps/journey-data";
 import { createPlacesModule } from "@access-maps/places-shell";
-import { createFindersModule } from "@access-tools/finders";
-import { gamesShellModule } from "@access-tools/games";
-import { navigatorShellModule } from "@access-tools/navigator";
 import { helpShellModule } from "@access/help";
 import type { ModuleRegistry, ModuleResult } from "@access/shared";
+import { createFindersModule, createJourneyModule, gamesShellModule, navigatorShellModule } from "./lane-adapters.ts";
 import { createModules } from "./stubs.ts";
 import type { PackRecord, PlaceDetail } from "./types.ts";
 

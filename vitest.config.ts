@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
@@ -9,18 +9,30 @@ const dataClientReal = path.resolve(root, "packages/data-client/src/index.ts");
 const dataClient = existsSync(dataClientReal) ? dataClientReal : path.resolve(root, "apps/web/src/modules/data-client-fallback.ts");
 const laneFallback = path.resolve(root, "apps/web/src/modules/lane-fallbacks.ts");
 
+interface LanePackage {
+  repo: string;
+  path: string;
+  alias: string;
+}
+
+/** Same rule as apps/web/vite.config.ts: use the synced package when it is present. */
+const lock = JSON.parse(readFileSync(path.join(root, "lanes.lock.json"), "utf8")) as { packages: LanePackage[] };
+const laneAliases = Object.fromEntries(
+  lock.packages.map((pkg) => {
+    const repo = pkg.repo.split("/")[1];
+    if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
+    const real = path.join(root, ".lanes", repo, ...pkg.path.split("/"), "src", "index.ts");
+    return [pkg.alias, existsSync(real) ? real : laneFallback];
+  }),
+);
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
       "@access/shared": path.resolve(root, "packages/shared/src/index.ts"),
       "@access-main/data-client": dataClient,
-      "@access-maps/places-shell": laneFallback,
-      "@access-maps/journey-data": laneFallback,
-      "@access-tools/finders": laneFallback,
-      "@access-tools/navigator": laneFallback,
-      "@access-tools/games": laneFallback,
-      "@access/help": laneFallback,
+      ...laneAliases,
     },
   },
   test: {

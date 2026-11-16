@@ -21,10 +21,15 @@ declare module "@access-tools/finders" {
 
 declare module "@access-tools/navigator" {
   export const navigatorShellModule: import("@access/shared").NavigatorModule;
+  export const DIRECTORY: readonly import("@access/shared").DirectoryEntry[];
 }
 
 declare module "@access-tools/games" {
   export const gamesShellModule: import("@access/shared").GamesModule;
+  export function filterGames(
+    filter: string,
+    favourites: readonly string[],
+  ): Array<{ id: string; name: string }>;
 }
 
 declare module "@access/help" {

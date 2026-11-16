@@ -23,8 +23,13 @@ function readRecords(dir: string): PackRecord[] {
       for (const line of text.split("\n")) if (line.trim()) found.push(JSON.parse(line));
     } else if (file.endsWith(".json")) {
       const data = JSON.parse(text) as unknown;
-      const list = Array.isArray(data) ? data : [(data as Record<string, unknown>)?.records, (data as Record<string, unknown>)?.venues].find(Array.isArray);
-      if (Array.isArray(list)) found.push(...list);
+      const record = data as Record<string, unknown>;
+      if (data && typeof data === "object" && !Array.isArray(data) && typeof record.id === "string" && typeof record.tranche === "string" && record.fields) {
+        found.push(data);
+      } else {
+        const list = Array.isArray(data) ? data : [record?.records, record?.venues].find(Array.isArray);
+        if (Array.isArray(list)) found.push(...list);
+      }
     }
   }
   return found as PackRecord[];
@@ -32,7 +37,7 @@ function readRecords(dir: string): PackRecord[] {
 
 function hasKnownName(record: PackRecord): boolean {
   const name = record.fields?.name;
-  return record.tranche === "venue" && !!name && typeof name.value === "string" && name.value !== "UNKNOWN" && name.value.trim() !== "" && (name.tier === 0 || name.tier === 1);
+  return (record.tranche === "venue" || record.tranche === "transit") && !!name && typeof name.value === "string" && name.value !== "UNKNOWN" && name.value.trim() !== "" && (name.tier === 0 || name.tier === 1);
 }
 
 function sourceFor(record: PackRecord): PackSourceEntry {

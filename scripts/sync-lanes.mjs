@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Pulls the sibling packages listed in lanes.lock.json into .lanes/<repo>/.
 // Node 22, no dependencies. Each repo is fetched at one pinned commit with a
-// sparse checkout of only the listed package folders; the .git folder is then
-// deleted. Running it again rebuilds the same result.
+// sparse checkout of the listed package folders and tsconfig.base.json when it
+// exists (packages often extend it). The .git folder is then deleted. Running
+// it again rebuilds the same result.
 import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -104,7 +105,11 @@ function pullGroup(group, outDir, remoteBase, index) {
     git(["config", "core.sparseCheckout", "true"], tmp);
     git(["config", "core.sparseCheckoutCone", "false"], tmp);
     mkdirSync(path.join(tmp, ".git", "info"), { recursive: true });
-    writeFileSync(path.join(tmp, ".git", "info", "sparse-checkout"), group.packages.map((pkg) => `/${pkg.path}/\n`).join(""));
+    const extraRoots = ["tsconfig.base.json"];
+    writeFileSync(
+      path.join(tmp, ".git", "info", "sparse-checkout"),
+      [...group.packages.map((pkg) => `/${pkg.path}/`), ...extraRoots.map((file) => `/${file}`)].join("\n") + "\n",
+    );
     git(["fetch", "-q", "--depth", "1", "--filter=blob:none", "origin", group.ref], tmp);
     git(["checkout", "-q", "FETCH_HEAD"], tmp);
     rmSync(path.join(tmp, ".git"), { recursive: true, force: true });
@@ -115,6 +120,13 @@ function pullGroup(group, outDir, remoteBase, index) {
       mkdirSync(path.dirname(to), { recursive: true });
       rmSync(to, { recursive: true, force: true });
       renameSync(from, to);
+    }
+    const destRoot = path.join(outDir, repoName(group.repo));
+    for (const file of extraRoots) {
+      const from = path.join(tmp, file);
+      if (!existsSync(from)) continue;
+      mkdirSync(destRoot, { recursive: true });
+      renameSync(from, path.join(destRoot, file));
     }
   } finally {
     rmSync(tmp, { recursive: true, force: true });
