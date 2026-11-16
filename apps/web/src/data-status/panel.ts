@@ -28,6 +28,32 @@ import { buildReviewQueue, renderReviewHtml } from './reviewDue';
 import { ariaSort, applySort, nextSort, type SortKey } from './sorting';
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, paginate } from './paging';
 import { buildQuery, type TableView } from './tableView';
+import {
+  buildAgeDistribution,
+  buildActions,
+  buildChecksumFile,
+  buildLicenceBreakdown,
+  buildMarkdownFile,
+  buildSourceDetails,
+  buildTablesFile,
+  buildToc,
+  buildWorkload,
+  createAnnouncer,
+  describeListChange,
+  describeVerify,
+  extraLabel,
+  renderActionsHtml,
+  renderAgeBandsHtml,
+  renderGlanceHtml,
+  renderLicenceBreakdownHtml,
+  renderSelfCheckHtml,
+  renderSourceDetailsHtml,
+  renderTocHtml,
+  renderWorkloadHtml,
+  runSelfCheck,
+  type ListState,
+} from './extras';
+import { buildExportFiles } from './exportFiles';
 
 export type SnapshotNote = 'none' | 'unreadable' | null;
 
@@ -65,6 +91,9 @@ export interface PanelState {
 }
 
 const esc = escapeHtml;
+
+/** Visually hidden but still read aloud: the short status sentence for list changes. */
+const HIDDEN_STYLE = 'position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0';
 
 function statusBadge(state: FreshnessState, locale: Locale): string {
   return `<span style="${badgeInlineStyle(state)}">${esc(t(locale, `state.${state}`))}</span>`;
@@ -279,23 +308,29 @@ export function renderDataStatusPanel(state: PanelState): string {
       (sv.icsHref ? ` ${downloadLink(sv.icsHref + thrQuery, t(locale, 'dl.ics'))}` : '') +
       (sv.catalogueHref ? ` ${downloadLink(sv.catalogueHref + thrQuery, t(locale, 'dl.catalogue'))}` : '') +
       `</div>`
-    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))}</div>`;
-  const html =
-    notices +
-    snapshotLine(state) +
-    actions +
+    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))}</div>`;
+  const head = notices + snapshotLine(state) + actions + renderGlanceHtml(audit, locale);
+  const body =
     renderQaReportHtml(buildQaReport(audit, locale), locale) +
+    renderActionsHtml(buildActions(audit), locale) +
+    renderSourceDetailsHtml(buildSourceDetails(audit), locale) +
     (state.changes ? renderChangesHtml(state.changes, locale) : '') +
     (state.history ? renderHistoryHtml(state.history, locale) : '') +
     datasetTable(audit, locale) +
     renderReviewHtml(buildReviewQueue(audit, state.now), locale) +
+    renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
     renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined) +
-    `<div data-region="sources" aria-live="polite">${renderSourcesRegion(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined)}</div>` +
+    (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
+    `<div data-region="sources">${renderSourcesRegion(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined)}</div>` +
     coverageSection(state) +
     renderCompletenessHtml(buildCompleteness(audit), locale) +
+    renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale) +
+    renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale) +
+    renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale));
+  const html = head + renderTocHtml(buildToc(body), locale) + body;
   return state.plainTables === true ? plainTables(html) : html;
 }
 
@@ -325,6 +360,8 @@ export interface MountOptions {
   getAttributeRecords?: (() => readonly Readonly<Record<string, unknown>>[]) | undefined;
   /** Called with the CSV text and a file name when the export button is used. */
   onExport?: ((csv: string, filename: string) => void) | undefined;
+  /** Called with a text file (Markdown report, checksum list) when its button is used. */
+  onExportFile?: ((file: { text: string; filename: string; mime: string }) => void) | undefined;
   /** Starting filters (for example parsed from the URL). */
   initialFilters?: Filters | undefined;
   /** Staleness thresholds in days per dataset type (for example parsed from the URL). */
@@ -353,6 +390,28 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   const view = (): string => serializeViewState({ filters: { ...filters, query: normaliseQuery(filters.query) }, thresholds });
 
   const nowFn = opts.now ?? (() => new Date());
+
+  // Short spoken status for list changes. The sources table is not a live region itself: re-reading
+  // every row on each keystroke would bury the answer. The announcer writes one sentence instead.
+  const announceEl = () => host.querySelector?.('[data-region="announce"]') ?? null;
+  const announcer = createAnnouncer({
+    get textContent() {
+      return announceEl()?.innerHTML ?? null;
+    },
+    set textContent(value: string | null) {
+      const el = announceEl();
+      if (el !== null) el.innerHTML = esc(value ?? '');
+    },
+  });
+  let lastList: ListState | null = null;
+  const listState = (audit: AuditResult): ListState => ({
+    shown: applyFilters(audit.sources, filters).length,
+    total: audit.sources.length,
+    filters: { ...filters },
+    sort: null,
+    page: 1,
+    pages: 1,
+  });
 
   const refresh = (): void => {
     const locale = opts.getLocale();
@@ -389,6 +448,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       snapshotNote = 'none';
     }
     lastRecords = records ?? [];
+    lastList = listState(auditRegistry(lastRecords, now, thresholds));
     host.setAttribute('lang', locale);
     host.setAttribute('role', 'region');
     host.setAttribute('aria-label', t(locale, 'panel.label'));
@@ -419,6 +479,9 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     const audit = auditRegistry(lastRecords, now, thresholds);
     const results = renderSourcesRegion(audit, opts.getLocale(), filters, now);
     region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
+    const next = listState(audit);
+    announcer.say(describeListChange(lastList, next, opts.getLocale()));
+    lastList = next;
   };
 
   const onFilterEvent = (ev: unknown): void => {
@@ -435,15 +498,37 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     opts.onFiltersChange?.(view());
   };
 
+  const exportChecksums = async (): Promise<void> => {
+    const locale = opts.getLocale();
+    let file: Awaited<ReturnType<typeof buildChecksumFile>> = null;
+    try {
+      file = await buildChecksumFile(buildExportFiles(lastRecords, locale, nowFn(), thresholds), locale);
+    } catch {
+      file = null;
+    }
+    if (file === null) announcer.say(describeVerify(null, locale)[0] ?? '');
+    else opts.onExportFile?.({ text: file.text, filename: file.filename, mime: file.mime });
+  };
+
   const onClick = (ev: unknown): void => {
     const target = (ev as { target?: EventTarget }).target;
     const action = target?.closest?.('[data-action]')?.getAttribute?.('data-action');
     if (action === 'recalculate') refresh();
     else if (action === 'reset-filters') {
       if (!hasActiveFilters(filters) && filters.query === '') return;
+      const before = lastList;
       filters = { ...NO_FILTERS };
       refresh();
+      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
       opts.onFiltersChange?.(view());
+    } else if (action === 'export-report' && opts.onExportFile) {
+      const { text, filename, mime } = buildMarkdownFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
+      opts.onExportFile({ text, filename, mime });
+    } else if (action === 'export-tables' && opts.onExportFile) {
+      const { text, filename, mime } = buildTablesFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
+      opts.onExportFile({ text, filename, mime });
+    } else if (action === 'export-checksums') {
+      void exportChecksums();
     } else if (action === 'export-csv' && opts.onExport) {
       const audit = auditRegistry(lastRecords, nowFn(), thresholds);
       opts.onExport(auditedSourcesToCsv(applyFilters(audit.sources, filters), opts.getLocale()), 'data-sources.csv');

@@ -283,7 +283,7 @@ function readBlob(blob: Blob): Promise<string> {
   });
 }
 
-describe("planning views and extra downloads", () => {
+describe("planning sections and extra downloads on the live panel", () => {
   const user = { click: (el: HTMLElement) => el.click() };
   const saved: Blob[] = [];
 
@@ -302,7 +302,8 @@ describe("planning views and extra downloads", () => {
       { id: "c", title: "Undated stop", retrieved: null },
     ];
     await view("en");
-    const planning = await screen.findByTestId("planning-views");
+    await screen.findByRole("heading", { name: /Review workload|Charge de révision/ });
+    const planning = screen.getByRole("region", { name: /Data status panel|Panneau de l’état des données/ });
     hasText(planning, "Review workload");
     hasText(planning, "1 source is past its review date.");
     hasText(planning, "1 source is not scheduled because its retrieved date is unknown.");
@@ -313,20 +314,37 @@ describe("planning views and extra downloads", () => {
     expect(rows.find((r) => r[0] === "Unknown date")?.[1]).toBe("1");
   });
 
+  it("shows the summary, the next steps and the licences in use", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Old stop", retrieved: daysAgo(400), licence: "Custom terms" },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "At a glance" });
+    const panel = screen.getByRole("region", { name: /Data status panel/ });
+    hasText(panel, "2 sources saved on this device");
+    expect(within(panel).getByRole("heading", { name: "What to do next" })).toBeTruthy();
+    const licences = within(panel).getByRole("table", { name: "Sources by licence" });
+    const rows = within(licences).getAllByRole("row").map((r) => cells(r));
+    expect(rows.find((r) => r[0] === "Custom terms")?.[1]).toBe("Not on the reference list");
+    expect(rows.find((r) => /Open Government Licence/.test(r[0] ?? ""))?.[2]).toBe("1");
+  });
+
   it("shows them in French, with the French table names", async () => {
     seeds = [{ id: "a", title: "Arrêt", retrieved: daysAgo(3) }];
     await view("fr");
-    const planning = await screen.findByTestId("planning-views");
+    await screen.findByRole("heading", { name: /Review workload|Charge de révision/ });
+    const planning = screen.getByRole("region", { name: /Data status panel|Panneau de l’état des données/ });
     hasText(planning, "Charge de révision");
     expect(within(planning).getByRole("table", { name: "Sources selon l’âge de la date de récupération" })).toBeTruthy();
     noText(planning, "Review workload");
   });
 
-  it("leaves both out when nothing is saved", async () => {
+  it("says there is nothing to plan, instead of leaving the sections out, when nothing is saved", async () => {
     seeds = [];
     await view("en");
-    await sourceTable().catch(() => undefined);
-    expect(screen.queryByTestId("planning-views")).toBeNull();
+    await screen.findByText("No source has a review date to plan around.");
+    await screen.findByText("There are no sources to count.");
   });
 
   it("has no axe violations with the planning views, in both languages", async () => {
@@ -336,7 +354,7 @@ describe("planning views and extra downloads", () => {
     ];
     for (const lang of ["en", "fr"] as const) {
       const { container } = await view(lang);
-      await screen.findByTestId("planning-views");
+      await screen.findByRole("heading", { name: /Review workload|Charge de révision/ });
       const results = await axe.run(container, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
       expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`), lang).toEqual([]);
       cleanup();
@@ -346,7 +364,7 @@ describe("planning views and extra downloads", () => {
   it("saves the Markdown report from the same records", async () => {
     seeds = [{ id: "a", title: "Fresh stop", retrieved: daysAgo(3) }];
     await view("en");
-    await screen.findByTestId("planning-views");
+    await screen.findByRole("heading", { name: /Review workload|Charge de révision/ });
     user.click(screen.getByRole("button", { name: "Download the audit report (Markdown)" }));
     expect(saved).toHaveLength(1);
     const text = await readBlob(saved[0]!);
@@ -358,7 +376,7 @@ describe("planning views and extra downloads", () => {
   it("saves a checksum list that matches the saved files", async () => {
     seeds = [{ id: "a", title: "Fresh stop", retrieved: daysAgo(3) }];
     await view("fr");
-    await screen.findByTestId("planning-views");
+    await screen.findByRole("heading", { name: /Review workload|Charge de révision/ });
     user.click(screen.getByRole("button", { name: "Télécharger la liste des sommes de contrôle (texte)" }));
     await waitFor(() => expect(saved).toHaveLength(1));
     const text = await readBlob(saved[0]!);
@@ -373,7 +391,7 @@ describe("planning views and extra downloads", () => {
     vi.stubGlobal("crypto", {});
     try {
       await view("en");
-      await screen.findByTestId("planning-views");
+      await screen.findByRole("heading", { name: /Review workload|Charge de révision/ });
       user.click(screen.getByRole("button", { name: "Download the checksum list (text)" }));
       await screen.findByText("Checksums cannot be made in this browser.");
       expect(saved).toHaveLength(0);
@@ -383,10 +401,22 @@ describe("planning views and extra downloads", () => {
     }
   });
 
-  it("disables both extra downloads when nothing is saved", async () => {
+  it("saves an empty report, saying there are no sources, when nothing is saved", async () => {
     seeds = [];
     await view("en");
-    await waitFor(() => expect(screen.getByRole("button", { name: "Download the audit report (Markdown)" }).hasAttribute("disabled")).toBe(true));
-    expect(screen.getByRole("button", { name: "Download the checksum list (text)" }).hasAttribute("disabled")).toBe(true);
+    await screen.findByText("No source has a review date to plan around.");
+    user.click(screen.getByRole("button", { name: "Download the audit report (Markdown)" }));
+    expect(saved).toHaveLength(1);
+    hasText(document.body, "Data status");
+    expect(await readBlob(saved[0]!)).toContain("There are no sources.");
+  });
+
+  it("uses one live region for list changes, not the table", async () => {
+    seeds = [{ id: "a", title: "A", retrieved: daysAgo(3) }];
+    await view("en");
+    await screen.findByRole("heading", { name: "Review workload" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    expect(panel.querySelectorAll("[aria-live]")).toHaveLength(1);
+    expect(panel.querySelector('[data-region="sources"]')?.hasAttribute("aria-live")).toBe(false);
   });
 });
