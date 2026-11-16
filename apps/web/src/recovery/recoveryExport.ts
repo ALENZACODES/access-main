@@ -1,5 +1,5 @@
-import { classifyRecoveryError } from "./classify.ts";
-import type { RecoveryReason, RecoverySource } from "./index.ts";
+import { classifyRecoveryError } from "./classify";
+import type { RecoveryReason, RecoverySource } from "./index";
 
 /** Explicitly provided, locally prepared export. No automatic submission. */
 export interface RecoveryExportRecord {
@@ -43,20 +43,10 @@ function isValidTimestamp(value: string): boolean {
   return UTC_DATE_TIME.test(value) && !Number.isNaN(Date.parse(value));
 }
 
-function hasControlChars(value: string): boolean {
-  for (const char of value) {
-    const code = char.charCodeAt(0);
-    if (code <= 0x08 || code === 0x0b || code === 0x0c || (code >= 0x0e && code <= 0x1f) || code === 0x7f) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function shortText(value: unknown): value is string {
   return typeof value === "string" &&
     value.length > 0 && value.length <= MAX_FIELD_LENGTH &&
-    !hasControlChars(value);
+    !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value);
 }
 
 function sourceIsComplete(source: RecoverySource): boolean {

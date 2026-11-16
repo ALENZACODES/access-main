@@ -1,5 +1,16 @@
 /** Recovery states never imply that partial data is complete. */
 export type RecoveryLocale = "en" | "fr";
+
+/** Public error-recovery API consumed by offline and feature screens. */
+export {
+  classifyRecoveryError,
+  classifyPackDownloadError,
+  runRecoverable,
+} from "./classify.ts";
+export type { RecoveryResult } from "./classify.ts";
+export { RecoveryNotice } from "./RecoveryNotice.tsx";
+export type { RecoveryNoticeProps } from "./RecoveryNotice.tsx";
+
 export type RecoveryOperation = "pack" | "download" | "export";
 export type RecoveryReason =
   | "offline"
@@ -62,13 +73,13 @@ const EN: CopyTable = {
     },
     interrupted: {
       title: "Pack interrupted",
-      description: "The pack operation did not finish. Do not use it as a complete pack.",
+      description: "The pack operation did not finish. Check the pack before using it.",
       actionLabel: "Try again",
       action: "retry",
     },
     "invalid-data": {
       title: "Pack could not be read",
-      description: "The pack data is not in the expected format. Check the source file.",
+      description: "The pack data did not pass validation. Check the source file.",
       actionLabel: "Check file",
       action: "check-input",
     },
@@ -105,8 +116,8 @@ const EN: CopyTable = {
       action: "retry",
     },
     "invalid-data": {
-      title: "Download failed its checks",
-      description: "The downloaded data did not match its expected size, fingerprint or record count. Nothing from it was saved.",
+      title: "Download content could not be checked",
+      description: "The downloaded data did not pass validation. Do not use the incomplete file.",
       actionLabel: "Try again",
       action: "retry",
     },
@@ -138,14 +149,14 @@ const EN: CopyTable = {
     },
     interrupted: {
       title: "Export interrupted",
-      description: "The export did not finish. Do not share a partial file.",
+      description: "The export did not finish. Check the file before sharing it.",
       actionLabel: "Try again",
       action: "retry",
     },
     "invalid-data": {
-      title: "Export data could not be read",
-      description: "The data to export is not in the expected format. Correct it, then export again.",
-      actionLabel: "Correct the data",
+      title: "Export data could not be checked",
+      description: "Check the input data before exporting again.",
+      actionLabel: "Check input",
       action: "check-input",
     },
     unknown: {
@@ -173,20 +184,20 @@ const FR: CopyTable = {
     },
     permission: {
       title: "Accès à l’ensemble bloqué",
-      description: "L’ensemble est inaccessible. Contrôlez les autorisations du navigateur ou de l’appareil.",
+      description: "L’ensemble est inaccessible. Examinez les autorisations du navigateur ou de l’appareil.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     interrupted: {
       title: "Opération interrompue",
-      description: "L’opération sur l’ensemble est inachevée. Ne l’utilisez pas comme ensemble complet.",
+      description: "L’opération sur l’ensemble est inachevée. Examinez l’ensemble avant de l’utiliser.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     "invalid-data": {
       title: "Lecture de l’ensemble impossible",
-      description: "Les données ne respectent pas le format attendu. Contrôlez le fichier source.",
-      actionLabel: "Contrôler le fichier",
+      description: "Les données n’ont pas été validées. Examinez le fichier source.",
+      actionLabel: "Examiner le fichier",
       action: "check-input",
     },
     unknown: {
@@ -211,7 +222,7 @@ const FR: CopyTable = {
     },
     permission: {
       title: "Téléchargement bloqué",
-      description: "Le fichier n’a pas été enregistré. Contrôlez les autorisations de téléchargement.",
+      description: "Le fichier n’a pas été enregistré. Examinez les autorisations de téléchargement.",
       actionLabel: "Réessayer",
       action: "retry",
     },
@@ -222,8 +233,8 @@ const FR: CopyTable = {
       action: "retry",
     },
     "invalid-data": {
-      title: "Échec des contrôles du téléchargement",
-      description: "Les données téléchargées ne correspondent pas à la taille, à l’empreinte ou au nombre de fiches attendus. Rien n’a été enregistré.",
+      title: "Contenu du téléchargement non contrôlé",
+      description: "Les données téléchargées n’ont pas été validées. N’utilisez pas le fichier incomplet.",
       actionLabel: "Réessayer",
       action: "retry",
     },
@@ -237,7 +248,7 @@ const FR: CopyTable = {
   export: {
     offline: {
       title: "Exportation indisponible",
-      description: "L’exportation est inachevée. Contrôlez la connexion si elle est nécessaire.",
+      description: "L’exportation est inachevée. Examinez la connexion si elle est nécessaire.",
       actionLabel: "Réessayer",
       action: "retry",
     },
@@ -249,20 +260,20 @@ const FR: CopyTable = {
     },
     permission: {
       title: "Exportation bloquée",
-      description: "L’exportation n’a pas été enregistrée. Contrôlez les autorisations d’accès aux fichiers.",
+      description: "L’exportation n’a pas été enregistrée. Examinez les autorisations d’accès aux fichiers.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     interrupted: {
       title: "Exportation interrompue",
-      description: "L’exportation est inachevée. Ne partagez pas un fichier partiel.",
+      description: "L’exportation est inachevée. Examinez le fichier avant de le partager.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     "invalid-data": {
-      title: "Données à exporter illisibles",
-      description: "Les données à exporter ne respectent pas le format attendu. Corrigez-les, puis relancez l’exportation.",
-      actionLabel: "Corriger les données",
+      title: "Données non validées",
+      description: "Examinez les données avant de relancer l’exportation.",
+      actionLabel: "Examiner les données",
       action: "check-input",
     },
     unknown: {
@@ -285,29 +296,24 @@ export function getRecoveryMessage(
   };
 }
 
-export { classifyPackDownloadError, classifyRecoveryError, runRecoverable, type RecoveryResult } from "./classify.ts";
-export { RecoveryNotice, type RecoveryNoticeProps } from "./RecoveryNotice.tsx";
-
-
 export {
   browserSha256,
   checkPackIntegrity,
   packIntegrityCopy,
   redownloadPack,
-} from "./packIntegrity.ts";
+} from "./packIntegrity";
 export type {
   PackCheck,
-  PackManifest as IntegrityPackManifest,
+  PackManifest,
   PackRedownloadResult,
   Sha256,
-} from "./packIntegrity.ts";
-export { CorruptPackNotice } from "./CorruptPackNotice.tsx";
-export type { CorruptPackNoticeProps } from "./CorruptPackNotice.tsx";
-
+} from "./packIntegrity";
+export { CorruptPackNotice } from "./CorruptPackNotice";
+export type { CorruptPackNoticeProps } from "./CorruptPackNotice";
 
 // P17C: public recovery shell and the local, fail-closed operations it mounts.
-export { RecoveryCenter } from "./RecoveryCenter.tsx";
-export type { RecoveryCenterProps } from "./RecoveryCenter.tsx";
+export { RecoveryCenter } from "./RecoveryCenter";
+export type { RecoveryCenterProps } from "./RecoveryCenter";
 export {
   canOpenPack,
   inspectInstalledPacks,
@@ -316,32 +322,45 @@ export {
   isSafePackId,
   knownPackIds,
   openCheckedPack,
-} from "./packInventory.ts";
+} from "./packInventory";
 export type {
   LocalPackRecord,
   LocalPackState,
   LocalPackStore,
   PackAvailability,
   PackProblem,
-  StoredPack as InventoryStoredPack,
+  StoredPack,
   OpenPackResult,
-} from "./packInventory.ts";
+} from "./packInventory";
 export {
   DEFAULT_MAX_PACK_BYTES,
   PackDownloadSession,
   downloadCopy,
-} from "./downloadSession.ts";
+} from "./downloadSession";
 export type {
   ChunkSource,
   DownloadOutcome,
   DownloadPhase,
   DownloadSnapshot,
   SessionOptions,
-} from "./downloadSession.ts";
-export { createRecoveryExport, exportCopy, saveRecoveryExport } from "./recoveryExport.ts";
+} from "./downloadSession";
+export { createRecoveryExport, exportCopy, saveRecoveryExport } from "./recoveryExport";
 export type {
   RecoveryExportEnvelope,
   RecoveryExportRecord,
   RecoveryExportResult,
   SaveTextFile,
-} from "./recoveryExport.ts";
+} from "./recoveryExport";
+
+export { RecoveryWorkbench } from "./RecoveryWorkbench";
+export type { RecoveryWorkbenchProps } from "./RecoveryWorkbench";
+export { diagnoseInventory, diagnosticsCopy, isOpenLicence, parseCalendarDate, sourceDiagnostics } from "./recoveryDiagnostics";
+export type { DiagnosticCode, DiagnosticFinding, DiagnosticOptions, DiagnosticSeverity, DiagnosticSummary } from "./recoveryDiagnostics";
+export { actionsCopy, actionEligibleForDownload, proposeRecoveryActions, reconcileRecoveryActions, transitionRecoveryAction } from "./recoveryActions";
+export type { ActionKind, ActionPlan, ActionPriority, ActionStatus, ActionTransition, RecoveryActionItem } from "./recoveryActions";
+export { appendReviewEvent, clearReviewLog, compareInspections, comparisonCopy, emptyReviewLog } from "./recoveryComparison";
+export type { ChangeKind, LocalReviewLog, PackChange, PackComparison, ReviewEvent } from "./recoveryComparison";
+
+export { RecoveryQueuePanel } from "./RecoveryQueuePanel";
+export type { RecoveryQueuePanelProps } from "./RecoveryQueuePanel";
+

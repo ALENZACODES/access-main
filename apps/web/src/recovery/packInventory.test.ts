@@ -7,8 +7,8 @@ import {
   knownPackIds,
   openCheckedPack,
   type LocalPackStore,
-} from "./packInventory.ts";
-import type { PackManifest } from "./packIntegrity.ts";
+} from "./packInventory";
+import type { PackManifest } from "./packIntegrity";
 
 const bytes = new TextEncoder().encode("abc");
 const manifest: PackManifest = {

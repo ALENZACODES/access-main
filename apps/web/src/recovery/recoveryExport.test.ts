@@ -3,7 +3,7 @@ import {
   createRecoveryExport,
   saveRecoveryExport,
   type RecoveryExportRecord,
-} from "./recoveryExport.ts";
+} from "./recoveryExport";
 
 const createdAt = "2026-11-15T20:30:00.000Z";
 const record: RecoveryExportRecord = {

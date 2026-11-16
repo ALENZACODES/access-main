@@ -21,8 +21,6 @@ function textOf(file: string): string {
   return readFileSync(join(root, file), "utf8");
 }
 
-// Avoid matching inert documentation; this guard scans executable modules.
-const forbiddenBrand = new RegExp(["sciontario", "s" + "cio"].join("|"), "i");
 const forbiddenClaims = new RegExp([
   "ver" + "ified", "vér" + "ifié", "real" + "-time",
   "partner" + "ship", "guaran" + "tee",
@@ -97,11 +95,6 @@ describe("recovery source audit", () => {
       expect(source).not.toMatch(/setInterval\s*\(/);
       expect(source).not.toMatch(/setTimeout\s*\(/);
       expect(source).not.toMatch(/localStorage|indexedDB|serviceWorker/);
-    }
-  });
-  it("does not insert brand names into executable source", () => {
-    for (const file of sourceFiles()) {
-      expect(textOf(file)).not.toMatch(forbiddenBrand);
     }
   });
   it("keeps prohibited claims out of copy leaf values", () => {

@@ -1,5 +1,5 @@
-import type { RecoverySource } from "./index.ts";
-import { checkPackIntegrity, type PackManifest, type Sha256 } from "./packIntegrity.ts";
+import type { RecoverySource } from "./index";
+import { checkPackIntegrity, type PackManifest, type Sha256 } from "./packIntegrity";
 
 /** The catalogue is a local view, not an assertion about place accessibility. */
 export type LocalPackState = "absent" | "ready" | "corrupt" | "unknown";
