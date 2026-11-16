@@ -19,7 +19,6 @@ const MAGIC = new Map([
   ['.ico', [{ bytes: [0, 0, 1, 0], offset: 0 }]],
   ['.zip', [{ bytes: [80, 75, 3, 4], offset: 0 }]],
 ]);
-const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 const EMPTY_SIGNATURES = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.pdf',
   '.woff', '.woff2', '.otf', '.ttf', '.ico', '.zip']);
 const MAX_PREFIX = 64;
