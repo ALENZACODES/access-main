@@ -14,8 +14,8 @@ const forbidden = [
 
 describe("public copy", () => {
   it("uses the required headings", () => {
-    expect(en.heading).toBe("Unverified drafts");
-    expect(fr.heading).toBe("Brouillons non vérifiés");
+    expect(en.heading).toBe("Pending drafts");
+    expect(fr.heading).toBe("Brouillons à examiner");
   });
 
   it("has the same keys in both languages", () => {
