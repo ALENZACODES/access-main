@@ -45,7 +45,7 @@ export function pressureView(state: PressureState, language: Language): Pressure
   if (state.phase === "working") {
     return { message: copy.working, details: "", action: copy.retry, disabled: true };
   }
-  if (state.phase === "idle") {
+  if (state.phase === "idle" || state.result === null) {
     return { message: "", details: "", action: copy.start, disabled: false };
   }
   const result = state.result;

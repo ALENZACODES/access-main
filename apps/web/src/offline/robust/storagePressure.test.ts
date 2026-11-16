@@ -18,7 +18,7 @@ function fixture() {
     async put(_region, cell, value) { saved.set(cell, value); },
   };
   let quota = 2_000_000;
-  const fetchCell = vi.fn(async (_region: string, _cell: RegionManifest["cells"][number]) => new Uint8Array([1, 2]));
+  const fetchCell = vi.fn(async (_region: string, _cell: RegionManifest["cells"][number]) => _cell.bytes);
   const dependencies: DownloadDependencies = {
     store,
     fetchCell,
