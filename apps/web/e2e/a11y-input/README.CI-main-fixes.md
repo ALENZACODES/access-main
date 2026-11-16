@@ -17,3 +17,13 @@ for inline prose links. The round-five announcement audit tests focus with
 
 Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run test:e2e`
 from a full checkout with dependencies and Playwright Chromium installed.
+
+## CI follow-up: round-five fixture and focus identifiers
+
+The download-link audit checks a presented download action for a name before
+excluding zero-sized boxes. An empty `<a download>` is a deliberate failing
+fixture; `aria-label`, `aria-labelledby`, visible text, or an image alternative
+can provide a name. The focus walk reports `#id` for elements with IDs even
+when the element has an `href`, keeping element identifiers independent of
+link destinations. The three-control and named-download fixtures exercise
+these contracts without suppressing failures.

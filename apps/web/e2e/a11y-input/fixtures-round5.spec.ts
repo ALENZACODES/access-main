@@ -525,6 +525,16 @@ for (const scenario of invalidNavigationCases) {
   });
 }
 
+test("download links need an accessible name even without a painted box", async ({ page }) => {
+  await fixture(page, `<a id="unnamed" href="/report.txt" download></a>
+    <a href="/named.txt" download aria-label="Download report"></a>
+    <span id="download-name">Download list</span>
+    <a href="/list.txt" download aria-labelledby="download-name"></a>`);
+  const issues = await auditRouteContinuity(page);
+  expect(issues.filter((issue) => issue.code === "unnamed-download"))
+    .toEqual([{ code: "unnamed-download", target: "unnamed", detail: "Download action has no accessible name" }]);
+});
+
 test("two named navigation areas with one current page pass", async ({ page }) => {
   await fixture(page, `<nav aria-label="Primary"><a href="/" aria-current="page">Home</a></nav>
     <nav aria-label="Secondary"><a href="/help">Help</a></nav>

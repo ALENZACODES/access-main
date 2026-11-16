@@ -21,6 +21,21 @@ export async function auditRouteContinuity(page: Page): Promise<ContinuityFindin
     };
     const links = Array.from(document.querySelectorAll<HTMLAnchorElement>("a[href]"));
     for (const link of links) {
+      // An unnamed download link can have a zero-sized box, which is itself
+      // an accessibility defect. Check its name before the geometry filter;
+      // skip links genuinely removed from presentation (hidden/inert/CSS).
+      const css = getComputedStyle(link);
+      const presented = !link.closest("[hidden],[inert],[aria-hidden='true']") &&
+        css.display !== "none" && css.visibility !== "hidden";
+      if (presented && link.hasAttribute("download") &&
+          !link.textContent?.trim() && !link.getAttribute("aria-label")?.trim() &&
+          !link.getAttribute("title")?.trim() &&
+          !link.querySelector("img[alt]")?.getAttribute("alt")?.trim() &&
+          !link.querySelector("svg title")?.textContent?.trim() &&
+          !(link.getAttribute("aria-labelledby") || "").split(/\s+/)
+            .some((id) => document.getElementById(id)?.textContent?.trim())) {
+        report("unnamed-download", link, "Download action has no accessible name");
+      }
       if (!visible(link)) continue;
       const raw = link.getAttribute("href") || "";
       if (raw === "#" || /^javascript:/i.test(raw)) {
@@ -32,10 +47,6 @@ export async function auditRouteContinuity(page: Page): Promise<ContinuityFindin
       }
       if (link.target === "_blank" && !/\bnoopener\b/.test(link.rel)) {
         report("external-new-window", link, "New window link omits noopener");
-      }
-      if (link.hasAttribute("download") && !link.textContent?.trim() &&
-          !link.getAttribute("aria-label")?.trim()) {
-        report("unnamed-download", link, "Download action has no accessible name");
       }
     }
     const currents = Array.from(document.querySelectorAll<HTMLElement>("[aria-current]"));
