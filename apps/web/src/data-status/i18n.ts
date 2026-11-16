@@ -184,6 +184,8 @@ export const EN = {
   'src.title': 'Sources and licences',
   'src.basisUnknown': 'Date shown as Unknown. Records without a usable retrieved date: {n} of {total}.',
   'src.basisOldest': 'The date shown is the oldest among this source’s cached records ({total}).',
+  'dl.title': 'Downloads',
+  'dl.intro': 'Files are made on this device from the saved records above.',
 } as const;
 
 export type MessageKey = keyof typeof EN;
@@ -368,6 +370,8 @@ export const FR: Record<MessageKey, string> = {
   'src.title': 'Sources et licences',
   'src.basisUnknown': 'Date affichée comme inconnue. Fiches sans date de récupération utilisable\u00A0: {n} sur {total}.',
   'src.basisOldest': 'La date affichée est la plus ancienne parmi les fiches de cette source ({total}).',
+  'dl.title': 'Télécharger',
+  'dl.intro': 'Les fichiers sont créés sur cet appareil à partir des données enregistrées ci-dessus.',
 };
 
 export const CATALOG: Readonly<Record<Locale, Readonly<Record<MessageKey, string>>>> = { en: EN, fr: FR };
