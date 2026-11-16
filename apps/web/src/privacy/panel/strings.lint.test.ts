@@ -19,6 +19,9 @@ const STATUSES: readonly Status[] = [
   { kind: "save-failed" },
   { kind: "expired-removed", count: 0 },
   { kind: "expired-removed", count: 4 },
+  { kind: "list-exported", format: "csv" },
+  { kind: "list-exported", format: "text" },
+  { kind: "seen-saved" },
 ];
 
 // This is the CI guard for the wording rules: every shipped string, both languages.

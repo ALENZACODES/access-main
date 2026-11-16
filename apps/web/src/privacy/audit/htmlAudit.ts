@@ -28,7 +28,15 @@ export type ViolationCode =
   | "external-url"
   | "javascript-url"
   | "target-blank-no-rel"
-  | "inline-handler";
+  | "inline-handler"
+  | "missing-doctype"
+  | "missing-title"
+  | "missing-charset"
+  | "missing-viewport"
+  | "main-count"
+  | "h1-count"
+  | "script-in-document"
+  | "external-resource";
 
 export interface Violation {
   code: ViolationCode;
@@ -328,4 +336,56 @@ export function formatViolations(v: readonly Violation[]): string {
 export function assertAccessibleHtml(html: string, options: AuditOptions = {}): void {
   const v = auditHtml(html, options);
   if (v.length > 0) throw new Error(`HTML audit failed:\n${formatViolations(v)}`);
+}
+
+/** Every piece of visible text and every text attribute (aria-label, title, alt) in the markup. */
+export function extractTexts(html: string): string[] {
+  const root = parse(html.replace(/<!doctype[^>]*>/gi, ""), []);
+  const out: string[] = [];
+  for (const n of flatten(root)) {
+    if (n.tag === "style" || n.tag === "script") continue;
+    const own = decode(n.text).replace(/\s+/g, " ").trim();
+    if (own !== "") out.push(own);
+    for (const a of ["aria-label", "title", "alt"]) {
+      const v = n.attrs[a];
+      if (v !== undefined && v.trim() !== "") out.push(v.trim());
+    }
+  }
+  return out;
+}
+
+/**
+ * Audits a whole standalone HTML document, such as a page the person saves or
+ * prints. It must work offline: no scripts, no stylesheets or fonts from elsewhere.
+ */
+export function auditDocument(html: string, options: AuditOptions = {}): Violation[] {
+  const out: Violation[] = [];
+  if (!/^\s*<!doctype html>/i.test(html)) {
+    out.push({ code: "missing-doctype", path: "", detail: "document does not start with <!doctype html>" });
+  }
+  const body = html.replace(/<!doctype[^>]*>/gi, "");
+  const root = parse(body, out);
+  const all = flatten(root);
+  const find = (tag: string): Node[] => all.filter((n) => n.tag === tag);
+  const add = (code: ViolationCode, n: Node | null, detail: string): void => {
+    out.push({ code, path: n?.path ?? "", detail });
+  };
+  const htmlEl = find("html")[0];
+  if (htmlEl === undefined || (htmlEl.attrs.lang ?? "") === "") add("missing-lang", htmlEl ?? null, "html has no lang");
+  if (!find("title").some((t) => textOf(t) !== "")) add("missing-title", null, "document has no title");
+  if (!find("meta").some((m) => m.attrs.charset !== undefined)) add("missing-charset", null, "no <meta charset>");
+  if (!find("meta").some((m) => m.attrs.name === "viewport")) add("missing-viewport", null, "no viewport meta");
+  const mains = find("main").length;
+  if (mains !== 1) add("main-count", null, `${mains} <main> elements, expected 1`);
+  const h1s = find("h1").length;
+  if (h1s !== 1) add("h1-count", null, `${h1s} <h1> elements, expected 1`);
+  for (const s of find("script")) add("script-in-document", s, "scripts are not allowed in a saved page");
+  for (const l of find("link")) {
+    if ((l.attrs.href ?? "") !== "") add("external-resource", l, `link to ${l.attrs.href ?? ""}`);
+  }
+  for (const st of find("style")) {
+    if (/@import|url\(/i.test(st.text)) add("external-resource", st, "style loads a resource");
+  }
+  out.push(...auditHtml(body, { ...options, requireLang: false, requireTargetSize: options.requireTargetSize ?? false }));
+  return out;
 }
