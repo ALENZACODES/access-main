@@ -1,11 +1,14 @@
-// EN + FR copy for the on-device data notice. No data claims live here:
-// callers say where each item is kept; anything not stated stays "unknown".
-// FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
+// EN + FR copy for the on-device data notice lives in the shell catalogs
+// (`apps/web/src/i18n/en.ts` and `fr.ts`, under `privacyNotice`) so the Day 24
+// typography and banned-term sweep covers it. This module only maps those
+// strings into the notice renderer. No data claims live here: callers say
+// where each item is kept; anything not stated stays "unknown".
+
+import { en } from "../../i18n/en.ts";
+import { fr } from "../../i18n/fr.ts";
 
 export type Locale = "en" | "fr";
 export type Where = "on-device" | "sent-to-server" | "unknown";
-
-const NBSP = "\u00a0";
 
 export interface NoticeStrings {
   title: string;
@@ -15,28 +18,21 @@ export interface NoticeStrings {
   dismiss: string;
 }
 
+function fromCatalog(catalog: typeof en.privacyNotice): NoticeStrings {
+  return {
+    title: catalog.title,
+    where: {
+      "on-device": catalog.whereOnDevice,
+      "sent-to-server": catalog.whereSentToServer,
+      unknown: catalog.whereUnknown,
+    },
+    reviewed: (date) => catalog.reviewed.replaceAll("{{date}}", date),
+    empty: catalog.empty,
+    dismiss: catalog.dismiss,
+  };
+}
+
 export const STRINGS: Record<Locale, NoticeStrings> = {
-  en: {
-    title: "Where your data is kept",
-    where: {
-      "on-device": "Stays on this device",
-      "sent-to-server": "Sent to a server",
-      unknown: "Not known",
-    },
-    reviewed: (d) => `Last reviewed: ${d}`,
-    empty: "This list is empty. That does not mean no data is kept.",
-    dismiss: "Close",
-  },
-  fr: {
-    title: "Où vos données sont conservées",
-    where: {
-      "on-device": "Reste sur cet appareil",
-      "sent-to-server": "Envoyé à un serveur",
-      unknown: "Inconnu",
-    },
-    reviewed: (d) => `Dernière révision${NBSP}: ${d}`,
-    empty:
-      "Cette liste est vide. Cela ne signifie pas qu’aucune donnée n’est conservée.",
-    dismiss: "Fermer",
-  },
+  en: fromCatalog(en.privacyNotice),
+  fr: fromCatalog(fr.privacyNotice),
 };
