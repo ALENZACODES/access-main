@@ -40,6 +40,9 @@ fault, and Dismiss.
 ## Damaged or uncheckable packs
 
 `packIntegrity.ts` and `CorruptPackNotice` detect a damaged or uncheckable pack
-and offer a re-download. On `/offline`, Check again re-reads the stored parts; a
-region whose parts are no longer all on the device shows the notice. A pack is
-never treated as complete when the digest or size cannot be confirmed.
+and offer a re-download. On `/offline`, Check again runs `checkPackIntegrity`
+over the raw bytes kept for each stored part, and also checks record counts
+against the manifest. A digest, size or count mismatch shows the damaged-pack
+notice with a re-download action. Re-download uses `redownloadPack` and only
+commits after every part passes. A pack is never treated as complete when the
+digest or size cannot be confirmed.
