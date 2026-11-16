@@ -173,7 +173,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
         <StateNotice
           lang={locale}
           view={
-            (id === "places" || id === "finders" || id === "journey" || id === "map")
+            (id === "places" || id === "finders" || id === "journey")
               ? (
                   (ERROR_KINDS as string[]).includes(stateKind)
                     ? getRouteError(id === "places" ? "search" : id, stateKind as ErrorKind, locale)

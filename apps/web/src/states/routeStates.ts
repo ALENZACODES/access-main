@@ -53,7 +53,8 @@ export function createRouteStates<R extends string>(
     isRouteId,
     getRouteError(route, kind, locale) {
       if (!isRouteId(route)) return withRoute(getErrorState("offline-no-pack", locale), null, locale);
-      const allowed = routes[route].errors.includes(kind) ? kind : "unknown";
+      // ErrorKind has no "unknown"; use the route's first listed kind instead.
+      const allowed = routes[route].errors.includes(kind) ? kind : (routes[route].errors[0] ?? "offline-no-pack");
       return withRoute(getErrorState(allowed, locale), route, locale);
     },
     getRouteEmpty(route, locale) {
