@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { registerFeatureTranslations } from "./i18n.ts";
 import { loadFeaturePackage, type FeaturePackage } from "./packages.ts";
 import { consentGranted, consentStatus, type ConsentCheck } from "./consent.ts";
+import { classifyRecoveryError, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
 
 registerFeatureTranslations();
 
@@ -53,7 +54,9 @@ function PackageView({ moduleName, exportName, props = {} }: {
 }
 
 function ControlsScreen(): ReactNode {
-  return <PackageView moduleName="controls" exportName="App" />;
+  const { i18n } = useTranslation();
+  // Embedded: the shell keeps its own <main>, h1, title and document language.
+  return <PackageView moduleName="controls" exportName="App" props={{ embedded: true, initialLang: i18n.language.startsWith("fr") ? "fr" : "en" }} />;
 }
 
 function ConsentScreen(): ReactNode {
@@ -132,21 +135,24 @@ function SyncScreen(): ReactNode {
 }
 
 function AdvocacyScreen(): ReactNode {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [observations, setObservations] = useState("");
   const [error, setError] = useState("");
+  const [failure, setFailure] = useState<RecoveryFailure | null>(null);
+  const language = i18n.language.startsWith("fr") ? "fr" : "en";
+  const invalid = () => Object.assign(new Error("invalid"), { name: "DataError" });
   async function exportPack(): Promise<void> {
-    setError("");
+    setError(""); setFailure(null);
     if (!(await consentGranted("advocacy-export"))) { setError(t("features.exportBlocked")); return; }
     try {
       const pkg = await loadFeaturePackage("advocacy");
       if (!pkg || typeof pkg.buildEvidencePack !== "function" || typeof pkg.serialisePack !== "function") { setError(t("features.pending")); return; }
       const input: unknown = JSON.parse(observations);
-      if (!Array.isArray(input)) throw Error("invalid");
+      if (!Array.isArray(input)) throw invalid();
       const result = (pkg.buildEvidencePack as (input: unknown) => unknown)(input) as Record<string, unknown>;
       const validPack = result.pack;
       if (!validPack || (typeof pkg.validatePack === "function" &&
-        !(pkg.validatePack as (value: unknown) => { valid: boolean })(validPack).valid)) throw Error("invalid");
+        !(pkg.validatePack as (value: unknown) => { valid: boolean })(validPack).valid)) throw invalid();
       const content = (pkg.serialisePack as (pack: unknown) => string)(validPack);
       const blob = new Blob([content], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -155,7 +161,7 @@ function AdvocacyScreen(): ReactNode {
       anchor.download = "evidence-pack.json";
       anchor.click();
       URL.revokeObjectURL(url);
-    } catch { setError(t("features.exportError")); }
+    } catch (cause) { setFailure(classifyRecoveryError("export", cause)); }
   }
   return <section><p>{t("features.advocacyDesc")}</p>
     <label htmlFor="advocacy-observations">{t("features.exportInput")}</label>
@@ -163,6 +169,8 @@ function AdvocacyScreen(): ReactNode {
     <p><button type="button" style={{ minHeight: 44 }} onClick={() => { void exportPack(); }}>
       {t("features.export")}</button></p>
     {error && <p role="alert">{error}</p>}
+    {failure && <RecoveryNotice failure={failure} locale={language} onRetry={() => { void exportPack(); }}
+      onCheckInput={() => document.getElementById("advocacy-observations")?.focus()} onDismiss={() => setFailure(null)} />}
   </section>;
 }
 
@@ -219,7 +227,7 @@ function SourcesScreen(): ReactNode {
 function FeaturePage({ entry, children }: { entry: Entry; children: ReactNode }): ReactNode {
   const { t } = useTranslation();
   return <><h1>{t(`features.${entry}`)}</h1><p>{t(`features.${entry}Desc`)}</p>
-    {children}<p><Link to="/settings">{t("features.back")}</Link></p></>;
+    {children}<p><Link className="text-link" to="/settings">{t("features.back")}</Link></p></>;
 }
 
 function ControlsPage(): ReactNode { return <FeaturePage entry="controls"><ControlsScreen /></FeaturePage>; }
