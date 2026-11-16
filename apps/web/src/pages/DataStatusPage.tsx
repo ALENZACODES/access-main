@@ -56,6 +56,17 @@ export function DataStatusPage() {
   // With no cached records the share is UNKNOWN, never 0.
   const unknownDates = entries.filter((entry) => badges.get(entry.id)?.ageDays === null).length;
   const unknownDateRate = formatRate(entries.length > 0 ? (unknownDates / entries.length) * 100 : null, locale);
+  const sourceRows = buildSourceList(
+    entries.map((entry) => ({
+      id: entry.provenance.source_name || entry.id,
+      name: entry.provenance.source_name,
+      licence: entry.provenance.licence,
+      retrievedAt: entry.provenance.retrieved_at ?? entry.provenance.source_date,
+    })),
+    locale,
+    now,
+  );
+  const sourceListHtml = renderSourceListHtml(sourceRows, locale);
 
   return (
     <div className="stack">
