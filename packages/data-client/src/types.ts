@@ -43,6 +43,15 @@ export interface PackManifest {
   search: Record<string, PackPart>;
   tiles: Record<string, { path: string; bytes: number; licence: string }>;
   counts: { records: number; byTranche: Record<string, number>; bySource: Record<string, number> };
+  /** Parts the pack builder left out, with the reason. Their places are shown as unavailable, never as absent. */
+  withheld?: WithheldPart[];
+}
+export interface WithheldPart {
+  path: string;
+  sourceId: string | null;
+  tranche: Tranche | null;
+  cell: string | null;
+  reason: string;
 }
 export interface SearchHit {
   id: string;
@@ -62,6 +71,12 @@ export interface RegionStatus {
   missingCells: string[];
   builtAt: string;
   count: number;
+  /** Cells shown from an older verified copy because the current part is not on the device yet. */
+  staleCells?: string[];
+  /** Stored records and search entries that failed the device check and are not shown. */
+  droppedRecords?: number;
+  /** Parts of this region that the pack builder withheld; show these places as unavailable. */
+  unavailable?: WithheldPart[];
 }
 export interface PackSource {
   manifest(): Promise<PackManifest>;
