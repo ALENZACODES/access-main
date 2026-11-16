@@ -27,3 +27,26 @@ inventory, the App's storage prefix and a container, e.g.
 
 and `apps/web/src/privacy/index.ts` should add `export * from "./panel";`.
 Run: `vitest run apps/web/src/privacy`.
+
+## Consent, expiry and audits (P10D)
+
+- `consent.ts`: optional features are off until the person decides. Each choice
+  is stored on this device with its date and wording version; a changed wording
+  makes it undecided again. Feature code asks `isAllowed(state, purpose)`, which
+  is true only for a current "granted". Erasing local data resets every choice.
+- `expiry.ts`: `putExpiring` stores a value with an expiry date. The controller
+  removes expired items at start-up and says how many. Values without an expiry
+  are never removed: their lifetime is unknown, not assumed.
+- `../audit/htmlAudit.ts`: static HTML audit (names, Label in Name, 44 px targets,
+  headings, tables, ids, outside URLs, inline handlers). A target size that
+  cannot be read from the markup is a violation, not a pass.
+- `../audit/parity.ts`: EN and FR tables must match in shape, digits and placeholders.
+- `../audit/repoAudit.ts` + `exemptions.ts`: repository rules over `apps/web/src`
+  and `.github/workflows` (outside organisation name, third-party tile and tracker
+  hosts, secrets, plain http, scheduled workflows, claim wording in copy files).
+  An exemption needs a reason and a date and is reported if it goes stale.
+
+CI: `panel.audit.test.ts`, `parity.audit.test.ts` and `repo.audit.test.ts` run
+with the normal `vitest run`. `repo.audit.test.ts` reads the whole source tree
+(read-only), so it fails on any existing violation elsewhere in the app until it
+is fixed or listed in `exemptions.ts` with a reason.

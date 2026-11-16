@@ -13,7 +13,23 @@ export type Status =
   | { kind: "erased"; count: number }
   | { kind: "erase-partial"; failed: number }
   | { kind: "nothing" }
-  | { kind: "unavailable" };
+  | { kind: "unavailable" }
+  | { kind: "consent-saved"; value: "granted" | "declined"; label: string }
+  | { kind: "save-failed" }
+  | { kind: "expired-removed"; count: number };
+
+export interface ConsentStrings {
+  heading: string;
+  note: string;
+  allow: string;
+  decline: string;
+  granted: (isoDate: string) => string;
+  declined: (isoDate: string) => string;
+  unknown: string;
+  stale: string;
+  ariaAllow: (label: string) => string;
+  ariaDecline: (label: string) => string;
+}
 
 export interface PanelStrings {
   title: string;
@@ -28,6 +44,7 @@ export interface PanelStrings {
   confirmBody: string;
   confirmYes: string;
   confirmNo: string;
+  consent: ConsentStrings;
   status: (s: Status) => string;
 }
 
@@ -57,6 +74,18 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
       "This removes what the App stored in this browser. Data sent to a server is not removed by this button.",
     confirmYes: "Yes, erase",
     confirmNo: "Keep my data",
+    consent: {
+      heading: "Optional features",
+      note: "Each choice applies only on this device. You can change it at any time.",
+      allow: "Allow",
+      decline: "Do not allow",
+      granted: (d) => `Allowed since ${d}`,
+      declined: (d) => `Not allowed since ${d}`,
+      unknown: "Not decided yet",
+      stale: "The wording changed. Please decide again.",
+      ariaAllow: (l) => `Allow: ${l}`,
+      ariaDecline: (l) => `Do not allow: ${l}`,
+    },
     status: (s) => {
       switch (s.kind) {
         case "exported":
@@ -69,6 +98,12 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return "Nothing from the App was found on this device.";
         case "unavailable":
           return "This browser does not let the App store data, so there is nothing to download or erase.";
+        case "consent-saved":
+          return `Saved: ${s.value === "granted" ? "allowed" : "not allowed"} for “${s.label}”.`;
+        case "save-failed":
+          return "Your choice could not be saved on this device. It will be lost when this page closes.";
+        case "expired-removed":
+          return `Expired items removed from this device: ${s.count}.`;
       }
     },
   },
@@ -93,6 +128,18 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
       "Cela supprime ce que l’App a enregistré dans ce navigateur. Les données envoyées à un serveur ne sont pas supprimées par ce bouton.",
     confirmYes: "Oui, effacer",
     confirmNo: "Garder mes données",
+    consent: {
+      heading: "Fonctions facultatives",
+      note: "Chaque choix s’applique seulement sur cet appareil. Vous pouvez le modifier en tout temps.",
+      allow: "Autoriser",
+      decline: "Ne pas autoriser",
+      granted: (d) => `Autorisé depuis le ${d}`,
+      declined: (d) => `Refusé depuis le ${d}`,
+      unknown: "Pas encore décidé",
+      stale: "Le texte a changé. Veuillez décider de nouveau.",
+      ariaAllow: (l) => `Autoriser${NBSP}: ${l}`,
+      ariaDecline: (l) => `Ne pas autoriser${NBSP}: ${l}`,
+    },
     status: (s) => {
       switch (s.kind) {
         case "exported":
@@ -107,6 +154,12 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return "Rien de l’App n’a été trouvé sur cet appareil.";
         case "unavailable":
           return `Ce navigateur ne permet pas à l’App d’enregistrer des données${NBSP}: il n’y a rien à télécharger ni à effacer.`;
+        case "consent-saved":
+          return `Enregistré${NBSP}: ${s.value === "granted" ? "autorisation accordée" : "autorisation refusée"} pour «${NNBSP}${s.label}${NNBSP}».`;
+        case "save-failed":
+          return "Votre choix n’a pas pu être enregistré sur cet appareil. Il sera perdu à la fermeture de cette page.";
+        case "expired-removed":
+          return `Éléments expirés retirés de cet appareil${NBSP}: ${s.count}.`;
       }
     },
   },

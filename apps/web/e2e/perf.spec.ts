@@ -2,8 +2,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Browser } from "@playwright/test";
 
-
-test.describe.configure({ mode: "serial" });
 /**
  * Day 22 performance record (P11). Measured in CI on every run.
  *
@@ -20,6 +18,13 @@ test.describe.configure({ mode: "serial" });
  *   may be 0 where a module has no records in this build; the time is still
  *   the time until the person learns the answer.
  *
+ * Steadiness: one warm-up load per route is thrown away (the first load after
+ * the server starts pays for cold disk and process start-up) and each measure
+ * is the median of five cold runs. There are no retries and no best-of-n: the
+ * one set of runs is what is gated. The gates are not changed. The default
+ * config runs the perf project on its own with one worker in CI, so no other
+ * test competes for the CPU while it measures.
+ *
  * The record is written to test-results/perf/day22-performance.json. The
  * gates are LCP 1,200 ms and first result 1,500 ms: about twice the CI
  * medians recorded on this branch (LCP 312–352 ms, first results 388–605 ms),
@@ -27,7 +32,7 @@ test.describe.configure({ mode: "serial" });
  * real phone; the record says so.
  */
 
-const RUNS = 3;
+const RUNS = 5;
 const CPU_SLOWDOWN = 4;
 const LCP_GATE_MS = 1_200;
 const FIRST_RESULT_GATE_MS = 1_500;
@@ -43,7 +48,7 @@ function median(values: number[]): number {
 }
 
 async function coldRun(browser: Browser, baseURL: string, route: string): Promise<{ lcp: number | null; firstResult: number | null }> {
-  const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, locale: "en-CA" });
+  const context = await browser.newContext({ baseURL, serviceWorkers: "block", viewport: { width: 390, height: 844 }, locale: "en-CA" });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: CPU_SLOWDOWN });
@@ -80,32 +85,37 @@ async function coldRun(browser: Browser, baseURL: string, route: string): Promis
 }
 
 test("Day 22: home LCP and core-flow time to first result on a mid-range profile", async ({ browser, baseURL }, testInfo) => {
-  test.setTimeout(180_000);
+  test.setTimeout(420_000);
   const base = baseURL ?? "http://127.0.0.1:4173";
 
-  const lcpRuns: number[] = [];
-  for (let run = 0; run < RUNS; run += 1) {
-    const { lcp } = await coldRun(browser, base, "/");
-    expect(lcp, "LCP was recorded on /").not.toBeNull();
-    lcpRuns.push(lcp as number);
+  // Discarded: the first load of each route after the server starts.
+  for (const route of ["/", ...FLOWS.map((flow) => flow.route)]) {
+    await coldRun(browser, base, route);
   }
 
-  const flows = [];
-  for (const flow of FLOWS) {
+  /** Measures one route: five cold runs, median reported and gated. */
+  async function measure(route: string, pick: "lcp" | "firstResult"): Promise<{ runsMs: number[]; medianMs: number }> {
     const runs: number[] = [];
     for (let run = 0; run < RUNS; run += 1) {
-      const { firstResult } = await coldRun(browser, base, flow.route);
-      expect(firstResult, `${flow.route} reported a result count`).not.toBeNull();
-      runs.push(Math.round(firstResult as number));
+      const value = (await coldRun(browser, base, route))[pick];
+      expect(value, `${route} reported ${pick}`).not.toBeNull();
+      runs.push(Math.round(value as number));
     }
-    flows.push({ ...flow, runsMs: runs, medianMs: median(runs) });
+    return { runsMs: runs, medianMs: median(runs) };
+  }
+
+  const lcp = await measure("/", "lcp");
+  const lcpRuns = lcp.runsMs;
+  const flows = [];
+  for (const flow of FLOWS) {
+    flows.push({ ...flow, ...(await measure(flow.route, "firstResult")) });
   }
 
   const record = {
     schemaVersion: "perf-record-1.0.0",
     ranAt: new Date().toISOString(),
-    method: `Playwright Chromium, production build served locally, 390x844 viewport, CPU slowdown ${CPU_SLOWDOWN}x (mid-range phone profile), no network throttling, ${RUNS} cold runs per measure, median reported. A CI runner is not a real phone.`,
-    homeLcp: { runsMs: lcpRuns.map(Math.round), medianMs: median(lcpRuns), gateMs: LCP_GATE_MS },
+    method: `Playwright Chromium, production build served locally, 390x844 viewport, CPU slowdown ${CPU_SLOWDOWN}x (mid-range phone profile), no network throttling, ${RUNS} cold runs per measure after a discarded warm-up load, service workers blocked (the offline cache install is not measured), median reported. A CI runner is not a real phone.`,
+    homeLcp: { runsMs: lcpRuns, medianMs: lcp.medianMs, gateMs: LCP_GATE_MS },
     timeToFirstResult: flows.map((flow) => ({ ...flow, gateMs: FIRST_RESULT_GATE_MS })),
   };
   const dir = resolve(import.meta.dirname, "../test-results/perf");
