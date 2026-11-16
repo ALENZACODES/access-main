@@ -5,6 +5,7 @@ const entrypoints = import.meta.glob([
   "../../../../packages/caregiver/src/index.ts",
   "../../../../packages/sync/src/index.ts",
   "../../../../packages/advocacy/src/index.ts",
+  "../../../../packages/data-client/src/index.ts",
 ]);
 
 export type FeaturePackage = "controls" | "consent" | "caregiver" | "sync" | "advocacy" | "data-client";
