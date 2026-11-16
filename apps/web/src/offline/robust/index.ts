@@ -1,0 +1,16 @@
+export {
+  OFFLINE_STRINGS,
+  downloadRegion,
+  lookupOfflineCell,
+  type CellLookup,
+  type CellStore,
+  type DownloadDependencies,
+  type DownloadResult,
+  type Language,
+  type Provenance,
+  type RegionCell,
+  type RegionManifest,
+  type StopReason,
+  type StorageEstimate,
+  type StoredCell,
+} from "./regionDownload.ts";
