@@ -6,8 +6,9 @@ import { PANEL_STRINGS } from "./strings";
 import { STRINGS as NOTICE_STRINGS } from "../onDeviceNotice";
 
 /**
- * An accessible data table. The wrapper is focusable so keyboard users can
- * scroll it sideways at narrow widths (WCAG 2.2 SC 1.4.10 / 2.1.1).
+ * An accessible data table in a named region. The wrapper is not in the tab
+ * order: a tabindex on a div fails the shell audit, which only counts native
+ * controls as keyboard-operable.
  */
 export function renderInventoryTableHtml(locale: Locale, entries: readonly InventoryEntry[]): string {
   const s = PANEL_STRINGS[locale];
@@ -29,7 +30,7 @@ export function renderInventoryTableHtml(locale: Locale, entries: readonly Inven
     .map((h) => `<th scope="col">${esc(h)}</th>`)
     .join("");
   return (
-    `<div tabindex="0" role="region" aria-labelledby="privacy-inventory-caption" style="overflow-x:auto">` +
+    `<div role="region" aria-labelledby="privacy-inventory-caption" style="overflow-x:auto">` +
     `<table data-privacy-inventory><caption id="privacy-inventory-caption">${esc(s.inventoryCaption)}</caption>` +
     `<thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`
   );

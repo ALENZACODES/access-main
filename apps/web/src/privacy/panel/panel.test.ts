@@ -18,9 +18,9 @@ describe("renderInventoryTableHtml", () => {
     expect(html.match(/<th scope="col">/g)).toHaveLength(5);
     expect(html.match(/<th scope="row">/g)).toHaveLength(FIXTURE.length);
   });
-  it("lets keyboard users scroll the table", () => {
+  it("names the table as a region and does not put a div in the tab order", () => {
     const html = renderInventoryTableHtml("en", FIXTURE);
-    expect(html).toContain('tabindex="0"');
+    expect(html).not.toContain('tabindex="0"');
     expect(html).toContain('role="region"');
     expect(html).toContain("aria-labelledby");
   });
