@@ -116,5 +116,7 @@ export function auditLookalike(html: string): CheckResult {
     }
     flush();
   }
+  const lineOf = (e: Entry): number => Number(/@L(\d+)$/.exec(e.id)?.[1] ?? 0);
+  entries.sort((a, b) => lineOf(a) - lineOf(b));
   return { checked, entries };
 }
