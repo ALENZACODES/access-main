@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
+import { ROUTES } from "./shell-routes.ts";
 import { resolve } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
@@ -13,7 +14,6 @@ import { expect, test, type Page } from "@playwright/test";
  * These checks do not prove WCAG 2.2 AA.
  */
 
-const ROUTES = ["/", "/about", "/onboarding", "/profile", "/data-status", "/build-card", "/offline", "/places", "/map", "/journey", "/finders", "/navigator", "/games", "/settings", "/more", "/help"];
 const TARGET_MIN_PX = 24;
 const LIMITATION = "Automated checks find some failures. They do not prove WCAG 2.2 AA.";
 
@@ -67,7 +67,27 @@ async function measure(page: Page) {
         const field = el as HTMLInputElement;
         let label = "";
         if (tag === "a" || tag === "button" || tag === "summary") label = el.innerText;
-        else if (tag === "input" || tag === "select" || tag === "textarea") label = field.labels?.[0]?.innerText ?? "";
+        else if (tag === "input" || tag === "select" || tag === "textarea") {
+          // Visible label is the associated <label> text, not the control's own
+          // options or value (a <select> inside its label would otherwise include
+          // every option in innerText).
+          const associated = field.labels?.[0];
+          if (associated) {
+            const clone = associated.cloneNode(true) as HTMLElement;
+            for (const nested of Array.from(clone.querySelectorAll("input, select, textarea, button"))) {
+              nested.replaceWith(document.createTextNode(" "));
+            }
+            // innerText on a detached node is plain textContent, which drops the whitespace between
+            // block nodes ("onlyNothing"). Lay the clone out next to the label, off screen, so the
+            // browser puts back the breaks a reader sees, then remove it.
+            clone.setAttribute("aria-hidden", "true");
+            clone.style.position = "absolute";
+            clone.style.left = "-9999px";
+            associated.insertAdjacentElement("afterend", clone);
+            label = clone.innerText;
+            clone.remove();
+          }
+        }
         // WCAG 2.5.8 counts the whole area that activates the control. When the input sits inside its
         // own label (React Aria radios and checkboxes), clicking the label activates it, so the label is the target.
         const wrapping = field.labels ? Array.from(field.labels).find((item) => item.contains(el)) : undefined;
@@ -82,7 +102,10 @@ async function measure(page: Page) {
           width: Math.round(hitBox.width * 10) / 10,
           height: Math.round(hitBox.height * 10) / 10,
           inline: tag === "a" && getComputedStyle(el).display === "inline" && parentText.length > ownText.length + 10,
-          native: ["a", "button", "input", "select", "textarea", "summary"].includes(tag) && !el.hasAttribute("ondblclick") && el.getAttribute("draggable") !== "true",
+          native: (
+            ["a", "button", "input", "select", "textarea", "summary"].includes(tag)
+            || ["listbox", "option", "combobox", "radio", "checkbox", "switch", "slider", "tab", "menuitem", "menuitemcheckbox", "menuitemradio"].includes(el.getAttribute("role") ?? "")
+          ) && !el.hasAttribute("ondblclick") && el.getAttribute("draggable") !== "true",
         };
       });
   });
@@ -162,6 +185,7 @@ test("Day 17: every shell route is audited in English and French", async ({ page
   const controls: Control[] = [];
   const screens: Array<{ route: string; language: Language; firstStop: string; stops: number; noTrap: boolean; axe: string[] }> = [];
   const fail = (failure: Omit<Failure, "id">) => failures.push({ ...failure, id: `F${failures.length + 1}` });
+  expect(ROUTES.length, "the shell route list shrank, so routes may have dropped out of the audit").toBeGreaterThanOrEqual(31);
 
   for (const language of ["en", "fr"] as const) {
     if (language === "fr") {

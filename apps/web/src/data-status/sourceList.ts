@@ -6,9 +6,9 @@ import { dataBadge, type FreshnessState, type Locale, type Provenance, type Prov
 
 export interface SourceInput extends Provenance {
   id: string;
-  name?: string | null;
+  name?: string | null | undefined;
   /** Public page for the source; only http(s) links are kept. */
-  url?: string | null;
+  url?: string | null | undefined;
 }
 
 export interface SourceRow {
