@@ -1,21 +1,6 @@
-/** Canonical shell routes used by the Day 17 audit, shell smoke tests, and the 320px narrow audit. */
-export const ROUTES = [
-  "/",
-  "/about",
-  "/onboarding",
-  "/profile",
-  "/data-status",
-  "/build-card",
-  "/offline",
-  "/places",
-  "/map",
-  "/journey",
-  "/finders",
-  "/navigator",
-  "/games",
-  "/settings",
-  "/more",
-  "/help",
-] as const;
+import { appRoutes } from "./a11y-input/helpers.ts";
+
+/** Live shell routes from the same appRoutes() list used by the a11y-input audit. */
+export const ROUTES: readonly string[] = appRoutes();
 
 export type ShellRoute = (typeof ROUTES)[number];

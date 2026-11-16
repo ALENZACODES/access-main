@@ -18,7 +18,7 @@ Run with the web package's test runner (`*.test.ts`).
 ## CI gate
 
 `apps/web/e2e/narrow-audit.spec.ts` visits every `ROUTES` entry from
-`apps/web/e2e/shell-routes.ts` at 320px wide, in English and in French. Any
+`apps/web/e2e/shell-routes.ts` (the live `appRoutes()` list) at 320px wide, in English and in French. Any
 reflow or sub-44px target finding fails CI unless it is listed in
 `NARROW_ALLOWLIST` in `allowlist.ts`, with a route, kind, id fragment, and
 reason. Prefer fixing the layout. An empty allowlist means every finding fails.
