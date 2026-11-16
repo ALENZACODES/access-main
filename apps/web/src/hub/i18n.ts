@@ -88,7 +88,7 @@ export const hubText = {
       eventNumber: "Événement de démonstration {{number}}",
       eventRecord: "Exemple de fiche",
       recordDetails: "Détails et provenance de la fiche",
-      dataUnavailable: "Cet exemple ne contient pas de source, de licence, de date et de niveau de vérification pour un fait local vérifié.",
+      dataUnavailable: "Cet exemple ne fournit pas de source, de licence, de date et de niveau vérifiés pour un fait d’accessibilité local.",
       loading: "Chargement de l’outil…",
       error: "L’outil ne peut pas être affiché. Vous pouvez retourner à Plus.",
     },
