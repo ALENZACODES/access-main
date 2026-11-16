@@ -1,20 +1,21 @@
 import { expect, test } from "@playwright/test";
+import { formatUnexplained } from "../src/narrow/allowlist.ts";
 import { auditRoutes } from "../src/narrow/page.ts";
+import { ROUTES } from "./shell-routes.ts";
 
-test("audits shell routes at 320px for reflow and 44px targets", async ({ page, baseURL }) => {
+test("audits every shell route at 320px in English and French", async ({ page, baseURL }) => {
   expect(baseURL).toBeTruthy();
-  const reports = await auditRoutes(page, baseURL!, ["/", "/about", "/help", "/data-status"]);
-  expect(reports.length).toBe(4);
-  for (const report of reports) {
-    expect(report.viewportWidth).toBe(320);
-    expect(report.route.length).toBeGreaterThan(0);
+  const leftovers: string[] = [];
+  for (const language of ["en", "fr"] as const) {
+    await page.goto("/");
+    await page.getByRole("button", { name: language === "fr" ? "Français" : "English" }).click();
+    const reports = await auditRoutes(page, baseURL!, ROUTES);
+    expect(reports.length).toBe(ROUTES.length);
+    for (const report of reports) {
+      expect(report.viewportWidth).toBe(320);
+      expect(report.route).toBeTruthy();
+    }
+    leftovers.push(...formatUnexplained(reports, language).map((line) => `${language} ${line}`));
   }
-  // Findings are reported for review. This check confirms the audit ran; it
-  // does not claim conformance.
-  test.info().annotations.push({
-    type: "narrow-audit",
-    description: reports
-      .map((report) => `${report.route}: ${report.findings.length} finding(s)`)
-      .join("; "),
-  });
+  expect(leftovers, leftovers.join("\n")).toEqual([]);
 });

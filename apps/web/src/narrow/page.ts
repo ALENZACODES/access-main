@@ -26,6 +26,10 @@ export function measureInPage(selector: string): Measured {
   interface El {
     id: string;
     tagName: string;
+    textContent: string | null;
+    getAttribute(name: string): string | null;
+    closest(selector: string): El | null;
+    parentElement: El | null;
     getBoundingClientRect(): { left: number; right: number; width: number; height: number };
   }
   const doc = (
@@ -34,16 +38,34 @@ export function measureInPage(selector: string): Measured {
         querySelectorAll(s: string): ArrayLike<El>;
         documentElement: { scrollWidth: number; clientWidth: number };
       };
+      getComputedStyle(el: El): { display: string; visibility: string };
     }
-  ).document;
-  const els = doc.querySelectorAll(selector);
+  );
+  const els = doc.document.querySelectorAll(selector);
   const boxes: Box[] = [];
   for (let i = 0; i < els.length; i++) {
     const el = els[i];
     if (!el) continue;
-    const r = el.getBoundingClientRect();
+    let hidden = false;
+    let node: El | null = el;
+    while (node) {
+      const style = doc.getComputedStyle(node);
+      if (style.display === "none" || style.visibility === "hidden") hidden = true;
+      if (node.getAttribute("aria-hidden") === "true") hidden = true;
+      node = node.parentElement;
+    }
+    if (hidden) continue;
+    const type = (el.getAttribute("type") ?? "").toLowerCase();
+    const tag = el.tagName.toLowerCase();
+    const hit: El =
+      (tag === "input" && (type === "checkbox" || type === "radio") && el.closest("label")) || el;
+    const r = hit.getBoundingClientRect();
+    const href = el.getAttribute("href") ?? "";
+    const name = (el.getAttribute("aria-label") ?? el.getAttribute("name") ?? "").trim();
+    const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 48);
+    const label = href || name || text || String(i);
     boxes.push({
-      id: `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}[${i}]`,
+      id: `${tag}${el.id ? "#" + el.id : ""}[${label}]`,
       left: r.left,
       right: r.right,
       width: r.width,
@@ -52,8 +74,8 @@ export function measureInPage(selector: string): Measured {
   }
   return {
     boxes,
-    scrollWidth: doc.documentElement.scrollWidth,
-    clientWidth: doc.documentElement.clientWidth,
+    scrollWidth: doc.document.documentElement.scrollWidth,
+    clientWidth: doc.document.documentElement.clientWidth,
   };
 }
 
@@ -66,7 +88,7 @@ export async function auditRoutes(
   await page.setViewportSize({ width: REFLOW_WIDTH_PX, height: 800 });
   const reports: NarrowReport[] = [];
   for (const route of routes) {
-    await page.goto(baseUrl.replace(/\/+$/, '') + (route.startsWith('/') ? route : '/' + route));
+    await page.goto(baseUrl.replace(/\/+$/, "") + (route.startsWith("/") ? route : "/" + route));
     const m = await page.evaluate(measureInPage, INTERACTIVE_SELECTOR);
     reports.push(auditBoxes(route, m.boxes, m.scrollWidth, m.clientWidth));
   }

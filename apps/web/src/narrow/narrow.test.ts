@@ -10,7 +10,11 @@ import {
   describeFinding,
   formatReport,
   measureInPage,
+  formatUnexplained,
+  isAllowlisted,
+  unexplainedFindings,
   type Box,
+  type AllowlistItem,
   type Finding,
   type PageLike,
 } from './index.ts';
@@ -77,19 +81,29 @@ describe('messages', () => {
 });
 
 describe('measureInPage + auditRoutes', () => {
-  const g = globalThis as unknown as { document?: unknown };
+  const g = globalThis as unknown as { document?: unknown; getComputedStyle?: (el: unknown) => { display: string; visibility: string } };
   afterEach(() => {
     delete g.document;
+    delete g.getComputedStyle;
   });
 
   it('reads layout from the page document', () => {
+    g.getComputedStyle = () => ({ display: 'block', visibility: 'visible' });
     g.document = {
       querySelectorAll: () => [
-        { id: 'go', tagName: 'BUTTON', getBoundingClientRect: () => ({ left: 0, right: 30, width: 30, height: 30 }) },
+        {
+          id: 'go',
+          tagName: 'BUTTON',
+          textContent: 'Go',
+          getAttribute: () => null,
+          closest: () => null,
+          parentElement: null,
+          getBoundingClientRect: () => ({ left: 0, right: 30, width: 30, height: 30 }),
+        },
       ],
       documentElement: { scrollWidth: 320, clientWidth: 320 },
     };
-    expect(measureInPage(INTERACTIVE_SELECTOR).boxes[0]?.id).toBe('button#go[0]');
+    expect(measureInPage(INTERACTIVE_SELECTOR).boxes[0]?.id).toBe('button#go[Go]');
   });
 
   it('audits every route at 320px', async () => {
@@ -103,9 +117,18 @@ describe('measureInPage + auditRoutes', () => {
         visited.push(url);
       },
       async evaluate(fn, arg) {
+        g.getComputedStyle = () => ({ display: 'block', visibility: 'visible' });
         g.document = {
           querySelectorAll: () => [
-            { id: '', tagName: 'A', getBoundingClientRect: () => ({ left: 0, right: 50, width: 50, height: 20 }) },
+            {
+              id: '',
+              tagName: 'A',
+              textContent: 'Open',
+              getAttribute: (name: string) => (name === 'href' ? '/map' : null),
+              closest: () => null,
+              parentElement: null,
+              getBoundingClientRect: () => ({ left: 0, right: 50, width: 50, height: 20 }),
+            },
           ],
           documentElement: { scrollWidth: 320, clientWidth: 320 },
         };
@@ -116,5 +139,26 @@ describe('measureInPage + auditRoutes', () => {
     expect(width).toBe(320);
     expect(visited).toEqual(['http://localhost:5173/', 'http://localhost:5173/map']);
     expect(reports.map((r) => r.findings.length)).toEqual([1, 1]);
+  });
+});
+
+
+describe('allowlist', () => {
+  const small: Finding = { kind: 'target-too-small', id: 'a[/help]', width: 24, height: 24, overflowPx: 0 };
+  it('treats an empty allowlist as a failure for every finding', () => {
+    const report = auditBoxes('/help', [box('a[/help]', 0, 24, 24)], 320, 320);
+    expect(unexplainedFindings(report, 'en')).toHaveLength(report.findings.length);
+    expect(formatUnexplained([report], 'en')[0]).toContain('/help');
+  });
+  it('records a reason when a finding is explicitly allowlisted', () => {
+    const item: AllowlistItem = {
+      route: '/help',
+      language: '*',
+      kind: 'target-too-small',
+      idIncludes: '/help',
+      reason: 'example only; not used in the production list',
+    };
+    expect(item.reason.length).toBeGreaterThan(0);
+    expect(isAllowlisted('/help', 'en', small)).toBe(false);
   });
 });
