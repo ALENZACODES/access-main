@@ -11,6 +11,10 @@ declare module "@access-tools/housing" {
 declare module "@access-tools/safety" {
   import type { ComponentType } from "react";
   export const SafetyApp: ComponentType<{ language?: "en" | "fr"; lang?: "en" | "fr" }>;
+  export const SafetyPanel: ComponentType<{
+    language: "en" | "fr";
+    onLanguage: (language: "en" | "fr") => void;
+  }>;
 }
 
 declare module "@access-tools/diary" {
