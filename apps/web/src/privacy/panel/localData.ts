@@ -6,7 +6,7 @@ import type { StorageLike } from "./storage";
 
 export interface ExportFile {
   filename: string;
-  mime: "application/json";
+  mime: "application/json" | "text/csv" | "text/plain" | "text/html";
   text: string;
   count: number;
 }

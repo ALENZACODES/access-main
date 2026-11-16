@@ -30,7 +30,7 @@ median): home LCP 288 ms; time to first result: place search 388 ms, journey
 plan 418 ms, washroom finder 450 ms. The e2e gates are LCP ≤ 1,200 ms and
 first result ≤ 1,500 ms, about twice the CI medians seen on this branch. A
 separate e2e checks that preloading on focus or pointer leaves focus and the
-route unchanged. To keep the gate steady without moving it, each route gets one discarded
+route unchanged, and a DOM test checks that it announces nothing. To keep the gate steady without moving it, each route gets one discarded
 warm-up load, each measure is the median of five cold runs, and a measure over
 its gate is taken again up to three times (the best attempt is gated and every
 attempt is in the record). The perf project also runs on its own: CI uses one
