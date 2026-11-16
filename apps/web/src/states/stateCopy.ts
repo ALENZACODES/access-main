@@ -13,7 +13,7 @@
  */
 export type Locale = "en" | "fr";
 
-export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed";
+export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed" | "not-found" | "load-failed" | "offline";
 export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places";
 export type ActionId = "retry" | "go-home" | "go-back" | "download-pack" | "clear-search" | "change-trip" | "help";
 
@@ -82,7 +82,7 @@ const ERRORS: Record<ErrorKind, Entry> = {
     title: { en: "The pack did not finish downloading", fr: "Le pack n’a pas fini de se télécharger" },
     description: {
       en: "The download stopped before it was complete. Check the connection and the space on this device, then try again.",
-      fr: "Le téléchargement s’est arrêté avant la fin. Vérifiez la connexion et l’espace libre sur cet appareil, puis réessayez.",
+      fr: "Le téléchargement s’est arrêté avant la fin. Contrôlez la connexion et l’espace libre sur cet appareil, puis réessayez.",
     },
     actions: ["retry", "help"],
   },
@@ -93,6 +93,30 @@ const ERRORS: Record<ErrorKind, Entry> = {
       fr: "Ses fichiers n’ont pas pu être ouverts sur cet appareil.",
     },
     actions: ["retry", "go-home"],
+  },
+  "not-found": {
+    title: { en: "This place was not found", fr: "Ce lieu n’a pas été trouvé" },
+    description: {
+      en: "No record matches this address in the pack on this device.",
+      fr: "Aucune fiche ne correspond à cette adresse dans le pack sur cet appareil.",
+    },
+    actions: ["go-back", "go-home"],
+  },
+  "load-failed": {
+    title: { en: "This place could not be loaded", fr: "Ce lieu n’a pas pu être chargé" },
+    description: {
+      en: "The record could not be opened on this device. Try again, or go back to the place list.",
+      fr: "La fiche n’a pas pu être ouverte sur cet appareil. Réessayez, ou revenez à la liste des lieux.",
+    },
+    actions: ["retry", "go-back"],
+  },
+  offline: {
+    title: { en: "You are offline", fr: "Vous êtes hors ligne" },
+    description: {
+      en: "This place could not be loaded without a connection, and no saved copy is available.",
+      fr: "Ce lieu n’a pas pu être chargé sans connexion, et aucune copie enregistrée n’est disponible.",
+    },
+    actions: ["retry", "download-pack"],
   },
 };
 
@@ -109,7 +133,7 @@ const EMPTY: Record<EmptyKind, Entry> = {
     title: { en: "No route found for this trip", fr: "Aucun itinéraire trouvé pour ce trajet" },
     description: {
       en: "Check the start and the destination, or choose places nearby.",
-      fr: "Vérifiez le départ et la destination, ou choisissez des lieux à proximité.",
+      fr: "Contrôlez le départ et la destination, ou choisissez des lieux à proximité.",
     },
     actions: ["change-trip", "help"],
   },
@@ -152,6 +176,14 @@ function build(entry: Entry, locale: Locale, role: StateView["role"]): StateView
       minTargetPx: MIN_TOUCH_TARGET_PX,
     })),
   };
+}
+
+
+/** Map an HTTP-style load failure onto a place-route error kind. */
+export function errorKindFromStatus(httpStatus: number | undefined, online: boolean): ErrorKind {
+  if (!online) return "offline";
+  if (httpStatus === 404) return "not-found";
+  return "load-failed";
 }
 
 export function getErrorState(kind: ErrorKind, locale: Locale): StateView {
