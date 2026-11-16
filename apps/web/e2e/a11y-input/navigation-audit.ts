@@ -79,8 +79,6 @@ export async function observeFocus(page: Page): Promise<FocusSnapshot | null> {
     const href = node.getAttribute("href") ?? "";
     const parentId = node.parentElement?.id ? `#${node.parentElement.id}` : "";
     return {
-      // IDs are complete stable identifiers. Do not append href metadata to
-      // them: link focus snapshots must match the actual DOM identifier.
       selector: node.id ? selector : (href || parentId ? `${selector}@${href}${parentId}` : selector),
       tag: node.tagName.toLowerCase(),
       role: node.getAttribute("role"),
@@ -106,8 +104,10 @@ export async function tabOnce(page: Page, reverse = false): Promise<FocusSnapsho
 }
 
 /**
- * Stop at the first repeated target: browser Tab navigation forms a cycle.
- * This prevents hanging on app routes with long, dynamic focus sequences.
+ * Test each adjacent forward/reverse transition in the live DOM.
+ * Replaying an entire walk after moving focus to body is not equivalent to
+ * reversing the original traversal: browser sequential-focus start points
+ * can differ after a second focus reset. A changed neighbour is a failure.
  */
 export async function walkSequentialFocus(
   page: Page,
