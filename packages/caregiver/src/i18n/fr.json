@@ -108,7 +108,7 @@
   "caregiver.recordedAt": "Date d'enregistrement : {time}",
   "caregiver.snapshotNote": "Copié au moment où l'accès a été accordé. Les valeurs affichées comme Non renseigné n'ont pas été fournies.",
 
-  "error.invalid_input": "Vérifiez le formulaire. Des renseignements manquent ou ne sont pas permis.",
+  "error.invalid_input": "Contrôlez le formulaire. Des renseignements manquent ou ne sont pas permis.",
   "error.looks_like_contact": "Utilisez seulement un nom ou une courte description, pas un numéro de téléphone, une adresse courriel ou une adresse web.",
   "error.profile_invalid": "Le profil n'a pas pu être utilisé pour le partage.",
   "error.not_found": "Cette autorisation n'existe plus.",
