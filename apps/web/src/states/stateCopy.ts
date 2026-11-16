@@ -1,13 +1,38 @@
 /**
- * Error-state next actions and empty-state wording.
- * Framework-agnostic model: a view layer renders it. No data is fetched here.
+ * Day 22 error and empty states: wording and next actions (EN + FR).
+ *
+ * The plan names six states: no network without a pack, pack download
+ * failure, search with no results, journey with no route, finder with no
+ * results, and game load failure. Each has a plain-language heading, one
+ * sentence on what happened, and a next action. The App is a local PWA: there
+ * is no server to blame, so nothing here says "service" or "our side".
+ *
+ * The shell's own states (not found, render failed, storage unavailable,
+ * profile save failed) stay in shell/errorStates.ts.
  * French typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
  */
 export type Locale = "en" | "fr";
 
-export type ErrorKind = "offline" | "timeout" | "server" | "not-found" | "unknown";
-export type EmptyKind = "no-results" | "no-saved-places" | "accessibility-unknown";
-export type ActionId = "retry" | "go-back" | "go-home" | "clear-filters" | "browse-places";
+export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed";
+export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown";
+export type ActionId = "retry" | "go-home" | "go-back" | "download-pack" | "clear-search" | "change-trip" | "help";
+
+/** The six Day 22 states, in the plan's order. */
+export const DAY22_STATES = [
+  "offline-no-pack",
+  "pack-download-failed",
+  "search-no-results",
+  "journey-no-route",
+  "finder-no-results",
+  "game-load-failed",
+] as const satisfies readonly (ErrorKind | EmptyKind)[];
+
+/** Where each action goes when it is a link. Other actions are handled by the view. */
+export const ACTION_LINKS: Partial<Record<ActionId, string>> = {
+  "go-home": "/",
+  "download-pack": "/offline",
+  help: "/help",
+};
 
 /** WCAG 2.5.8 AA asks for 24px; the App's rule is stricter. */
 export const MIN_TOUCH_TARGET_PX = 44;
@@ -30,10 +55,12 @@ type Text = Record<Locale, string>;
 
 const ACTION_LABELS: Record<ActionId, Text> = {
   retry: { en: "Try again", fr: "Réessayer" },
+  "go-home": { en: "Go to the home page", fr: "Aller à l’accueil" },
   "go-back": { en: "Go back", fr: "Retour" },
-  "go-home": { en: "Go to the start", fr: "Aller à l’accueil" },
-  "clear-filters": { en: "Clear filters", fr: "Effacer les filtres" },
-  "browse-places": { en: "Browse places", fr: "Parcourir les lieux" },
+  "download-pack": { en: "Download an offline pack", fr: "Télécharger un pack hors ligne" },
+  "clear-search": { en: "Clear the search", fr: "Effacer la recherche" },
+  "change-trip": { en: "Change the trip", fr: "Modifier le trajet" },
+  help: { en: "Open help", fr: "Ouvrir l’aide" },
 };
 
 interface Entry {
@@ -43,71 +70,63 @@ interface Entry {
 }
 
 const ERRORS: Record<ErrorKind, Entry> = {
-  offline: {
-    title: { en: "You are offline", fr: "Vous êtes hors ligne" },
+  "offline-no-pack": {
+    title: { en: "No connection and no offline pack", fr: "Pas de connexion ni de pack hors ligne" },
     description: {
-      en: "The App could not reach the network. Your connection may have dropped.",
-      fr: "L’App n’a pas pu joindre le réseau. Votre connexion a peut-être été coupée.",
+      en: "This device is offline and has no offline pack for this area, so there is nothing to search yet.",
+      fr: "Cet appareil est hors ligne et n’a aucun pack hors ligne pour cette région. Il n’y a donc rien à chercher pour l’instant.",
     },
-    actions: ["retry"],
+    actions: ["download-pack", "retry"],
   },
-  timeout: {
-    title: { en: "This is taking too long", fr: "Le chargement est trop long" },
+  "pack-download-failed": {
+    title: { en: "The pack did not finish downloading", fr: "Le pack n’a pas fini de se télécharger" },
     description: {
-      en: "The request did not finish in time.",
-      fr: "La requête n’a pas abouti à temps.",
+      en: "The download stopped before it was complete. Check the connection and the space on this device, then try again.",
+      fr: "Le téléchargement s’est arrêté avant la fin. Vérifiez la connexion et l’espace libre sur cet appareil, puis réessayez.",
     },
-    actions: ["retry", "go-back"],
+    actions: ["retry", "help"],
   },
-  server: {
-    title: { en: "Something went wrong on our side", fr: "Un problème est survenu de notre côté" },
+  "game-load-failed": {
+    title: { en: "This game did not load", fr: "Ce jeu ne s’est pas chargé" },
     description: {
-      en: "The service returned an error. Nothing you did caused it.",
-      fr: "Le service a renvoyé une erreur. Rien de ce que vous avez fait n’en est la cause.",
-    },
-    actions: ["retry", "go-back"],
-  },
-  "not-found": {
-    title: { en: "We could not find that page", fr: "Cette page est introuvable" },
-    description: {
-      en: "The link may be old or mistyped.",
-      fr: "Le lien est peut-être périmé ou mal saisi.",
-    },
-    actions: ["go-back", "go-home"],
-  },
-  unknown: {
-    title: { en: "Something went wrong", fr: "Un problème est survenu" },
-    description: {
-      en: "The App hit an unexpected problem.",
-      fr: "L’App a rencontré un problème inattendu.",
+      en: "Its files could not be opened on this device.",
+      fr: "Ses fichiers n’ont pas pu être ouverts sur cet appareil.",
     },
     actions: ["retry", "go-home"],
   },
 };
 
 const EMPTY: Record<EmptyKind, Entry> = {
-  "no-results": {
-    title: { en: "No places match", fr: "Aucun lieu ne correspond" },
+  "search-no-results": {
+    title: { en: "No places match this search", fr: "Aucun lieu ne correspond à cette recherche" },
     description: {
-      en: "Nothing matches the filters you chose.",
-      fr: "Aucun lieu ne correspond aux filtres choisis.",
+      en: "Try fewer words or different words.",
+      fr: "Essayez moins de mots ou d’autres mots.",
     },
-    actions: ["clear-filters"],
+    actions: ["clear-search"],
   },
-  "no-saved-places": {
-    title: { en: "No saved places yet", fr: "Aucun lieu enregistré pour l’instant" },
+  "journey-no-route": {
+    title: { en: "No route found for this trip", fr: "Aucun itinéraire trouvé pour ce trajet" },
     description: {
-      en: "Places you save will appear here.",
-      fr: "Les lieux que vous enregistrez apparaîtront ici.",
+      en: "Check the start and the destination, or choose places nearby.",
+      fr: "Vérifiez le départ et la destination, ou choisissez des lieux à proximité.",
     },
-    actions: ["browse-places"],
+    actions: ["change-trip", "help"],
+  },
+  "finder-no-results": {
+    title: { en: "Nothing of this kind was found", fr: "Rien de ce type n’a été trouvé" },
+    description: {
+      en: "Choose another kind, or clear the search words.",
+      fr: "Choisissez un autre type, ou effacez les mots de recherche.",
+    },
+    actions: ["clear-search"],
   },
   // Unknown stays UNKNOWN: never imply a place is or is not accessible.
   "accessibility-unknown": {
     title: { en: "Accessibility: UNKNOWN", fr: "Accessibilité : INCONNUE" },
     description: {
-      en: "No accessibility details are recorded for this place. We do not guess.",
-      fr: "Aucun détail d’accessibilité n’est enregistré pour ce lieu. Nous ne faisons pas de suppositions.",
+      en: "No accessibility details are recorded for this place. The App does not guess.",
+      fr: "Aucun détail d’accessibilité n’est enregistré pour ce lieu. L’application ne fait pas de suppositions.",
     },
     actions: ["go-back"],
   },
@@ -134,14 +153,8 @@ export function getEmptyState(kind: EmptyKind, locale: Locale): StateView {
   return build(EMPTY[kind], locale, "status");
 }
 
-/** Map an HTTP status (or undefined for a network failure) to an error kind. */
-export function errorKindFromStatus(status: number | undefined, online: boolean): ErrorKind {
-  if (!online) return "offline";
-  if (status === undefined) return "unknown";
-  if (status === 404) return "not-found";
-  if (status === 408 || status === 504) return "timeout";
-  if (status >= 500) return "server";
-  return "unknown";
+export function getState(kind: ErrorKind | EmptyKind, locale: Locale): StateView {
+  return kind in ERRORS ? getErrorState(kind as ErrorKind, locale) : getEmptyState(kind as EmptyKind, locale);
 }
 
 export const ERROR_KINDS = Object.keys(ERRORS) as ErrorKind[];

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   EMPTY_KINDS,
   ERROR_KINDS,
+  DAY22_STATES,
   MIN_TOUCH_TARGET_PX,
-  errorKindFromStatus,
   getEmptyState,
   getErrorState,
   type Locale,
@@ -61,8 +61,8 @@ describe("state copy", () => {
   });
 
   it("errors are alerts, empty states are status", () => {
-    expect(getErrorState("server", "en").role).toBe("alert");
-    expect(getEmptyState("no-results", "en").role).toBe("status");
+    expect(getErrorState("game-load-failed", "en").role).toBe("alert");
+    expect(getEmptyState("search-no-results", "en").role).toBe("status");
   });
 
   it("keeps unknown accessibility as UNKNOWN", () => {
@@ -81,12 +81,18 @@ describe("state copy", () => {
     }
   });
 
-  it("maps status codes to error kinds", () => {
-    expect(errorKindFromStatus(undefined, false)).toBe("offline");
-    expect(errorKindFromStatus(404, true)).toBe("not-found");
-    expect(errorKindFromStatus(504, true)).toBe("timeout");
-    expect(errorKindFromStatus(500, true)).toBe("server");
-    expect(errorKindFromStatus(undefined, true)).toBe("unknown");
-    expect(errorKindFromStatus(400, true)).toBe("unknown");
+  it("covers the six Day 22 states, each with a next action", () => {
+    expect(DAY22_STATES).toHaveLength(6);
+    expect(new Set([...ERROR_KINDS, ...EMPTY_KINDS])).toEqual(new Set([...DAY22_STATES, "accessibility-unknown"]));
+  });
+
+  it("uses local-app wording: no server, service or blame", () => {
+    for (const l of locales) {
+      for (const v of allViews(l)) {
+        for (const s of strings(v)) {
+          expect(s).not.toMatch(/service|server|serveur|our side|notre côté|nothing you did|your fault/i);
+        }
+      }
+    }
   });
 });
