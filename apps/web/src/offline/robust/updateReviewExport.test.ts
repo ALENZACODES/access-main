@@ -6,6 +6,12 @@ import {
   safeReviewText, updateReviewFilename, type UpdateReviewReport,
 } from "./updateReviewExport";
 
+/** A fixture element must exist; fail the test rather than accepting undefined. */
+function required<T>(value: T | undefined): T {
+  if (value === undefined) throw new Error("Missing test fixture element");
+  return value;
+}
+
 const provenance: Provenance = {
   source: "Ontario open data",
   licence: "CC BY 4.0",
@@ -39,8 +45,8 @@ function report(): UpdateReviewReport {
 describe("local offline update review report", () => {
   it("exports provenance but never raw offline bytes", () => {
     const result = report();
-    expect(result.cells[0].source).toEqual(provenance);
-    expect(result.cells[0].expectedBytes).toBe(200);
+    expect(required(result.cells[0]).source).toEqual(provenance);
+    expect(required(result.cells[0]).expectedBytes).toBe(200);
     const json = encodeUpdateReview(result);
     expect(json).not.toContain("Uint8Array");
     expect(json).not.toContain("base64");
@@ -70,8 +76,8 @@ describe("local offline update review report", () => {
   it("retains UNKNOWN for a missing cell even if estimated space is ample", () => {
     const result = report();
     expect(result.budget).toBe("yes");
-    expect(result.cells[1].status).toBe("UNKNOWN");
-    expect(result.cells[1].reason).toBe("not-downloaded");
+    expect(required(result.cells[1]).status).toBe("UNKNOWN");
+    expect(required(result.cells[1]).reason).toBe("not-downloaded");
   });
 
   it("rejects dates that could not appear on a calendar", () => {
@@ -111,7 +117,7 @@ describe("local offline update review report", () => {
 
   it("rejects newlines and bidirectional control characters in text exports", () => {
     const source = "source\u202ehidden\nnext\t";
-    const altered = { ...report(), cells: [{ ...report().cells[0], source: { ...provenance, source } }] };
+    const altered = { ...report(), cells: [{ ...required(report().cells[0]), source: { ...provenance, source } }] };
     const text = formatUpdateReview(altered, "en");
     expect(text).not.toContain("\u202e");
     expect(text).toContain("source hidden next");
@@ -122,7 +128,7 @@ describe("local offline update review report", () => {
     const older = { ...provenance, date: "2025-03-02" };
     const changed = {
       ...report(),
-      cells: [{ ...report().cells[0], reason: "metadata-changed" as const, observed: older }],
+      cells: [{ ...required(report().cells[0]), reason: "metadata-changed" as const, observed: older }],
     };
     const english = formatUpdateReview(changed, "en");
     const french = formatUpdateReview(changed, "fr");
@@ -149,7 +155,7 @@ describe("local offline update review report", () => {
   it("retains the source and licence when another cell is unavailable", () => {
     const unknown = createUpdateReview({ ...assessment, status: "UNKNOWN" }, {}, "2026-11-16");
     expect(unknown.state).toBe("UNKNOWN");
-    expect(unknown.cells[1].source).toEqual(provenance);
+    expect(required(unknown.cells[1]).source).toEqual(provenance);
   });
 
   it("does not invent publication dates for an unlisted cell", () => {
@@ -161,7 +167,7 @@ describe("local offline update review report", () => {
         observed: null, advice: "inspect" as const,
       }],
     };
-    const record = createUpdateReview(altered, {}, "2026-11-16").cells[0];
+    const record = required(createUpdateReview(altered, {}, "2026-11-16").cells[0]);
     expect(record.source).toBeNull();
     expect(record.expectedBytes).toBeNull();
     expect(formatUpdateReview({ ...report(), cells: [record] }, "en")).toContain("Source: UNKNOWN");

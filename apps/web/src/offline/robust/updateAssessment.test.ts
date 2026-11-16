@@ -7,6 +7,12 @@ import {
   type ReviewFilter, type ReviewOrder,
 } from "./updateAssessment";
 
+/** A fixture element must exist; fail the test rather than accepting undefined. */
+function required<T>(value: T | undefined): T {
+  if (value === undefined) throw new Error("Missing test fixture element");
+  return value;
+}
+
 const first: Provenance = { source: "Ontario open data", licence: "CC BY 4.0", date: "2026-03-02" };
 const second: Provenance = { source: "Municipal open data", licence: "CC0 1.0", date: "2026-02-01" };
 const manifest: RegionManifest = {
@@ -84,7 +90,7 @@ describe("offline update assessment", () => {
   });
 
   it("identifies duplicate manifest cell identifiers", () => {
-    const invalid = { ...manifest, cells: [manifest.cells[0], manifest.cells[0]] };
+    const invalid = { ...manifest, cells: [required(manifest.cells[0]), required(manifest.cells[0])] };
     const failures = assessManifestSafety(invalid);
     expect(failures).toContain("duplicate-cell:alpha");
     expect(assessOfflineRegion(invalid, inventory([])).status).toBe("UNKNOWN");
@@ -122,7 +128,7 @@ describe("offline update assessment", () => {
 
   it("marks a missing observation UNKNOWN instead of assuming missing", () => {
     const result = assessOfflineRegion(manifest, inventory([cell("alpha", "present")]));
-    expect(result.rows[1]).toMatchObject({
+    expect(required(result.rows[1])).toMatchObject({
       kind: "unreadable", offlineStatus: "UNKNOWN", advice: "inspect",
     });
   });
@@ -133,7 +139,7 @@ describe("offline update assessment", () => {
       cell("gamma", "present"), cell("delta", "present"),
     ]));
     expect(result.status).toBe("partial");
-    expect(result.rows[1].advice).toBe("download");
+    expect(required(result.rows[1]).advice).toBe("download");
     expect(result.counts.stale).toBe(1);
     expect(result.savedBytes).toBe(80);
     expect(result.remainingBytes).toBe(20);
@@ -154,13 +160,13 @@ describe("offline update assessment", () => {
   it("will not treat a cause of present with UNKNOWN state as saved", () => {
     const wrong = { ...cell("alpha", "present"), state: "unknown" as const };
     const result = assessOfflineRegion(manifest, inventory([wrong]));
-    expect(result.rows[0].offlineStatus).toBe("UNKNOWN");
+    expect(required(result.rows[0]).offlineStatus).toBe("UNKNOWN");
   });
 
   it("stops classification if source metadata conflicts with listing", () => {
     const bad = { ...cell("alpha", "present"), provenance: second };
     const result = assessOfflineRegion(manifest, inventory([bad]));
-    expect(result.rows[0]).toMatchObject({
+    expect(required(result.rows[0])).toMatchObject({
       kind: "metadata-changed", advice: "review-source", offlineStatus: "UNKNOWN",
     });
     expect(result.status).toBe("UNKNOWN");
@@ -178,24 +184,24 @@ describe("offline update assessment", () => {
   it("does not conflate sources that have different dates", () => {
     const altered: RegionManifest = {
       ...manifest, cells: [
-        manifest.cells[0],
-        { ...manifest.cells[1], provenance: { ...first, date: "2026-03-03" } },
+        required(manifest.cells[0]),
+        { ...required(manifest.cells[1]), provenance: { ...first, date: "2026-03-03" } },
       ],
     };
     const result = assessOfflineRegion(altered, inventory([]));
     const groups = assessSources(result);
     expect(groups).toHaveLength(2);
-    expect(groups[0].source.date).toBe("2026-03-02");
-    expect(groups[1].source.date).toBe("2026-03-03");
+    expect(required(groups[0]).source.date).toBe("2026-03-02");
+    expect(required(groups[1]).source.date).toBe("2026-03-03");
   });
 
   it("counts each source with matching and UNKNOWN subsets", () => {
     const groups = assessSources(example());
     expect(groups).toHaveLength(2);
-    expect(groups[0]).toMatchObject({
+    expect(required(groups[0])).toMatchObject({
       count: 2, saved: 1, unknown: 1, expectedBytes: 30,
     });
-    expect(groups[1]).toMatchObject({
+    expect(required(groups[1])).toMatchObject({
       count: 2, saved: 0, unknown: 2, expectedBytes: 70,
     });
   });
@@ -280,7 +286,7 @@ describe("offline update assessment", () => {
         filter: "all", search: "", order: "manifest", offset, limit: 1,
       });
       expect(page.rows).toHaveLength(1);
-      seen.push(page.rows[0].id);
+      seen.push(required(page.rows[0]).id);
       expect(page.hasPrevious).toBe(offset > 0);
       expect(page.hasNext).toBe(offset < 3);
     }
@@ -323,7 +329,7 @@ describe("offline update assessment", () => {
   it("never merges queue estimates into the offline statuses", () => {
     const initial = example();
     assessRecoveryBudget([], { quota: 5_000_000, usage: 0 });
-    expect(initial.rows[1].offlineStatus).toBe("UNKNOWN");
+    expect(required(initial.rows[1]).offlineStatus).toBe("UNKNOWN");
   });
 
   it("supports all public filters without silently excluding records", () => {
