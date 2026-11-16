@@ -2,13 +2,15 @@
  * Per-source licence + retrieved-date list (data-status round 2).
  * Pure model plus a small accessible HTML renderer. Unknown stays UNKNOWN.
  */
-import { dataBadge, type FreshnessState, type Locale, type Provenance, type ProvenanceIssue } from './dataStatus.ts';
+import { parseRetrieved } from './dateRules';
+import { cleanValue } from './unknownTokens';
+import { DEFAULT_STALE_AFTER_DAYS, dataBadge, type FreshnessState, type Locale, type Provenance, type ProvenanceIssue } from './dataStatus.ts';
 
 export interface SourceInput extends Provenance {
   id: string;
-  name?: string | null;
+  name?: string | null | undefined;
   /** Public page for the source; only http(s) links are kept. */
-  url?: string | null;
+  url?: string | null | undefined;
 }
 
 export interface SourceRow {
@@ -58,11 +60,7 @@ const T = {
   },
 } as const;
 
-function clean(v: string | null | undefined): string | null {
-  if (typeof v !== 'string') return null;
-  const t = v.trim();
-  return t === '' ? null : t;
-}
+const clean = cleanValue;
 
 function safeUrl(v: string | null | undefined): string | null {
   const u = clean(v);
@@ -76,17 +74,16 @@ function safeUrl(v: string | null | undefined): string | null {
 }
 
 /** Build one row per source, sorted by name (then id). Nothing is inferred. */
-export function buildSourceList(sources: readonly SourceInput[], locale: Locale, now: Date): SourceRow[] {
+/** `staleAfterDays` is the limit for these sources (the dataset's own limit when known); stale means more days than that. */
+export function buildSourceList(sources: readonly SourceInput[], locale: Locale, now: Date, staleAfterDays: number = DEFAULT_STALE_AFTER_DAYS): SourceRow[] {
   const t = T[locale];
   const counts = new Map<string, number>();
   for (const s of sources) counts.set(s.id, (counts.get(s.id) ?? 0) + 1);
 
   const rows = sources.map((s): SourceRow => {
-    const badge = dataBadge(s, locale, now);
+    const badge = dataBadge(s, locale, now, staleAfterDays);
     const licence = clean(s.licence);
-    const iso = clean(s.retrievedAt) !== null && !badge.issues.includes('invalid-date') && !badge.issues.includes('missing-date')
-      ? (clean(s.retrievedAt) as string).slice(0, 10)
-      : null;
+    const iso = parseRetrieved(s.retrievedAt)?.day ?? null;
     return {
       id: s.id,
       name: clean(s.name) ?? t.unknownSource,
