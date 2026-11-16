@@ -116,6 +116,13 @@ function pullGroup(group, outDir, remoteBase, index) {
       rmSync(to, { recursive: true, force: true });
       renameSync(from, to);
     }
+    const fromBase = path.join(tmp, "tsconfig.base.json");
+    if (existsSync(fromBase)) {
+      const toBase = path.join(outDir, repoName(group.repo), "tsconfig.base.json");
+      mkdirSync(path.dirname(toBase), { recursive: true });
+      rmSync(toBase, { force: true });
+      renameSync(fromBase, toBase);
+    }
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

@@ -37,6 +37,7 @@ async function registerTests() {
     mkdirSync(path.join(work, "packages", "big"), { recursive: true });
     mkdirSync(path.join(work, "other"), { recursive: true });
     writeFileSync(path.join(work, "README.md"), "root file, not in any listed package\n");
+    writeFileSync(path.join(work, "tsconfig.base.json"), '{ "compilerOptions": {} }\n');
     writeFileSync(path.join(work, "other", "skip.txt"), "not listed\n");
     writeFileSync(path.join(work, "packages", "alpha", "src", "index.ts"), "export const alpha = 1;\n");
     writeFileSync(path.join(work, "packages", "beta", "src", "index.ts"), "export const beta = 2;\n");
@@ -136,9 +137,10 @@ async function registerTests() {
     assert.equal(existsSync(path.join(outDir, "fixture-repo", "README.md")), false);
     assert.equal(existsSync(path.join(outDir, "fixture-repo", "other")), false);
     assert.equal(existsSync(path.join(outDir, "fixture-repo", ".git")), false);
+    assert.equal(readFileSync(path.join(outDir, "fixture-repo", "tsconfig.base.json"), "utf8"), '{ "compilerOptions": {} }\n');
     assert.equal(readFileSync(path.join(outDir, ".gitignore"), "utf8"), "*\n");
-    assert.equal(first.files, 2);
-    assert.match(logs.at(-1), /2 files, \d+ bytes/);
+    assert.equal(first.files, 3);
+    assert.match(logs.at(-1), /3 files, \d+ bytes/);
     const second = result();
     assert.deepEqual(second, first);
     assert.equal(existsSync(path.join(outDir, ".tmp-fixture-repo-0")), false);
@@ -146,7 +148,7 @@ async function registerTests() {
 
   test("a branch can stand in for an unpinned package", () => {
     const { outDir, result } = run("branch", lockText(fixtureEntry("alpha", { commit: UNPINNED })), { allowUnpinned: "main" });
-    assert.equal(result().files, 1);
+    assert.equal(result().files, 2);
     assert.ok(existsSync(path.join(outDir, "fixture-repo", "packages", "alpha", "src", "index.ts")));
   });
 
