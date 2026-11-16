@@ -70,12 +70,15 @@ describe("silenceMapMotion", () => {
       deceleration: Number.POSITIVE_INFINITY,
       maxSpeed: 0,
     });
-    const easing = map.dragPan.enable.mock.calls[0][0].easing as (t: number) => number;
+    const enableOptions = map.dragPan.enable.mock.calls[0]?.[0];
+    expect(enableOptions).toBeDefined();
+    const easing = enableOptions?.easing as (t: number) => number;
     expect(easing(0)).toBe(1);
     expect(easing(0.5)).toBe(1);
     expect(map.on).toHaveBeenCalledWith("wheel", expect.any(Function));
-    const onWheel = map.on.mock.calls[0][1] as () => void;
-    onWheel();
+    const onWheel = map.on.mock.calls[0]?.[1] as (() => void) | undefined;
+    expect(onWheel).toBeTypeOf("function");
+    onWheel?.();
     expect(map.stop).toHaveBeenCalledTimes(2);
   });
 });
