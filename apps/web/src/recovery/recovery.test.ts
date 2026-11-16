@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { classifyRecoveryError, runRecoverable } from "./classify";
 import {
-  classifyRecoveryError,
   getRecoveryMessage,
-  runRecoverable,
   type RecoveryOperation,
   type RecoveryReason,
 } from "./index";
