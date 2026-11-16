@@ -38,7 +38,7 @@ body { line-height: 1.5; }
 .a11y-stack { display: flex; flex-wrap: wrap; gap: ${TARGET_GAP_PX}px; }
 .a11y-skip-link { position: absolute; inset-inline-start: 0; inset-block-start: -100%; min-height: ${MIN_TARGET_PX}px; padding: 12px 16px; background: var(--a11y-bg); color: var(--a11y-text); }
 .a11y-skip-link:focus-visible { inset-block-start: 0; }
-@media (prefers-reduced-motion: reduce) { :focus-visible { transition: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none; animation: none; } }
 @media (forced-colors: active) { :focus-visible { outline-color: Highlight; } }
 `;
 }

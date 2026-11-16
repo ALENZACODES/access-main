@@ -1,11 +1,9 @@
-/** EN + FR user strings for the a11y shell helpers. */
+import { en } from '../i18n/en.ts';
+import { fr } from '../i18n/fr.ts';
+
+/** Skip-link label, always taken from t('skip') so the two cannot drift. */
 export type Lang = 'en' | 'fr';
 
-export const SKIP_LINK: Readonly<Record<Lang, string>> = {
-  en: 'Skip to main content',
-  fr: 'Aller au contenu principal',
-};
-
 export function skipLinkLabel(lang: string): string {
-  return lang.toLowerCase().startsWith('fr') ? SKIP_LINK.fr : SKIP_LINK.en;
+  return lang.toLowerCase().startsWith('fr') ? fr.skip : en.skip;
 }
