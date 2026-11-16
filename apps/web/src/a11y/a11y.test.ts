@@ -1,6 +1,9 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it } from 'vitest';
 import mainSource from '../main.tsx?raw';
+import appShellSource from '../shell/AppShell.tsx?raw';
+import { en } from '../i18n/en.ts';
+import { fr } from '../i18n/fr.ts';
 import {
   DARK,
   LIGHT,
@@ -55,6 +58,16 @@ describe('buildA11yCss', () => {
     expect(css).toContain('prefers-reduced-motion');
   });
 
+  it('disables transitions and animations globally under reduced motion', () => {
+    const block = css.match(/@media \(prefers-reduced-motion:\s*reduce\)\s*\{([^}]+)\}/);
+    expect(block, 'prefers-reduced-motion rule is missing').not.toBeNull();
+    const body = block?.[1] ?? '';
+    expect(body).toContain('*, *::before, *::after');
+    expect(body).toContain('transition: none');
+    expect(body).toContain('animation: none');
+    expect(body).not.toMatch(/^\s*:focus-visible\s*\{/);
+  });
+
   it('is deterministic', () => {
     expect(buildA11yCss()).toBe(css);
   });
@@ -73,6 +86,20 @@ describe('skipLinkLabel', () => {
   it('returns French for fr locales and English otherwise', () => {
     expect(skipLinkLabel('fr-CA')).toBe('Aller au contenu principal');
     expect(skipLinkLabel('en')).toBe('Skip to main content');
+  });
+
+  it("is derived from t('skip') so the label cannot drift", () => {
+    expect(skipLinkLabel('en')).toBe(en.skip);
+    expect(skipLinkLabel('fr')).toBe(fr.skip);
+    expect(skipLinkLabel('fr-CA')).toBe(fr.skip);
+  });
+});
+
+describe('skip link wiring', () => {
+  it('uses the .a11y-skip-link class on the live control', () => {
+    expect(appShellSource).toMatch(/className="a11y-skip-link"/);
+    expect(appShellSource).toMatch(/skipLinkLabel\(/);
+    expect(buildA11yCss()).toContain('.a11y-skip-link');
   });
 });
 
