@@ -38,7 +38,8 @@ export async function swReadyInPage(timeoutMs: number): Promise<'unsupported' | 
 }
 
 /** Runs in the page. Looks for a browser error page and counts visible text. */
-export function readPageStateInPage(): { errorPage: boolean; textLength: number } {
+export function readPageStateInPage(arg: null | undefined = null): { errorPage: boolean; textLength: number } {
+  void arg;
   const doc = (
     globalThis as unknown as {
       document: {
@@ -76,7 +77,7 @@ export async function checkOfflineReload(
   try {
     await context.setOffline(true);
     await page.reload();
-    const state = await page.evaluate(readPageStateInPage);
+    const state = await page.evaluate(readPageStateInPage, null);
     if (state.errorPage) return { status: 'fail', reason: 'error-page' };
     if (state.textLength === 0) return { status: 'fail', reason: 'empty-page' };
     return { status: 'pass', reason: 'ok' };
