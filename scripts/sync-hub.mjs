@@ -96,7 +96,8 @@ mkdirSync(tmpDir, { recursive: true });
 try {
   for (const pkgs of groups.values()) {
     const { repo, commit } = pkgs[0];
-    const repoDir = path.join(tmpDir, repo.replace("/", "_"));
+    // One clone per repo and commit, so two packages of one repo can sit at different pins.
+    const repoDir = path.join(tmpDir, `${repo.replace("/", "_")}_${commit.slice(0, 12)}`);
     const url = `https://github.com/${repo}.git`;
     execFileSync("git", ["clone", "--filter=blob:none", "--sparse", "--no-checkout", url, repoDir], { stdio: "inherit" });
     execFileSync(

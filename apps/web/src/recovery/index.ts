@@ -299,6 +299,7 @@ export function getRecoveryMessage(
 export {
   browserSha256,
   checkPackIntegrity,
+  checkStoredPackParts,
   packIntegrityCopy,
   redownloadPack,
 } from "./packIntegrity";
@@ -307,6 +308,7 @@ export type {
   PackManifest,
   PackRedownloadResult,
   Sha256,
+  StoredPackPart,
 } from "./packIntegrity";
 export { CorruptPackNotice } from "./CorruptPackNotice";
 export type { CorruptPackNoticeProps } from "./CorruptPackNotice";

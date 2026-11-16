@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { checkPackIntegrity, packIntegrityCopy, redownloadPack } from "./packIntegrity";
+import { checkPackIntegrity, checkStoredPackParts, packIntegrityCopy, redownloadPack } from "./packIntegrity";
 import type { PackManifest } from "./packIntegrity";
 
 const data = new TextEncoder().encode("abc");
@@ -71,5 +71,49 @@ describe("pack integrity and user-controlled re-download", () => {
     expect(packIntegrityCopy("en", "unknown").title).toContain("unknown");
     expect(packIntegrityCopy("fr", "unknown").title).toContain("inconnu");
     expect(packIntegrityCopy("fr", "corrupt").action).toBe("Télécharger de nouveau");
+  });
+
+  const part = {
+    data,
+    expectedBytes: 3,
+    expectedSha256: manifest.sha256,
+    expectedCount: 1,
+    actualCount: 1,
+    structurallyValid: true,
+    source: manifest.source,
+  };
+
+  it("accepts a stored pack only when every part's digest and count match", async () => {
+    expect(await checkStoredPackParts([part], hash)).toEqual({
+      status: "complete", source: manifest.source,
+    });
+  });
+
+  it("treats a same-length digest mismatch as a corrupt stored pack", async () => {
+    const changed = { ...part, data: new TextEncoder().encode("abd") };
+    expect(await checkStoredPackParts([changed], async () => "0".repeat(64))).toEqual({
+      status: "corrupt", reason: "digest",
+    });
+  });
+
+  it("treats a record-count mismatch or invalid records as corrupt", async () => {
+    expect(await checkStoredPackParts([{ ...part, actualCount: 0 }], hash)).toEqual({
+      status: "corrupt", reason: "size",
+    });
+    expect(await checkStoredPackParts([{ ...part, structurallyValid: false }], hash)).toEqual({
+      status: "corrupt", reason: "size",
+    });
+    expect(await checkStoredPackParts([{ ...part, actualCount: null }], hash)).toEqual({
+      status: "corrupt", reason: "size",
+    });
+  });
+
+  it("does not treat a pack as complete when the digest cannot be confirmed", async () => {
+    expect(await checkStoredPackParts([{ ...part, data: null }], hash)).toEqual({
+      status: "unknown", reason: "digest-unavailable",
+    });
+    expect(await checkStoredPackParts([], hash)).toEqual({
+      status: "unknown", reason: "metadata",
+    });
   });
 });

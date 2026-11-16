@@ -14,8 +14,8 @@ describe("offline region recovery wiring", () => {
     expect(source).toContain("<RecoveryCenter locale={language} store={recoveryStore} />");
   });
 
-  it("starts the region download on the retry button, not deletion", () => {
-    expect(source).toContain("onRedownload={() => { if (packRegion) void download(packRegion);");
+  it("starts the checked re-download on the retry button, not deletion", () => {
+    expect(source).toContain("onRedownload={() => { if (packRegion) void redownload(packRegion);");
     expect(source).not.toContain("setConfirmation(packRegion)");
   });
 

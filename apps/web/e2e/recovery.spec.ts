@@ -14,7 +14,7 @@ async function axeClean(page: Page, label: string) {
   expect(results.violations, `${label} ${JSON.stringify(results.violations, null, 2)}`).toEqual([]);
 }
 
-async function servePack(page: Page) {
+async function servePack(page: Page, startCorrupt = true) {
   const cell = "n43.5_w079.5";
   const record = { id: "test:0", tranche: "venue", region: "toronto", fields: { name: { value: "Test venue", source_id: "osm-test", licence: "ODbL-1.0", retrieved_at: "2026-11-01", tier: 1 } } };
   const venue = gzipSync(`${JSON.stringify(record)}\n`);
@@ -29,7 +29,7 @@ async function servePack(page: Page) {
     search: { [cell]: { path: `pack/v1/search/${cell}.json.gz`, bytes: hits.byteLength, sha256: sha(hits), count: 1 } },
     tiles: {}, counts: { records: 1, byTranche: { venue: 1 }, bySource: { "osm-test": 1 } },
   };
-  let corrupt = true;
+  let corrupt = startCorrupt;
   await page.route("**/data/**", async (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^.*?\/data\//, "");
     if (path === "pack/v1/manifest.json") return route.fulfill({ json: manifest });
@@ -70,6 +70,73 @@ for (const language of ["en", "fr"] as const) {
     await page.keyboard.press("Enter");
     await expect(page.getByText(offlineCatalog[language].complete)).toBeVisible();
     await expect(page.getByRole("heading", { name: c.title })).toHaveCount(0);
+  });
+}
+
+
+async function flipStoredPackBytes(page: Page) {
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("access-pack-v1");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error ?? new Error("open"));
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction("parts", "readwrite");
+        const store = tx.objectStore("parts");
+        const read = store.getAll();
+        read.onerror = () => reject(read.error ?? new Error("read parts"));
+        read.onsuccess = () => {
+          try {
+            const parts = read.result as Array<{ bytes?: ArrayBuffer | Uint8Array }>;
+            if (parts.length === 0) throw new Error("no stored pack parts to corrupt");
+            for (const part of parts) {
+              const raw = part.bytes;
+              if (!raw) throw new Error("stored pack part is missing raw bytes");
+              const bytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw);
+              if (bytes.byteLength === 0) throw new Error("stored pack part is empty");
+              bytes[0] = (bytes[0] ?? 0) ^ 0xff;
+              part.bytes = bytes;
+              store.put(part);
+            }
+          } catch (error) { reject(error); }
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error ?? new Error("corrupt"));
+      });
+    } finally { db.close(); }
+  });
+}
+
+for (const language of ["en", "fr"] as const) {
+  test(`check again detects a corrupted stored pack and offers re-download (${language})`, async ({ page }) => {
+    const catalog = offlineCatalog[language];
+    const copy = language === "en"
+      ? { title: "Damaged pack", action: "Download again" }
+      : { title: "Ensemble endommagé", action: "Télécharger de nouveau" };
+    await servePack(page, false);
+    await page.goto("/offline");
+    if (language === "fr") await page.getByRole("button", { name: "Français" }).click();
+    await page.getByRole("button", { name: catalog.download, exact: true }).click();
+    await expect(page.getByText(catalog.complete)).toBeVisible();
+
+    await flipStoredPackBytes(page);
+    await page.getByRole("button", { name: catalog.recheck }).click();
+
+    const notice = page.getByRole("alert").filter({ has: page.getByRole("heading", { name: copy.title }) });
+    await expect(notice).toBeVisible();
+    await expect(notice).toHaveAttribute("lang", language);
+    await expect(notice).not.toContainText(/verif|vérif/i);
+    const action = notice.getByRole("button", { name: copy.action });
+    const box = await action.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await axeClean(page, `${language} corrupt stored pack`);
+
+    await action.click();
+    await expect(page.getByText(catalog.complete)).toBeVisible();
+    await expect(page.getByRole("heading", { name: copy.title })).toHaveCount(0);
   });
 }
 

@@ -183,7 +183,7 @@ export function RecoveryWorkbench({
         )}
         <p>{actionText.caution}</p>
         <button type="button" style={control} onClick={onInspect}>
-          {locale === "fr" ? "Contrôler de nouveau les fichiers" : "Inspect files again"}
+          {locale === "fr" ? "Inspecter de nouveau les fichiers" : "Inspect files again"}
         </button>
       </section>
       <section style={panel} aria-labelledby={comparisonHeading}>

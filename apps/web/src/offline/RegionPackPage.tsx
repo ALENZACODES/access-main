@@ -18,10 +18,9 @@ import {
   type StorageEstimate,
   pressureView,
 } from "./robust/index.ts";
-import { classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, packIntegrityCopy, type RecoveryFailure } from "../recovery/index.ts";
+import { checkStoredPackParts, classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, packIntegrityCopy, redownloadPack, type RecoveryFailure } from "../recovery/index.ts";
 import { RecoveryCenter } from "../recovery/RecoveryCenter.tsx";
 import type { LocalPackStore } from "../recovery/packInventory.ts";
-import { assessStoredRegion } from "../recovery/regionRecheck.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
@@ -63,7 +62,7 @@ const formatBytes = (bytes: number, language: string) => new Intl.NumberFormat(l
 
 
 /** Inventory and storage-headroom dashboard for one region, mounted on the live /offline page. */
-function RegionInventoryDashboard({ pack, regionId, language, source }: { pack: PackManifest; regionId: string; language: "en" | "fr"; source: PackSource }) {
+function RegionInventoryDashboard({ source, pack, regionId, language }: { source: PackSource; pack: PackManifest; regionId: string; language: "en" | "fr" }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const root = rootRef.current;
@@ -96,7 +95,7 @@ function RegionInventoryDashboard({ pack, regionId, language, source }: { pack: 
       cancelled = true;
       unmount?.();
     };
-  }, [pack, regionId, language, source]);
+  }, [source, pack, regionId, language]);
   return <div ref={rootRef} className="offline-inventory" data-testid={`offline-inventory-${regionId}`} />;
 }
 
@@ -195,27 +194,63 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
       await refresh().catch(() => undefined);
     } finally { abortRef.current = null; setBusy(null); }
   }
-  /** Re-read the current inventory and ledger without claiming a byte digest. */
+  /** Runs a real digest and record-count check over the stored pack. */
   async function recheck(id: string) {
-    setPackStatus(null);
-    setMessage("");
-    setPackRegion(id);
+    setPackStatus(null); setMessage(""); setFailure(null);
+    const snapshot = await source.storedRegionIntegrity(id);
+    const pack = await source.manifest();
+    const statuses = await source.regions();
+    setRegions(statuses);
+    setCells(await cellReports(pack, statuses));
+    // The row keeps the result of the last check, also after the notice is closed.
+    if (!snapshot) { setPackRegion(id); setPackStatus("unknown"); setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" })); return; }
+    const check = await checkStoredPackParts(snapshot.parts);
+    if (check.status === "complete") { setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; }); setMessage(c.downloaded); return; }
+    setPackRegion(id); setPackStatus(check.status);
+    setCheckedStatuses((previous) => ({ ...previous, [id]: check.status === "corrupt" ? "corrupt" : "unknown" }));
+  }
+  async function redownload(id: string) {
+    setBusy(id); setError(""); setMessage(""); setProgress(null); setFailure(null);
     try {
-      const pack = await source.manifest();
-      const statuses = await source.regions();
-      const reports = await cellReports(pack, statuses);
-      setRegions(statuses);
-      setCells(reports);
-      const result = assessStoredRegion(
-        statuses.find((region) => region.id === id),
-        reports[id],
-      );
-      setPackStatus(result.status);
-      setCheckedStatuses((previous) => ({ ...previous, [id]: result.status }));
-    } catch {
-      setPackStatus("unknown");
-      setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
-    }
+      const snapshot = await source.storedRegionIntegrity(id);
+      const parts = snapshot?.parts;
+      if (!parts || parts.length === 0) {
+        setPackRegion(id); setPackStatus("unknown"); return;
+      }
+      const pending: Array<{ sha256: string; data: Uint8Array }> = [];
+      let done = 0;
+      const total = parts.reduce((sum, part) => sum + part.expectedBytes, 0);
+      setProgress({ done, total });
+      for (const part of parts) {
+        const result = await redownloadPack(
+          () => source.fetchRegionPartBytes(part.path),
+          { byteLength: part.expectedBytes, sha256: part.expectedSha256, source: part.source },
+          async (data) => { pending.push({ sha256: part.expectedSha256, data }); },
+        );
+        if (result.status === "failed") {
+          setPackStatus(null);
+          setFailure({ region: id, failure: { operation: "download", reason: result.reason } });
+          await refresh().catch(() => undefined);
+          return;
+        }
+        if (result.status !== "complete") {
+          setPackRegion(id); setPackStatus(result.status === "corrupt" ? "corrupt" : "unknown");
+          await refresh().catch(() => undefined);
+          return;
+        }
+        done += part.expectedBytes;
+        setProgress({ done, total });
+      }
+      await source.commitCheckedRegion(id, pending);
+      await refresh();
+      setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; });
+      setPackStatus(null);
+      setMessage(c.complete);
+    } catch (cause) {
+      setPackStatus(null);
+      setFailure({ region: id, failure: classifyPackDownloadError(cause, navigator.onLine) });
+      await refresh().catch(() => undefined);
+    } finally { setBusy(null); }
   }
   async function remove() {
     const id = confirmation;
@@ -234,7 +269,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
       <CorruptPackNotice
         status={packStatus}
         locale={language}
-        onRedownload={() => { if (packRegion) void download(packRegion); setPackStatus(null); }}
+        onRedownload={() => { if (packRegion) void redownload(packRegion); }}
         onDismiss={() => setPackStatus(null)}
         busy={!!busy}
       />
@@ -273,7 +308,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         </div>
         {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
         {busy === region.id && progress && <div className="stack"><label id={`${progressTitle}-${region.id}`}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={`${progressTitle}-${region.id}`} value={progress.done} max={progress.total || 1}/></div>}
-        {manifest && <RegionInventoryDashboard pack={manifest} regionId={region.id} language={language} source={source} />}
+        {manifest && <RegionInventoryDashboard source={source} pack={manifest} regionId={region.id} language={language} />}
       </li>; })}</ul>
     </>}
     <RecoveryCenter locale={language} store={recoveryStore} />

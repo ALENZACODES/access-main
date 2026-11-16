@@ -1,49 +1,59 @@
 # Pack, download and export error recovery
 
-This directory provides typed error classification, bilingual recovery text and
-an accessible notice for failed pack, download and export operations.
+Typed error classification, English and French recovery copy, and an
+accessible notice for failed pack, download and export operations.
 
-Integrate by wrapping the existing user-triggered operation with
-`runRecoverable("download", () => downloadFile())`. On a failed result, render
-`<RecoveryNotice failure={result.failure} locale="en" onRetry={retry}
-onDismiss={dismiss} />` and supply `onCheckInput` if appropriate. Retry handlers
-must be explicitly user-triggered; storage guidance does not delete files.
+## Where it is used
 
-The wrapper does not validate file integrity, resume transfers, remove partial
-files, or persist anything. Callers must independently validate final output
-before marking it complete. Unknown errors remain `unknown` and no exception
-message is exposed in user-facing text. Pass an actual `source` with name,
-open licence and source date when sourced data is involved; missing metadata
-is not invented. The notice displays provenance only when all three fields
-are provided. Localised strings are provided for English and French. All
-notice buttons have a minimum 44 by 44 CSS-pixel touch target.
+| Failure path | Component | Operation |
+| --- | --- | --- |
+| Region download on `/offline` | `offline/RegionPackPage.tsx` | `download`, classified by `classifyPackDownloadError` |
+| Preferences export (text and JSON) on `/profile` | `pages/ProfilePage.tsx` | `export`, through `runRecoverable` |
+| Evidence pack export on `/settings/advocacy` | `features/featureScreens.tsx` (AdvocacyScreen) | `export`, through `classifyRecoveryError` |
 
-Run `vitest run apps/web/src/recovery/recovery.test.ts` from a workspace with
-Vitest installed.
+Each shows `<RecoveryNotice>` with Try again (a user-pressed retry, never
+automatic), Correct the data (moves focus to the input) where the input is at
+fault, and Dismiss.
 
-## Corrupted packs and re-download (round 2)
+## Rules
 
-`checkPackIntegrity` checks an actual byte count and SHA-256 digest against an
-independently supplied `PackManifest` containing source, open-licence identifier
-and source date. An absent or unsupported manifest, or an unavailable digest,
-returns `unknown`, not `complete`. Use `CorruptPackNotice` for bilingual,
-accessible guidance and a user-initiated re-download button (44px minimum).
+- Raw exception text, part paths and byte counts are never shown.
+- Pack download codes from `packages/data-client` map as follows: size, digest
+  or record-count mismatch → invalid data; quota → storage; a failed fetch →
+  offline only when the device reports it is offline, otherwise unknown.
+- Unknown causes stay unknown. Nothing is described as verified.
+- The notice shows source, licence and date only when all three are supplied.
+- Storage guidance never deletes files.
+- Buttons are at least 44 × 44 CSS pixels; the notice is a labelled `alert`
+  with its own `lang`, and it does not move focus.
 
-Connect that button to `redownloadPack(download, manifest, commit)`. This stages
-bytes in memory, checks them before invoking `commit`, and never automatically
-retries. `commit` must atomically replace persisted data; the wrapper cannot
-undo a partial write by an unsafe callback. Do not expose a failed or unchecked
-pack as usable. Never derive the expected hash from the downloaded bytes.
+## Tests
 
-Run `vitest run apps/web/src/recovery/packIntegrity.test.ts`.
+- `recovery.test.ts`: copy coverage and classification.
+- `RecoveryNotice.dom.test.tsx`: every operation and reason in EN and FR,
+  rendered and checked with axe (WCAG 2.2 AA tags), handlers, provenance, and a
+  check that no copy says verified or vérifié.
+- `e2e/recovery.spec.ts`: a failed pack download on `/offline` in EN and FR
+  (notice, 44 px targets, axe, retry), and a failed preferences export on
+  `/profile` (notice, axe, retry saves the file).
 
-## P17C: local recovery centre
+## Damaged or uncheckable packs
+
+`packIntegrity.ts` and `CorruptPackNotice` detect a damaged or uncheckable pack
+and offer a re-download. On `/offline`, Check again runs `checkPackIntegrity`
+over the raw bytes kept for each stored part, and also checks record counts
+against the manifest. A digest, size or count mismatch shows the damaged-pack
+notice with a re-download action. Re-download uses `redownloadPack` and only
+commits after every part passes. A pack is never treated as complete when the
+digest or size cannot be confirmed.
+
+## Local recovery centre
 
 `RecoveryCenter` is a mountable, bilingual shell component exported from the
 existing recovery index. Provide a `LocalPackStore` implementation (only explicit
 IDs, bytes and independently supplied manifests), an optional user-initiated
 `SessionOptions` download, and an optional `SaveTextFile` callback. The component
-wires all three P17C modules: local inventory inspection, bounded streaming
+wires three modules: local inventory inspection, bounded streaming
 pack replacement and a private local JSON status report. No third-party servers,
 background transfers or automatic retry are introduced. Nothing automatically
 reads the user's directory or uploads exported files.
@@ -72,7 +82,7 @@ Before mounting a specific route, connect its actual offline store and pack
 loader: this package does not pretend a route exists in repositories not included
 in this patch.
 
-## P17D: local health review and change history
+## Local health review and change history
 
 The existing `RecoveryCenter` now mounts `RecoveryWorkbench`. No new route,
 network destination or optional device permission is required. The workbench
@@ -119,9 +129,9 @@ vitest run apps/web/src/recovery/recoveryDiagnostics.test.ts \
 The offline region page accepts an optional `packSource` for deterministic route
 checks and mounts `RecoveryCenter` with a local store. This store does not claim
 byte-level integrity when the underlying client exposes only parsed records.
-The region check keeps an UNKNOWN or damaged result visible in its row, even
-when the notice is closed. The user-triggered download action never routes to
-region deletion. Recovery error classification and notices are exported by the
+Check again keeps an UNKNOWN or damaged result visible in the region row, even
+when the notice is closed, until a later check or re-download passes. The
+re-download action never routes to region deletion. Recovery error classification and notices are exported by the
 package index for the profile, region and feature screens.
 
 
