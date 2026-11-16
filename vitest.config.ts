@@ -16,12 +16,16 @@ interface LanePackage {
 }
 
 const lock = JSON.parse(readFileSync(path.join(root, "lanes.lock.json"), "utf8")) as { packages: LanePackage[] };
+const SHELL_ENTRY = new Set(["@access-tools/games", "@access-tools/navigator"]);
 const laneAliases = Object.fromEntries(
   lock.packages.map((pkg) => {
     const repo = pkg.repo.split("/")[1];
     if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
-    const real = path.join(root, ".lanes", repo, ...pkg.path.split("/"), "src", "index.ts");
-    return [pkg.alias, existsSync(real) ? real : laneFallback];
+    const pkgRoot = path.join(root, ".lanes", repo, ...pkg.path.split("/"));
+    const shell = path.join(pkgRoot, "src", "shell.ts");
+    const real = path.join(pkgRoot, "src", "index.ts");
+    const resolved = SHELL_ENTRY.has(pkg.alias) && existsSync(shell) ? shell : existsSync(real) ? real : laneFallback;
+    return [pkg.alias, resolved];
   }),
 );
 
