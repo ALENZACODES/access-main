@@ -113,3 +113,13 @@ vitest run apps/web/src/recovery/recoveryDiagnostics.test.ts \
   apps/web/src/recovery/recoveryComparison.test.ts \
   apps/web/src/recovery/recoveryAudit.test.ts
 ```
+
+## Integration notes for the offline route
+
+The offline region page accepts an optional `packSource` for deterministic route
+checks and mounts `RecoveryCenter` with a local store. This store does not claim
+byte-level integrity when the underlying client exposes only parsed records.
+The region check keeps an UNKNOWN or damaged result visible in its row, even
+when the notice is closed. The user-triggered download action never routes to
+region deletion. Recovery error classification and notices are exported by the
+package index for the profile, region and feature screens.

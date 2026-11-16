@@ -3,14 +3,25 @@ import {
   classifyRecoveryError,
   classifyPackDownloadError,
   RecoveryNotice,
+  runRecoverable,
   type RecoveryFailure,
 } from "./index";
 
 describe("public recovery imports", () => {
-  it("exposes all three live entry points through the package barrel", () => {
+  it("exposes all four live entry points through the package barrel", () => {
     expect(typeof RecoveryNotice).toBe("function");
+    expect(typeof runRecoverable).toBe("function");
     expect(typeof classifyRecoveryError).toBe("function");
     expect(typeof classifyPackDownloadError).toBe("function");
+  });
+
+  it("preserves typed success and failure return values", async () => {
+    const success = await runRecoverable("export", async () => "saved");
+    expect(success.ok).toBe(true);
+    if (success.ok) expect(success.value).toBe("saved");
+    const failure = await runRecoverable("export", async (): Promise<string> => { throw new Error("unexpected"); });
+    expect(failure.ok).toBe(false);
+    if (!failure.ok) expect(failure.failure.reason).toBe("unknown");
   });
 
   it("keeps unexpected failures unknown", () => {
