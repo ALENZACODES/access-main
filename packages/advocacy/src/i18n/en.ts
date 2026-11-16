@@ -97,7 +97,7 @@ export const en = {
   "rp.limit.5":
     "Do not combine this pack with another pack built from the same reports at a different period grain or with different settings. The differences between two packs could reveal a withheld count.",
   "rp.limit.6":
-    "The suppression check assumes a reader who has the published numbers and knows counts are whole and not negative. It does not model other knowledge a reader may hold about a community.",
+    "The suppression check assumes a reader who has the published numbers and knows counts are whole and not negative. It does not take account of other knowledge a reader may hold about a community.",
   "rp.method.1":
     "Each report is a structured record with a kind, a topic, a region code and a month. Free text, names, addresses, positions, days and times are not accepted.",
   "rp.method.2":
