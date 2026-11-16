@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { copy } from "./catalog";
+import { contextualName } from "../input/index.ts";
 import { contributions, deleteDraft } from "../../../../packages/contribute/src/store";
 import { assertDraft, licences, makeDraft, validateDraft, type Draft, type Licence } from "../../../../packages/contribute/src/schema";
 import { sanitisePhoto } from "../../../../packages/contribute/src/photos";
@@ -17,7 +18,8 @@ function safeError(error: unknown): string { return error instanceof Error ? err
 
 export function ContributePage() {
   const { i18n } = useTranslation();
-  const t = copy[i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en"];
+  const locale = i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en";
+  const t = copy[locale];
   const [draft, setDraft] = useState<Draft>(() => makeDraft());
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [field, setField] = useState("");
@@ -87,15 +89,15 @@ export function ContributePage() {
     await refresh();
     event.target.value = "";
   }, t.statusImported);
-  if (isEvent) return <main style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
+  if (isEvent) return <div style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
     <h1>{t.eventTitle}</h1><a href="../contribute" style={focusStyle}>{t.eventBack}</a>
     <p>{t.intro}</p>
     <label style={lineStyle}>{t.eventName}<input style={inputStyle} value={eventName} onChange={(e) => setEventName(e.target.value)} /></label>
     <p aria-live="polite">{t.ready}: {drafts.filter((d) => d.event === eventName.trim() && validateDraft(d)).length}</p>
     <button style={focusStyle} type="button" disabled={!eventName.trim() || selectedDrafts.length === 0} onClick={() => void exportSelected()}>{t.exportEvent}</button>
     <p role="status">{status}</p>
-  </main>;
-  return <main style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
+  </div>;
+  return <div style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
     <h1>{t.heading}</h1><p>{t.intro}</p><p>{t.privacy}</p><p>{t.localOnly}</p>
     <section style={sectionStyle} aria-label={t.kind}>
       <label style={lineStyle}>{t.kind}<select style={inputStyle} value={draft.kind} onChange={(e) => update({ kind: e.target.value as Draft["kind"], target: e.target.value === "new-place" ? "new place" : "" })}>
@@ -130,7 +132,7 @@ export function ContributePage() {
         await contributions.photos.delete(photo.id);
         const next = { ...draft, photos: draft.photos.filter((p) => p.id !== photo.id) };
         update(next); if (validateDraft(next)) await contributions.drafts.put(next);
-      })}>{t.remove}</button></li>)}</ul>
+      })} aria-label={contextualName(locale, t.remove, [t.photoItem, photo.name])}>{t.remove}</button></li>)}</ul>
     </section>
     <p>{t.tier}</p>
     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -147,12 +149,16 @@ export function ContributePage() {
       <label style={lineStyle}>{t.import}<input style={inputStyle} type="file" accept=".json,.geojson,application/json,application/geo+json" onChange={(e) => void importFile(e)} /></label>
       <p>{t.replace}</p>
       {drafts.length === 0 && <p>{t.empty}</p>}
-      <ul>{drafts.map((item) => <li key={item.id}>
-        {item.target} — {item.observed} — {item.event ?? ""}
-        <button style={focusStyle} type="button" onClick={() => setDraft(item)}>{t.edit}</button>
-        <button style={focusStyle} type="button" onClick={() => { if (window.confirm(t.removeConfirm)) void run(async () => { await deleteDraft(item.id); await refresh(); }); }}>{t.remove}</button>
-      </li>)}</ul>
+      {/* Numbered, and each Edit and Delete is named for its row, so screen-reader and voice users can tell the rows apart. */}
+      <ol>{drafts.map((item, index) => {
+        const row = [t.draftItem.replace("{n}", String(index + 1)), item.target, item.observed, item.event];
+        return <li key={item.id}>
+        {item.target} — {item.observed}{item.event ? ` — ${item.event}` : ""}
+        <button style={focusStyle} type="button" aria-label={contextualName(locale, t.edit, row)} onClick={() => setDraft(item)}>{t.edit}</button>
+        <button style={focusStyle} type="button" aria-label={contextualName(locale, t.remove, row)} onClick={() => { if (window.confirm(t.removeConfirm)) void run(async () => { await deleteDraft(item.id); await refresh(); }); }}>{t.remove}</button>
+      </li>;
+      })}</ol>
     </section>
     <a href="contribute/event" style={focusStyle}>{t.eventTitle}</a>
-  </main>;
+  </div>;
 }

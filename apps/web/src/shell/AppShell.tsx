@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { SHELL_CONTRACT_VERSION } from "@access/shared";
 import { skipLinkLabel } from "../a11y/index.ts";
 import { BUILD_ID } from "../buildInfo.ts";
+import { preloadRoute } from "../perf/routeChunks.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { ErrorActions } from "./ErrorActions.tsx";
 import { UpdatePrompt } from "./UpdatePrompt.tsx";
@@ -18,6 +19,7 @@ const LINKS = [
   ["/finders", "nav.finders", false],
   ["/navigator", "nav.navigator", false],
   ["/games", "nav.games", false],
+  ["/more", "nav.more", false],
   ["/help", "nav.help", false],
   ["/settings", "nav.settings", false],
   ["/offline", "nav.offline", false],
@@ -99,10 +101,10 @@ export function AppShell() {
         <div className="header-bar">
           <Link className="app-mark" to="/">{t("appName")}</Link>
           <div className="language-switch" role="group" aria-label={t("language.label")}>
-            <button type="button" className="lang-button" aria-pressed={language === "en"} onClick={() => void setLanguage("en")}>
+            <button type="button" className="lang-button" lang="en" aria-pressed={language === "en"} onClick={() => void setLanguage("en")}>
               {t("language.english")}
             </button>
-            <button type="button" className="lang-button" aria-pressed={language === "fr"} onClick={() => void setLanguage("fr")}>
+            <button type="button" className="lang-button" lang="fr" aria-pressed={language === "fr"} onClick={() => void setLanguage("fr")}>
               {t("language.french")}
             </button>
           </div>
@@ -111,7 +113,7 @@ export function AppShell() {
           <ul className="nav-list">
             {LINKS.map(([to, key, end]) => (
               <li key={to}>
-                <NavLink to={to} end={end} className="nav-link">{t(key)}</NavLink>
+                <NavLink to={to} end={end} className="nav-link" onFocus={() => preloadRoute(to)} onPointerEnter={() => preloadRoute(to)}>{t(key)}</NavLink>
               </li>
             ))}
           </ul>

@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import { BUILD_ID, CONTRACT_VERSION } from "../buildInfo.ts";
 import { summarizeStorage, type StorageSummary } from "../storage/repository.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
+import { aboutNoticeItems, renderOnDeviceNoticeHtml } from "../privacy/onDeviceNotice/index.ts";
 
 export function AboutPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("fr") ? "fr" : "en";
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   useDocumentTitle(t("about.title"));
 
@@ -35,6 +37,16 @@ export function AboutPage() {
       </section>
       <p>{t("about.frenchNote")}</p>
       <p>{t("about.audit")}</p>
+
+      <div
+        dangerouslySetInnerHTML={{
+          __html: renderOnDeviceNoticeHtml({
+            locale,
+            items: aboutNoticeItems(),
+            reviewedOn: "2026-11-15",
+          }),
+        }}
+      />
       <p>{t("about.notices")}</p>
     </div>
   );
