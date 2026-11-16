@@ -26,7 +26,7 @@ Rules that do not bend:
 
 | Repository | Role | State |
 | --- | --- | --- |
-| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Every entry in `lanes.lock.json` is pinned to a merged commit. Places, finders, navigator, games, and help use the real adapter from their package; journey has no adapter yet, because the planner takes coordinates and the shell form does not. |
+| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Every entry in `lanes.lock.json` is pinned to a merged commit. Places, finders, navigator, games, and help use the real adapter from their package; journey has no adapter yet, because the planner takes coordinates and the shell form does not. The pack's place records carry sourced `lat` and `lon`, so the place search can supply them; the build is designed step by step in `docs/repo-map.md` ("Journey from the place search"). |
 | access-maps | Open-data pipeline, journey engine, map interface, conditions | Imports are in place with tier 0 and tier 1 values only. Verified (tier 2–3) total is 0. |
 | access-tools | Place pages, search, finders, directory, games, importers | Place pages and finders run on labelled fixtures. Ten of fifty games ship. |
 | access-help | Help centre, onboarding, glossary, peers, events, the cross-repository test harness | Built on demonstration and sample data. French is a draft. |
