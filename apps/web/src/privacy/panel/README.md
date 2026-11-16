@@ -50,3 +50,35 @@ CI: `panel.audit.test.ts`, `parity.audit.test.ts` and `repo.audit.test.ts` run
 with the normal `vitest run`. `repo.audit.test.ts` reads the whole source tree
 (read-only), so it fails on any existing violation elsewhere in the app until it
 is fixed or listed in `exemptions.ts` with a reason.
+
+## Stored items, activity, changes, downloads and the page (P10E)
+
+- `reconcile.ts`: compares what is stored under the App's prefix with the data
+  list. Entries name their storage with `storageKeys` (a trailing `*` matches a
+  prefix). Items the list does not describe are shown as such; on-device entries
+  that name no key are reported as unmatchable, never as fine. Contents are never
+  read into the result, only names, sizes and expiry dates.
+- `ownEntries.ts`: the panel's own storage is described in the same list, only
+  for the features that are switched on. Ids starting `privacy-` are reserved.
+- `activityLog.ts` (`logActivity: true`): a local list of the person's own privacy
+  actions, newest 50, expiring 90 days after the latest one, removed on erase.
+- `changes.ts` (`trackChanges: true`): remembers the last list marked as seen
+  (fingerprints and labels, 365 days) and shows what was added, changed or
+  removed. The first time nothing is compared.
+- `inventoryExport.ts`: the data list as CSV (formula-safe, `;` in French) or text.
+- `route.ts` + `page.ts`: `#/privacy` and `#/confidentialite`. `installPrivacyRoute`
+  shows or hides the panel, sets the document title and language, moves focus to
+  the heading on arrival and restores title, language and focus on leave.
+  `renderPrivacyLinkHtml(locale)` gives the shell a 44 px link.
+
+Shell wiring, one call at start-up (the host and container are your window and
+the element that holds the page):
+
+    installPrivacyRoute({ host: window, container, onExport: browserDownload,
+      createController: () => createPrivacyController({ storage: safeLocalStorage(),
+        prefix, inventory, purposes, logActivity: true, trackChanges: true,
+        now: () => new Date(), languages: navigator.languages }) });
+
+CI: `storage.audit.test.ts` fails if the panel stores anything its data list does
+not describe; `panel.audit.test.ts` now also audits every new section and each
+step of the live panel; `parity.audit.test.ts` covers the new copy.

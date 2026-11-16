@@ -1,7 +1,12 @@
+import { loadActivity, recordActivity, type ActivityEntry } from "./activityLog";
+import { diffInventory, loadSeen, saveSeen, snapshot, type ChangesView } from "./changes";
 import { assertValidPurposes, loadConsent, saveConsent, setConsent, type ConsentState, type Purpose } from "./consent";
 import type { Locale } from "./copyLint";
 import { purgeExpired } from "./expiry";
 import { assertValidInventory, type InventoryEntry } from "./inventory";
+import { inventoryAsCsv, inventoryAsText } from "./inventoryExport";
+import { ownEntries } from "./ownEntries";
+import { reconcile } from "./reconcile";
 import { eraseLocalData, exportLocalData, listKeys, type ExportFile } from "./localData";
 import { renderPrivacyPanelHtml } from "./panel";
 import { detectLocale, loadPrefs, savePrefs, type PrivacyPrefs } from "./preferences";
@@ -18,6 +23,10 @@ export interface ControllerDeps {
   purposes?: readonly Purpose[];
   now: () => Date;
   reviewedOn?: string;
+  /** Keep a visible, local list of the person's privacy actions. Default off. */
+  logActivity?: boolean;
+  /** Show what changed in the data list since it was last marked as seen. Default off. */
+  trackChanges?: boolean;
   /** e.g. navigator.languages, used only when no preference is stored */
   languages?: readonly string[];
 }
@@ -28,6 +37,8 @@ export interface PrivacyState {
   status: Status | null;
   lastExport: ExportFile | null;
   consent: ConsentState;
+  /** null when change tracking is off */
+  changes: ChangesView | null;
 }
 
 export type PrivacyAction =
@@ -36,11 +47,16 @@ export type PrivacyAction =
   | { type: "erase-cancel" }
   | { type: "erase-confirm" }
   | { type: "set-locale"; locale: Locale }
-  | { type: "consent"; purposeId: string; value: "granted" | "declined" };
+  | { type: "consent"; purposeId: string; value: "granted" | "declined" }
+  | { type: "export-list-csv" }
+  | { type: "export-list-text" }
+  | { type: "mark-seen" };
 
 export interface PrivacyController {
   getState(): PrivacyState;
   dispatch(action: PrivacyAction): PrivacyState;
+  /** Called after every dispatch. Returns a function that stops the calls. */
+  subscribe(listener: (state: PrivacyState) => void): () => void;
   html(): string;
 }
 
@@ -52,15 +68,37 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
   assertValidInventory(deps.inventory);
   const purposes = deps.purposes ?? [];
   assertValidPurposes(purposes);
+  const inventory: readonly InventoryEntry[] = [
+    ...deps.inventory,
+    ...ownEntries({ consent: purposes.length > 0, activity: deps.logActivity === true, changes: deps.trackChanges === true }),
+  ];
+  assertValidInventory(inventory, { allowReservedIds: true });
+  const today = (): string => {
+    const d = deps.now();
+    const p = (n: number): string => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  };
+  const log = (entry: Omit<ActivityEntry, "at">): void => {
+    if (deps.logActivity === true) recordActivity(deps.storage, deps.prefix, entry, deps.now());
+  };
+  const listeners = new Set<(s: PrivacyState) => void>();
   const initial: PrivacyPrefs =
     loadPrefs(deps.storage, deps.prefix) ?? { locale: detectLocale(deps.languages ?? []) };
   const purged = deps.storage === null ? 0 : purgeExpired(deps.storage, deps.prefix, deps.now()).purged.length;
+  let changes: ChangesView | null = null;
+  if (deps.trackChanges === true) {
+    const seen = loadSeen(deps.storage, deps.prefix, deps.now());
+    changes = diffInventory(seen, inventory);
+    if (seen === null) saveSeen(deps.storage, deps.prefix, snapshot(inventory, today()), deps.now());
+  }
+  if (purged > 0) log({ kind: "expired-removed", count: purged });
   let state: PrivacyState = {
     prefs: initial,
     confirmingErase: false,
     status: purged > 0 ? { kind: "expired-removed", count: purged } : null,
     lastExport: null,
     consent: loadConsent(deps.storage, deps.prefix, purposes),
+    changes,
   };
 
   const unavailable = (): PrivacyState => ({
@@ -74,6 +112,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     const storage = deps.storage;
     switch (action.type) {
       case "set-locale": {
+        if (action.locale !== state.prefs.locale) log({ kind: "language", lang: action.locale });
         const prefs: PrivacyPrefs = { locale: action.locale };
         savePrefs(storage, deps.prefix, prefs);
         state = { ...state, prefs };
@@ -84,6 +123,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         if (purpose === undefined) break;
         const consent = setConsent(state.consent, purpose, action.value, deps.now());
         const saved = saveConsent(storage, deps.prefix, consent);
+        log({ kind: action.value === "granted" ? "consent-granted" : "consent-declined", purposeId: purpose.id });
         state = {
           ...state,
           consent,
@@ -101,10 +141,39 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           break;
         }
         const file = exportLocalData(storage, deps.prefix, deps.now(), state.prefs.locale);
+        if (file.count > 0) log({ kind: "export", count: file.count });
         state =
           file.count === 0
             ? { ...state, confirmingErase: false, status: { kind: "nothing" }, lastExport: null }
             : { ...state, confirmingErase: false, status: { kind: "exported", count: file.count }, lastExport: file };
+        break;
+      }
+      case "export-list-csv":
+      case "export-list-text": {
+        const csv = action.type === "export-list-csv";
+        const loc = state.prefs.locale;
+        const file = csv
+          ? inventoryAsCsv(loc, inventory, deps.now(), loc === "fr" ? ";" : ",")
+          : inventoryAsText(loc, inventory, deps.now(), deps.reviewedOn);
+        log({ kind: "list-export", format: csv ? "csv" : "text" });
+        state = {
+          ...state,
+          confirmingErase: false,
+          lastExport: file,
+          status: { kind: "list-exported", format: csv ? "csv" : "text" },
+        };
+        break;
+      }
+      case "mark-seen": {
+        if (deps.trackChanges !== true) break;
+        saveSeen(storage, deps.prefix, snapshot(inventory, today()), deps.now());
+        state = {
+          ...state,
+          confirmingErase: false,
+          lastExport: null,
+          changes: { kind: "none", seenOn: today() },
+          status: { kind: "seen-saved" },
+        };
         break;
       }
       case "erase-ask": {
@@ -132,20 +201,37 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
             : r.removed === 0
               ? { kind: "nothing" }
               : { kind: "erased", count: r.removed };
-        state = { ...state, confirmingErase: false, status, lastExport: null, consent: {} };
+        state = {
+          ...state,
+          confirmingErase: false,
+          status,
+          lastExport: null,
+          consent: {},
+          changes: deps.trackChanges === true ? { kind: "first-view" } : null,
+        };
         break;
       }
     }
+    for (const l of listeners) l(state);
     return state;
   }
 
   return {
     getState: () => state,
     dispatch,
+    subscribe: (l) => {
+      listeners.add(l);
+      return () => {
+        listeners.delete(l);
+      };
+    },
     html: () =>
       renderPrivacyPanelHtml({
         locale: state.prefs.locale,
-        inventory: deps.inventory,
+        inventory,
+        stored: reconcile(deps.storage, deps.prefix, inventory),
+        ...(deps.logActivity === true ? { activity: loadActivity(deps.storage, deps.prefix, deps.now()) } : {}),
+        ...(state.changes !== null ? { changes: state.changes } : {}),
         purposes,
         consent: state.consent,
         ...(deps.reviewedOn !== undefined ? { reviewedOn: deps.reviewedOn } : {}),

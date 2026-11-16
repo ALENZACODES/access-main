@@ -16,7 +16,9 @@ export type Status =
   | { kind: "unavailable" }
   | { kind: "consent-saved"; value: "granted" | "declined"; label: string }
   | { kind: "save-failed" }
-  | { kind: "expired-removed"; count: number };
+  | { kind: "expired-removed"; count: number }
+  | { kind: "list-exported"; format: "csv" | "text" }
+  | { kind: "seen-saved" };
 
 export interface ConsentStrings {
   heading: string;
@@ -104,6 +106,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return "Your choice could not be saved on this device. It will be lost when this page closes.";
         case "expired-removed":
           return `Expired items removed from this device: ${s.count}.`;
+        case "list-exported":
+          return `Data list prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "seen-saved":
+          return "The list is marked as seen.";
       }
     },
   },
@@ -160,6 +166,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return "Votre choix n’a pas pu être enregistré sur cet appareil. Il sera perdu à la fermeture de cette page.";
         case "expired-removed":
           return `Éléments expirés retirés de cet appareil${NBSP}: ${s.count}.`;
+        case "list-exported":
+          return `Liste des données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "seen-saved":
+          return "La liste est marquée comme vue.";
       }
     },
   },

@@ -36,13 +36,22 @@ export function mountPrivacyPanel(
     const t = e.target?.closest("[data-action]") ?? null;
     if (t === null) return;
     switch (t.getAttribute("data-action")) {
-      case "export": {
+      case "export":
+      case "export-list-csv":
+      case "export-list-text": {
+        const action = t.getAttribute("data-action");
         const before = controller.getState().lastExport;
-        const after = controller.dispatch({ type: "export" }).lastExport;
+        const after = controller.dispatch({
+          type: action === "export-list-csv" ? "export-list-csv" : action === "export-list-text" ? "export-list-text" : "export",
+        }).lastExport;
         render("[data-privacy-status]");
         if (after !== null && after !== before) options.onExport?.(after);
         break;
       }
+      case "mark-seen":
+        controller.dispatch({ type: "mark-seen" });
+        render("[data-privacy-status]");
+        break;
       case "erase":
         controller.dispatch({ type: "erase-ask" });
         render(controller.getState().confirmingErase ? '[data-action="erase-cancel"]' : "[data-privacy-status]");
