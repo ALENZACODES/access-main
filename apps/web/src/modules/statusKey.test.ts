@@ -31,6 +31,12 @@ describe("statusKey", () => {
     ).toBe("modules.ready");
   });
 
+  it("does not claim a source or a tier for a list of games", () => {
+    const games = { ...result("ready", [{ id: "one" }]), moduleId: "games" as const };
+    expect(statusKey(games)).toBe("modules.gamesReady");
+    expect(statusKey({ ...games, items: [] })).toBe("modules.empty");
+  });
+
   it("keeps unavailable and error states", () => {
     expect(statusKey(result("stub", []))).toBe("modules.unavailable");
     expect(statusKey(result("error", [], "modules.contractError"))).toBe("modules.contractError");

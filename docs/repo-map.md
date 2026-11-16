@@ -20,6 +20,19 @@
 | `apps/web/src/hub/` | The `/more` route table (`routes.tsx`), the index (`HubIndex.tsx`), one small page per mounted screen, the strings (`i18n.ts`), and the shared wrapper (`PackageView.tsx`): page title, back link, demonstration label, and an error boundary. |
 | `apps/web/src/modules/linked.ts` | The real adapters passed to `createModules`. `lane-adapters.ts` holds a route that has a package but no adapter yet. |
 
+### Module routes (16 November 2026)
+
+| Route | Adapter passed to `createModules` | State |
+| --- | --- | --- |
+| `/places`, `/places/:id` | access-maps `places-shell` | Real adapter. Unavailable when no data pack can be read |
+| `/journey` | `apps/web/src/modules/lane-adapters.ts` | Unavailable. The access-maps `journey-data` planner takes coordinates; the shell form has only origin and destination text |
+| `/finders` | access-tools `finders` (`src/shell.ts`) | Real adapter over the data pack |
+| `/navigator` | access-tools `navigator` (`src/shell.ts`, `listForShell`) | Real adapter. Lists the package's dated directory records with source, licence note, read date and tier |
+| `/games` | access-tools `games` (`src/shell.ts`, `listGamesForShell` over `GAME_LIBRARY`) | Real adapter. Lists the 19 game names. The games are played at `/more/games` |
+| `/help`, `/help/:id` | access-help `help` (`src/shell.ts`) | Real adapter |
+
+Every result still passes through `guardModules`. When a package is not in `.lanes/`, its route falls back to the unavailable state.
+
 ### Routes under `/more` (16 November 2026)
 
 | Route | Package and screen | Data shown |
