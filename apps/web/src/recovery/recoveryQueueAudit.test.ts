@@ -1,3 +1,4 @@
+import { forbiddenOrgNames } from "./forbiddenOrgNames";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -12,7 +13,7 @@ const modules = [
   "recoveryPolicy.ts", "recoveryLedger.ts", "recoveryBatch.ts",
   "recoveryPlanExport.ts", "RecoveryQueuePanel.tsx",
 ];
-const prohibitedCopy = /\b(?:verified|verify|vérifié|real-time|partnership|guarantee|sciontario)\b/i;
+const prohibitedCopy = /\b(?:verified|verify|vérifié|real-time|partnership|guarantee)\b/i;
 const externalLocation = /(?:https?:\/\/|tile\.openstreetmap\.org|api\.mapbox\.com)/i;
 const scheduledWork = /(?:setInterval\s*\(|cron\b|scheduleJob\s*\()/;
 
@@ -44,7 +45,7 @@ describe("recovery queue policy audits", () => {
   it("does not include organisation names or claims in new sources", () => {
     for (const name of modules) {
       const content = readFileSync(join(root, name), "utf8");
-      expect(content).not.toMatch(/\bSCIO\b|sciontario|Spinal Cord Injury Ontario/i);
+      for (const needle of forbiddenOrgNames()) expect(content.toLowerCase()).not.toContain(needle);
       expect(content).not.toMatch(/AAA-conformant/i);
     }
   });

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { diagnosticsCopy } from "./recoveryDiagnostics";
 import { actionsCopy } from "./recoveryActions";
 import { comparisonCopy } from "./recoveryComparison";
+import { forbiddenOrgNames } from "./forbiddenOrgNames";
 
 /**
  * Enforcement guard for the mounted recovery workstream. Tests intentionally
@@ -21,8 +22,6 @@ function textOf(file: string): string {
   return readFileSync(join(root, file), "utf8");
 }
 
-// Avoid matching inert documentation; this guard scans executable modules.
-const forbiddenBrand = new RegExp(["sciontario", "s" + "cio"].join("|"), "i");
 const forbiddenClaims = new RegExp([
   "ver" + "ified", "vér" + "ifié", "real" + "-time",
   "partner" + "ship", "guaran" + "tee",
@@ -53,6 +52,15 @@ const english = [diagnosticsCopy("en"), actionsCopy("en"), comparisonCopy("en")]
 const french = [diagnosticsCopy("fr"), actionsCopy("fr"), comparisonCopy("fr")];
 
 describe("recovery source audit", () => {
+  it("excludes organisation identifiers from repository source and test files", () => {
+    const parent = join(root, "..", "offline", "RegionPackPage.tsx");
+    const files = [...readdirSync(root).filter((name) => /\.(?:ts|tsx|md)$/.test(name)).map((name) => join(root, name)), parent];
+    for (const file of files) {
+      const content = readFileSync(file, "utf8").toLowerCase();
+      for (const name of forbiddenOrgNames()) expect(content).not.toContain(name);
+    }
+  });
+
   it("includes real shell wiring and exported functions", () => {
     const center = textOf("RecoveryCenter.tsx");
     const index = textOf("index.ts");
@@ -97,11 +105,6 @@ describe("recovery source audit", () => {
       expect(source).not.toMatch(/setInterval\s*\(/);
       expect(source).not.toMatch(/setTimeout\s*\(/);
       expect(source).not.toMatch(/localStorage|indexedDB|serviceWorker/);
-    }
-  });
-  it("does not insert brand names into executable source", () => {
-    for (const file of sourceFiles()) {
-      expect(textOf(file)).not.toMatch(forbiddenBrand);
     }
   });
   it("keeps prohibited claims out of copy leaf values", () => {

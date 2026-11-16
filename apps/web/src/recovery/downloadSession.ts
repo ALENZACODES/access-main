@@ -1,10 +1,10 @@
-import { classifyRecoveryError } from "./classify.ts";
-import type { RecoveryReason } from "./index.ts";
+import { classifyRecoveryError } from "./classify";
+import type { RecoveryReason } from "./index";
 import {
   checkPackIntegrity,
   type PackManifest,
   type Sha256,
-} from "./packIntegrity.ts";
+} from "./packIntegrity";
 
 /** A source supplied by the caller: no implicit third-party endpoints. */
 export type ChunkSource = (

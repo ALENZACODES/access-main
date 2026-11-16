@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createPackSource, PackClientError, type PackManifest, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { createPackSource, PackClientError, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
 import { offlineCatalog } from "./catalog.ts";
 import {
   cellStatusText,
@@ -18,14 +18,31 @@ import {
   type StorageEstimate,
   pressureView,
 } from "./robust/index.ts";
-import { classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
+import { classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, packIntegrityCopy, type RecoveryFailure } from "../recovery/index.ts";
 import { RecoveryCenter } from "../recovery/RecoveryCenter.tsx";
+import type { LocalPackStore } from "../recovery/packInventory.ts";
 import { assessStoredRegion } from "../recovery/regionRecheck.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
-const source = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
+const defaultSource = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
 const ledger = createIndexedDbLedger();
+
+function localRecoveryStore(source: PackSource): LocalPackStore {
+  return {
+    async listIds() {
+      return (await source.regions()).map((item) => item.id);
+    },
+    async read(id) {
+      const region = (await source.regions()).find((item) => item.id === id);
+      if (!region || !region.downloaded) return null;
+      // Parsed storage status does not expose compressed bytes or an independent digest.
+      // A downloaded flag alone cannot establish pack integrity.
+      return { id, manifest: null, bytes: null };
+    },
+  };
+}
+
 const estimateStorage = async (): Promise<StorageEstimate> => (await globalThis.navigator?.storage?.estimate?.()) ?? {};
 
 /** Per-cell report for every region; a region whose manifest cannot be read reads UNKNOWN cell by cell. */
@@ -46,7 +63,7 @@ const formatBytes = (bytes: number, language: string) => new Intl.NumberFormat(l
 
 
 /** Inventory and storage-headroom dashboard for one region, mounted on the live /offline page. */
-function RegionInventoryDashboard({ pack, regionId, language }: { pack: PackManifest; regionId: string; language: "en" | "fr" }) {
+function RegionInventoryDashboard({ pack, regionId, language, source }: { pack: PackManifest; regionId: string; language: "en" | "fr"; source: PackSource }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const root = rootRef.current;
@@ -83,7 +100,9 @@ function RegionInventoryDashboard({ pack, regionId, language }: { pack: PackMani
   return <div ref={rootRef} className="offline-inventory" data-testid={`offline-inventory-${regionId}`} />;
 }
 
-export function OfflineRegionPage() {
+export function OfflineRegionPage({ packSource = defaultSource }: { packSource?: PackSource } = {}) {
+  const source = packSource;
+  const recoveryStore = useMemo(() => localRecoveryStore(source), [source]);
   const { i18n } = useTranslation();
   const language = i18n.language.startsWith("fr") ? "fr" : "en";
   const c = offlineCatalog[language];
@@ -102,6 +121,7 @@ export function OfflineRegionPage() {
   const [failure, setFailure] = useState<{ region: string; failure: RecoveryFailure } | null>(null);
   const [packStatus, setPackStatus] = useState<"corrupt" | "unknown" | null>(null);
   const [packRegion, setPackRegion] = useState<string | null>(null);
+  const [checkedStatuses, setCheckedStatuses] = useState<Record<string, "corrupt" | "unknown">>({});
   const abortRef = useRef<AbortController | null>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
@@ -117,7 +137,7 @@ export function OfflineRegionPage() {
       if (active) { setManifest(value); setRegions(statuses); setCells(reports); }
     }).catch(() => { if (active) setError(c.unavailable); });
     return () => { active = false; };
-  }, [c.unavailable]);
+  }, [c.unavailable, source]);
   async function refresh() {
     const pack = await source.manifest();
     const statuses = await source.regions();
@@ -156,7 +176,11 @@ export function OfflineRegionPage() {
       }, controller.signal);
       setResults((current) => ({ ...current, [id]: result }));
       await refresh();
-      if (result.completed) setMessage(c.complete);
+      if (result.completed) {
+        setMessage(c.complete);
+        // Committed cells alone do not establish a fresh stored-byte check.
+        setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
+      }
       else if (result.reason === "download-error") {
         // Digest, size or record-count mismatches use the recovery notice.
         // A failed fetch that still saved earlier cells stays a partial result
@@ -165,9 +189,11 @@ export function OfflineRegionPage() {
         if (classified.reason === "invalid-data") setFailure({ region: id, failure: classified });
         else setError(downloadResultText(language, result));
       } else setError(downloadResultText(language, result));
+      if (!result.completed) setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
     } catch (cause) {
       // Recovery copy names the cause and the next step; raw error text is never shown.
       setFailure({ region: id, failure: classifyPackDownloadError(cause, navigator.onLine) });
+      setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
       await refresh().catch(() => undefined);
     } finally { abortRef.current = null; setBusy(null); }
   }
@@ -187,15 +213,17 @@ export function OfflineRegionPage() {
         reports[id],
       );
       setPackStatus(result.status);
+      setCheckedStatuses((previous) => ({ ...previous, [id]: result.status }));
     } catch {
       setPackStatus("unknown");
+      setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
     }
   }
   async function remove() {
     const id = confirmation;
     if (!id) return;
     setConfirmation(null); setBusy(id);
-    try { await source.deleteRegion(id); await ledger.deleteRegion(id); setResults((current) => { const next = { ...current }; delete next[id]; return next; }); await refresh(); setMessage(c.deleted); setProgress(null); }
+    try { await source.deleteRegion(id); await ledger.deleteRegion(id); setResults((current) => { const next = { ...current }; delete next[id]; return next; }); await refresh(); setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; }); setMessage(c.deleted); setProgress(null); }
     catch { setError(c.error); }
     finally { setBusy(null); requestAnimationFrame(() => deleteRef.current?.focus()); }
   }
@@ -208,7 +236,7 @@ export function OfflineRegionPage() {
       <CorruptPackNotice
         status={packStatus}
         locale={language}
-        onRedownload={() => { if (packRegion) setConfirmation(packRegion); setPackStatus(null); }}
+        onRedownload={() => { if (packRegion) void download(packRegion); setPackStatus(null); }}
         onDismiss={() => setPackStatus(null)}
         busy={!!busy}
       />
@@ -228,7 +256,7 @@ export function OfflineRegionPage() {
         return <li key={region.id} className="panel stack">
         <h2>{region.label[language]}</h2>
         <p>{c.size}: {formatBytes(region.bytes, language)}. {c.counts}: {region.count.toLocaleString(language)}.</p>
-        <p data-testid="region-state">{region.downloaded ? c.downloaded : statuses.includes("stale") ? r.staleRegion : partial ? r.partial : c.notDownloaded}</p>
+        <p data-testid="region-state">{checkedStatuses[region.id] === "corrupt" ? packIntegrityCopy(language, "corrupt").title : checkedStatuses[region.id] === "unknown" ? c.unknown : region.downloaded ? c.downloaded : statuses.includes("stale") ? r.staleRegion : partial ? r.partial : c.notDownloaded}</p>
         {report.length > 0 && <details className="region-cells">
           <summary style={{ minHeight: 44, display: "flex", alignItems: "center" }}>{cellSummaryText(language, statuses)}</summary>
           <ul>{report.map((cell) => <li key={cell.id} data-cell-status={cell.lookup.status}>
@@ -247,10 +275,10 @@ export function OfflineRegionPage() {
         </div>
         {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
         {busy === region.id && progress && <div className="stack"><label id={`${progressTitle}-${region.id}`}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={`${progressTitle}-${region.id}`} value={progress.done} max={progress.total || 1}/></div>}
-        {manifest && <RegionInventoryDashboard pack={manifest} regionId={region.id} language={language} />}
+        {manifest && <RegionInventoryDashboard pack={manifest} regionId={region.id} language={language} source={source} />}
       </li>; })}</ul>
     </>}
-    <RecoveryCenter locale={language} regions={regions} onRecheck={(id) => void recheck(id)} onDownload={(id) => void download(id)} busy={busy !== null} />
+    <RecoveryCenter locale={language} store={recoveryStore} />
     {confirmation && <dialog open aria-labelledby={dialogTitle} className="panel stack" onKeyDown={(event) => {
       if (event.key === "Escape") setConfirmation(null);
       if (event.key === "Tab") { const buttons = [keepRef.current, confirmDeleteRef.current].filter(Boolean); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1]?.focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0]?.focus(); } }

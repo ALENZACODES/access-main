@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { PackDownloadSession, type ChunkSource } from "./downloadSession.ts";
-import type { PackManifest } from "./packIntegrity.ts";
+import { PackDownloadSession, type ChunkSource } from "./downloadSession";
+import type { PackManifest } from "./packIntegrity";
 
 const bytes = new TextEncoder().encode("abc");
 const manifest: PackManifest = {
