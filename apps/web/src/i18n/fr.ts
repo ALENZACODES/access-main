@@ -80,6 +80,20 @@ export const fr: Messages = {
     notices:
       "Les bibliothèques d'exécution comprennent React Aria Components (Apache-2.0), i18next (MIT), Dexie (Apache-2.0), et Workbox avec vite-plugin-pwa (MIT). Ces noms sont des crédits, pas des appuis.",
   },
+  privacyNotice: {
+    title: "Où vos données sont conservées",
+    whereOnDevice: "Reste sur cet appareil",
+    whereSentToServer: "Envoyé à un serveur",
+    whereUnknown: "Inconnu",
+    reviewed: "Dernière révision\u202f: {{date}}",
+    empty: "Cette liste est vide. Cela ne signifie pas qu’aucune donnée n’est conservée.",
+    dismiss: "Fermer",
+    itemProfile: "Profil",
+    itemCache: "Enregistrements en cache",
+    itemOutbox: "Brouillons d’export de contribution",
+    itemLanguage: "Choix de langue",
+    itemGeolocation: "Géolocalisation facultative",
+  },
   storage: {
     cacheCount_one: "{{count}} enregistrement stocké sur cet appareil",
     cacheCount_other: "{{count}} enregistrements stockés sur cet appareil",
