@@ -72,7 +72,7 @@ export const fr: Messages = {
     countsTitle: "Enregistrements dans cette interface",
     countsIntro: "Ces nombres sont lus sur cet appareil. Ils ne décrivent pas une couverture.",
     refusedLabelCount:
-      "Enregistrements stockés qui portent encore une étiquette de confirmation refusée\u00a0: {{count}}. Ce prototype n’utilise pas cette étiquette.",
+      "Enregistrements stockés qui portent encore une étiquette de confirmation refusée\u202f: {{count}}. Ce prototype n’utilise pas cette étiquette.",
     frenchNote:
       "Le texte français de l'interface est une traduction provisoire. Il doit encore être révisé par une personne qualifiée. Au-delà de l'interface, le contenu est en anglais dans ce prototype.",
     audit:
@@ -438,7 +438,7 @@ export const fr: Messages = {
     undated_other: "{{count}} enregistrements en cache n'ont pas de date de source.",
     labelPolicyTitle: "Position sur l’étiquetage",
     labelPolicyBody: "Aucun enregistrement de ce prototype ne porte une étiquette de confirmation. Le niveau 3 et cette étiquette sont refusés.",
-    refusedLabelCount: "Enregistrements en cache qui portent encore une étiquette de confirmation refusée\u00a0: {{count}}.",
+    refusedLabelCount: "Enregistrements en cache qui portent encore une étiquette de confirmation refusée\u202f: {{count}}.",
     modulesTitle: "Parties de the App dans cette version",
     modulesCaption: "Si chaque partie a répondu comme connectée",
     part: "Partie",
