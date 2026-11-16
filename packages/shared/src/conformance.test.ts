@@ -48,7 +48,7 @@ describe("module result contract", () => {
     expect(codes({ licence: "" })).toContain("missing_licence");
     expect(codes({ source_date: "" })).toContain("invalid_date");
     expect(codes({ tier: "UNKNOWN" as never })).toContain("invalid_tier");
-    expect(codes({ tier: 3 })).toContain("verified_not_in_prototype");
+    expect(codes({ tier: 3 })).toContain("refused_label_not_in_prototype");
     expect(checkModuleItem("places", { id: "p1", name: "x" }).map((issue) => issue.code)).toContain("missing_provenance");
   });
 

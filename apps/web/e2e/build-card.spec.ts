@@ -20,7 +20,7 @@ test("the build card opens from About by keyboard and states only what it can re
   await expect(page.getByText("Build identifier: e2e")).toBeVisible();
   await expect(page.getByText("No records are cached on this device.")).toBeVisible();
   await expect(page.getByText("No source is listed, because no record is cached.")).toBeVisible();
-  await expect(page.getByText("Cached records that still claim verified: 0.")).toBeVisible();
+  await expect(page.getByText("Cached records that still carry a refused confirmation label: 0.")).toBeVisible();
 
   const statements = page.getByRole("region", { name: "Statements to deliver" }).getByRole("listitem");
   await expect(statements).toHaveCount(6);

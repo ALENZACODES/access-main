@@ -1,4 +1,4 @@
-import { PROTOTYPE_LABELS, TIERS } from "./catalog/types.js";
+import { PROTOTYPE_LABELS, REFUSED_PROTOTYPE_LABEL, TIERS } from "./catalog/types.js";
 
 /**
  * Canonical verification tiers. packages/schema is the source of truth.
@@ -6,7 +6,7 @@ import { PROTOTYPE_LABELS, TIERS } from "./catalog/types.js";
  * The French name of the product is "l'application". These ids are not translated.
  */
 
-export { PROTOTYPE_LABELS };
+export { PROTOTYPE_LABELS, REFUSED_PROTOTYPE_LABEL };
 export const CANONICAL_TIER_IDS = TIERS;
 
 export type CanonicalTierId = (typeof CANONICAL_TIER_IDS)[number];

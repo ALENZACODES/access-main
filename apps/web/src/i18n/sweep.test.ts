@@ -72,13 +72,13 @@ describe("endorsement and overclaim sweep", () => {
     expect(hits).toEqual([]);
   });
 
-  it("keeps the no-endorsement, no-medical-advice, and unverified statements in both languages", () => {
+  it("keeps the no-endorsement, no-medical-advice, and prototype-sample statements in both languages", () => {
     expect(en.noEndorsement).toMatch(/^No organisation/);
     expect(fr.noEndorsement).toMatch(/^Aucune organisation/);
     expect(en.noMedical).toContain("does not give medical advice");
     expect(fr.noMedical).toContain("ne donne pas de conseil médical");
-    expect(en.prototypeBanner).toContain("unverified");
-    expect(fr.prototypeBanner).toContain("non vérifié");
+    expect(en.prototypeBanner).toContain("prototype sample");
+    expect(fr.prototypeBanner).toContain("échantillon de prototype");
   });
 
   it("catches the overclaims it is meant to catch", () => {
@@ -98,7 +98,7 @@ describe("endorsement and overclaim sweep", () => {
     for (const sample of samples) {
       expect(RULES.some((rule) => rule.pattern.test(sample)), sample).toBe(true);
     }
-    for (const fine of ["Every record is unverified.", "Chaque enregistrement est non vérifié.", "the App does not decide whether you qualify."]) {
+    for (const fine of ["Every record is a prototype sample.", "Chaque enregistrement est un échantillon de prototype.", "the App does not decide whether you qualify."]) {
       expect(RULES.some((rule) => rule.pattern.test(fine)), fine).toBe(false);
     }
   });

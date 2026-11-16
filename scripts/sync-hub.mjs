@@ -7,6 +7,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statS
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { applyHubWordingBan } from "./hub-wording.mjs";
 
 const SHA = /^[0-9a-f]{40}$/;
 const REPO = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
@@ -79,6 +80,9 @@ function alreadySynced() {
 }
 
 if (alreadySynced()) {
+  for (const pkg of lock.packages) {
+    applyHubWordingBan(path.join(outDir, pkg.repo.split("/")[1], "packages", pkg.package));
+  }
   process.exit(0);
 }
 
@@ -125,6 +129,7 @@ try {
         },
       });
       demoteNestedMains(to);
+      applyHubWordingBan(to);
     }
   }
   mkdirSync(outDir, { recursive: true });
