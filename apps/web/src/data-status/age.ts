@@ -1,17 +1,10 @@
 /** "14 days ago" style text for a retrieved date. Future or unreadable dates are Unknown, never guessed. */
-import { parseIsoDate, type Locale } from './dataStatus';
+import { ageInDays, type Locale } from './dataStatus';
 import { t } from './i18n';
 
-const DAY_MS = 86_400_000;
-
-/** Whole UTC days between the retrieved date and today; null when unreadable or in the future. */
+/** Whole UTC days between the retrieved day and today; null when unreadable or in the future. */
 export function ageDays(iso: string | null | undefined, now: Date): number | null {
-  if (parseIsoDate(iso) === null) return null;
-  const then = Date.parse(`${(iso as string).trim().slice(0, 10)}T00:00:00Z`);
-  if (Number.isNaN(then)) return null;
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const days = Math.floor((today - then) / DAY_MS);
-  return days < 0 ? null : days;
+  return ageInDays(iso, now);
 }
 
 const FORMATTERS: Readonly<Record<Locale, Intl.RelativeTimeFormat>> = {

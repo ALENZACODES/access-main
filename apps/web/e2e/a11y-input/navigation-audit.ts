@@ -79,7 +79,7 @@ export async function observeFocus(page: Page): Promise<FocusSnapshot | null> {
     const href = node.getAttribute("href") ?? "";
     const parentId = node.parentElement?.id ? `#${node.parentElement.id}` : "";
     return {
-      selector: href || parentId ? `${selector}@${href}${parentId}` : selector,
+      selector: node.id ? selector : (href || parentId ? `${selector}@${href}${parentId}` : selector),
       tag: node.tagName.toLowerCase(),
       role: node.getAttribute("role"),
       name: name.slice(0, 100),
@@ -104,8 +104,10 @@ export async function tabOnce(page: Page, reverse = false): Promise<FocusSnapsho
 }
 
 /**
- * Stop at the first repeated target: browser Tab navigation forms a cycle.
- * This prevents hanging on app routes with long, dynamic focus sequences.
+ * Test each adjacent forward/reverse transition in the live DOM.
+ * Replaying an entire walk after moving focus to body is not equivalent to
+ * reversing the original traversal: browser sequential-focus start points
+ * can differ after a second focus reset. A changed neighbour is a failure.
  */
 export async function walkSequentialFocus(
   page: Page,
@@ -116,52 +118,54 @@ export async function walkSequentialFocus(
   }
   await resetSequentialFocus(page);
   const forward: FocusSnapshot[] = [];
-  const keys = new Set<string>();
+  const backwards: FocusSnapshot[] = [];
+  const seen = new Set<string>();
+  let error: string | null = null;
   let wrapped = false;
-  for (let index = 0; index < maxSteps; index += 1) {
+
+  for (let step = 0; step < maxSteps; step += 1) {
     const next = await tabOnce(page);
-    if (next === null) break;
+    if (next === null) {
+      // Tab may leave the document and enter browser chrome at the end.
+      // It must not be interpreted as a focusable application control.
+      break;
+    }
     const key = stableFocusKey(next);
-    if (keys.has(key)) {
+    if (seen.has(key)) {
       wrapped = true;
       break;
     }
+    const previous = forward[forward.length - 1];
     forward.push(next);
-    keys.add(key);
-  }
-  if (forward.length === 0) {
-    return {
-      forward, backwards: [], returnedToStart: false,
-      trapped: false, error: "No keyboard focus target found",
-    };
-  }
-  // One additional Tab may wrap to browser chrome. Re-establish focus at the
-  // final recorded control by walking from the beginning rather than storing
-  // an element handle that may become detached during a route transition.
-  await resetSequentialFocus(page);
-  for (let index = 0; index < forward.length; index += 1) {
-    await page.keyboard.press("Tab");
-  }
-  const backwards: FocusSnapshot[] = [];
-  let mismatch: string | null = null;
-  for (let index = forward.length - 2; index >= 0; index -= 1) {
-    const previous = await tabOnce(page, true);
-    if (previous === null) {
-      mismatch = `Focus disappeared while reversing at step ${index}`;
+    seen.add(key);
+    if (!previous) continue;
+
+    // Test the *actual* adjacent transition before taking another forward
+    // step. Replaying Tab from <body> after the full walk can enter at a
+    // different point when browser chrome or a rendered SPA is involved.
+    const reverse = await tabOnce(page, true);
+    if (reverse === null || stableFocusKey(reverse) !== stableFocusKey(previous)) {
+      error = `Reverse focus mismatch at step ${forward.length - 2}: ` +
+        `expected ${stableFocusKey(previous)}, observed ${reverse ? stableFocusKey(reverse) : "none"}`;
       break;
     }
-    backwards.push(previous);
-    if (stableFocusKey(previous) !== stableFocusKey(forward[index])) {
-      mismatch = `Reverse focus mismatch at step ${index}`;
+    backwards.unshift(reverse);
+    const again = await tabOnce(page);
+    if (again === null || stableFocusKey(again) !== key) {
+      error = `Forward focus mismatch after reversing at step ${forward.length - 1}: ` +
+        `expected ${key}, observed ${again ? stableFocusKey(again) : "none"}`;
       break;
     }
   }
+
+  if (forward.length === 0 && error === null) error = "No keyboard focus target found";
+  const trapped = !wrapped && forward.length === maxSteps;
   return {
     forward,
     backwards,
-    returnedToStart: mismatch === null,
-    trapped: !wrapped && forward.length === maxSteps,
-    error: mismatch,
+    returnedToStart: error === null,
+    trapped,
+    error,
   };
 }
 
@@ -232,7 +236,6 @@ export async function inspectTargetSizes(page: Page): Promise<TargetIssue[]> {
       }
       if (style.display === "none" || style.visibility === "hidden" ||
           rect.width === 0 || rect.height === 0) continue;
-      // Inline text links have a different box model than 44px action targets.
       if (element.matches("a[href]") && style.display === "inline") continue;
       if (rect.width >= 44 && rect.height >= 44) continue;
       issues.push({

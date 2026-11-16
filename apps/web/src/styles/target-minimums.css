@@ -1,0 +1,25 @@
+/* The audit requires a 44 CSS-pixel hit area for standalone controls.
+   Apply after global.css so route-specific, native and custom controls share
+   the same minimum, without enlarging prose links embedded in sentences. */
+:where(button, input:not([type="hidden"]), select, textarea, summary,
+  [role="button"], [role="switch"], [role="checkbox"], [role="radio"],
+  [role="tab"], [role="menuitem"]) {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}
+
+/* Inline custom-role controls otherwise ignore min-inline-size/min-block-size. */
+:where(span[role="button"], span[role="switch"], span[role="checkbox"],
+  span[role="radio"], span[role="tab"], span[role="menuitem"]) {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* A standalone link is a touch target; text links within prose retain their
+   natural line wrapping and the paragraph-link exception of the route audit. */
+:where(a[href]):not(:is(p a, li a, blockquote a)) {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}
