@@ -147,3 +147,45 @@ describe("mountPrivacyPanel consent buttons", () => {
     expect(controller.getState().consent).toEqual({});
   });
 });
+
+describe("mountPrivacyPanel list downloads and change tracking", () => {
+  function tracked() {
+    const storage = createMemoryStorage();
+    const make = () =>
+      createPrivacyController({
+        storage,
+        prefix: PREFIX,
+        inventory: FIXTURE,
+        now: () => new Date(2026, 10, 15),
+        trackChanges: true,
+      });
+    make();
+    const changed = [{ ...FIXTURE[0]!, where: "sent-to-server" as const }, ...FIXTURE.slice(1)];
+    const controller = createPrivacyController({
+      storage,
+      prefix: PREFIX,
+      inventory: changed,
+      now: () => new Date(2026, 10, 15),
+      trackChanges: true,
+    });
+    const root = new FakeRoot();
+    const exported: ExportFile[] = [];
+    mountPrivacyPanel(root, controller, { onExport: (f) => exported.push(f) });
+    return { root, controller, exported };
+  }
+  it("CSV and text downloads call onExport once each, with the right type", () => {
+    const { root, exported } = tracked();
+    root.fire("click", { "data-action": "export-list-csv" });
+    root.fire("click", { "data-action": "export-list-text" });
+    expect(exported.map((f) => f.mime)).toEqual(["text/csv", "text/plain"]);
+    expect(root.focused.at(-1)).toBe("[data-privacy-status]");
+  });
+  it("shows the changes and the button clears them", () => {
+    const { root, controller } = tracked();
+    expect(root.innerHTML).toContain("Changed: Saved places");
+    root.fire("click", { "data-action": "mark-seen" });
+    expect(controller.getState().changes?.kind).toBe("none");
+    expect(root.innerHTML).toContain("The list is marked as seen.");
+    expect(root.innerHTML).not.toContain('data-action="mark-seen"');
+  });
+});

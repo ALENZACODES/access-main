@@ -2,6 +2,13 @@ import type { Locale } from "./copyLint";
 import { button, esc, TARGET_STYLE } from "./html";
 import type { InventoryEntry } from "./inventory";
 import { renderInventoryTableHtml } from "./inventoryRender";
+import type { ActivityEntry } from "./activityLog";
+import type { ChangesView } from "./changes";
+import { EXTRA_STRINGS } from "./copyExtra";
+import { renderActivityHtml, renderChangesHtml, renderDeviceHtml, renderImportHtml, renderNetworkHtml, renderProtectedHtml, renderSignalsHtml, renderStoredHtml, type DeviceView, type NetworkView } from "./panelSections";
+import type { Signals } from "./signals";
+import { MORE_STRINGS } from "./copyMore";
+import type { Reconciled } from "./reconcile";
 import { consentStatus, type ConsentState, type Purpose } from "./consent";
 import { PANEL_STRINGS, type Status } from "./strings";
 import { renderOnDeviceNoticeHtml } from "../onDeviceNotice";
@@ -14,6 +21,22 @@ export interface PanelView {
   status: Status | null;
   purposes?: readonly Purpose[];
   consent?: ConsentState;
+  /** Entries newest first. Leave undefined to hide the activity section. */
+  activity?: readonly ActivityEntry[];
+  /** Leave undefined to hide the stored-items section. */
+  stored?: Reconciled;
+  /** Leave undefined to hide the changes section. */
+  changes?: ChangesView;
+  /** Leave undefined to hide the network section. */
+  network?: NetworkView;
+  /** A restore file was checked and waits for confirmation. */
+  importPending?: boolean;
+  /** Show the browser signals section. Pass null before they have been read: every answer shows as Unknown. */
+  signals?: Signals | null;
+  /** Leave undefined to hide the offline storage section. */
+  device?: DeviceView;
+  /** Show the protected copy section. */
+  protectedCopy?: boolean;
 }
 
 const LOCALE_NAMES: ReadonlyArray<{ locale: Locale; name: string }> = [
@@ -82,11 +105,22 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
   const status = view.status === null ? "" : esc(s.status(view.status));
   return (
     `<section lang="${view.locale}" aria-labelledby="privacy-panel-title" data-privacy-panel>` +
-    `<h2 id="privacy-panel-title">${esc(s.title)}</h2><p>${esc(s.scopeNote)}</p>` +
+    `<h2 id="privacy-panel-title" tabindex="-1">${esc(s.title)}</h2><p>${esc(s.scopeNote)}</p>` +
     `${notice}${renderInventoryTableHtml(view.locale, view.inventory)}` +
+    `${view.stored === undefined ? "" : renderStoredHtml(view.locale, view.stored, view.inventory)}` +
+    `${view.changes === undefined ? "" : renderChangesHtml(view.locale, view.changes)}` +
+    `${view.network === undefined ? "" : renderNetworkHtml(view.locale, view.network)}` +
+    `${view.signals === undefined ? "" : renderSignalsHtml(view.locale, view.signals)}` +
+    `${view.device === undefined ? "" : renderDeviceHtml(view.locale, view.device)}` +
     `${renderConsentHtml(view)}` +
+    `${view.activity === undefined ? "" : renderActivityHtml(view.locale, view.activity, view.purposes ?? [])}` +
     `${languageFieldset(view.locale, s.languageLegend)}` +
-    `<div>${button("export", s.exportButton)}${button("erase", s.eraseButton)}</div>` +
+    `${renderImportHtml(view.locale, view.importPending === true)}` +
+    `${view.protectedCopy === true ? renderProtectedHtml(view.locale) : ""}` +
+    `<div>${button("export", s.exportButton)}${button("export-list-csv", EXTRA_STRINGS[view.locale].list.csvButton)}` +
+    `${button("export-list-text", EXTRA_STRINGS[view.locale].list.textButton)}` +
+    `${button("export-support", MORE_STRINGS[view.locale].buttons.support)}${button("export-printable", MORE_STRINGS[view.locale].buttons.printable)}` +
+    `${button("erase", s.eraseButton)}</div>` +
     `${confirm}<p role="status" aria-live="polite" tabindex="-1" data-privacy-status>${status}</p></section>`
   );
 }
