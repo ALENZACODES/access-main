@@ -55,7 +55,7 @@ export function renderStoredHtml(
   const head = [c.name, c.size, c.expires, c.described].map((h) => `<th scope="col">${esc(h)}</th>`).join("");
   return (
     `<div data-privacy-stored><h3>${esc(x.heading)}</h3><p>${summary}</p>${note}` +
-    `<div tabindex="0" role="region" aria-labelledby="privacy-stored-caption" style="overflow-x:auto">` +
+    `<div role="region" aria-labelledby="privacy-stored-caption" style="overflow-wrap:anywhere">` +
     `<table><caption id="privacy-stored-caption">${esc(x.note)}</caption><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div></div>`
   );
 }
