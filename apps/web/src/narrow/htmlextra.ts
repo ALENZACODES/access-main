@@ -196,6 +196,17 @@ export function extraHtmlRules(nodes: readonly HtmlNode[]): ExtraHit[] {
     }
   }
 
+  // A value that changes the context on input (3.2.2), and page-wide key listeners (2.1.4). Neither can be judged from markup alone.
+  for (const n of nodes) {
+    const type = attr(n, 'type').toLowerCase();
+    const picks = n.tag === 'select' || (n.tag === 'input' && (type === 'radio' || type === 'checkbox'));
+    if (picks && attr(n, 'onchange') !== '') hits.push({ rule: 'change-context', node: n, status: 'unknown' });
+    const pageWide = n.tag === 'body' || n.tag === 'html';
+    if (pageWide && (attr(n, 'onkeydown') !== '' || attr(n, 'onkeypress') !== '' || attr(n, 'onkeyup') !== '')) {
+      hits.push({ rule: 'key-handler', node: n, status: 'unknown' });
+    }
+  }
+
   // Two controls with one access key fight over it.
   const keys = new Map<string, HtmlNode>();
   for (const n of nodes) {

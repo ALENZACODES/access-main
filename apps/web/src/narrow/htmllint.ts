@@ -172,7 +172,9 @@ export type HtmlRule =
   | 'autofocus'
   | 'details-summary'
   | 'dialog-name'
-  | 'hreflang-code';
+  | 'hreflang-code'
+  | 'change-context'
+  | 'key-handler';
 
 export const HTML_RULES: readonly HtmlRule[] = [
   'doctype', 'lang', 'title', 'viewport', 'headings', 'img-alt', 'name', 'label', 'dup-id', 'aria-ref',
@@ -180,6 +182,7 @@ export const HTML_RULES: readonly HtmlRule[] = [
   'table-headers', 'table-caption', 'fieldset-legend', 'nested-interactive', 'empty-heading', 'svg-name', 'media-captions',
   'meta-refresh', 'autocomplete-token', 'list-structure', 'lang-part', 'landmark-label', 'accesskey-dup',
   'invalid-describedby', 'autofocus', 'details-summary', 'dialog-name', 'hreflang-code',
+  'change-context', 'key-handler',
 ];
 
 const MESSAGES: Readonly<Record<HtmlRule, { en: string; fr: string }>> = {
@@ -228,9 +231,17 @@ const MESSAGES: Readonly<Record<HtmlRule, { en: string; fr: string }>> = {
   'details-summary': { en: 'The details element has no summary as its first child.', fr: 'L’élément details n’a pas de summary comme premier enfant.' },
   'dialog-name': { en: 'The dialog has no accessible name.', fr: 'La boîte de dialogue n’a pas de nom accessible.' },
   'hreflang-code': { en: 'The hreflang value is not a valid language code.', fr: 'La valeur hreflang n’est pas un code de langue valide.' },
+  'change-context': {
+    en: 'This field runs a script as soon as its value changes. Check that choosing a value does not move the person to another page or submit a form without warning.',
+    fr: 'Ce champ exécute un script dès que sa valeur change. Contrôlez que choisir une valeur n’envoie pas la personne vers une autre page et ne soumet pas de formulaire sans avertissement.',
+  },
+  'key-handler': {
+    en: 'A script listens for key presses on the whole page. If a single letter, number or symbol key does something, check that it can be turned off or remapped, or only works while a control has focus.',
+    fr: 'Un script écoute les touches pressées sur toute la page. Si une touche seule (lettre, chiffre ou symbole) déclenche une action, contrôlez qu’on peut la désactiver ou la reconfigurer, ou qu’elle ne marche que lorsqu’une commande a le focus.',
+  },
 };
 
-const REVIEW: ReadonlySet<HtmlRule> = new Set<HtmlRule>(['autocomplete', 'link-text', 'table-caption', 'media-captions', 'autofocus']);
+const REVIEW: ReadonlySet<HtmlRule> = new Set<HtmlRule>(['autocomplete', 'link-text', 'table-caption', 'media-captions', 'autofocus', 'change-context', 'key-handler']);
 
 const GENERIC_LINKS = new Set([
   'click here', 'here', 'read more', 'more', 'learn more', 'link', 'cliquez ici', 'ici', 'en savoir plus', 'lire la suite', 'plus',
