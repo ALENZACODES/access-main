@@ -69,3 +69,13 @@ describe("inventory storage key rules", () => {
     expect(codes([...mine, clash], { allowReservedIds: true })).toEqual(["duplicate-storage-key"]);
   });
 });
+
+describe("the network record entry", () => {
+  it("is listed only when the guard's policy is given", () => {
+    expect(ownEntries({ consent: false, activity: false, changes: false }).map((e) => e.id)).not.toContain("privacy-egress");
+    const e = ownEntries({ consent: false, activity: false, changes: false, egress: true }).find((x) => x.id === "privacy-egress");
+    expect(e?.storageKeys).toEqual(["egress.v1"]);
+    expect(e?.keptFor?.en).toContain("30 days");
+    expect(e?.keptFor?.fr).toContain("30 jours");
+  });
+});

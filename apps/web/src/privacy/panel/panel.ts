@@ -5,7 +5,8 @@ import { renderInventoryTableHtml } from "./inventoryRender";
 import type { ActivityEntry } from "./activityLog";
 import type { ChangesView } from "./changes";
 import { EXTRA_STRINGS } from "./copyExtra";
-import { renderActivityHtml, renderChangesHtml, renderStoredHtml } from "./panelSections";
+import { renderActivityHtml, renderChangesHtml, renderImportHtml, renderNetworkHtml, renderStoredHtml, type NetworkView } from "./panelSections";
+import { MORE_STRINGS } from "./copyMore";
 import type { Reconciled } from "./reconcile";
 import { consentStatus, type ConsentState, type Purpose } from "./consent";
 import { PANEL_STRINGS, type Status } from "./strings";
@@ -25,6 +26,10 @@ export interface PanelView {
   stored?: Reconciled;
   /** Leave undefined to hide the changes section. */
   changes?: ChangesView;
+  /** Leave undefined to hide the network section. */
+  network?: NetworkView;
+  /** A restore file was checked and waits for confirmation. */
+  importPending?: boolean;
 }
 
 const LOCALE_NAMES: ReadonlyArray<{ locale: Locale; name: string }> = [
@@ -97,11 +102,15 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${notice}${renderInventoryTableHtml(view.locale, view.inventory)}` +
     `${view.stored === undefined ? "" : renderStoredHtml(view.locale, view.stored, view.inventory)}` +
     `${view.changes === undefined ? "" : renderChangesHtml(view.locale, view.changes)}` +
+    `${view.network === undefined ? "" : renderNetworkHtml(view.locale, view.network)}` +
     `${renderConsentHtml(view)}` +
     `${view.activity === undefined ? "" : renderActivityHtml(view.locale, view.activity, view.purposes ?? [])}` +
     `${languageFieldset(view.locale, s.languageLegend)}` +
+    `${renderImportHtml(view.locale, view.importPending === true)}` +
     `<div>${button("export", s.exportButton)}${button("export-list-csv", EXTRA_STRINGS[view.locale].list.csvButton)}` +
-    `${button("export-list-text", EXTRA_STRINGS[view.locale].list.textButton)}${button("erase", s.eraseButton)}</div>` +
+    `${button("export-list-text", EXTRA_STRINGS[view.locale].list.textButton)}` +
+    `${button("export-support", MORE_STRINGS[view.locale].buttons.support)}${button("export-printable", MORE_STRINGS[view.locale].buttons.printable)}` +
+    `${button("erase", s.eraseButton)}</div>` +
     `${confirm}<p role="status" aria-live="polite" tabindex="-1" data-privacy-status>${status}</p></section>`
   );
 }

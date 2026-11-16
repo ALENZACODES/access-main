@@ -5,3 +5,6 @@ export type { ParityCode, ParityOptions, ParityProblem } from "./parity";
 export { auditFiles, formatFindings, scanFile } from "./repoAudit";
 export type { Exemption, Finding, RuleId, SourceFile } from "./repoAudit";
 export { EXEMPTIONS } from "./exemptions";
+export { auditDocument, extractTexts } from "./htmlAudit";
+export { collectCopy } from "./copyCorpus";
+export type { CopyItem } from "./copyCorpus";

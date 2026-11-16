@@ -12,7 +12,10 @@ export type ActivityKind =
   | "consent-granted"
   | "consent-declined"
   | "language"
-  | "expired-removed";
+  | "expired-removed"
+  | "import"
+  | "support-export"
+  | "printable-export";
 
 export interface ActivityEntry {
   /** ISO date and time */
@@ -35,6 +38,9 @@ const KINDS: readonly ActivityKind[] = [
   "consent-declined",
   "language",
   "expired-removed",
+  "import",
+  "support-export",
+  "printable-export",
 ];
 
 export function activityKey(prefix: string): string {

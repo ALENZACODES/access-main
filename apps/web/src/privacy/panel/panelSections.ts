@@ -6,6 +6,9 @@ import type { Locale } from "./copyLint";
 import { button, esc } from "./html";
 import type { InventoryEntry } from "./inventory";
 import type { Reconciled } from "./reconcile";
+import type { BlockedView } from "./egressLog";
+import { MORE_STRINGS } from "./copyMore";
+import { formatActivityTime as fmtTime } from "./activityLog";
 
 const colon = (locale: Locale): string => (locale === "fr" ? "\u00a0:" : ":");
 
@@ -75,4 +78,48 @@ export function renderChangesHtml(locale: Locale, changes: ChangesView): string 
       `${group(x.removed, changes.removed)}</ul>${button("mark-seen", x.markSeen)}`;
   }
   return `<div data-privacy-changes><h3>${esc(x.heading)}</h3>${body}</div>`;
+}
+
+export interface NetworkView {
+  selfOrigin: string;
+  allowedOrigins: readonly string[];
+  blocked: BlockedView;
+}
+
+export function renderNetworkHtml(locale: Locale, v: NetworkView): string {
+  const x = MORE_STRINGS[locale].network;
+  const allowed =
+    `<li>${esc(x.self)}: ${esc(v.selfOrigin)}</li>` + v.allowedOrigins.map((o) => `<li>${esc(o)}</li>`).join("");
+  const others = v.allowedOrigins.length === 0 ? `<p>${esc(x.noOthers)}</p>` : "";
+  let blocked: string;
+  if (v.blocked.hosts.length === 0) {
+    blocked = `<p>${esc(x.noneBlocked)}</p>`;
+  } else {
+    const total = v.blocked.hosts.reduce((a, h) => a + h.count, 0);
+    const rows = v.blocked.hosts
+      .map(
+        (h) =>
+          `<tr data-host="${esc(h.host)}"><th scope="row">${esc(h.host)}</th><td>${h.count}</td>` +
+          `<td><time datetime="${esc(h.lastAt)}">${esc(fmtTime(h.lastAt))}</time></td></tr>`,
+      )
+      .join("");
+    const head = [x.columns.host, x.columns.times, x.columns.last].map((c) => `<th scope="col">${esc(c)}</th>`).join("");
+    blocked =
+      `<p>${esc(x.summary(total, v.blocked.hosts.length))}</p>` +
+      `<div tabindex="0" role="region" aria-labelledby="privacy-network-caption" style="overflow-x:auto">` +
+      `<table><caption id="privacy-network-caption">${esc(x.blockedNote)}</caption><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+  return (
+    `<div data-privacy-network><h3>${esc(x.heading)}</h3><p>${esc(x.note)}</p>` +
+    `<h4>${esc(x.allowedHeading)}</h4><ul>${allowed}</ul>${others}<h4>${esc(x.blockedHeading)}</h4>${blocked}</div>`
+  );
+}
+
+export function renderImportHtml(locale: Locale, pending: boolean): string {
+  const x = MORE_STRINGS[locale].importer;
+  const input =
+    `<label for="privacy-import-file" style="display:inline-flex;align-items:center;min-height:44px;min-width:44px">${esc(x.fileLabel)}</label> ` +
+    `<input id="privacy-import-file" type="file" accept="application/json,.json" data-import-file style="min-width:44px;min-height:44px">`;
+  const actions = pending ? `${button("import-confirm", x.confirmButton)}${button("import-cancel", x.cancelButton)}` : "";
+  return `<div data-privacy-import><h3>${esc(x.heading)}</h3><p>${esc(x.note)}</p><div>${input}</div>${actions}</div>`;
 }

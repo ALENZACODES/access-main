@@ -6,6 +6,9 @@
 
 import type { PrivacyController } from "./controller";
 import type { ExportFile } from "./localData";
+import { installPersistentGuard } from "./egressLog";
+import type { EgressPolicy, GuardHost, InstalledGuard } from "./egress";
+import type { StorageLike } from "./storage";
 import { mountPrivacyPanel, type PanelRoot } from "./mount";
 import { PAGE_TITLES, matchRoute, routeHref } from "./route";
 
@@ -34,6 +37,11 @@ export interface RouteOptions {
   /** Called each time the page is entered, so each visit starts from what is stored now. */
   createController: () => PrivacyController;
   onExport?: (file: ExportFile) => void;
+  /**
+   * Starts the network guard when the route is installed, so requests the App
+   * makes from any page are checked, and stops it on dispose.
+   */
+  guard?: { host: GuardHost; policy: EgressPolicy; storage: StorageLike | null; prefix: string; now?: () => Date };
 }
 
 export interface InstalledRoute {
@@ -103,6 +111,10 @@ export function installPrivacyRoute(o: RouteOptions): InstalledRoute {
     if (moveFocus) container.querySelector(HEADING)?.focus();
   }
 
+  const guard: InstalledGuard | null =
+    o.guard === undefined
+      ? null
+      : installPersistentGuard(o.guard.host, o.guard.policy, o.guard.storage, o.guard.prefix, o.guard.now);
   host.addEventListener("hashchange", sync);
   sync();
 
@@ -110,6 +122,7 @@ export function installPrivacyRoute(o: RouteOptions): InstalledRoute {
     sync,
     dispose: () => {
       host.removeEventListener("hashchange", sync);
+      guard?.uninstall();
       if (controller !== null) leave();
     },
   };

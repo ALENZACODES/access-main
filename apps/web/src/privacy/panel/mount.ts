@@ -7,6 +7,8 @@ import type { PrivacyController } from "./controller";
 
 export interface ActionTarget {
   getAttribute(name: string): string | null;
+  /** Set on a file input */
+  files?: ArrayLike<{ text(): Promise<string> }> | null;
 }
 export interface PanelEvent {
   target: { closest(selector: string): ActionTarget | null } | null;
@@ -38,16 +40,28 @@ export function mountPrivacyPanel(
     switch (t.getAttribute("data-action")) {
       case "export":
       case "export-list-csv":
-      case "export-list-text": {
+      case "export-list-text":
+      case "export-support":
+      case "export-printable": {
         const action = t.getAttribute("data-action");
         const before = controller.getState().lastExport;
-        const after = controller.dispatch({
-          type: action === "export-list-csv" ? "export-list-csv" : action === "export-list-text" ? "export-list-text" : "export",
-        }).lastExport;
+        const type =
+          action === "export-list-csv" || action === "export-list-text" || action === "export-support" || action === "export-printable"
+            ? action
+            : "export";
+        const after = controller.dispatch({ type }).lastExport;
         render("[data-privacy-status]");
         if (after !== null && after !== before) options.onExport?.(after);
         break;
       }
+      case "import-confirm":
+        controller.dispatch({ type: "import-confirm" });
+        render("[data-privacy-status]");
+        break;
+      case "import-cancel":
+        controller.dispatch({ type: "import-cancel" });
+        render("[data-import-file]");
+        break;
       case "mark-seen":
         controller.dispatch({ type: "mark-seen" });
         render("[data-privacy-status]");
@@ -83,6 +97,22 @@ export function mountPrivacyPanel(
   });
 
   root.addEventListener("change", (e) => {
+    const file = e.target?.closest("[data-import-file]") ?? null;
+    if (file !== null) {
+      const f = file.files?.[0];
+      if (f === undefined) return;
+      void f.text().then(
+        (text) => {
+          controller.dispatch({ type: "import-load", text });
+          render(controller.getState().importPending ? '[data-action="import-confirm"]' : "[data-privacy-status]");
+        },
+        () => {
+          controller.dispatch({ type: "import-load", text: "" });
+          render("[data-privacy-status]");
+        },
+      );
+      return;
+    }
     const t = e.target?.closest("[data-locale-option]") ?? null;
     const v = t?.getAttribute("value");
     if (v !== "en" && v !== "fr") return;

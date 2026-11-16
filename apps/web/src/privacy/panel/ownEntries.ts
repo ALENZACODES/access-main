@@ -5,6 +5,7 @@
 import { ACTIVITY_KEY_SUFFIX, ACTIVITY_TTL_DAYS } from "./activityLog";
 import { SEEN_KEY_SUFFIX, SEEN_TTL_DAYS } from "./changes";
 import { CONSENT_KEY_SUFFIX } from "./consent";
+import { EGRESS_KEY_SUFFIX, EGRESS_TTL_DAYS } from "./egressLog";
 import type { InventoryEntry } from "./inventory";
 import { PREFS_KEY_SUFFIX } from "./preferences";
 
@@ -12,6 +13,7 @@ export interface OwnEntryOptions {
   consent: boolean;
   activity: boolean;
   changes: boolean;
+  egress?: boolean;
 }
 
 const SOURCE = { en: "Privacy panel code", fr: "Code du panneau de confidentialité" };
@@ -69,6 +71,21 @@ export function ownEntries(o: OwnEntryOptions): InventoryEntry[] {
         fr: `Jusqu’à ${SEEN_TTL_DAYS} jours après la dernière fois que vous avez marqué la liste comme vue`,
       },
       storageKeys: [SEEN_KEY_SUFFIX],
+      source: SOURCE,
+      recordedOn: RECORDED_ON,
+    });
+  }
+  if (o.egress === true) {
+    out.push({
+      id: "privacy-egress",
+      label: { en: "Requests the App stopped", fr: "Demandes que l’App a arrêtées" },
+      where: "on-device",
+      purpose: { en: "Show you which addresses were blocked", fr: "Vous montrer quelles adresses ont été bloquées" },
+      keptFor: {
+        en: `Up to ${EGRESS_TTL_DAYS} days after the latest one`,
+        fr: `Jusqu’à ${EGRESS_TTL_DAYS} jours après la dernière`,
+      },
+      storageKeys: [EGRESS_KEY_SUFFIX],
       source: SOURCE,
       recordedOn: RECORDED_ON,
     });

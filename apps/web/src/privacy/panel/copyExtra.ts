@@ -153,6 +153,12 @@ export function activityText(
         return `Langue changée${NBSP}: ${e.lang === "fr" ? "français" : "anglais"}`;
       case "expired-removed":
         return `Éléments expirés retirés${NBSP}: ${count}`;
+      case "import":
+        return `Restauration à partir d’un fichier${NBSP}: ${n("fr", count, "élément", "éléments")}`;
+      case "support-export":
+        return "Résumé pour l’aide téléchargé";
+      case "printable-export":
+        return "Page à imprimer téléchargée";
     }
   }
   switch (e.kind) {
@@ -168,5 +174,11 @@ export function activityText(
       return `Changed language to ${e.lang === "fr" ? "French" : "English"}`;
     case "expired-removed":
       return `Removed expired items: ${count}`;
+    case "import":
+      return `Restored from a file: ${n("en", count, "item", "items")}`;
+    case "support-export":
+      return "Downloaded a support summary";
+    case "printable-export":
+      return "Downloaded a printable page";
   }
 }

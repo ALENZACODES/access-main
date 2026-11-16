@@ -3,6 +3,7 @@
 // FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
 
 import type { Locale } from "./copyLint";
+import { MORE_STRINGS, type MoreStatus } from "./copyMore";
 import { isSingular } from "./html";
 
 const NBSP = "\u00a0";
@@ -18,7 +19,8 @@ export type Status =
   | { kind: "save-failed" }
   | { kind: "expired-removed"; count: number }
   | { kind: "list-exported"; format: "csv" | "text" }
-  | { kind: "seen-saved" };
+  | { kind: "seen-saved" }
+  | MoreStatus;
 
 export interface ConsentStrings {
   heading: string;
@@ -110,6 +112,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Data list prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
           return "The list is marked as seen.";
+        default:
+          return MORE_STRINGS.en.status(s);
       }
     },
   },
@@ -170,6 +174,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Liste des données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":
           return "La liste est marquée comme vue.";
+        default:
+          return MORE_STRINGS.fr.status(s);
       }
     },
   },

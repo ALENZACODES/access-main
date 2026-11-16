@@ -82,3 +82,43 @@ the element that holds the page):
 CI: `storage.audit.test.ts` fails if the panel stores anything its data list does
 not describe; `panel.audit.test.ts` now also audits every new section and each
 step of the live panel; `parity.audit.test.ts` covers the new copy.
+
+## Network guard, restore, support summary, printable page, CSP and plain language (P10F)
+
+All of it is reached from the privacy route. In the shell:
+
+```ts
+installPrivacyRoute({
+  host: window, container,
+  guard: { host: window, policy: createEgressPolicy({ selfOrigin: location.origin, allowedOrigins: [] }),
+           storage: safeLocalStorage(), prefix: "app." },
+  createController: () => createPrivacyController({ /* as before */, egress: policy }),
+});
+```
+
+- **Network guard** (`egress.ts`, `egressLog.ts`): fetch, XMLHttpRequest, sendBeacon,
+  WebSocket and EventSource calls to any address other than the App's own or a
+  listed https origin are refused. Only the host is recorded (never path, query or
+  body), as counts, for 30 days. The panel shows the allowed addresses and the
+  stopped requests. It does not cover images, scripts or stylesheets the page
+  loads itself: that is the Content-Security-Policy's job. It also cannot stop
+  code that captured `fetch` before the guard was installed, so install it first.
+- **CSP** (`csp.ts`): `buildCsp` makes a strict policy; `auditCsp` judges any
+  policy. The `weak-csp` rule in `repoAudit.ts` runs it over any policy set in an
+  HTML meta tag, `_headers`, `netlify.toml` or `vercel.json` under the scanned
+  folders, so a weaker policy fails CI.
+- **Restore** (`importData.ts`): reads a file from "Download my data". The file is
+  checked completely first (format, version, prefix, 1 MB, 200 items, 200 kB per
+  value, key names). Nothing is written until the person confirms; a failed write
+  is rolled back.
+- **Support summary** and **printable page**: names, sizes and choices only, never
+  contents. The printable page is a standalone offline HTML document; its CSP
+  allows only its own inline style.
+- **Plain language** (`plainLanguage.ts`, `audit/copyCorpus.ts`,
+  `audit/plain.audit.test.ts`): every shipped string and the visible text of the
+  live panel must stay under 25 words per sentence, free of listed jargon and
+  within a reading-level limit (English Flesch-Kincaid grade 9 or lower; French
+  Kandel-Moles 50 or higher). These are heuristics: syllables are counted by
+  rule, not from a dictionary. They catch dense text; they do not grade quality.
+- New audits: `more.audit.test.ts` (lint, EN/FR parity, HTML audit of each new
+  state), `document.audit.test.ts` (whole-page audit), `storage.more.audit.test.ts`.

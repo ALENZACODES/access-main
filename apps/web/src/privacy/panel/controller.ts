@@ -7,6 +7,11 @@ import { assertValidInventory, type InventoryEntry } from "./inventory";
 import { inventoryAsCsv, inventoryAsText } from "./inventoryExport";
 import { ownEntries } from "./ownEntries";
 import { reconcile } from "./reconcile";
+import { buildPrintable } from "./printable";
+import { buildSupportSummary } from "./supportSummary";
+import { applyImport, prepareImport, type ImportPlan } from "./importData";
+import { loadBlocked } from "./egressLog";
+import type { EgressPolicy } from "./egress";
 import { eraseLocalData, exportLocalData, listKeys, type ExportFile } from "./localData";
 import { renderPrivacyPanelHtml } from "./panel";
 import { detectLocale, loadPrefs, savePrefs, type PrivacyPrefs } from "./preferences";
@@ -27,6 +32,12 @@ export interface ControllerDeps {
   logActivity?: boolean;
   /** Show what changed in the data list since it was last marked as seen. Default off. */
   trackChanges?: boolean;
+  /**
+   * Show the network section: the addresses the App may contact and the requests
+   * that were stopped. Install the guard itself with installPersistentGuard
+   * (or the `guard` option of installPrivacyRoute).
+   */
+  egress?: EgressPolicy;
   /** e.g. navigator.languages, used only when no preference is stored */
   languages?: readonly string[];
 }
@@ -39,6 +50,8 @@ export interface PrivacyState {
   consent: ConsentState;
   /** null when change tracking is off */
   changes: ChangesView | null;
+  /** true while a file has been checked and is waiting for the person to confirm */
+  importPending: boolean;
 }
 
 export type PrivacyAction =
@@ -50,7 +63,12 @@ export type PrivacyAction =
   | { type: "consent"; purposeId: string; value: "granted" | "declined" }
   | { type: "export-list-csv" }
   | { type: "export-list-text" }
-  | { type: "mark-seen" };
+  | { type: "mark-seen" }
+  | { type: "import-load"; text: string }
+  | { type: "import-confirm" }
+  | { type: "import-cancel" }
+  | { type: "export-support" }
+  | { type: "export-printable" };
 
 export interface PrivacyController {
   getState(): PrivacyState;
@@ -70,7 +88,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
   assertValidPurposes(purposes);
   const inventory: readonly InventoryEntry[] = [
     ...deps.inventory,
-    ...ownEntries({ consent: purposes.length > 0, activity: deps.logActivity === true, changes: deps.trackChanges === true }),
+    ...ownEntries({ consent: purposes.length > 0, activity: deps.logActivity === true, changes: deps.trackChanges === true, egress: deps.egress !== undefined }),
   ];
   assertValidInventory(inventory, { allowReservedIds: true });
   const today = (): string => {
@@ -99,14 +117,24 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     lastExport: null,
     consent: loadConsent(deps.storage, deps.prefix, purposes),
     changes,
+    importPending: false,
   };
+  let plan: ImportPlan | null = null;
 
-  const unavailable = (): PrivacyState => ({
+  const unavailable = (): PrivacyState => {
+    plan = null;
+    return unavailableState();
+  };
+  const unavailableState = (): PrivacyState => ({
     ...state,
     confirmingErase: false,
     status: { kind: "unavailable" },
     lastExport: null,
+    importPending: false,
   });
+  const stored = (): ReturnType<typeof reconcile> => reconcile(deps.storage, deps.prefix, inventory);
+  const blockedNow = (): ReturnType<typeof loadBlocked> =>
+    deps.egress === undefined ? { hosts: [] } : loadBlocked(deps.storage, deps.prefix, deps.now());
 
   function dispatch(action: PrivacyAction): PrivacyState {
     const storage = deps.storage;
@@ -176,6 +204,103 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         };
         break;
       }
+      case "export-support":
+      case "export-printable": {
+        const loc = state.prefs.locale;
+        const support = action.type === "export-support";
+        const file = support
+          ? buildSupportSummary({
+              locale: loc,
+              now: deps.now(),
+              stored: stored(),
+              inventoryCount: inventory.length,
+              purposes,
+              consent: state.consent,
+              activity: deps.logActivity === true ? loadActivity(storage, deps.prefix, deps.now()) : [],
+              blocked: blockedNow(),
+            })
+          : buildPrintable({
+              locale: loc,
+              now: deps.now(),
+              inventory,
+              stored: stored(),
+              ...(deps.reviewedOn !== undefined ? { reviewedOn: deps.reviewedOn } : {}),
+            });
+        log({ kind: support ? "support-export" : "printable-export" });
+        state = {
+          ...state,
+          confirmingErase: false,
+          importPending: false,
+          lastExport: file,
+          status: { kind: support ? "support-prepared" : "printable-prepared" },
+        };
+        plan = null;
+        break;
+      }
+      case "import-load": {
+        plan = null;
+        if (storage === null) {
+          state = unavailable();
+          break;
+        }
+        const r = prepareImport(action.text, storage, deps.prefix);
+        if (!r.ok) {
+          state = { ...state, confirmingErase: false, importPending: false, lastExport: null, status: { kind: "import-problem", code: r.code } };
+          break;
+        }
+        plan = r.plan;
+        state = {
+          ...state,
+          confirmingErase: false,
+          importPending: true,
+          lastExport: null,
+          status: {
+            kind: "import-ready",
+            additions: r.plan.additions.length,
+            overwrites: r.plan.overwrites.length,
+            unchanged: r.plan.unchanged.length,
+          },
+        };
+        break;
+      }
+      case "import-cancel":
+        plan = null;
+        state = { ...state, importPending: false, lastExport: null, status: { kind: "import-cancelled" } };
+        break;
+      case "import-confirm": {
+        const p = plan;
+        plan = null;
+        if (storage === null) {
+          state = unavailable();
+          break;
+        }
+        if (p === null) {
+          state = { ...state, importPending: false, status: null };
+          break;
+        }
+        const r = applyImport(storage, p);
+        if (r.failed.length > 0) {
+          state = {
+            ...state,
+            importPending: false,
+            lastExport: null,
+            status: r.rolledBack ? { kind: "import-rolled-back" } : { kind: "import-stuck", failed: r.restoreFailed.length },
+          };
+          break;
+        }
+        purgeExpired(storage, deps.prefix, deps.now());
+        log({ kind: "import", count: r.written });
+        const restored = loadPrefs(storage, deps.prefix);
+        state = {
+          ...state,
+          prefs: restored ?? state.prefs,
+          consent: loadConsent(storage, deps.prefix, purposes),
+          importPending: false,
+          lastExport: null,
+          status: { kind: "import-done", count: r.written },
+        };
+        break;
+      }
       case "erase-ask": {
         if (storage === null) {
           state = unavailable();
@@ -194,6 +319,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           state = unavailable();
           break;
         }
+        plan = null;
         const r = eraseLocalData(storage, deps.prefix);
         const status: Status =
           r.failed.length > 0
@@ -207,6 +333,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           status,
           lastExport: null,
           consent: {},
+          importPending: false,
           changes: deps.trackChanges === true ? { kind: "first-view" } : null,
         };
         break;
@@ -229,7 +356,11 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       renderPrivacyPanelHtml({
         locale: state.prefs.locale,
         inventory,
-        stored: reconcile(deps.storage, deps.prefix, inventory),
+        stored: stored(),
+        ...(deps.egress !== undefined
+          ? { network: { selfOrigin: deps.egress.selfOrigin, allowedOrigins: deps.egress.allowedOrigins, blocked: blockedNow() } }
+          : {}),
+        importPending: state.importPending,
         ...(deps.logActivity === true ? { activity: loadActivity(deps.storage, deps.prefix, deps.now()) } : {}),
         ...(state.changes !== null ? { changes: state.changes } : {}),
         purposes,
