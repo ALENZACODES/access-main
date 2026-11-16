@@ -22,11 +22,19 @@ const laneAliases = Object.fromEntries(
     const repo = pkg.repo.split("/")[1];
     if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
     const pkgRoot = path.join(root, ".lanes", repo, ...pkg.path.split("/"));
-      const real = path.join(pkgRoot, "src", "index.ts");
+    const real = path.join(pkgRoot, "src", "index.ts");
     const resolved = UNLINKED.has(pkg.alias) ? laneFallback : existsSync(real) ? real : laneFallback;
     return [pkg.alias, resolved];
   }),
 );
+function slimLane(find: string, repo: string, pkgPath: string, file: string, fallback: string): [string, string] {
+  const real = path.join(root, ".lanes", repo, ...pkgPath.split("/"), file);
+  return [find, existsSync(real) ? real : fallback];
+}
+const slimLaneAliases = Object.fromEntries([
+  slimLane("@access-tools/finders/shell", "access-tools", "packages/finders", "src/shell.ts", path.resolve(root, "apps/web/src/modules/finders-shell-fallback.ts")),
+  slimLane("@access/help/shell", "access-help", "packages/help", "src/shell.ts", path.resolve(root, "apps/web/src/modules/help-shell-fallback.ts")),
+]);
 
 export default defineConfig({
   plugins: [react()],
@@ -34,6 +42,7 @@ export default defineConfig({
     alias: {
       "@access/shared": path.resolve(root, "packages/shared/src/index.ts"),
       "@access-main/data-client": dataClient,
+      ...slimLaneAliases,
       ...laneAliases,
     },
   },

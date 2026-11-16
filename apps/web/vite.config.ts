@@ -42,6 +42,15 @@ const laneAliases = lock.packages.map((pkg) => {
   const resolved = UNLINKED.has(pkg.alias) ? fallbacks : existsSync(real) ? real : fallbacks;
   return { find: new RegExp(`^${escapeRegExp(pkg.alias)}$`), replacement: resolved };
 });
+const slimLaneAlias = (find: RegExp, repo: string, pkgPath: string, file: string, fallback: string) => {
+  const real = path.join(repoRoot, ".lanes", repo, ...pkgPath.split("/"), file);
+  return { find, replacement: existsSync(real) ? real : fallback };
+};
+const slimLaneAliases = [
+  slimLaneAlias(/^@access-tools\/finders\/shell$/, "access-tools", "packages/finders", "src/shell.ts", path.join(root, "src/modules/finders-shell-fallback.ts")),
+  slimLaneAlias(/^@access\/help\/shell$/, "access-help", "packages/help", "src/shell.ts", path.join(root, "src/modules/help-shell-fallback.ts")),
+];
+
 const dataClientReal = path.join(repoRoot, "packages/data-client/src/index.ts");
 const dataClientAlias = {
   find: /^@access-main\/data-client$/,
@@ -138,6 +147,7 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
     alias: [
       { find: "@access/shared", replacement: path.resolve(root, "../../packages/shared/src/index.ts") },
+      ...slimLaneAliases,
       ...laneAliases,
       ...hubAliases,
       dataClientAlias,
