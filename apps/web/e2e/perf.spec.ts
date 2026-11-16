@@ -48,7 +48,7 @@ function median(values: number[]): number {
 }
 
 async function coldRun(browser: Browser, baseURL: string, route: string): Promise<{ lcp: number | null; firstResult: number | null }> {
-  const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, locale: "en-CA" });
+  const context = await browser.newContext({ baseURL, serviceWorkers: "block", viewport: { width: 390, height: 844 }, locale: "en-CA" });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: CPU_SLOWDOWN });
@@ -114,7 +114,7 @@ test("Day 22: home LCP and core-flow time to first result on a mid-range profile
   const record = {
     schemaVersion: "perf-record-1.0.0",
     ranAt: new Date().toISOString(),
-    method: `Playwright Chromium, production build served locally, 390x844 viewport, CPU slowdown ${CPU_SLOWDOWN}x (mid-range phone profile), no network throttling, ${RUNS} cold runs per measure after a discarded warm-up load, median reported. A CI runner is not a real phone.`,
+    method: `Playwright Chromium, production build served locally, 390x844 viewport, CPU slowdown ${CPU_SLOWDOWN}x (mid-range phone profile), no network throttling, ${RUNS} cold runs per measure after a discarded warm-up load, service workers blocked (the offline cache install is not measured), median reported. A CI runner is not a real phone.`,
     homeLcp: { runsMs: lcpRuns, medianMs: lcp.medianMs, gateMs: LCP_GATE_MS },
     timeToFirstResult: flows.map((flow) => ({ ...flow, gateMs: FIRST_RESULT_GATE_MS })),
   };

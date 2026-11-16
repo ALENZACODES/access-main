@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { NAME_HASHES, type NameHash } from "./nameHashes";
+import { containsForbiddenOrg, endorsedByForbiddenOrgSample, forbiddenOrgNeedles } from "../../../../../packages/shared/test/forbiddenOrg.ts";
 import { auditFiles, formatFindings, nameFindings, scanFile, type Exemption, type SourceFile } from "./repoAudit";
-import { sha256Hex } from "./sha256";
 
 // Violating text for the other rules is assembled from pieces so this file does not trip the audit itself.
 const j = (...p: string[]): string => p.join("");
@@ -9,37 +8,30 @@ const file = (path: string, text: string): SourceFile => ({ path, text });
 const rules = (path: string, text: string): string[] => scanFile(file(path, text)).map((f) => f.rule);
 
 describe("forbidden names", () => {
-  // The real names are held only as hashes, so these tests use a made-up list built the same way.
-  const fake: readonly NameHash[] = [
-    { hash: sha256Hex("quuxword"), words: 1, length: 8, insideWord: true },
-    { hash: sha256Hex("zed"), words: 1, length: 3 },
-    { hash: sha256Hex("lorem ipsum dolor sit"), words: 4, length: 21 },
-  ];
-  it("finds a listed word, in any case, on the right line", () => {
-    expect(nameFindings("a\nb QuuxWord c", fake)).toEqual([{ line: 2, token: "quuxword" }]);
+  // The names are never written here: samples and needles come from the shared helper.
+  const sample = endorsedByForbiddenOrgSample("en");
+  it("finds a line that carries a listed name, in any case, on the right line", () => {
+    expect(nameFindings(`a\nb ${sample.toUpperCase()} c`)).toEqual([{ line: 2 }]);
   });
-  it("finds a listed word inside a longer one, but only where the list says so", () => {
-    expect(nameFindings("const theQuuxWordApp = 1;", fake)).toHaveLength(1);
-    expect(nameFindings("const zedApp = 1; const mazed = 2;", fake)).toEqual([]);
-    expect(nameFindings("let Zed;", fake)).toHaveLength(1);
+  it("finds the French sample too", () => {
+    expect(nameFindings(endorsedByForbiddenOrgSample("fr"))).toEqual([{ line: 1 }]);
   });
-  it("finds a listed name of several words, across spaces and line breaks", () => {
-    expect(nameFindings("Lorem  Ipsum\nDolor sit", fake)).toHaveLength(1);
-    expect(nameFindings("lorem, ipsum dolor sit", fake)).toEqual([]);
+  it("does not flag ordinary text", () => {
+    expect(nameFindings("const decision = 'precision';\nSaved places stay on this device.")).toEqual([]);
   });
-  it("does not flag ordinary words", () => {
-    expect(nameFindings("const decision = 'precision';", fake)).toEqual([]);
-    expect(nameFindings("const decision = 'precision';")).toEqual([]);
+  it("uses the needles it is given", () => {
+    expect(nameFindings("one\ntwo", ["two"])).toEqual([{ line: 2 }]);
+    expect(nameFindings("one\ntwo", [""])).toEqual([]);
   });
-  it("is wired into the file scan", () => {
-    expect(scanFile(file("apps/web/src/a.ts", "x quuxword y")).map((f) => f.rule)).toEqual([]);
+  it("is wired into the file scan and reports no name", () => {
+    const f = scanFile(file("apps/web/src/a.ts", sample));
+    expect(f.map((x) => x.rule)).toEqual(["forbidden-name"]);
+    expect(f[0]?.detail).toBe("outside organisation name");
+    expect(JSON.stringify(f)).not.toContain(sample);
   });
-  it("holds the real list as well-formed hashes", () => {
-    expect(NAME_HASHES).toHaveLength(3);
-    for (const n of NAME_HASHES) {
-      expect(n.hash).toMatch(/^[0-9a-f]{64}$/);
-      expect(n.length).toBeGreaterThan(0);
-    }
+  it("agrees with the shared helper", () => {
+    expect(containsForbiddenOrg(sample)).toBe(true);
+    expect(forbiddenOrgNeedles().length).toBeGreaterThan(0);
   });
 });
 
@@ -119,7 +111,7 @@ describe("claim wording in copy files", () => {
 });
 
 describe("exemptions", () => {
-  const bad = file("apps/web/src/a.ts", `const x = "${j("S", "CIO")}";`);
+  const bad = file("apps/web/src/a.ts", `const x = "${endorsedByForbiddenOrgSample("en")}";`);
   const ex = (patch: Partial<Exemption> = {}): Exemption => ({
     path: "apps/web/src/a.ts",
     rule: "forbidden-name",

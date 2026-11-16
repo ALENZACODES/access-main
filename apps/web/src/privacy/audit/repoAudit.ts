@@ -2,9 +2,8 @@
 // breaks. Exceptions must be listed with a reason and a date, and an exception
 // that no longer matches a file is itself reported, so the list cannot rot.
 
+import { forbiddenOrgNeedles } from "../../../../../packages/shared/test/forbiddenOrg.ts";
 import { lintCopy } from "../panel/copyLint";
-import { NAME_HASHES, type NameHash } from "./nameHashes";
-import { sha256Hex } from "./sha256";
 
 export type RuleId =
   | "forbidden-name"
@@ -39,31 +38,18 @@ export interface Exemption {
   recordedOn: string;
 }
 
-/** Lines where a listed name appears, found by hashing words rather than matching text. */
-export function nameFindings(text: string, names: readonly NameHash[] = NAME_HASHES): Array<{ line: number; token: string }> {
-  const found: Array<{ line: number; token: string }> = [];
-  const words = [...text.matchAll(/[\p{L}\p{N}]+/gu)].map((m) => ({ value: m[0].toLowerCase(), index: m.index ?? 0, end: (m.index ?? 0) + m[0].length }));
-  const add = (index: number, token: string): void => {
-    found.push({ line: lineOf(text, index), token });
-  };
-  for (let i = 0; i < words.length; i += 1) {
-    const w = words[i];
-    if (w === undefined) continue;
-    for (const n of names) {
-      if (n.words === 1 && w.value.length === n.length && sha256Hex(w.value) === n.hash) add(w.index, w.value);
-      if (n.insideWord === true && w.value.length > n.length) {
-        for (let k = 0; k + n.length <= w.value.length; k += 1) {
-          if (sha256Hex(w.value.slice(k, k + n.length)) === n.hash) add(w.index + k, w.value);
-        }
-      }
-      if (n.words > 1 && i + n.words <= words.length) {
-        const run = words.slice(i, i + n.words);
-        const spaced = run.every((x, k) => k === 0 || /^\s+$/.test(text.slice((run[k - 1] as { end: number }).end, x.index)));
-        const joined = run.map((x) => x.value).join(" ");
-        if (spaced && joined.length === n.length && sha256Hex(joined) === n.hash) add(w.index, "name of an outside organisation");
-      }
-    }
-  }
+/**
+ * Lines that carry an outside organisation's name. The names come from the shared
+ * forbiddenOrgNeedles() helper, so they are written down in one place only and never
+ * here. A finding says which line, never which name.
+ */
+export function nameFindings(text: string, needles: readonly string[] = forbiddenOrgNeedles()): Array<{ line: number }> {
+  const lower = needles.map((n) => n.toLowerCase());
+  const found: Array<{ line: number }> = [];
+  text.split("\n").forEach((line, i) => {
+    const l = line.toLowerCase();
+    if (lower.some((n) => n !== "" && l.includes(n))) found.push({ line: i + 1 });
+  });
   return found;
 }
 
@@ -137,7 +123,7 @@ function scanPatterns(
 export function scanFile(f: SourceFile): Finding[] {
   const out: Finding[] = [];
   if (SCRIPT_FILE.test(f.path)) {
-    for (const n of nameFindings(f.text)) out.push({ rule: "forbidden-name", path: f.path, line: n.line, detail: `outside organisation name: ${n.token.slice(0, 60)}` });
+    for (const n of nameFindings(f.text)) out.push({ rule: "forbidden-name", path: f.path, line: n.line, detail: "outside organisation name" });
     scanPatterns(out, f, "third-party-tiles", TILE_HOSTS.map((re) => ({ re, why: "third-party tile or map host" })));
     scanPatterns(out, f, "tracker-host", TRACKER_HOSTS.map((re) => ({ re, why: "analytics or tracking host" })));
     scanPatterns(out, f, "secret", SECRET_PATTERNS);
