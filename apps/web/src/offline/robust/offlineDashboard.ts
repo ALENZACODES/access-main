@@ -16,6 +16,7 @@ import { selectedDownloadPlan } from "./cellTriage";
 import { mountOfflineTriage } from "./offlineTriagePanel";
 import { mountOfflineCleanup } from "./cleanupPanel";
 import { mountOfflineUpdateReview } from "./updateReviewPanel";
+import { mountOfflineSessionComparison } from "./sessionComparisonPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -225,6 +226,9 @@ export function mountOfflineDashboard(
   const reviewHost = element("div");
   section.append(reviewHost);
   const unmountReview = mountOfflineUpdateReview(reviewHost, manifest, model, language, dependencies.estimateStorage);
+  const comparisonHost = element("div");
+  section.append(comparisonHost);
+  const unmountComparison = mountOfflineSessionComparison(comparisonHost, manifest, model, language);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -336,6 +340,7 @@ export function mountOfflineDashboard(
     unmountTriage();
     unmountCleanup();
     unmountReview();
+    unmountComparison();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);

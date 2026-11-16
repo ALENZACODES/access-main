@@ -46,13 +46,10 @@ export function pressureView(state: PressureState, language: Language): Pressure
   if (state.phase === "working") {
     return { message: copy.working, details: "", action: copy.retry, disabled: true };
   }
-  if (state.phase === "idle") {
+  if (state.phase !== "stopped" || state.result === null) {
     return { message: "", details: "", action: copy.start, disabled: false };
   }
-  const result = state.result;
-  if (result === null) {
-    return { message: copy.error, details: "", action: copy.retry, disabled: false };
-  }
+  const result: DownloadResult = state.result;
   const message = result.completed ? copy.complete : result.reason === "quota" ? copy.quota :
     result.reason === "interrupted" ? copy.interrupted : copy.error;
   const separator = language === "fr" ? "\u00a0:" : ":";

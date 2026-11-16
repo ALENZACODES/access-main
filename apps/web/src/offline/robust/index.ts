@@ -34,3 +34,8 @@ export * from "./updateAssessment";
 export * from "./updateCopy";
 export * from "./updateReviewExport";
 export * from "./updateReviewPanel";
+
+export * from "./sessionComparison";
+export * from "./sessionComparisonCopy";
+export * from "./sessionComparisonExport";
+export * from "./sessionComparisonPanel";
