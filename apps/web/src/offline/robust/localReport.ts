@@ -1,7 +1,7 @@
-import { type Language, type DownloadResult } from "./regionDownload.ts";
-import { type RegionInventory } from "./regionInventory.ts";
-import { type CapacityPlan } from "./quotaPlanning.ts";
-import { type ManifestAudit } from "./manifestAudit.ts";
+import { type Language, type DownloadResult } from "./regionDownload";
+import { type RegionInventory } from "./regionInventory";
+import { type CapacityPlan } from "./quotaPlanning";
+import { type ManifestAudit } from "./manifestAudit";
 
 /** A snapshot contains metadata only; it never includes downloaded cell bytes. */
 export interface LocalReport {
@@ -118,7 +118,7 @@ const HEADINGS = {
 } as const;
 
 function plain(value: string): string {
-  return value.replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/gu, " ");
+  return value.replace(/[\p{Cc}\u202a-\u202e\u2066-\u2069]/gu, " ");
 }
 
 function display(value: number | null, language: Language): string {

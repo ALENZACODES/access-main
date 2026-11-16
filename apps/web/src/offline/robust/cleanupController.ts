@@ -39,11 +39,10 @@ export interface CleanupController {
 
 /** A store failure cannot be mistaken for a successfully completed delete. */
 function sameStoredCell(a: StoredCell, b: StoredCell): boolean {
-  return a.data.byteLength === b.data.byteLength &&
+  return a.bytes === b.bytes &&
     a.provenance.source === b.provenance.source &&
     a.provenance.licence === b.provenance.licence &&
-    a.provenance.date === b.provenance.date &&
-    a.data.every((byte, index) => byte === b.data[index]);
+    a.provenance.date === b.provenance.date;
 }
 
 function consistentListing(

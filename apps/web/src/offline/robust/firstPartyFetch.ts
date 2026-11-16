@@ -1,4 +1,4 @@
-import { type RegionCell, type DownloadDependencies } from "./regionDownload.ts";
+import { type RegionCell, type DownloadDependencies } from "./regionDownload";
 
 export interface FirstPartyFetchOptions {
   /** Same-origin absolute path, never a remote hostname. */
@@ -19,7 +19,7 @@ export function validFirstPartyPath(value: string): boolean {
     /%(?:2f|5c|2e|00)/i.test(value)) return false;
   const segments = value.split("/");
   return segments.every((part, index) => index === 0 ||
-    (part !== ".." && part !== "." && !/[\u0000-\u001f\u007f]/.test(part)));
+    (part !== ".." && part !== "." && !/[\p{Cc}]/u.test(part)));
 }
 
 function validateId(value: string): string {
@@ -136,7 +136,6 @@ export function createFirstPartyCellFetcher(
     if (length !== null && (!/^\d+$/.test(length) || Number(length) !== cell.bytes)) {
       throw new Error("Offline cell response size mismatch");
     }
-    const body = await readBoundedBody(response, cell.bytes, maximumBytes, signal);
-    return body.byteLength;
+    return (await readBoundedBody(response, cell.bytes, maximumBytes, signal)).byteLength;
   };
 }

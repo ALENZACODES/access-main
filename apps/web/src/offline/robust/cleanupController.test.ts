@@ -18,7 +18,7 @@ function fixture() {
   const key = (region: string, id: string): string => `${region}\u0000${id}`;
   for (const cell of manifest.cells) {
     records.set(key(manifest.regionId, cell.id), {
-      data: new Uint8Array([1, 2, 3]), provenance: cell.provenance,
+      bytes: 3, provenance: cell.provenance,
     });
   }
   const get = vi.fn(async (region: string, id: string) => records.get(key(region, id)));
@@ -174,11 +174,11 @@ describe("cleanup controller requires explicit review and confirmation", () => {
     controller.dispose();
   });
 
-  it("stops if content changes after preview", async () => {
+  it("stops if recorded byte count changes after preview", async () => {
     const f = fixture();
     const controller = createCleanupController(manifest, f.store);
     await controller.prepare(["one", "two"]);
-    f.records.set(f.key("west", "one"), { data: new Uint8Array([3, 2, 1]), provenance });
+    f.records.set(f.key("west", "one"), { bytes: 4, provenance });
     const result = await controller.confirm();
     expect(result?.stop).toBe("changed");
     expect(result?.deleted).toEqual([]);
@@ -192,7 +192,7 @@ describe("cleanup controller requires explicit review and confirmation", () => {
     const controller = createCleanupController(manifest, f.store);
     await controller.prepare(["one"]);
     f.records.set(f.key("west", "one"), {
-      data: new Uint8Array([1, 2, 3]), provenance: { ...provenance, date: "2025-03-01" },
+      bytes: 3, provenance: { ...provenance, date: "2025-03-01" },
     });
     const result = await controller.confirm();
     expect(result?.stop).toBe("changed");

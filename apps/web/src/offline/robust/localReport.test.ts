@@ -5,11 +5,11 @@ import {
   formatLocalReport,
   reportFilename,
   type LocalReportInput,
-} from "./localReport.ts";
-import { auditManifest } from "./manifestAudit.ts";
-import { type RegionManifest } from "./regionDownload.ts";
-import { type RegionInventory } from "./regionInventory.ts";
-import { type CapacityPlan } from "./quotaPlanning.ts";
+} from "./localReport";
+import { auditManifest } from "./manifestAudit";
+import { type RegionManifest } from "./regionDownload";
+import { type RegionInventory } from "./regionInventory";
+import { type CapacityPlan } from "./quotaPlanning";
 
 const date = "2026-11-15";
 const provenance = {
@@ -197,7 +197,7 @@ describe("local device-only offline report", () => {
   it("limits filename size and strips control characters", () => {
     const filename = reportFilename("A".repeat(300), date, "txt");
     expect(filename.length).toBeLessThan(100);
-    expect(filename).toMatch(/^offline-a+\-2026-11-15\.txt$/);
+    expect(filename).toMatch(/^offline-a+-2026-11-15\.txt$/);
   });
 
   it("does not accept arbitrary date fragments in filenames", () => {

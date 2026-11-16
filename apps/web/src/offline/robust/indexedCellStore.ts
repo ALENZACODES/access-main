@@ -1,4 +1,4 @@
-import { type CellStore, type StoredCell, type Provenance } from "./regionDownload.ts";
+import { type CellStore, type StoredCell, type Provenance } from "./regionDownload";
 
 /**
  * Persistent first-party byte storage. No network or background activity.

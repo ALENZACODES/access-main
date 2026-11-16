@@ -8,8 +8,8 @@ import {
   requireAuditedManifest,
   type AuditCode,
   type AuditLimits,
-} from "./manifestAudit.ts";
-import { type RegionManifest, type RegionCell } from "./regionDownload.ts";
+} from "./manifestAudit";
+import { type RegionManifest, type RegionCell } from "./regionDownload";
 
 const today = "2026-11-15";
 const attribution = { source: "Province public data", licence: "CC BY 4.0", date: "2026-01-01" };

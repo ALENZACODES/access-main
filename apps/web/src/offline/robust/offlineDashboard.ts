@@ -5,13 +5,16 @@ import {
   type Language,
   type RegionManifest,
   type StorageEstimate,
-} from "./regionDownload.ts";
-import { dashboardCopy } from "./offlineCopy.ts";
-import { inspectRegion, inventoryPage, type RegionInventory } from "./regionInventory.ts";
-import { formatBinaryBytes, planCapacity, type CapacityPlan } from "./quotaPlanning.ts";
-import { auditManifest } from "./manifestAudit.ts";
-import { createLocalReport, saveReportFile } from "./localReport.ts";
-import { createOfflineAction } from "./accessibilityGuard.ts";
+} from "./regionDownload";
+import { dashboardCopy } from "./offlineCopy";
+import { inspectRegion, inventoryPage, type RegionInventory } from "./regionInventory";
+import { formatBinaryBytes, planCapacity, type CapacityPlan } from "./quotaPlanning";
+import { auditManifest } from "./manifestAudit";
+import { createLocalReport, saveReportFile } from "./localReport";
+import { createOfflineAction } from "./accessibilityGuard";
+import { selectedDownloadPlan } from "./cellTriage";
+import { mountOfflineTriage } from "./offlineTriagePanel";
+import { mountOfflineCleanup } from "./cleanupPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
