@@ -40,7 +40,7 @@ export const fr: Record<keyof typeof en, string> = {
   tierE: "E — Contrôle d'une page officielle au bureau ; pas sur le terrain. Non utilisée ici.",
   higherTiers: "Les niveaux 2, 3 et 4 exigent d'autres preuves ; ce prototype ne les attribue pas.",
   seeded: "SEEDED-OPEN-DATA — Étiquette d'un exemple de données ouvertes ; pas une contrôle.",
-  prototype: "PROTOTYPE-not independently checked — Étiquette de métadonnées de prototype non contrôlées.",
+  prototype: "PROTOTYPE-UNVERIFIED — Étiquette de métadonnées de prototype non contrôlées.",
   emptyTier: "Aucun enregistrement avec niveau",
   tierCountSeparator: " : ",
   listSeparator: " ; ",
