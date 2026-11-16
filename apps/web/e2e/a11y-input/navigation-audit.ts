@@ -41,8 +41,7 @@ export interface FocusOrderIssue {
 }
 
 export function stableFocusKey(snapshot: FocusSnapshot): string {
-  if (snapshot.selector.startsWith("#")) return snapshot.selector;
-  return [snapshot.tag, snapshot.role ?? "", snapshot.name, String(snapshot.tabindex)].join("|");
+  return snapshot.selector;
 }
 
 /**
@@ -76,10 +75,8 @@ export async function observeFocus(page: Page): Promise<FocusSnapshot | null> {
     const name = node.getAttribute("aria-label") ??
       node.getAttribute("title") ?? node.textContent?.trim() ?? "";
     const numericTabindex = node.getAttribute("tabindex");
-    const href = node.getAttribute("href") ?? "";
-    const parentId = node.parentElement?.id ? `#${node.parentElement.id}` : "";
     return {
-      selector: href || parentId ? `${selector}@${href}${parentId}` : selector,
+      selector,
       tag: node.tagName.toLowerCase(),
       role: node.getAttribute("role"),
       name: name.slice(0, 100),
@@ -116,52 +113,54 @@ export async function walkSequentialFocus(
   }
   await resetSequentialFocus(page);
   const forward: FocusSnapshot[] = [];
-  const keys = new Set<string>();
+  const backwards: FocusSnapshot[] = [];
+  const seen = new Set<string>();
+  let error: string | null = null;
   let wrapped = false;
-  for (let index = 0; index < maxSteps; index += 1) {
+
+  for (let step = 0; step < maxSteps; step += 1) {
     const next = await tabOnce(page);
-    if (next === null) break;
+    if (next === null) {
+      // Tab may leave the document and enter browser chrome at the end.
+      // It must not be interpreted as a focusable application control.
+      break;
+    }
     const key = stableFocusKey(next);
-    if (keys.has(key)) {
+    if (seen.has(key)) {
       wrapped = true;
       break;
     }
+    const previous = forward[forward.length - 1];
     forward.push(next);
-    keys.add(key);
-  }
-  if (forward.length === 0) {
-    return {
-      forward, backwards: [], returnedToStart: false,
-      trapped: false, error: "No keyboard focus target found",
-    };
-  }
-  // One additional Tab may wrap to browser chrome. Re-establish focus at the
-  // final recorded control by walking from the beginning rather than storing
-  // an element handle that may become detached during a route transition.
-  await resetSequentialFocus(page);
-  for (let index = 0; index < forward.length; index += 1) {
-    await page.keyboard.press("Tab");
-  }
-  const backwards: FocusSnapshot[] = [];
-  let mismatch: string | null = null;
-  for (let index = forward.length - 2; index >= 0; index -= 1) {
-    const previous = await tabOnce(page, true);
-    if (previous === null) {
-      mismatch = `Focus disappeared while reversing at step ${index}`;
+    seen.add(key);
+    if (!previous) continue;
+
+    // Test the *actual* adjacent transition before taking another forward
+    // step. Replaying Tab from <body> after the full walk can enter at a
+    // different point when browser chrome or a rendered SPA is involved.
+    const reverse = await tabOnce(page, true);
+    if (reverse === null || stableFocusKey(reverse) !== stableFocusKey(previous)) {
+      error = `Reverse focus mismatch at step ${forward.length - 2}: ` +
+        `expected ${stableFocusKey(previous)}, observed ${reverse ? stableFocusKey(reverse) : "none"}`;
       break;
     }
-    backwards.push(previous);
-    if (stableFocusKey(previous) !== stableFocusKey(forward[index])) {
-      mismatch = `Reverse focus mismatch at step ${index}`;
+    backwards.unshift(reverse);
+    const again = await tabOnce(page);
+    if (again === null || stableFocusKey(again) !== key) {
+      error = `Forward focus mismatch after reversing at step ${forward.length - 1}: ` +
+        `expected ${key}, observed ${again ? stableFocusKey(again) : "none"}`;
       break;
     }
   }
+
+  if (forward.length === 0 && error === null) error = "No keyboard focus target found";
+  const trapped = !wrapped && forward.length === maxSteps;
   return {
     forward,
     backwards,
-    returnedToStart: mismatch === null,
-    trapped: !wrapped && forward.length === maxSteps,
-    error: mismatch,
+    returnedToStart: error === null,
+    trapped,
+    error,
   };
 }
 
@@ -215,25 +214,11 @@ export async function inspectTargetSizes(page: Page): Promise<TargetIssue[]> {
     ).entries()) {
       if (element.matches(":disabled,[aria-disabled='true']")) continue;
       const style = getComputedStyle(element);
-      const own = element.getBoundingClientRect();
-      let rect = own;
-      if (element instanceof HTMLInputElement &&
-          (element.type === "checkbox" || element.type === "radio")) {
-        const label = element.closest("label") ??
-          (element.id ? document.querySelector(`label[for="${CSS.escape(element.id)}"]`) : null);
-        if (label instanceof HTMLElement) {
-          const labelRect = label.getBoundingClientRect();
-          const left = Math.min(own.left, labelRect.left);
-          const top = Math.min(own.top, labelRect.top);
-          const right = Math.max(own.right, labelRect.right);
-          const bottom = Math.max(own.bottom, labelRect.bottom);
-          rect = new DOMRect(left, top, right - left, bottom - top);
-        }
-      }
+      const rect = element.getBoundingClientRect();
       if (style.display === "none" || style.visibility === "hidden" ||
           rect.width === 0 || rect.height === 0) continue;
-      // Inline text links have a different box model than 44px action targets.
-      if (element.matches("a[href]") && style.display === "inline") continue;
+      if (element.matches("a[href]") &&
+          style.display === "inline" && element.closest("p,li,blockquote")) continue;
       if (rect.width >= 44 && rect.height >= 44) continue;
       issues.push({
         selector: element.id ? `#${element.id}` :
