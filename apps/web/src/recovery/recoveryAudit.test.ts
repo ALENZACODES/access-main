@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { diagnosticsCopy } from "./recoveryDiagnostics";
 import { actionsCopy } from "./recoveryActions";
 import { comparisonCopy } from "./recoveryComparison";
-import { forbiddenOrgNames } from "./forbiddenOrgNames";
+import { forbiddenOrgNeedles } from "../../../../packages/shared/test/forbiddenOrg.ts";
 
 /**
  * Enforcement guard for the mounted recovery workstream. Tests intentionally
@@ -57,7 +57,7 @@ describe("recovery source audit", () => {
     const files = [...readdirSync(root).filter((name) => /\.(?:ts|tsx|md)$/.test(name)).map((name) => join(root, name)), parent];
     for (const file of files) {
       const content = readFileSync(file, "utf8").toLowerCase();
-      for (const name of forbiddenOrgNames()) expect(content).not.toContain(name);
+      for (const name of forbiddenOrgNeedles()) expect(content).not.toContain(name.toLowerCase());
     }
   });
 

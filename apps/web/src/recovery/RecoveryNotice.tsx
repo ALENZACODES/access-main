@@ -59,7 +59,7 @@ export function RecoveryNotice({
       {message.action === "free-space" && (
         <p>
           {locale === "fr"
-            ? "Examinez l’espace libre dans les paramètres de l’appareil. Aucun fichier ne sera supprimé automatiquement."
+            ? "Consultez l’espace libre dans les paramètres de l’appareil. Aucun fichier ne sera supprimé automatiquement."
             : "Check available space in device settings. No files will be deleted automatically."}
         </p>
       )}

@@ -1,5 +1,6 @@
 import { classifyRecoveryError } from "./classify";
 import type { RecoveryReason, RecoverySource } from "./index";
+import { hasControlCharacter } from "./controlCharacters";
 
 /** Explicitly provided, locally prepared export. No automatic submission. */
 export interface RecoveryExportRecord {
@@ -46,7 +47,7 @@ function isValidTimestamp(value: string): boolean {
 function shortText(value: unknown): value is string {
   return typeof value === "string" &&
     value.length > 0 && value.length <= MAX_FIELD_LENGTH &&
-    !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value);
+    !hasControlCharacter(value);
 }
 
 function sourceIsComplete(source: RecoverySource): boolean {

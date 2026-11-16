@@ -123,3 +123,24 @@ The region check keeps an UNKNOWN or damaged result visible in its row, even
 when the notice is closed. The user-triggered download action never routes to
 region deletion. Recovery error classification and notices are exported by the
 package index for the profile, region and feature screens.
+
+
+## Manual recovery plans and inspection comparison
+
+The recovery shell now shows an on-device queue alongside its existing inspection
+and download tools. `recoveryPolicy.ts` assigns review priorities from current
+local inspection results; an UNKNOWN record is never promoted to ready by a
+queue action. `recoveryBatch.ts` records only user-initiated queue decisions,
+`recoveryLedger.ts` provides an in-memory, bounded session history, and
+`recoveryPlanExport.ts` creates a limited local JSON summary with source,
+licence and date where actually known. The storage budget is an estimate; a
+missing size remains unknown instead of becoming zero.
+
+`RecoveryPlanReview` offers a separate manual import of an earlier JSON plan.
+The parser checks size, structure, provenance and date constraints; the
+comparison presents historical changes against a fresh inspection. Imported
+queue decisions are never installed or replayed. No automatic downloads,
+external requests, permissions escalation, medical determinations, or
+background tasks are performed by these components. The save and inspection
+callbacks remain owned by the host route. The tests cover malformed imports,
+partial inputs, unknown outcomes and manual transitions.

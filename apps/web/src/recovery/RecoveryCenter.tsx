@@ -22,6 +22,8 @@ import type { RecoveryLocale } from "./index";
 import { RecoveryNotice } from "./RecoveryNotice";
 import { RecoveryWorkbench } from "./RecoveryWorkbench";
 import { RecoveryQueuePanel } from "./RecoveryQueuePanel";
+import { RecoveryPlanReview } from "./RecoveryPlanReview";
+import { planPackRepairs } from "./recoveryPolicy";
 
 /** This is a complete local shell widget; routes can mount it without a service. */
 export interface RecoveryCenterProps {
@@ -81,6 +83,9 @@ export function RecoveryCenter({
   const copy = inventoryCopy(locale);
   const transferCopy = downloadCopy(locale);
   const fileCopy = exportCopy(locale);
+  const policy = useMemo(() => hasInspected && !checking && !inventoryFailure
+    ? planPackRepairs(inventory, { date: inspectionDate }) : null,
+    [hasInspected, checking, inventoryFailure, inventory, inspectionDate]);
 
   useEffect(() => session.subscribe(setTransfer), [session]);
   useEffect(() => () => { session.cancel(); }, [session]);
@@ -175,8 +180,14 @@ export function RecoveryCenter({
         onInspect={() => { void refresh(); }}
       />
       {hasInspected && !checking && !inventoryFailure && (
-        <RecoveryQueuePanel locale={locale} records={inventory} busy={checking} onInspect={() => { void refresh(); }} />
+        <RecoveryQueuePanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure}
+          inspectionDate={inspectionDate}
+          onInspect={() => { void refresh(); }} saveFile={saveFile} />
       )}
+      <RecoveryPlanReview locale={locale} current={policy}
+        inspected={hasInspected && !checking && !inventoryFailure}
+        onInspect={() => { void refresh(); }} saveFile={saveFile} />
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>

@@ -96,7 +96,7 @@ function RegionInventoryDashboard({ pack, regionId, language, source }: { pack: 
       cancelled = true;
       unmount?.();
     };
-  }, [pack, regionId, language]);
+  }, [pack, regionId, language, source]);
   return <div ref={rootRef} className="offline-inventory" data-testid={`offline-inventory-${regionId}`} />;
 }
 
