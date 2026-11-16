@@ -36,3 +36,10 @@ fault, and Dismiss.
 - `e2e/recovery.spec.ts`: a failed pack download on `/offline` in EN and FR
   (notice, 44 px targets, axe, retry), and a failed preferences export on
   `/profile` (notice, axe, retry saves the file).
+
+## Damaged or uncheckable packs
+
+`packIntegrity.ts` and `CorruptPackNotice` detect a damaged or uncheckable pack
+and offer a re-download. On `/offline`, Check again re-reads the stored parts; a
+region whose parts are no longer all on the device shows the notice. A pack is
+never treated as complete when the digest or size cannot be confirmed.

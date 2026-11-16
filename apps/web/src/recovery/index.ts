@@ -288,3 +288,18 @@ export function getRecoveryMessage(
 export { classifyPackDownloadError, classifyRecoveryError, runRecoverable, type RecoveryResult } from "./classify.ts";
 export { RecoveryNotice, type RecoveryNoticeProps } from "./RecoveryNotice.tsx";
 
+
+export {
+  browserSha256,
+  checkPackIntegrity,
+  packIntegrityCopy,
+  redownloadPack,
+} from "./packIntegrity.ts";
+export type {
+  PackCheck,
+  PackManifest as IntegrityPackManifest,
+  PackRedownloadResult,
+  Sha256,
+} from "./packIntegrity.ts";
+export { CorruptPackNotice } from "./CorruptPackNotice.tsx";
+export type { CorruptPackNoticeProps } from "./CorruptPackNotice.tsx";
