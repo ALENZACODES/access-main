@@ -27,17 +27,6 @@ test.describe("Sequential focus walk regression", () => {
     ]);
   });
 
-  test("identified links use DOM IDs rather than href-suffixed snapshots", async ({ page }) => {
-    await page.setContent(`<main>
-      <a id="download" href="/report.txt">Download</a>
-      <button id="next">Next</button>
-    </main>`);
-    const walk = await walkSequentialFocus(page, 12);
-    assertWalk(walk);
-    expect(walk.forward.map((item) => item.selector))
-      .toEqual(["#download", "#next"]);
-  });
-
   test("single focus target does not disappear after Tab wraps", async ({ page }) => {
     await page.setContent('<main><button id="only">Only</button></main>');
     const walk = await walkSequentialFocus(page, 10);

@@ -10,6 +10,7 @@ import {
   MIN_TOUCH_TARGET_PX,
   type Locale,
 } from "./index.ts";
+import { containsForbiddenOrg } from "../../../../packages/shared/test/forbiddenOrg.ts";
 
 const locales: Locale[] = ["en", "fr"];
 
@@ -54,12 +55,13 @@ describe("route states (via package index)", () => {
 
   it("route labels avoid banned and prohibited wording", () => {
     const banned = new RegExp(
-      ["verified", "vérifié", "AAA", String.raw`\bAI\b`, String.raw`\bIA\b`, "sci" + "ontario", "SCI" + "O"].join("|"),
+      ["verified", "vérifié", "AAA", String.raw`\bAI\b`, String.raw`\bIA\b`].join("|"),
       "i",
     );
     for (const r of ROUTE_IDS) {
       for (const l of locales) {
         expect(ROUTE_STATES[r].label[l]).not.toMatch(banned);
+        expect(containsForbiddenOrg(ROUTE_STATES[r].label[l])).toBe(false);
       }
     }
   });

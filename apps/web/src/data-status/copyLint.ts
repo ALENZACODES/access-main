@@ -5,6 +5,7 @@
  * no AI mentions, no partnership claims, no medical or eligibility advice,
  * no guarantees, and no reference to the organisations the App is unbranded from.
  */
+import { forbiddenOrgNeedles } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import { CATALOG, type MessageKey } from './i18n';
 import type { Locale } from './dataStatus';
 
@@ -13,10 +14,11 @@ export interface CopyRule {
   pattern: RegExp;
 }
 
-// Built from fragments so the banned names never appear literally in this repo.
-const BRAND_A = ['sci', 'ontario'].join('');
-const BRAND_B = ['s', 'c', 'i', 'o'].join('');
-const BRAND_C = ['spinal', 'cord', 'injury', 'ontario'].join(' ');
+// The banned names come only from the repo's shared helper (it rebuilds them from code points), never from text here.
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+const BANNED_NAMES = new RegExp(forbiddenOrgNeedles().map((needle) => `(?<![\\p{L}\\p{N}])${escapeRegExp(needle)}(?![\\p{L}\\p{N}])`).join('|'), 'iu');
 
 export const COPY_RULES: readonly CopyRule[] = [
   { id: 'verified-claim', pattern: /\bverif\w*|\bv[ée]rifi\w*/i },
@@ -27,7 +29,7 @@ export const COPY_RULES: readonly CopyRule[] = [
   { id: 'medical-advice', pattern: /\b(medical advice|see (a|your) (doctor|physician)|diagnos\w*|treatment|symptom\w*|medication)\b|conseil m[ée]dical|consultez (un|votre) m[ée]decin|\bdiagnostic\b|\btraitement\b|sympt[ôo]me\w*|m[ée]dicament\w*/i },
   { id: 'eligibility-advice', pattern: /\beligib\w*|you qualify|vous [êe]tes admissible|\badmissib\w*|vous avez droit/i },
   { id: 'guarantee-claim', pattern: /\bguarantee\w*|\bgaranti\w*|100 ?% (accurate|complete|exact|complet)|always accurate|toujours exact/i },
-  { id: 'banned-name', pattern: new RegExp(`\\b${BRAND_A}\\b|\\b${BRAND_B}\\b|${BRAND_C}`, 'i') },
+  { id: 'banned-name', pattern: BANNED_NAMES },
 ];
 
 export interface CopyViolation {

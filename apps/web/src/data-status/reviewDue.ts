@@ -53,10 +53,10 @@ function utcToday(now: Date): number {
 
 /** All sources, most urgent first; Unknown dates last. */
 export function buildReviewQueue(audit: AuditResult, now: Date): DueItem[] {
-  const days = new Map(audit.datasets.map((d) => [d.id, d.staleAfterDays] as const));
   const today = utcToday(now);
   const items = audit.sources.map((s): DueItem => {
-    const staleAfterDays = days.get(s.datasetId) ?? 0;
+    // Each audited source carries the limit that was applied to it, so duplicate dataset ids cannot mix limits up.
+    const staleAfterDays = s.limitDays;
     // A date that is missing, unreadable or in the future makes the state Unknown: nothing is scheduled from it.
     const known = s.retrievedIso !== null && s.state !== 'unknown';
     const dueIso = known && s.retrievedIso !== null ? addDaysIso(s.retrievedIso, staleAfterDays) : null;
