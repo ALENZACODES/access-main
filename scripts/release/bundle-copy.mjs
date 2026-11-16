@@ -1,34 +1,10 @@
 /**
- * Extract statically shipped JavaScript string content without treating
- * function names, comments, or regex source text as interface copy.
- * This is a conservative lexical pass, not a JavaScript interpreter.
+ * Inspect statically shipped JavaScript string and template content.
+ * TypeScript's JavaScript parser handles minified syntax, regex literals and
+ * interpolated templates without treating source identifiers as interface copy.
  */
+import ts from 'typescript';
 
-const JS_IDENTIFIER = /[\p{L}\p{N}_$]/u;
-
-/** Read a string token and return its raw payload and next offset. */
-function quoted(source, start, quote) {
-  let content = '';
-  let index = start + 1;
-  while (index < source.length) {
-    const next = source[index];
-    if (next === '\\') {
-      if (index + 1 >= source.length) return { error: 'unterminated escape', next: source.length };
-      content += source.slice(index, index + 2);
-      index += 2;
-      continue;
-    }
-    if (next === quote) return { text: content, next: index + 1 };
-    if (quote !== '`' && (next === '\n' || next === '\r')) {
-      return { error: 'unterminated string', next: index };
-    }
-    content += next;
-    index += 1;
-  }
-  return { error: 'unterminated string', next: source.length };
-}
-
-/** Decode common escaped Unicode forms; preserve unknown escapes literally. */
 export function decodeStaticString(raw) {
   return raw
     .replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (all, hex) => {
@@ -41,65 +17,27 @@ export function decodeStaticString(raw) {
     .replace(/\\([\\'"`])/g, '$1');
 }
 
-/**
- * Only lexical string tokens are inspected. The caller must additionally
- * inspect HTML, JSON and localisation catalogues as plain text.
- */
+/** Parse every JavaScript string token and fail closed on malformed input. */
 export function extractShippedStrings(source) {
-  const strings = [];
-  let position = 0;
-  let previous = '';
-  while (position < source.length) {
-    const char = source[position];
-    const next = source[position + 1];
-    if (char === '/' && next === '/') {
-      position = source.indexOf('\n', position + 2);
-      if (position < 0) break;
-      continue;
-    }
-    if (char === '/' && next === '*') {
-      const stop = source.indexOf('*/', position + 2);
-      position = stop < 0 ? source.length : stop + 2;
-      continue;
-    }
-    if (char === '"' || char === "'" || char === '`') {
-      const read = quoted(source, position, char);
-      if (read.error) {
-        return { strings, error: `${read.error} at offset ${position}` };
-      }
-      strings.push({ value: decodeStaticString(read.text), offset: position });
-      position = read.next;
-      previous = 'literal';
-      continue;
-    }
-    if (char === '/' && next !== '=' && next !== '/' && next !== '*'
-      && !['literal', 'identifier', ')', ']'].includes(previous)) {
-      // Skip regular expression syntax, including escaped / and character sets.
-      let cursor = position + 1;
-      let insideClass = false;
-      for (; cursor < source.length; cursor += 1) {
-        const ch = source[cursor];
-        if (ch === '\\') { cursor += 1; continue; }
-        if (ch === '[') insideClass = true;
-        if (ch === ']') insideClass = false;
-        if (ch === '/' && !insideClass) break;
-        if (ch === '\n') break;
-      }
-      if (source[cursor] === '/') {
-        position = cursor + 1;
-        while (/[a-z]/i.test(source[position] ?? '')) position += 1;
-        previous = 'literal';
-        continue;
-      }
-    }
-    if (JS_IDENTIFIER.test(char)) {
-      while (position < source.length && JS_IDENTIFIER.test(source[position])) position += 1;
-      previous = 'identifier';
-      continue;
-    }
-    if (!/\s/.test(char)) previous = char;
-    position += 1;
+  const file = ts.createSourceFile('release-bundle.js', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const diagnostic = file.parseDiagnostics[0];
+  if (diagnostic) {
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ').toLowerCase();
+    return { strings: [], error: `${message} at offset ${diagnostic.start ?? 0}` };
   }
+  const strings = [];
+  function visit(node) {
+    if (ts.isStringLiteral(node)
+      || node.kind === ts.SyntaxKind.NoSubstitutionTemplateLiteral
+      || node.kind === ts.SyntaxKind.TemplateHead
+      || node.kind === ts.SyntaxKind.TemplateMiddle
+      || node.kind === ts.SyntaxKind.TemplateTail) {
+      strings.push({ value: node.text ?? '', offset: node.getStart(file) });
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  strings.sort((a, b) => a.offset - b.offset);
   return { strings, error: null };
 }
 
