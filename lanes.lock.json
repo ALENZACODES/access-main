@@ -5,10 +5,10 @@
     { "repo": "ALENZACODES/access-maps", "path": "packages/journey", "alias": "@access-maps/journey", "commit": "4274cd0c12d6cdd8061a08f1dedc2af744263234" },
     { "repo": "ALENZACODES/access-maps", "path": "packages/map-ui", "alias": "@access-maps/map-ui", "commit": "4274cd0c12d6cdd8061a08f1dedc2af744263234" },
     { "repo": "ALENZACODES/access-maps", "path": "packages/journey-data", "alias": "@access-maps/journey-data", "commit": "4274cd0c12d6cdd8061a08f1dedc2af744263234" },
-    { "repo": "ALENZACODES/access-tools", "path": "packages/finders", "alias": "@access-tools/finders", "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860" },
-    { "repo": "ALENZACODES/access-tools", "path": "packages/place", "alias": "@access-tools/place", "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860" },
-    { "repo": "ALENZACODES/access-tools", "path": "packages/navigator", "alias": "@access-tools/navigator", "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860" },
-    { "repo": "ALENZACODES/access-tools", "path": "packages/games", "alias": "@access-tools/games", "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860" },
-    { "repo": "ALENZACODES/access-help", "path": "packages/help", "alias": "@access/help", "commit": "4870fa91555f5aa96fb936586c80a8931a58db7d" }
+    { "repo": "ALENZACODES/access-tools", "path": "packages/finders", "alias": "@access-tools/finders", "commit": "48f5e237e9275abf5b8375922cb6eed08658760c" },
+    { "repo": "ALENZACODES/access-tools", "path": "packages/place", "alias": "@access-tools/place", "commit": "48f5e237e9275abf5b8375922cb6eed08658760c" },
+    { "repo": "ALENZACODES/access-tools", "path": "packages/navigator", "alias": "@access-tools/navigator", "commit": "48f5e237e9275abf5b8375922cb6eed08658760c" },
+    { "repo": "ALENZACODES/access-tools", "path": "packages/games", "alias": "@access-tools/games", "commit": "48f5e237e9275abf5b8375922cb6eed08658760c" },
+    { "repo": "ALENZACODES/access-help", "path": "packages/help", "alias": "@access/help", "commit": "6ae6038f4f35f6eb11cdeb60a5c71c398ee02e5d" }
   ]
 }

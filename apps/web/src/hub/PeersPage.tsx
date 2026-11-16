@@ -10,6 +10,7 @@ export default function PeersPage() {
       <p>{t("peerNotice")}</p>
       <h2>{t("peerTopics")}</h2>
       <ul>{Object.values(PEER_TOPICS).map((topic) => <li key={String(topic)}>{String(topic)}</li>)}</ul>
+      <p><Link to="/more/peer-request" style={{ display: "inline-flex", minHeight: 44, alignItems: "center" }}>{t("peerRequest")}</Link></p>
       <Link to="/help" style={{ display: "inline-flex", minHeight: 44, alignItems: "center" }}>{t("help")}</Link>
     </HubLayout>
   );

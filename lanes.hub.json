@@ -5,61 +5,61 @@
       "repo": "ALENZACODES/access-tools",
       "package": "employment",
       "alias": "@access-tools/employment",
-      "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "housing",
       "alias": "@access-tools/housing",
-      "commit": "8befe99e12bcf17098827c6df4389ce096e0cc41"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "safety",
       "alias": "@access-tools/safety",
-      "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "timing",
       "alias": "@access-tools/timing",
-      "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "diary",
       "alias": "@access-tools/diary",
-      "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "auditors",
       "alias": "@access-tools/auditors",
-      "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     },
     {
       "repo": "ALENZACODES/access-tools",
       "package": "handoff",
       "alias": "@access-tools/handoff",
-      "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     },
     {
       "repo": "ALENZACODES/access-help",
       "package": "peers",
       "alias": "@access/peers",
-      "commit": "4870fa91555f5aa96fb936586c80a8931a58db7d"
+      "commit": "6ae6038f4f35f6eb11cdeb60a5c71c398ee02e5d"
     },
     {
       "repo": "ALENZACODES/access-help",
       "package": "event-access",
       "alias": "@access/event-access",
-      "commit": "4870fa91555f5aa96fb936586c80a8931a58db7d"
+      "commit": "6ae6038f4f35f6eb11cdeb60a5c71c398ee02e5d"
     },
     {
       "repo": "ALENZACODES/access-help",
       "package": "outings",
       "alias": "@access/outings",
-      "commit": "4870fa91555f5aa96fb936586c80a8931a58db7d"
+      "commit": "6ae6038f4f35f6eb11cdeb60a5c71c398ee02e5d"
     },
     {
       "repo": "ALENZACODES/access-maps",
@@ -71,7 +71,7 @@
       "repo": "ALENZACODES/access-tools",
       "package": "games",
       "alias": "@hub/games",
-      "commit": "72d5580fc00f94c97fb1af60ae6880dff78cf860"
+      "commit": "48f5e237e9275abf5b8375922cb6eed08658760c"
     }
   ]
 }

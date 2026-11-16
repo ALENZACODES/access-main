@@ -49,6 +49,7 @@ const NEW_ROUTES: Array<{ path: string; key: Key; mark: string }> = [
   { path: "event-organiser", key: "eventOrganiser", mark: "#org-title" },
   { path: "event-plan", key: "eventPlan", mark: "#ep-start" },
   { path: "reports", key: "reports", mark: "#reports-heading" },
+  { path: "peer-request", key: "peerRequest", mark: "#pcr-form-title" },
 ];
 
 describe("new More routes mount their package in both languages", () => {

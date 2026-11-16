@@ -70,6 +70,7 @@ const hubAliases = (
     ["@access-tools/handoff", "access-tools", "handoff"],
     ["@hub/handoff-fixtures", "access-tools", "handoff", "src/fixtures.ts"],
     ["@access/peers", "access-help", "peers"],
+    ["@hub/peers-ui", "access-help", "peers", "src/ui/index.ts"],
     ["@access/event-access", "access-help", "event-access"],
     ["@hub/event-access-ui", "access-help", "event-access", "src/ui/index.ts"],
     ["@access/outings", "access-help", "outings"],

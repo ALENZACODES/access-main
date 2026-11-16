@@ -8,7 +8,7 @@ type ToolProps = Record<string, unknown>;
 
 export type HubPage =
   | "employment" | "housing" | "safety" | "diary" | "auditors" | "handoff"
-  | "games" | "routeReports" | "wav" | "eventOrganiser" | "eventPlan" | "reports";
+  | "games" | "routeReports" | "wav" | "eventOrganiser" | "eventPlan" | "reports" | "peerRequest";
 
 /** Pages whose records are labelled demonstration or sample data. */
 const DEMONSTRATION: readonly HubPage[] = ["employment", "housing", "handoff", "eventPlan", "reports"];

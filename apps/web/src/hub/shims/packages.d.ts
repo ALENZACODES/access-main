@@ -34,6 +34,19 @@ declare module "@access-tools/handoff" {
 
 declare module "@access/peers" {
   export const PEER_TOPICS: Readonly<Record<string, string>> | readonly string[];
+  export interface KeyValueStorage {
+    getItem(key: string): string | null;
+    setItem(key: string, value: string): void;
+    removeItem(key: string): void;
+  }
+  export class ConnectionRequestStore {
+    constructor(storage: KeyValueStorage);
+  }
+}
+
+declare module "@hub/peers-ui" {
+  import type { ComponentType } from "react";
+  export const PeerRequestFlow: ComponentType<{ language: "en" | "fr"; store?: unknown; now?: () => string }>;
 }
 
 declare module "@access/event-access" {
