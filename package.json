@@ -27,14 +27,14 @@
     "lint": "eslint .",
     "pretest": "npm run lanes:ensure && npm run hub:sync",
     "test": "vitest run && npm test --workspaces --if-present && npm run test:scripts",
-    "test:scripts": "node --test scripts/sync-lanes.test.mjs scripts/release/check.test.mjs scripts/hub-wording.test.mjs",
+    "test:scripts": "node --test scripts/sync-lanes.test.mjs scripts/release/check.test.mjs scripts/release/site-audit.test.mjs scripts/hub-wording.test.mjs",
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "validate": "npm run validate -w @access-main/schema --",
     "count": "npm run count -w @access-main/schema --",
     "postdemo": "node apps/web/scripts/postdemo.ts",
     "hub:sync": "node scripts/sync-hub.mjs",
     "prebuild": "npm run hub:sync",
-    "verify": "npm run test --prefix scripts/release && node scripts/release/check.mjs --dir apps/web/dist"
+    "verify": "npm run test --prefix scripts/release && node scripts/release/check.mjs --dir apps/web/dist && node scripts/release/audit.mjs --dir apps/web/dist"
   },
   "dependencies": {
     "ajv": "^8.17.1",

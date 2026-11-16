@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test check.test.mjs",
-    "verify": "npm run test && node check.mjs --dir ../../apps/web/dist"
+    "test": "node --test check.test.mjs site-audit.test.mjs",
+    "verify": "npm run test && node check.mjs --dir ../../apps/web/dist && node audit.mjs --dir ../../apps/web/dist"
   }
 }
