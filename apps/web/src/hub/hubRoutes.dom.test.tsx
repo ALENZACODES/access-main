@@ -89,11 +89,11 @@ describe("More index", () => {
 });
 
 describe("games", () => {
-  it("offers the nineteen games of the pinned package and the dwell setting", async () => {
+  it("offers the 25 games of the pinned package and the dwell setting", async () => {
     const { container } = await open("en", "/more/games");
     await waitFor(() => expect(container.querySelectorAll("button[id^='play-']").length).toBeGreaterThan(0), { timeout: 15000 });
     const { GAME_LIBRARY } = await import("@hub/games");
-    expect(GAME_LIBRARY).toHaveLength(19);
+    expect(GAME_LIBRARY).toHaveLength(25);
     const offered = new Set([...container.querySelectorAll("button[id^='play-']")].map((button) => button.id));
     for (const game of GAME_LIBRARY) expect(offered.has(`play-${game.id}`), game.id).toBe(true);
     expect(container.querySelector("#dwell-enabled, [id*='dwell']")).not.toBeNull();

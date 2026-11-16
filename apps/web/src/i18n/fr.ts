@@ -169,6 +169,7 @@ export const fr: Messages = {
   },
   modules: {
     ready: "Ces fiches viennent de la partie liée de the App. Chacune indique sa source, sa licence, sa date et son niveau. L’inconnu reste inconnu.",
+    gamesReady: "Ces jeux viennent de la partie liée de the App. Un jeu n’est pas la fiche d’un lieu, il n’a donc ni source ni niveau.",
     empty: "Aucune fiche n’est affichée.",
     noMatches: "Aucune fiche correspondante n’a été trouvée. La recherche a porté sur la partie liée de the App. L’inconnu reste inconnu.",
     error: "Cette partie de the App n'a pas pu se charger. Aucune fiche n'est affichée. Réessayez plus tard.",
@@ -211,10 +212,10 @@ export const fr: Messages = {
       "Les toilettes, le stationnement, la recharge, la réparation et les tables à langer pour adultes ne sont pas listés, parce qu'aucun enregistrement n'est chargé. Un indicateur municipal d'accessibilité n'est pas une mesure de l'espace de rotation, du côté de transfert ou d'un lève-personne.",
     navigatorTitle: "Répertoire de services",
     navigatorBody:
-      "Le répertoire mènera vers des pages officielles de programmes et indiquera la date du lien. Il ne tranche pas l'admissibilité. Rien n'est copié ici depuis un site de prestations.",
+      "Le répertoire présente les programmes par nom, avec la source, la date de lecture de la page officielle et le niveau de chaque entrée. Il ne tranche pas l'admissibilité. Rien n'est copié ici depuis un site de prestations.",
     gamesTitle: "Jeux",
     gamesBody:
-      "Le carrefour de jeux n'est pas branché. Les jeux ne sont pas une thérapie, pas un test de capacité, et pas un conseil médical. Les jeux qui clignotent sont hors du cadre.",
+      "Cette page présente les jeux de cette version. Pour y jouer, ouvrez Plus, puis Jeux. Les jeux ne sont pas une thérapie, pas un test de capacité, et pas un conseil médical. Les jeux qui clignotent sont hors du cadre.",
     helpTitle: "Aide",
     helpArticles: "Les articles du centre d'aide ne sont pas encore branchés.",
   },

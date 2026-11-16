@@ -20,6 +20,19 @@
 | `apps/web/src/hub/` | The `/more` route table (`routes.tsx`), the index (`HubIndex.tsx`), one small page per mounted screen, the strings (`i18n.ts`), and the shared wrapper (`PackageView.tsx`): page title, back link, demonstration label, and an error boundary. |
 | `apps/web/src/modules/linked.ts` | The real adapters passed to `createModules`. `lane-adapters.ts` holds a route that has a package but no adapter yet. |
 
+### Module routes (16 November 2026)
+
+| Route | Adapter passed to `createModules` | State |
+| --- | --- | --- |
+| `/places`, `/places/:id` | access-maps `places-shell` | Real adapter. Unavailable when no data pack can be read |
+| `/journey` | `apps/web/src/modules/lane-adapters.ts` | Unavailable. The access-maps `journey-data` planner takes coordinates; the shell form has only origin and destination text |
+| `/finders` | access-tools `finders` (`src/shell.ts`) | Real adapter over the data pack |
+| `/navigator` | access-tools `navigator` (`src/shell.ts`, `listForShell`) | Real adapter. Lists the package's dated directory records with source, licence note, read date and tier |
+| `/games` | access-tools `games` (`src/shell.ts`, `listGamesForShell` over `GAME_LIBRARY`) | Real adapter. Lists the 25 game names. The games are played at `/more/games` |
+| `/help`, `/help/:id` | access-help `help` (`src/shell.ts`) | Real adapter |
+
+Every result still passes through `guardModules`. When a package is not in `.lanes/`, its route falls back to the unavailable state.
+
 ### Routes under `/more` (16 November 2026)
 
 | Route | Package and screen | Data shown |
@@ -29,7 +42,7 @@
 | `/more/diary` | access-tools `diary` | Not changed or inspected in this round |
 | `/more/auditors` | access-tools `auditors`: `App`, with the record, programme, venue, cases and service panels | Labelled fixtures and the person's own entries |
 | `/more/handoff` | access-tools `handoff` | Labelled demonstration records |
-| `/more/games` | access-tools `games`: `GamesApp`, 19 games, dwell select setting | Rounds and settings, on the device |
+| `/more/games` | access-tools `games`: `GamesApp`, 25 games, dwell select setting | Rounds and settings, on the device |
 | `/more/safety` | access-tools `safety` | Not changed or inspected in this round |
 | `/more/route-reports` | access-maps `conditions`: `RouteReportsList`, and `RouteReportForm` when a place in the data is given with `?place=<id>` | Reports saved on the device. None ship |
 | `/more/accessible-taxis` | access-maps `conditions`: `WavFinder` over `datasets/wav-services.json` | The published list, which holds zero records |
@@ -40,8 +53,8 @@
 
 Not mounted, and the change each one needs in its own package:
 
-- **Housing depth finder and barrier evidence form** (access-tools `housing` at `310e8de`). `DepthFinder.tsx` renders `<section className="room-facts" aria-labelledby=...>` for every room of every unit, and the room names repeat from unit to unit (axe reports "unit entry"), so the page has several region landmarks with the same name and fails the axe `landmark-unique` rule. Change that `<section>` to a `<div>` (the `<h4>` already labels it), or name each region with the unit as well. Then move the `housing` pin in `lanes.hub.json`.
-- **Peer request flow** (access-help `peers`, `PeerRequestFlow`). `src/strings.ts` holds the sentence "The App is not affiliated with or endorsed by any organisation." The post-build wording check (`apps/web/scripts/check-dist-overclaim.mjs`) fails on the words "endorsed by" anywhere in the bundle. Reword it in both languages without those words, for example "No organisation has endorsed the App."
+- **Housing depth finder and barrier evidence form** (access-tools `housing` at `72d5580`, still true at that commit). `DepthFinder.tsx` renders `<section className="room-facts" aria-labelledby=...>` for every room of every unit, and the room names repeat from unit to unit (axe reports "unit entry"), so the page has several region landmarks with the same name and fails the axe `landmark-unique` rule. Change that `<section>` to a `<div>` (the `<h4>` already labels it), or name each region with the unit as well. Then move the `housing` pin in `lanes.hub.json`.
+- **Peer request flow** (access-help `peers`, `PeerRequestFlow`, still true at `4870fa9`). `src/strings.ts` holds the sentence "The App is not affiliated with or endorsed by any organisation." The post-build wording check (`apps/web/scripts/check-dist-overclaim.mjs`) fails on the words "endorsed by" anywhere in the bundle. Reword it in both languages without those words, for example "No organisation has endorsed the App."
 - **Report tables** (access-main `packages/advocacy`, `ReportsPanel`). The panel makes each wide table's scrolling box and each indicator list focusable with `tabIndex={0}` on a `<div>`. The Day 17 route audit (`apps/web/e2e/audit.spec.ts`) reports every focusable element that is not a native control as a serious keyboard finding, so `/more/reports` failed it with 12 findings per language. Either the panel drops `tabIndex` from those boxes, or the audit accepts a named, focusable scrolling region. The evidence pack at `/settings/advocacy` is unchanged.
 - **Route report form from a place page.** The form needs a place the shell has already resolved. `/more/route-reports?place=<id>` accepts one, but no page links to it yet; the place page belongs to another lane.
-
+- **Games list default** (access-tools `games`, `src/shell.ts`). `gamesShellModule.list()` and `listGamesForShell()` without an argument still list only the first ten games (`CATALOG`). The shell passes `GAME_LIBRARY` itself, so `/games` lists all 25. Making `GAME_LIBRARY` the default in the package would let any other host get the full list.

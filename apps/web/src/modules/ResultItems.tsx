@@ -20,7 +20,8 @@ export function statusKey(result: ModuleResult<unknown>): string {
     if (result.items.length === 0) {
       return result.messageKey === "finder.shell.noMatches" ? "modules.noMatches" : "modules.empty";
     }
-    return "modules.ready";
+    // A game has no source, licence, date or tier, so the records sentence would not be true for it.
+    return result.moduleId === "games" ? "modules.gamesReady" : "modules.ready";
   }
   if (result.availability === "stub") return "modules.unavailable";
   return result.messageKey === "modules.contractError" ? "modules.contractError" : "modules.error";

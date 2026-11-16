@@ -555,9 +555,10 @@ The table above is dated 14 November. Since then seven feature packages merged, 
 | --- | --- | --- |
 | 2 Live Disruption Shield | `/more/route-reports` lists route-condition reports saved on the device; `/more/accessible-taxis` is the accessible-vehicle finder over a published list of zero records | Adding a report needs a place, and no place page links to the form yet. No live feed |
 | 3 Peer Connect | `/more/peers` lists the request topics | The request flow with consent and routing is built in access-help but not mounted: its text fails the shell's post-build wording check |
+| 4 Service Navigation and Benefits | `/navigator` lists the dated signposting directory by name, with source, licence note, read date and tier | Links, summaries and search of the directory are in the package screen, which is not mounted; `/more/handoff` runs on demonstration records |
 | 6 Employment and Income | `/more/employment`: listing with workplace access record, commute check, referral summary | Real listings |
 | 7 Accessible Housing | `/more/housing`: the first housing finder | The unit and room depth finder and barrier evidence form: built in access-tools, not mounted because of a repeated-landmark fault |
 | 8 Advocacy Engine | `/settings/advocacy` (evidence pack export) | The suppressed report tables and indicators are built in `packages/advocacy` but not mounted: the panel's focusable scrolling boxes fail the shell's route audit. No real consented reports exist |
 | 11 Community Events and Social | `/more/events`, `/more/event-organiser` (organiser checklist), `/more/event-plan` (outing plan) | A per-event access page for a real event, and the journey join |
 | 12 Access Auditors and Venue Dashboard | `/more/auditors`: observations, volunteer programme, venue responses, correction cases | Publication of any audited value |
-| 13 Play and Rehab Games | `/more/games`: 19 of the 50 games, with dwell select | The other 31 games; gaze |
+| 13 Play and Rehab Games | `/more/games`: 25 of the 50 games, with dwell select. `/games` lists them | The other 25 games; gaze |

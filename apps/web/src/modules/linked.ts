@@ -1,6 +1,6 @@
 import { createPackSource, fieldValue, type PackSource } from "@access-main/data-client";
 import { createPlacesModule } from "@access-maps/places-shell";
-import { emptyModuleResult, type FindersModule, type HelpModule, type ModuleRegistry, type ModuleResult, type PlacesModule } from "@access/shared";
+import { emptyModuleResult, type FindersModule, type GamesModule, type HelpModule, type ModuleRegistry, type ModuleResult, type NavigatorModule, type PlacesModule } from "@access/shared";
 import { createJourneyModule } from "./lane-adapters.ts";
 import { createModules } from "./stubs.ts";
 import type { PackRecord, PlaceDetail } from "./types.ts";
@@ -75,6 +75,31 @@ function deferredHelp(): HelpModule {
   };
 }
 
+/**
+ * The games list: every game in the pinned package's library, through the package's own shell adapter.
+ * Only the list code is loaded here. The games themselves are played at /more/games.
+ */
+function deferredGames(): GamesModule {
+  let pending: Promise<GamesModule["list"]> | undefined;
+  const load = () => {
+    pending ??= Promise.all([import("@access-tools/games/shell"), import("@access-tools/games/library")]).then(
+      ([shell, library]) => async () => shell.listGamesForShell(library.GAME_LIBRARY),
+    );
+    return pending;
+  };
+  return { id: "games", list: async (ctx) => (await load())(ctx) };
+}
+
+/** The services directory: the pinned package's dated records, as the package's shell adapter returns them. */
+function deferredNavigator(): NavigatorModule {
+  let pending: Promise<NavigatorModule["list"]> | undefined;
+  const load = () => {
+    pending ??= import("@access-tools/navigator/shell").then((mod) => async (ctx: Parameters<NavigatorModule["list"]>[0]) => mod.listForShell(ctx));
+    return pending;
+  };
+  return { id: "navigator", list: async (ctx) => (await load())(ctx) };
+}
+
 /** The places package is only ready when the data pack can be read. A missing or broken pack stays unavailable, with no invented records. */
 async function packIsAvailable(source: PackSource): Promise<boolean> {
   try {
@@ -101,6 +126,8 @@ export function createLinkedModules(source: PackSource): ModuleRegistry {
     places,
     journey: createJourneyModule(source),
     finders: deferredFinders(source),
+    navigator: deferredNavigator(),
+    games: deferredGames(),
     help: deferredHelp(),
   });
   // `get` is checked by getPlaceDetail, so it is set again in case the guard rebuilt the places module.

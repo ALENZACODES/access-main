@@ -75,6 +75,10 @@ function placeLaneAlias() {
 const slimLaneAliases = [
   slimLaneAlias(/^@access-tools\/finders\/shell$/, "access-tools", "packages/finders", "src/shell.ts", path.join(root, "src/modules/finders-shell-fallback.ts")),
   slimLaneAlias(/^@access\/help\/shell$/, "access-help", "packages/help", "src/shell.ts", path.join(root, "src/modules/help-shell-fallback.ts")),
+  // The games and navigator module routes load only the list adapters, not the package screens.
+  slimLaneAlias(/^@access-tools\/games\/shell$/, "access-tools", "packages/games", "src/shell.ts", path.join(root, "src/modules/games-shell-fallback.ts")),
+  slimLaneAlias(/^@access-tools\/games\/library$/, "access-tools", "packages/games", "src/library.ts", path.join(root, "src/modules/games-shell-fallback.ts")),
+  slimLaneAlias(/^@access-tools\/navigator\/shell$/, "access-tools", "packages/navigator", "src/shell.ts", path.join(root, "src/modules/navigator-shell-fallback.ts")),
   placeLaneAlias(),
 ];
 
