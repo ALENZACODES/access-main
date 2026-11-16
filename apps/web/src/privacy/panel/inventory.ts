@@ -20,6 +20,12 @@ export interface InventoryEntry {
   purpose?: Bilingual;
   /** How long it is kept. Omit when not confirmed. */
   keptFor?: Bilingual;
+  /**
+   * Storage names this entry uses, written without the App's key prefix. A name
+   * ending in "*" matches every name that starts the same way. Omit if unknown:
+   * the entry then cannot be matched against what is stored.
+   */
+  storageKeys?: readonly string[];
   /** Where this statement came from (a code review, a policy page...). Required. */
   source: Bilingual;
   /** Licence identifier, only if the statement comes from third-party material. */
@@ -34,6 +40,9 @@ export type ProblemCode =
   | "empty-text"
   | "bad-date"
   | "empty-licence"
+  | "bad-storage-key"
+  | "duplicate-storage-key"
+  | "reserved-id"
   | "copy-lint";
 
 export interface InventoryProblem {
@@ -44,6 +53,13 @@ export interface InventoryProblem {
 }
 
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
+/** Ids starting with this are reserved for the privacy panel's own entries. */
+export const RESERVED_ID_PREFIX = "privacy-";
+const KEY_RE = /^[A-Za-z0-9._:-]+\*?$/;
+
+export function isValidKeyPattern(p: string): boolean {
+  return KEY_RE.test(p);
+}
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** True for a real calendar date written YYYY-MM-DD. */
@@ -82,11 +98,28 @@ function checkText(
   }
 }
 
-export function validateInventory(entries: readonly InventoryEntry[]): InventoryProblem[] {
+export interface ValidateOptions {
+  /** Set when validating the panel's own entries, which may use the reserved id prefix. */
+  allowReservedIds?: boolean;
+}
+
+export function validateInventory(
+  entries: readonly InventoryEntry[],
+  options: ValidateOptions = {},
+): InventoryProblem[] {
   const out: InventoryProblem[] = [];
   const seen = new Set<string>();
+  const keys = new Map<string, string>();
   for (const e of entries) {
     if (!ID_RE.test(e.id)) out.push({ id: e.id, field: "id", code: "bad-id" });
+    if (!options.allowReservedIds && e.id.startsWith(RESERVED_ID_PREFIX)) {
+      out.push({ id: e.id, field: "id", code: "reserved-id" });
+    }
+    for (const k of e.storageKeys ?? []) {
+      if (!isValidKeyPattern(k)) out.push({ id: e.id, field: "storageKeys", code: "bad-storage-key", detail: k });
+      else if (keys.has(k)) out.push({ id: e.id, field: "storageKeys", code: "duplicate-storage-key", detail: `${k} (also ${keys.get(k)})` });
+      else keys.set(k, e.id);
+    }
     if (seen.has(e.id)) out.push({ id: e.id, field: "id", code: "duplicate-id" });
     seen.add(e.id);
     checkText(out, e.id, "label", e.label, true);
@@ -101,8 +134,8 @@ export function validateInventory(entries: readonly InventoryEntry[]): Inventory
   return out;
 }
 
-export function assertValidInventory(entries: readonly InventoryEntry[]): void {
-  const problems = validateInventory(entries);
+export function assertValidInventory(entries: readonly InventoryEntry[], options: ValidateOptions = {}): void {
+  const problems = validateInventory(entries, options);
   if (problems.length > 0) {
     const lines = problems.map((p) => `${p.id}.${p.field}: ${p.code}${p.detail ? ` (${p.detail})` : ""}`);
     throw new Error(`Invalid privacy inventory:\n${lines.join("\n")}`);
