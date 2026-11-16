@@ -1,8 +1,8 @@
 import Dexie, { type Table } from "dexie";
-import type { FieldValue, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionStatus, SearchHit, Tranche } from "./types.ts";
-export type { FieldValue, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionStatus, SearchHit, Tranche } from "./types.ts";
+import type { FieldValue, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche } from "./types.ts";
+export type { FieldValue, IntegritySource, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche } from "./types.ts";
 
-interface CachedPart { sha256: string; records: PackRecord[]; search: SearchHit[]; }
+interface CachedPart { sha256: string; records: PackRecord[]; search: SearchHit[]; bytes?: Uint8Array; }
 interface RegionEntry { id: string; hashes: string[]; }
 interface MetaEntry { id: string; manifest: PackManifest; }
 class PackDatabase extends Dexie {
@@ -162,6 +162,7 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     const parsed = await parseGzip(bytes, isSearch, part.path);
     if ((isSearch ? parsed.search.length : parsed.records.length) !== part.count) throw new PackClientError("content", part.path);
     parsed.sha256 = part.sha256;
+    parsed.bytes = bytes;
     return parsed;
   }
   async function storedCells(pack: PackManifest): Promise<string[]> {
@@ -266,7 +267,103 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     const ids = new Set(Object.values(record.fields).map((field) => field.source_id));
     return (lastManifest?.sources ?? []).filter((source) => ids.has(source.sourceId) && source.inWebPack);
   }
-  return { manifest, cellsFor, records, search, get, sourcesFor, regions, downloadRegion, deleteRegion };
+  function asBytes(value: unknown): Uint8Array | null {
+    if (value instanceof Uint8Array) return new Uint8Array(value);
+    if (value instanceof ArrayBuffer) return new Uint8Array(value);
+    if (ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    return null;
+  }
+  function integritySource(pack: PackManifest, part: PackPart) {
+    const match = part.sourceId
+      ? pack.sources.find((source) => source.sourceId === part.sourceId && source.inWebPack)
+      : pack.sources.find((source) => source.inWebPack);
+    const date = (match?.retrieved ?? pack.builtAt).slice(0, 10);
+    return {
+      name: match?.name?.trim() ?? "",
+      licence: match?.licence ?? "",
+      date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "",
+    };
+  }
+  async function inspectPart(pack: PackManifest, part: PackPart): Promise<RegionIntegrityPart> {
+    const isSearch = !part.sourceId;
+    const stored = await readPart(part.sha256);
+    const source = integritySource(pack, part);
+    if (!stored) {
+      return { path: part.path, data: null, expectedBytes: part.bytes, expectedSha256: part.sha256, expectedCount: part.count, actualCount: null, structurallyValid: false, source };
+    }
+    const data = asBytes(stored.bytes);
+    const actualCount = isSearch ? stored.search.length : stored.records.length;
+    let structurallyValid = stored.records.every(validateRecord) && stored.search.every(validateHit);
+    if (data) {
+      try {
+        const parsed = await parseGzip(data, isSearch, part.path);
+        const expectedItems = isSearch ? parsed.search : parsed.records;
+        const storedItems = isSearch ? stored.search : stored.records;
+        if (JSON.stringify(expectedItems) !== JSON.stringify(storedItems)) structurallyValid = false;
+      } catch {
+        structurallyValid = false;
+      }
+    }
+    return { path: part.path, data, expectedBytes: part.bytes, expectedSha256: part.sha256, expectedCount: part.count, actualCount, structurallyValid, source };
+  }
+  async function storedRegionIntegrity(id: string): Promise<RegionIntegritySnapshot | null> {
+    const pack = await manifest();
+    const region = pack.regions.find((item) => item.id === id);
+    if (!region) throw new PackClientError("missing", id);
+    if (!(await readRegion(id))) return null;
+    const parts = [];
+    for (const part of partsIn(pack, region.cells)) parts.push(await inspectPart(pack, part));
+    return { regionId: id, cellCount: region.cells.length, parts };
+  }
+  async function fetchRegionPartBytes(path: string): Promise<Uint8Array> {
+    let response: Response;
+    try {
+      response = await fetcher(`${url}${path}`);
+      if (!response.ok) throw new Error("response");
+    } catch { throw new PackClientError("network", path); }
+    try { return new Uint8Array(await response.arrayBuffer()); }
+    catch { throw new PackClientError("network", path); }
+  }
+  async function commitCheckedRegion(id: string, incoming: ReadonlyArray<{ sha256: string; data: Uint8Array }>): Promise<RegionStatus> {
+    const pack = await manifest();
+    const region = pack.regions.find((item) => item.id === id);
+    if (!region) throw new PackClientError("missing", id);
+    const expected = partsIn(pack, region.cells);
+    if (incoming.length !== expected.length) throw new PackClientError("content", id);
+    const byHash = new Map(incoming.map((part) => [part.sha256.toLowerCase(), part]));
+    const pending: CachedPart[] = [];
+    for (const part of expected) {
+      const found = byHash.get(part.sha256.toLowerCase());
+      if (!found) throw new PackClientError("missing", part.path);
+      const copy = Uint8Array.from(found.data);
+      if (copy.byteLength !== part.bytes) throw new PackClientError("bytes", part.path, part.bytes, copy.byteLength);
+      if ((await digest(copy)) !== part.sha256.toLowerCase()) throw new PackClientError("sha256", part.path);
+      const isSearch = !part.sourceId;
+      const parsed = await parseGzip(copy, isSearch, part.path);
+      if ((isSearch ? parsed.search.length : parsed.records.length) !== part.count) throw new PackClientError("content", part.path);
+      parsed.sha256 = part.sha256;
+      parsed.bytes = copy;
+      pending.push(parsed);
+    }
+    const entry = { id, hashes: expected.map((part) => part.sha256) };
+    const nextHashes = new Set(entry.hashes);
+    if (db) await db.transaction("rw", db.parts, db.regions, async () => {
+      const previous = await db.regions.get(id);
+      await db.parts.bulkPut(pending);
+      await db.regions.put(entry);
+      const remaining = new Set((await db.regions.toArray()).flatMap((item) => item.hashes));
+      for (const hash of previous?.hashes ?? []) if (!nextHashes.has(hash) && !remaining.has(hash)) await db.parts.delete(hash);
+    });
+    else {
+      const previous = memoryRegions.get(id);
+      for (const value of pending) memoryParts.set(value.sha256, value);
+      memoryRegions.set(id, entry);
+      const remaining = new Set([...memoryRegions.values()].flatMap((item) => item.hashes));
+      for (const hash of previous?.hashes ?? []) if (!nextHashes.has(hash) && !remaining.has(hash)) memoryParts.delete(hash);
+    }
+    return (await regions()).find((value) => value.id === id)!;
+  }
+  return { manifest, cellsFor, records, search, get, sourcesFor, regions, downloadRegion, deleteRegion, storedRegionIntegrity, fetchRegionPartBytes, commitCheckedRegion };
 }
 
 /** In-memory source for deterministic consumer tests, never used as production data. */
@@ -289,5 +386,17 @@ export function createFixtureSource(records: PackRecord[], sources: PackSourceEn
       return status;
     },
     async deleteRegion() { downloaded = false; },
+    async storedRegionIntegrity(id) {
+      if (id !== "fixture" || !downloaded) return null;
+      return { regionId: "fixture", cellCount: cells.length, parts: [] };
+    },
+    async fetchRegionPartBytes(path) { throw new PackClientError("missing", path); },
+    async commitCheckedRegion(id) {
+      if (id !== "fixture") throw new PackClientError("missing", id);
+      downloaded = true;
+      const status = (await this.regions())[0];
+      if (!status) throw new Error("fixture region missing");
+      return status;
+    },
   };
 }

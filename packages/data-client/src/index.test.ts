@@ -85,4 +85,70 @@ describe("data client", () => {
     expect(await sample.search("cafe", {})).toEqual([]);
     expect(await sample.get(first.id)).toEqual(first);
   });
+  it("keeps raw part bytes so a later integrity check can hash them", async () => {
+    const f = fixture();
+    const client = createPackSource({ baseUrl: "/data/", fetch: f.fetcher, db: "memory" });
+    expect(await client.storedRegionIntegrity("toronto")).toBeNull();
+    await client.downloadRegion("toronto");
+    const snapshot = await client.storedRegionIntegrity("toronto");
+    expect(snapshot?.parts.length).toBeGreaterThan(0);
+    for (const part of snapshot!.parts) {
+      expect(part.data?.byteLength).toBe(part.expectedBytes);
+      expect(part.actualCount).toBe(part.expectedCount);
+      expect(part.structurallyValid).toBe(true);
+      expect(part.source.name).toBe("OpenStreetMap");
+      expect(part.source.licence).toBe("ODbL-1.0");
+      expect(part.source.date).toBe("2026-11-01");
+    }
+    const firstPart = snapshot!.parts[0]!;
+    const before = f.calls();
+    const fetched = await client.fetchRegionPartBytes(firstPart.path);
+    expect(fetched.byteLength).toBe(firstPart.expectedBytes);
+    expect(f.calls()).toBe(before + 1);
+  });
+  it("does not replace a stored region when a re-commit fails its digest", async () => {
+    const f = fixture();
+    const client = createPackSource({ baseUrl: "/data/", fetch: f.fetcher, db: "memory" });
+    await client.downloadRegion("toronto");
+    const snapshot = await client.storedRegionIntegrity("toronto");
+    if (!snapshot) throw new Error("expected a stored region");
+    const tampered = snapshot.parts.map((part) => ({ sha256: part.expectedSha256, data: new Uint8Array(part.expectedBytes) }));
+    await expect(client.commitCheckedRegion("toronto", tampered)).rejects.toMatchObject({ code: "sha256" });
+    expect(await client.get("osm:one")).toEqual(first);
+    const again = await client.storedRegionIntegrity("toronto");
+    expect(again?.parts.every((part) => part.structurallyValid && part.actualCount === part.expectedCount)).toBe(true);
+  });
+  it("flags stored records that no longer match the kept bytes", async () => {
+    const f = fixture();
+    const client = createPackSource({ baseUrl: "/data/", fetch: f.fetcher });
+    await client.downloadRegion("toronto");
+    await mutateStoredRecords((record) => {
+      if (record && typeof record === "object" && Array.isArray((record as { records?: unknown[] }).records)) {
+        const records = (record as { records: Array<{ id: string }> }).records;
+        if (records[0]) records[0] = { ...records[0], id: "tampered" };
+      }
+      return record;
+    });
+    const snapshot = await client.storedRegionIntegrity("toronto");
+    expect(snapshot?.parts.some((part) => part.structurallyValid === false)).toBe(true);
+  });
 });
+
+async function mutateStoredRecords(update: (value: unknown) => unknown): Promise<void> {
+  const db = await new Promise<IDBDatabase>((resolve, reject) => {
+    const request = indexedDB.open("access-pack-v1");
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction("parts", "readwrite");
+    const store = tx.objectStore("parts");
+    const read = store.getAll();
+    read.onsuccess = () => {
+      for (const value of read.result as unknown[]) store.put(update(value));
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+  db.close();
+}

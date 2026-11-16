@@ -1,16 +1,16 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createPackSource, type PackManifest, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { createPackSource, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
 import { offlineCatalog } from "./catalog.ts";
-import { classifyPackDownloadError, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
+import { checkStoredPackParts, classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, redownloadPack, type RecoveryFailure } from "../recovery/index.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
-import { CorruptPackNotice } from "../recovery/index.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
-const source = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
+const defaultSource = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
 const formatBytes = (bytes: number, language: string) => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bytes / 1024) + " KiB";
 
-export function OfflineRegionPage() {
+export function OfflineRegionPage({ packSource = defaultSource }: { packSource?: PackSource } = {}) {
+  const source = packSource;
   const { i18n } = useTranslation();
   const language = i18n.language.startsWith("fr") ? "fr" : "en";
   const c = offlineCatalog[language];
@@ -38,7 +38,7 @@ export function OfflineRegionPage() {
       if (active) { setManifest(value); setRegions(statuses); }
     }).catch(() => { if (active) setError(c.unavailable); });
     return () => { active = false; };
-  }, [c.unavailable]);
+  }, [c.unavailable, source]);
   async function refresh() { setRegions(await source.regions()); }
   async function download(id: string) {
     setBusy(id); setError(""); setMessage(""); setProgress(null); setFailure(null);
@@ -51,13 +51,58 @@ export function OfflineRegionPage() {
       await refresh().catch(() => undefined);
     } finally { setBusy(null); }
   }
-  /** Re-reads the stored parts. A region with parts no longer on the device cannot be treated as complete. */
+  /** Runs a real digest and record-count check over the stored pack. */
   async function recheck(id: string) {
-    setPackStatus(null); setMessage("");
+    setPackStatus(null); setMessage(""); setFailure(null);
+    const snapshot = await source.storedRegionIntegrity(id);
     const statuses = await source.regions();
     setRegions(statuses);
-    if (statuses.find((region) => region.id === id)?.downloaded) { setMessage(c.downloaded); return; }
-    setPackRegion(id); setPackStatus("unknown");
+    if (!snapshot) { setPackRegion(id); setPackStatus("unknown"); return; }
+    const check = await checkStoredPackParts(snapshot.parts);
+    if (check.status === "complete") { setMessage(c.downloaded); return; }
+    setPackRegion(id); setPackStatus(check.status);
+  }
+  async function redownload(id: string) {
+    setBusy(id); setError(""); setMessage(""); setProgress(null); setFailure(null);
+    try {
+      const snapshot = await source.storedRegionIntegrity(id);
+      const parts = snapshot?.parts;
+      if (!parts || parts.length === 0) {
+        setPackRegion(id); setPackStatus("unknown"); return;
+      }
+      const pending: Array<{ sha256: string; data: Uint8Array }> = [];
+      let done = 0;
+      const total = parts.reduce((sum, part) => sum + part.expectedBytes, 0);
+      setProgress({ done, total });
+      for (const part of parts) {
+        const result = await redownloadPack(
+          () => source.fetchRegionPartBytes(part.path),
+          { byteLength: part.expectedBytes, sha256: part.expectedSha256, source: part.source },
+          async (data) => { pending.push({ sha256: part.expectedSha256, data }); },
+        );
+        if (result.status === "failed") {
+          setPackStatus(null);
+          setFailure({ region: id, failure: { operation: "download", reason: result.reason } });
+          await refresh().catch(() => undefined);
+          return;
+        }
+        if (result.status !== "complete") {
+          setPackRegion(id); setPackStatus(result.status === "corrupt" ? "corrupt" : "unknown");
+          await refresh().catch(() => undefined);
+          return;
+        }
+        done += part.expectedBytes;
+        setProgress({ done, total });
+      }
+      await source.commitCheckedRegion(id, pending);
+      await refresh();
+      setPackStatus(null);
+      setMessage(c.complete);
+    } catch (cause) {
+      setPackStatus(null);
+      setFailure({ region: id, failure: classifyPackDownloadError(cause, navigator.onLine) });
+      await refresh().catch(() => undefined);
+    } finally { setBusy(null); }
   }
   async function remove() {
     const id = confirmation;
@@ -76,7 +121,7 @@ export function OfflineRegionPage() {
       <CorruptPackNotice
         status={packStatus}
         locale={language}
-        onRedownload={() => { if (packRegion) void download(packRegion); setPackStatus(null); }}
+        onRedownload={() => { if (packRegion) void redownload(packRegion); }}
         onDismiss={() => setPackStatus(null)}
         busy={!!busy}
       />
