@@ -101,6 +101,11 @@ export const fr: Messages = {
     outboxCount_other: "{{count}} signalements en attente sur cet appareil",
   },
   data: {
+    qualityRate: "Taux de fiches en cache sans date de récupération utilisable",
+    qualityRule: "Une fiche récupérée il y a plus de {{days}} jours est marquée « Possiblement périmé ». Chaque fiche indique son âge.",
+    licenceTerms: "Utilisé selon les conditions d’utilisation du fournisseur. Ce n’est pas une licence ouverte.",
+    licenceUnrecognised: "Cette application ne reconnaît pas cette licence. Lisez ses conditions avant de réutiliser la fiche.",
+    licenceUnknown: "Licence inconnue.",
     title: "État des données",
     lead: "Cette page est l'inventaire exact de ce que cet appareil contient.",
     connection: "Connexion",

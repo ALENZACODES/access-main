@@ -95,6 +95,11 @@ export const en = {
     outboxCount_other: "{{count}} reports waiting on this device",
   },
   data: {
+    qualityRate: "Share of cached records with no usable retrieval date",
+    qualityRule: "A record retrieved more than {{days}} days ago is marked “May be out of date”. Every record shows its age.",
+    licenceTerms: "Used under the provider’s terms of use. Not an open licence.",
+    licenceUnrecognised: "This app does not recognise this licence. Read its terms before reusing the record.",
+    licenceUnknown: "Licence unknown.",
     title: "Data status",
     lead: "This page is the honest inventory of what this device holds.",
     connection: "Connection",
