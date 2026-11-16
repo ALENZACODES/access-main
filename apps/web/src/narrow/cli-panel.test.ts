@@ -39,6 +39,15 @@ describe('parseArgs', () => {
         baselineFile: null,
         writeBaselineFile: null,
         waiversFile: null,
+        manifestFiles: [],
+        swFiles: [],
+        scanFiles: [],
+        allowHosts: [],
+        budgetFile: null,
+        writeBudgetFile: null,
+        historyFile: null,
+        historyMax: null,
+        maxWeightKb: null,
       },
     });
   });
@@ -254,6 +263,109 @@ describe('runCli with CI options', () => {
     d.files.set('good.html', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>t</title></head><body><main><h1>x</h1></main></body></html>');
     d.files.set('w.json', waivers([{ check: 'contrast', reason: 'no', expires: '2026-12-31' }]));
     expect(await runCli(['--html', 'good.html', '--waivers', 'w.json'], d.deps)).toBe(1);
+  });
+});
+
+describe('--max-weight-kb', () => {
+  it('parses a whole number of kilobytes', () => {
+    const r = parseArgs(['--html', 'a.html', '--max-weight-kb', '800']);
+    expect(r.ok && r.args.maxWeightKb).toBe(800);
+  });
+  it('rejects zero, text and a missing value', () => {
+    for (const v of [['--max-weight-kb', '0'], ['--max-weight-kb', 'x'], ['--max-weight-kb']]) expect(parseArgs(['--html', 'a.html', ...v]).ok).toBe(false);
+  });
+});
+
+describe('runCli with PWA, host, budget and history options', () => {
+  async function noBrowser(): Promise<never> {
+    throw new Error('browser launched');
+  }
+  const MANIFEST = JSON.stringify({
+    id: '/', name: 'Access Guide', short_name: 'Access', start_url: '/', scope: '/', display: 'standalone', lang: 'en', theme_color: '#0b4f9c',
+    icons: [{ src: '/a.png', sizes: '192x192' }, { src: '/b.png', sizes: '512x512', purpose: 'maskable' }],
+  });
+  const SW = `const C='app-v1';const O='/offline.html';
+self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['/',O]))));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))));
+self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>caches.match(O))));`;
+  it('parses the new flags and rejects bad ones', () => {
+    expect(parseArgs(['--manifest', 'm.json', '--sw', 'sw.js', '--scan', 'a.js', '--scan', 'b.css', '--allow-host', '*.example.org', '--budget', 'b.json', '--write-budget', 'w.json', '--history', 'h.json', '--history-max', '20'])).toMatchObject({
+      ok: true,
+      args: { manifestFiles: ['m.json'], swFiles: ['sw.js'], scanFiles: ['a.js', 'b.css'], allowHosts: ['*.example.org'], budgetFile: 'b.json', writeBudgetFile: 'w.json', historyFile: 'h.json', historyMax: 20 },
+    });
+    expect(parseArgs(['--manifest', 'm.json', '--history-max', '0']).ok).toBe(false);
+    expect(parseArgs(['--manifest', 'm.json', '--history-max', 'x']).ok).toBe(false);
+    expect(parseArgs(['--sw']).ok).toBe(false);
+  });
+  it('lints a good manifest and service worker with no browser, and exits 0', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('m.json', MANIFEST);
+    d.files.set('sw.js', SW);
+    expect(await runCli(['--manifest', 'm.json', '--sw', 'sw.js'], d.deps)).toBe(0);
+  });
+  it('fails a manifest with no icons and a worker with no fetch handler', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('m.json', JSON.stringify({ name: 'x' }));
+    d.files.set('sw.js', 'console.log(1)');
+    expect(await runCli(['--manifest', 'm.json', '--sw', 'sw.js', '--out', 'o'], d.deps)).toBe(1);
+    const json = d.files.get('o/narrow-audit.json') ?? '';
+    expect(json).toContain('"rule": "icons"');
+    expect(json).toContain('no-fetch-handler');
+  });
+  it('fails a third-party tile server found in a worker, a script or a page, and unknowns do not fail', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('tiles.js', "const u='https://tile.openstreetmap.org/1/2/3.png';");
+    expect(await runCli(['--scan', 'tiles.js'], d.deps)).toBe(1);
+    d.files.set('font.css', "@import url('https://fonts.googleapis.com/css');");
+    expect(await runCli(['--scan', 'font.css'], d.deps)).toBe(0);
+    expect(await runCli(['--scan', 'font.css', '--strict-unknown'], d.deps)).toBe(1);
+    expect(await runCli(['--scan', 'font.css', '--allow-host', 'fonts.googleapis.com', '--strict-unknown'], d.deps)).toBe(0);
+    d.files.set('p.html', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>t</title></head><body><main><h1>x</h1><img src="https://tile.openstreetmap.org/1.png" alt="Map"></main></body></html>');
+    expect(await runCli(['--html', 'p.html'], d.deps)).toBe(1);
+  });
+  it('a budget fails when a count is over, passes when within, and the ratchet never raises it', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('tiles.js', "const u='https://tile.openstreetmap.org/1/2/3.png';");
+    expect(await runCli(['--scan', 'tiles.js', '--write-budget', 'b.json'], d.deps)).toBe(1);
+    expect(JSON.parse(d.files.get('b.json') ?? '{}').checks.external).toEqual({ fail: 1, unknown: 0 });
+    expect(await runCli(['--scan', 'tiles.js', '--budget', 'b.json'], d.deps)).toBe(1);
+    expect(d.logs.join('\n')).toContain('1/1 failures');
+    d.files.set('tiles.js', "const u='https://tile.openstreetmap.org/1/2/3.png';const v='https://tile.thunderforest.com/x.png';");
+    expect(await runCli(['--scan', 'tiles.js', '--budget', 'b.json', '--out', 'o'], d.deps)).toBe(1);
+    expect(d.files.get('o/narrow-audit.json')).toContain('over-fail');
+    await runCli(['--scan', 'tiles.js', '--budget', 'b.json', '--write-budget', 'b2.json'], d.deps);
+    expect(JSON.parse(d.files.get('b2.json') ?? '{}').checks.external).toEqual({ fail: 1, unknown: 0 });
+  });
+  it('a bad budget file is an error', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('a.js', 'x');
+    d.files.set('a.js', "fetch('/x')");
+    d.files.set('b.json', '{"version":1,"checks":{"nope":{"fail":0,"unknown":0}}}');
+    expect(await runCli(['--scan', 'a.js', '--budget', 'b.json'], d.deps)).toBe(2);
+  });
+  it('keeps a history, starting a new file and then showing the trend', async () => {
+    const d = deps({ launch: noBrowser });
+    let clock = new Date('2026-11-10T00:00:00Z');
+    d.deps.now = () => clock;
+    d.files.set('tiles.js', "const u='https://tile.openstreetmap.org/1/2/3.png';");
+    await runCli(['--scan', 'tiles.js', '--history', 'h.json'], { ...d.deps, readText: async (p) => { if (p === 'h.json' && !d.files.has(p)) throw new Error('ENOENT: no such file'); return d.deps.readText(p); } });
+    expect(JSON.parse(d.files.get('h.json') ?? '{}').runs).toHaveLength(1);
+    expect(d.logs.join('\n')).toContain('First run recorded');
+    d.files.set('tiles.js', "fetch('/ok')");
+    clock = new Date('2026-11-12T00:00:00Z');
+    await runCli(['--scan', 'tiles.js', '--history', 'h.json'], d.deps);
+    expect(JSON.parse(d.files.get('h.json') ?? '{}').runs).toHaveLength(2);
+    expect(d.logs.join('\n')).toContain('Since 2026-11-10');
+    expect(d.logs.join('\n')).toContain('Fewer failures: External hosts');
+  });
+  it('a broken history file stops the run with exit 2 and a real read error is not hidden', async () => {
+    const d = deps({ launch: noBrowser });
+    d.files.set('a.js', "fetch('/x')");
+    d.files.set('h.json', '{"version":2}');
+    expect(await runCli(['--scan', 'a.js', '--history', 'h.json'], d.deps)).toBe(2);
+    const denied = deps({ launch: noBrowser, async readText(p) { if (p === 'h.json') throw new Error('EACCES: permission denied'); return "fetch('/x')"; } });
+    expect(await runCli(['--scan', 'a.js', '--history', 'h.json'], denied.deps)).toBe(2);
+    expect(denied.logs.join('\n')).toContain('EACCES');
   });
 });
 

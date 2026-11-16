@@ -223,6 +223,13 @@ describe('runAudit and selfAudit', () => {
     expect(report.routes.map((r) => r.route)).toEqual(['/']);
   });
 
+  it('selfAudit also reports outside hosts the live page uses, which is what the panel shows', () => {
+    dom = installDom([{ tag: 'link', interactive: true, attrs: { href: 'https://tile.openstreetmap.org/1.png' }, text: 'x' }], {});
+    const report = selfAudit(NOW);
+    const ext = report.routes[0]?.entries.filter((e) => e.check === 'external') ?? [];
+    expect(ext.map((e) => [e.rule, e.status])).toEqual([['tile-server', 'fail']]);
+  });
+
   it('selfAudit reads the live document without probing focus', () => {
     dom = installDom(page, { innerWidth: 360, scrollWidth: 360, clientWidth: 360 });
     const report = selfAudit(NOW);

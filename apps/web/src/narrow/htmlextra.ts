@@ -175,6 +175,27 @@ export function extraHtmlRules(nodes: readonly HtmlNode[]): ExtraHit[] {
     });
   }
 
+  for (const n of nodes) {
+    // An invalid field has to say what is wrong, not only turn red.
+    if (attr(n, 'aria-invalid') === 'true' && !attr(n, 'aria-describedby') && !attr(n, 'aria-errormessage')) hits.push({ rule: 'invalid-describedby', node: n });
+    if (n.attrs['autofocus'] !== undefined) hits.push({ rule: 'autofocus', node: n, status: 'unknown' });
+    if (n.tag === 'details' && !descendants(nodes, n).some((d) => d.tag === 'summary' && n.children.includes(d.index))) hits.push({ rule: 'details-summary', node: n });
+    if (n.tag === 'dialog' || attr(n, 'role') === 'dialog' || attr(n, 'role') === 'alertdialog') {
+      const named = attr(n, 'aria-label') !== '' || attr(n, 'aria-labelledby') !== '';
+      if (!named) hits.push({ rule: 'dialog-name', node: n });
+    }
+  }
+
+  // Alternate language links, when a page has them, must use real language codes.
+  const root = nodes.find((n) => n.tag === 'html');
+  if (root) {
+    const alternates = nodes.filter((n) => n.tag === 'link' && attr(n, 'rel').toLowerCase().split(/\s+/).includes('alternate') && n.attrs['hreflang'] !== undefined);
+    for (const a of alternates) {
+      const code = attr(a, 'hreflang');
+      if (code !== 'x-default' && !/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(code)) hits.push({ rule: 'hreflang-code', node: a });
+    }
+  }
+
   // Two controls with one access key fight over it.
   const keys = new Map<string, HtmlNode>();
   for (const n of nodes) {

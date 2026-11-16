@@ -46,6 +46,9 @@ const SITE: Record<string, string> = {
   '/bad-nav': page({ title: 'Bad nav', nav: ['Tools', 'Map', 'About'], help: 'header' }),
   '/bad-link': page({ title: 'Bad link', inline: '<p>Read the <a href="/hours" style="text-decoration:none;color:#444">opening hours</a> today.</p>' }),
   '/bad-field': page({ title: 'Bad field', extra: '<input aria-label="Name" style="border:1px solid #ddd">' }),
+  '/bad-tiles': page({ title: 'Bad tiles', extra: '<img src="https://tile.openstreetmap.org/1/1/1.png" alt="Map tile" width="64" height="64">' }),
+  '/bad-fonts': page({ title: 'Bad fonts', extra: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter">' }),
+  '/bad-orient': page({ title: 'Bad orientation', extra: '<style>@media (orientation:landscape){#filters{display:none}}</style><button id="filters">Filters</button>' }),
   '/bad-drag': page({ title: 'Bad drag', extra: '<div draggable="true" style="min-height:44px">Drag me</div>' }),
 };
 
@@ -137,6 +140,29 @@ describe.skipIf(!enabled)('real browser gates over a served site', () => {
   it('finds a field with a faint border', async () => {
     const f = failing(await run(['/bad-field']));
     expect(f.some((x) => x.includes('non-text-contrast/boundary'))).toBe(true);
+  }, 60_000);
+
+  it('fails a third-party tile server that the page really requests', async () => {
+    const f = failing(await run(['/bad-tiles']));
+    expect(f.some((x) => x.includes('external/tile-server'))).toBe(true);
+  }, 60_000);
+
+  it('asks about an outside font host and does not fail it', async () => {
+    const report = await run(['/bad-fonts']);
+    const e = report.routes[0]?.entries.filter((x) => x.check === 'external') ?? [];
+    expect(e.map((x) => [x.rule, x.status])).toEqual([['font-cdn', 'unknown']]);
+  }, 60_000);
+
+  it('the good site loads nothing from outside', async () => {
+    const report = await run(['/a']);
+    expect(report.routes[0]?.entries.filter((x) => x.check === 'external')).toEqual([]);
+  }, 60_000);
+
+  it('asks about a control that disappears in landscape', async () => {
+    const report = await run(['/bad-orient'], PROFILES.filter((p) => p.id === 'narrow' || p.id === 'landscape'));
+    const p = report.routes[0]?.entries.filter((x) => x.check === 'parity') ?? [];
+    expect(p.map((x) => [x.id, x.rule, x.status])).toEqual([['landscape', 'landscape-missing', 'unknown']]);
+    expect(p[0]?.message.en).toContain('button “filters”');
   }, 60_000);
 
   it('asks about dragging and never passes it', async () => {

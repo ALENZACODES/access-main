@@ -51,6 +51,15 @@ const FIXTURES: ReadonlyArray<readonly [HtmlRule, string, string]> = [
     doc('<nav aria-label="Main"><a href="/a">A</a></nav><nav aria-label="Footer"><a href="/b">B</a></nav>'),
   ],
   ['accesskey-dup', doc('<button accesskey="s">A</button><button accesskey="S">B</button>'), doc('<button accesskey="s">A</button><button accesskey="t">B</button>')],
+  [
+    'invalid-describedby',
+    doc('<label>Mail <input aria-invalid="true" autocomplete="email"></label>'),
+    doc('<label>Mail <input aria-invalid="true" aria-describedby="e" autocomplete="email"></label><p id="e">Enter a valid address</p>'),
+  ],
+  ['autofocus', doc('<label>Q <input autofocus></label>'), doc('<label>Q <input></label>')],
+  ['details-summary', doc('<details><p>x</p></details>'), doc('<details><summary>More</summary><p>x</p></details>')],
+  ['dialog-name', doc('<dialog open><p>x</p></dialog>'), doc('<dialog open aria-label="Filters"><p>x</p></dialog>')],
+  ['hreflang-code', doc('', { head: HEAD + '<link rel="alternate" hreflang="english" href="/en">' }), doc('', { head: HEAD + '<link rel="alternate" hreflang="fr-CA" href="/fr"><link rel="alternate" hreflang="x-default" href="/">' })],
 ];
 
 describe('parseHtml', () => {

@@ -167,13 +167,19 @@ export type HtmlRule =
   | 'list-structure'
   | 'lang-part'
   | 'landmark-label'
-  | 'accesskey-dup';
+  | 'accesskey-dup'
+  | 'invalid-describedby'
+  | 'autofocus'
+  | 'details-summary'
+  | 'dialog-name'
+  | 'hreflang-code';
 
 export const HTML_RULES: readonly HtmlRule[] = [
   'doctype', 'lang', 'title', 'viewport', 'headings', 'img-alt', 'name', 'label', 'dup-id', 'aria-ref',
   'tabindex', 'autocomplete', 'main', 'link-text', 'target-inline', 'aria-hidden-focus', 'iframe-title', 'autoplay',
   'table-headers', 'table-caption', 'fieldset-legend', 'nested-interactive', 'empty-heading', 'svg-name', 'media-captions',
   'meta-refresh', 'autocomplete-token', 'list-structure', 'lang-part', 'landmark-label', 'accesskey-dup',
+  'invalid-describedby', 'autofocus', 'details-summary', 'dialog-name', 'hreflang-code',
 ];
 
 const MESSAGES: Readonly<Record<HtmlRule, { en: string; fr: string }>> = {
@@ -217,9 +223,14 @@ const MESSAGES: Readonly<Record<HtmlRule, { en: string; fr: string }>> = {
   'lang-part': { en: 'The lang attribute is not a valid language code.', fr: 'L’attribut lang n’est pas un code de langue valide.' },
   'landmark-label': { en: 'Repeated landmarks need different names.', fr: 'Les repères répétés doivent avoir des noms différents.' },
   'accesskey-dup': { en: 'The access key is used more than once.', fr: 'La touche d’accès est utilisée plus d’une fois.' },
+  'invalid-describedby': { en: 'The field is marked invalid but points to no error message.', fr: 'Le champ est marqué invalide mais ne pointe vers aucun message d’erreur.' },
+  autofocus: { en: 'Focus moves by itself when the page loads. Check that this helps and does not skip content.', fr: 'Le focus se déplace seul au chargement de la page. Contrôlez que cela aide et ne fait pas sauter de contenu.' },
+  'details-summary': { en: 'The details element has no summary as its first child.', fr: 'L’élément details n’a pas de summary comme premier enfant.' },
+  'dialog-name': { en: 'The dialog has no accessible name.', fr: 'La boîte de dialogue n’a pas de nom accessible.' },
+  'hreflang-code': { en: 'The hreflang value is not a valid language code.', fr: 'La valeur hreflang n’est pas un code de langue valide.' },
 };
 
-const REVIEW: ReadonlySet<HtmlRule> = new Set<HtmlRule>(['autocomplete', 'link-text', 'table-caption', 'media-captions']);
+const REVIEW: ReadonlySet<HtmlRule> = new Set<HtmlRule>(['autocomplete', 'link-text', 'table-caption', 'media-captions', 'autofocus']);
 
 const GENERIC_LINKS = new Set([
   'click here', 'here', 'read more', 'more', 'learn more', 'link', 'cliquez ici', 'ici', 'en savoir plus', 'lire la suite', 'plus',

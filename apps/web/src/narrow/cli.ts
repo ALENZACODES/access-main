@@ -1,12 +1,17 @@
 import { applyWaivers, describeDiff, describeWaived, diffAgainstBaseline, makeBaseline, parseBaseline, parseWaivers, renderJunit, renderSarif } from './ci.js';
+import { applyBudget, describeBudget, parseBudget, ratchet, type Budget } from './budget.js';
 import { auditCopy, auditCopyDict } from './copylint.js';
+import { appendRun, DEFAULT_HISTORY_MAX, describeTrend, EMPTY_HISTORY, parseHistory, trend } from './history.js';
+import { scanHosts } from './hostlint.js';
 import { htmlTextItems, lintHtml } from './htmllint.js';
 import { auditI18n, flattenDict } from './i18n.js';
 import type { OfflineContext } from './offline.js';
 import { PROFILES, selectProfiles, type Profile } from './profiles.js';
+import { lintManifest } from './manifestlint.js';
 import { auditProvenance } from './provenance.js';
 import { buildRouteAudit, makeReport, renderHtml, renderJson, renderText, totals, type AuditReport, type RouteAudit } from './report.js';
 import { runAudit, type FullPage } from './run.js';
+import { lintServiceWorker } from './swlint.js';
 import type { Lang } from './types.js';
 
 export interface CliArgs {
@@ -31,6 +36,15 @@ export interface CliArgs {
   readonly baselineFile: string | null;
   readonly writeBaselineFile: string | null;
   readonly waiversFile: string | null;
+  readonly manifestFiles: readonly string[];
+  readonly swFiles: readonly string[];
+  readonly scanFiles: readonly string[];
+  readonly allowHosts: readonly string[];
+  readonly budgetFile: string | null;
+  readonly writeBudgetFile: string | null;
+  readonly historyFile: string | null;
+  readonly historyMax: number | null;
+  readonly maxWeightKb: number | null;
 }
 
 export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit'];
@@ -45,6 +59,9 @@ export const HELP_TEXT =
   '                    [--en en.json --fr fr.json] [--html FILE ...] [--data FILE]\n' +
   '                    [--allow-licence ID ...] [--require-fact KEY ...] [--strict-unknown]\n' +
   '                    [--format sarif,junit] [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
+  '                    [--manifest FILE ...] [--sw FILE ...] [--scan FILE ...] [--allow-host PATTERN ...]\n' +
+  '                    [--budget FILE] [--write-budget FILE] [--history FILE] [--history-max N]\n' +
+  '                    [--max-weight-kb N]\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
   '\n' +
@@ -53,6 +70,9 @@ export const HELP_TEXT =
   '                    [--en en.json --fr fr.json] [--html FICHIER ...] [--data FICHIER]\n' +
   '                    [--allow-licence ID ...] [--require-fact CLÉ ...] [--strict-unknown]\n' +
   '                    [--format sarif,junit] [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
+  '                    [--manifest FICHIER ...] [--sw FICHIER ...] [--scan FICHIER ...] [--allow-host MOTIF ...]\n' +
+  '                    [--budget FICHIER] [--write-budget FICHIER] [--history FICHIER] [--history-max N]\n' +
+  '                    [--max-weight-kb N]\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
 
@@ -73,6 +93,15 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let baselineFile: string | null = null;
   let writeBaselineFile: string | null = null;
   let waiversFile: string | null = null;
+  const manifestFiles: string[] = [];
+  const swFiles: string[] = [];
+  const scanFiles: string[] = [];
+  const allowHosts: string[] = [];
+  let budgetFile: string | null = null;
+  let writeBudgetFile: string | null = null;
+  let historyFile: string | null = null;
+  let historyMax: number | null = null;
+  let maxWeightKb: number | null = null;
   let offline = false;
   let strictUnknown = false;
   let help = false;
@@ -157,6 +186,35 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         if (typeof got !== 'string') return got;
         writeBaselineFile = got;
         break;
+      case '--manifest':
+      case '--sw':
+      case '--scan':
+      case '--allow-host':
+        got = need(a, next(), a === '--allow-host' ? 'a host pattern' : 'a file', a === '--allow-host' ? 'un motif d’hôte' : 'un fichier');
+        if (typeof got !== 'string') return got;
+        (a === '--manifest' ? manifestFiles : a === '--sw' ? swFiles : a === '--scan' ? scanFiles : allowHosts).push(got);
+        break;
+      case '--budget':
+      case '--write-budget':
+      case '--history':
+        got = need(a, next(), 'a file', 'un fichier');
+        if (typeof got !== 'string') return got;
+        if (a === '--budget') budgetFile = got;
+        else if (a === '--write-budget') writeBudgetFile = got;
+        else historyFile = got;
+        break;
+      case '--max-weight-kb': {
+        const n = Number.parseInt(next() ?? '', 10);
+        if (!Number.isInteger(n) || n < 1 || n > 1000000) return fail('--max-weight-kb must be a whole number of kilobytes, 1 or more.', '--max-weight-kb doit être un nombre entier de kilooctets, 1 ou plus.');
+        maxWeightKb = n;
+        break;
+      }
+      case '--history-max': {
+        const n = Number.parseInt(next() ?? '', 10);
+        if (!Number.isInteger(n) || n < 1 || n > 10000) return fail('--history-max must be a whole number from 1 to 10000.', '--history-max doit être un entier de 1 à 10000.');
+        historyMax = n;
+        break;
+      }
       case '--waivers':
         got = need(a, next(), 'a file', 'un fichier');
         if (typeof got !== 'string') return got;
@@ -190,15 +248,15 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     const offlineOnly = routes.length === 0 && baseUrl === '';
     if (routes.length > 0 && !baseUrl) return fail('--base-url is required with --route.', '--base-url est obligatoire avec --route.');
     if (baseUrl && routes.length === 0) return fail('Give at least one --route.', 'Indiquez au moins un --route.');
-    if (offlineOnly && htmlFiles.length === 0 && dataFile === null && enFile === null) {
-      return fail('Nothing to audit. Give --route, --html, --data or --en and --fr.', 'Rien à auditer. Indiquez --route, --html, --data ou --en et --fr.');
+    if (offlineOnly && htmlFiles.length === 0 && dataFile === null && enFile === null && manifestFiles.length === 0 && swFiles.length === 0 && scanFiles.length === 0) {
+      return fail('Nothing to audit. Give --route, --html, --data, --manifest, --sw, --scan or --en and --fr.', 'Rien à auditer. Indiquez --route, --html, --data, --manifest, --sw, --scan ou --en et --fr.');
     }
     if (formats.length > 0 && outDir === null) return fail('--format needs --out.', '--format demande --out.');
     if ((enFile === null) !== (frFile === null)) return fail('Give both --en and --fr, or neither.', 'Indiquez --en et --fr ensemble, ou aucun des deux.');
   }
   return {
     ok: true,
-    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile },
+    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, historyMax, maxWeightKb },
   };
 }
 
@@ -244,9 +302,25 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       };
     }
     const extra: RouteAudit[] = [];
+    const hostOpts = args.allowHosts.length > 0 ? { allow: args.allowHosts } : {};
+    for (const file of args.manifestFiles) {
+      const text = await deps.readText(file);
+      extra.push(buildRouteAudit(`manifest:${file}`, null, { manifest: lintManifest(text), external: scanHosts(file, text, hostOpts) }));
+    }
+    for (const file of args.swFiles) {
+      const text = await deps.readText(file);
+      extra.push(buildRouteAudit(`sw:${file}`, null, { 'service-worker': lintServiceWorker(file, text), external: scanHosts(file, text, hostOpts) }));
+    }
+    for (const file of args.scanFiles) extra.push(buildRouteAudit(`scan:${file}`, null, { external: scanHosts(file, await deps.readText(file), hostOpts) }));
     for (const file of args.htmlFiles) {
       const html = await deps.readText(file);
-      extra.push(buildRouteAudit(`html:${file}`, null, { 'static-html': lintHtml(html), copy: auditCopy(htmlTextItems(html)) }));
+      extra.push(
+        buildRouteAudit(`html:${file}`, null, {
+          'static-html': lintHtml(html),
+          copy: auditCopy(htmlTextItems(html)),
+          external: scanHosts(file, html, hostOpts),
+        }),
+      );
     }
     if (args.dataFile !== null) {
       const data: unknown = JSON.parse(await deps.readText(args.dataFile));
@@ -270,7 +344,10 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         baseUrl: args.baseUrl,
         routes: args.routes,
         ...(profiles ? { profiles } : {}),
-        ...(args.keyboardMax !== null ? { options: { keyboardMax: args.keyboardMax } } : {}),
+        ...(args.allowHosts.length > 0 ? { allowHosts: args.allowHosts } : {}),
+        ...(args.keyboardMax !== null || args.maxWeightKb !== null
+          ? { options: { ...(args.keyboardMax !== null ? { keyboardMax: args.keyboardMax } : {}), ...(args.maxWeightKb !== null ? { weight: { maxKb: args.maxWeightKb } } : {}) } }
+          : {}),
         ...(i18n ? { i18n } : {}),
         extra,
         now: deps.now(),
@@ -286,8 +363,36 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       report = applied.waived.length > 0 ? { ...applied.report, waived: applied.waived } : applied.report;
       waivedText = describeWaived(applied.waived, args.lang);
     }
+    let budget: Budget | null = null;
+    if (args.budgetFile !== null) {
+      const parsedBudget = parseBudget(await deps.readText(args.budgetFile));
+      if (!parsedBudget.ok) {
+        deps.log(`${parsedBudget.error.en} / ${parsedBudget.error.fr}`);
+        return 2;
+      }
+      budget = parsedBudget.value;
+    }
+    const beforeBudget = report;
+    if (budget) report = applyBudget(report, budget);
     deps.log(renderText(report, args.lang));
     if (waivedText) deps.log(waivedText);
+    if (budget) deps.log(describeBudget(beforeBudget, budget, args.lang));
+    if (args.writeBudgetFile !== null) await deps.writeText(args.writeBudgetFile, JSON.stringify(ratchet(beforeBudget, budget), null, 2) + '\n');
+    if (args.historyFile !== null) {
+      const existing = await readOptional(deps, args.historyFile);
+      let history = EMPTY_HISTORY;
+      if (existing !== null) {
+        const parsedHistory = parseHistory(existing);
+        if (!parsedHistory.ok) {
+          deps.log(`${parsedHistory.error.en} / ${parsedHistory.error.fr}`);
+          return 2;
+        }
+        history = parsedHistory.value;
+      }
+      history = appendRun(history, report, args.historyMax ?? DEFAULT_HISTORY_MAX);
+      await deps.writeText(args.historyFile, JSON.stringify(history, null, 2) + '\n');
+      deps.log(describeTrend(trend(history), args.lang));
+    }
     if (args.outDir !== null) {
       const dir = args.outDir.replace(/\/+$/, '');
       await deps.writeText(`${dir}/narrow-audit.json`, renderJson(report));
@@ -315,6 +420,17 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
     return 2;
   } finally {
     if (browser) await browser.close().catch(() => undefined);
+  }
+}
+
+/** Reads a file that may not exist yet. Only a missing file gives null. Other errors are raised. */
+async function readOptional(deps: CliDeps, path: string): Promise<string | null> {
+  try {
+    return await deps.readText(path);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/ENOENT|no such file/i.test(msg)) return null;
+    throw err;
   }
 }
 

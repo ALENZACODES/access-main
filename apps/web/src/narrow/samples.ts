@@ -1,11 +1,15 @@
 import { applyWaivers, parseWaivers } from './ci.js';
+import { auditBudget } from './budget.js';
 import { auditConsistency } from './consistency.js';
 import { auditContrast } from './contrast.js';
 import { auditCopy, COPY_RULES } from './copylint.js';
 import { auditFocusObscured } from './focus.js';
 import { lintHtml } from './htmllint.js';
+import { auditHosts } from './hostlint.js';
 import { auditI18n } from './i18n.js';
 import { auditKeyboard } from './keyboard.js';
+import { lintManifest } from './manifestlint.js';
+import { auditParity } from './parity.js';
 import { auditLanguage, auditNames } from './names.js';
 import { offlineCheckResult } from './offline.js';
 import { auditMotion } from './profiles.js';
@@ -13,6 +17,8 @@ import { auditControlBoundaries, auditDragging, auditLinkCues, type PageFacts } 
 import { auditProvenance } from './provenance.js';
 import { buildRouteAudit, entriesFromFindings, makeReport } from './report.js';
 import { auditTargetSpacing } from './spacing.js';
+import { lintServiceWorker } from './swlint.js';
+import { auditWeight } from './weight.js';
 import { auditTextSpacing } from './textspacing.js';
 import type { Entry, Rect } from './types.js';
 
@@ -25,7 +31,7 @@ export function sampleEntries(): Entry[] {
   const rect: Rect = { left: 0, top: 0, right: 1, bottom: 1 };
   const el = (id: string, name: string, text: string) => ({ id, tag: 'a', role: null, rect, name, text });
   const badHtml =
-    '<html><head></head><body><h1>a</h1><h3>b</h3><img src="a.png"><button></button><input type="email">' +
+    '<html><head><link rel="alternate" hreflang="english" href="/e"></head><body><h1>a</h1><h3>b</h3><img src="a.png"><button></button><input type="email">' +
     '<p id="d"></p><p id="d"></p><div tabindex="2"></div><div aria-hidden="true"><button>x</button></div>' +
     '<button aria-labelledby="zz">x</button><a href="/x">click here</a><iframe></iframe><video autoplay></video>' +
     '<button style="width:20px">go</button><main></main><main></main>' +
@@ -33,7 +39,8 @@ export function sampleEntries(): Entry[] {
     '<input type="radio" name="r"><input type="radio" name="r"><a href="/y"><button>in</button></a><h2></h2>' +
     '<svg role="img"></svg><svg></svg><video src="v.mp4"></video><meta http-equiv="refresh" content="5">' +
     '<input autocomplete="e-mail"><li>x</li><p lang="english">x</p><nav></nav><nav></nav>' +
-    '<button accesskey="a">a</button><button accesskey="a">b</button></body></html>';
+    '<button accesskey="a">a</button><button accesskey="a">b</button>' +
+    '<input aria-invalid="true"><input autofocus><details></details><dialog></dialog></body></html>';
   const facts = (over: Partial<PageFacts>): PageFacts => ({
     title: 'T', lang: 'en', links: [], controls: [], draggables: [], nav: ['A', 'B'], help: { text: 'Help', region: 'footer', afterMain: true }, truncated: false, ...over,
   });
@@ -134,6 +141,33 @@ export function sampleEntries(): Entry[] {
       { route: '/c', facts: facts({ help: null }) },
     ]).entries,
     ...waiverEntries,
+    ...auditHosts(
+      [
+        'https://tile.openstreetmap.org/a', 'http://example.org/a', 'https://www.google-analytics.com/a',
+        'https://fonts.googleapis.com/a', 'https://unpkg.com/a', 'https://example.org/b',
+      ].map((url, i) => ({ id: `u${i}`, url })),
+    ).entries,
+    ...lintManifest('{"orientation":"portrait","start_url":"https://x.test/","scope":"/a/","short_name":"A very long short name","icons":[{"src":"a","sizes":"48x48"}],"prefer_related_applications":true,"shortcuts":[{}]}').entries,
+    ...lintManifest('{').entries,
+    ...lintServiceWorker('sw.js', "caches.open('plain');").entries,
+    ...auditParity([
+      { profile: 'narrow', keys: ['button|a', 'button|b'] },
+      { profile: 'landscape', keys: [] },
+      { profile: 'dark', keys: [] },
+    ]).entries,
+    ...auditWeight(
+      {
+        resources: [
+          { url: 'https://x.test/big.jpg', bytes: 900 * 1024, kind: 'img' },
+          { url: 'https://y.test/a.js', bytes: null, kind: 'script' },
+        ],
+        images: [{ id: 'img[0]', src: 'a.jpg', naturalWidth: 2400, shownWidth: 300, hasSize: false }],
+      },
+      { maxKb: 100 },
+    ).entries,
+    ...auditWeight({ resources: [{ url: 'https://x.test/a.js', bytes: 2000 * 1024, kind: 'script' }], images: [] }).entries,
+    ...auditBudget(waiverReport, { version: 1, checks: { contrast: { fail: 0, unknown: 0 } } }).entries,
+    ...auditBudget(makeReport([buildRouteAudit('/x', 320, { contrast: { checked: 1, entries: [{ check: 'contrast', id: 'a', status: 'unknown', message: { en: 'e', fr: 'f' } }] } })], new Date('2026-11-15T00:00:00Z')), { version: 1, checks: {} }).entries,
   ];
 }
 

@@ -118,6 +118,31 @@ describe('accesskey-dup', () => {
   });
 });
 
+describe('form, details and dialog rules', () => {
+  it('aria-errormessage also counts as pointing to the error', () => {
+    expect(rulesOf('<label>M <input aria-invalid="true" aria-errormessage="e" autocomplete="email"></label><p id="e">x</p>')).not.toContain('invalid-describedby');
+  });
+  it('aria-invalid=false needs nothing', () => {
+    expect(rulesOf('<label>M <input aria-invalid="false"></label>')).not.toContain('invalid-describedby');
+  });
+  it('autofocus only asks for a look', () => {
+    expect(frag('<label>Q <input autofocus></label>').find((x) => x.rule === 'autofocus')?.status).toBe('unknown');
+  });
+  it('a summary that is not the direct child does not count', () => {
+    expect(rulesOf('<details><div><summary>x</summary></div></details>')).toContain('details-summary');
+  });
+  it('a dialog named through aria-labelledby passes, and role=dialog is covered', () => {
+    expect(rulesOf('<h2 id="t">Filters</h2><div role="dialog" aria-labelledby="t"></div>')).not.toContain('dialog-name');
+    expect(rulesOf('<div role="alertdialog"></div>')).toContain('dialog-name');
+  });
+  it('hreflang x-default is fine, and a page with no alternates is not flagged', () => {
+    const page = (links: string): string => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>t</title>${links}</head><body><main><h1>x</h1></main></body></html>`;
+    expect(lintHtml(page('<link rel="alternate" hreflang="x-default" href="/">')).entries).toEqual([]);
+    expect(lintHtml(page('')).entries).toEqual([]);
+    expect(lintHtml(page('<link rel="alternate" hreflang="fr_CA" href="/f">')).entries.map((x) => x.rule)).toEqual(['hreflang-code']);
+  });
+});
+
 describe('extraHtmlRules', () => {
   it('works straight on parsed nodes and leaves a clean page alone', () => {
     const nodes = parseHtml('<ul><li><a href="/a">A</a></li></ul><h2>T</h2>').nodes;

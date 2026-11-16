@@ -37,6 +37,11 @@ export interface RouteInputs {
   readonly keyboard?: KeyboardProbe;
   /** Link, field and dragging facts, and the page title and navigation. */
   readonly facts?: PageFacts;
+  /** What the page loaded, for the external host check. */
+  readonly resources?: ResourceFacts;
+  readonly weight?: { readonly facts: WeightFacts; readonly options: WeightOptions };
+  /** Host patterns the team allowed. */
+  readonly allowHosts?: readonly string[];
   /** True when the browser overrides colours, so contrast cannot be judged. */
   readonly skipContrast?: boolean;
 }
@@ -73,6 +78,8 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
     ...(input.textSpacing ? { 'text-spacing': auditTextSpacing(input.textSpacing) } : {}),
     ...(input.html !== undefined ? { 'static-html': lintHtml(input.html) } : {}),
     ...(input.motion ? { motion: auditMotion(input.motion.result, input.motion.reduced) } : {}),
+    ...(input.weight ? { weight: auditWeight(input.weight.facts, input.weight.options) } : {}),
+    ...(input.resources ? { external: auditResources(input.resources, input.allowHosts ? { allow: input.allowHosts } : {}) } : {}),
     ...(kb ? { keyboard: kb.keyboard, 'focus-visible': kb.focusVisible } : {}),
     ...(input.facts
       ? {
@@ -98,6 +105,8 @@ export interface RunOptions {
   readonly swTimeoutMs?: number;
   /** Tab presses for the keyboard walk. 0 turns it off. */
   readonly keyboardMax?: number;
+  /** Weight limits. */
+  readonly weight?: WeightOptions;
 }
 
 const joinUrl = (base: string, route: string): string =>
@@ -105,6 +114,10 @@ const joinUrl = (base: string, route: string): string =>
 
 export interface LoadedOptions extends RunOptions {
   readonly profile?: Profile;
+  /** Host patterns the team allowed for the external host check. */
+  readonly allowHosts?: readonly string[];
+  /** Limits for the weight check. */
+  readonly weight?: WeightOptions;
   /** Walk the page with the Tab key. Only the first profile of a route does this. */
   readonly keyboard?: boolean;
 }
@@ -112,6 +125,8 @@ export interface LoadedOptions extends RunOptions {
 export interface PageResult {
   readonly audit: RouteAudit;
   readonly facts: PageFacts;
+  /** Keys of the named controls on the page, for the cross-view check. */
+  readonly controls: readonly string[];
 }
 
 /** Audits the page the browser is on now. Use after goto or setContent. */
@@ -134,9 +149,14 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
       ? await probeKeyboard(page as KeyboardPage, INTERACTIVE_SELECTOR, kbMax)
       : undefined;
   const facts = await page.evaluate(probesInPage, { maxElements: MAX_ELEMENTS, helpPattern: HELP_WORDS.source });
+  const resources = await page.evaluate(resourcesInPage, { max: 400 });
+  const weightFacts = await page.evaluate(weightInPage, { max: 400 });
   const audit = auditSnapshot(label, width, {
     snapshot,
     facts,
+    resources,
+    weight: { facts: weightFacts, options: opts.weight ?? {} },
+    ...(opts.allowHosts ? { allowHosts: opts.allowHosts } : {}),
     focus,
     textSpacing,
     html,
@@ -144,7 +164,7 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
     ...(keyboard ? { keyboard } : {}),
     ...(profile.skipContrast ? { skipContrast: true } : {}),
   });
-  return { audit, facts };
+  return { audit, facts, controls: controlKeys(snapshot.interactive) };
 }
 
 export async function auditRoute(page: FullPage, baseUrl: string, route: string, opts: LoadedOptions = {}): Promise<RouteAudit> {
@@ -164,6 +184,8 @@ export interface RunInput {
   readonly i18n?: { readonly en: Dict; readonly fr: Dict; readonly options?: ParityOptions };
   /** Extra routes already audited elsewhere, such as HTML files or data files. */
   readonly extra?: readonly RouteAudit[];
+  /** Host patterns the team allowed for the external host check. */
+  readonly allowHosts?: readonly string[];
   readonly now: Date;
 }
 
@@ -171,6 +193,7 @@ export async function runAudit(input: RunInput): Promise<AuditReport> {
   const profiles = input.profiles && input.profiles.length > 0 ? input.profiles : [DEFAULT_PROFILE];
   const routes: RouteAudit[] = [];
   const pageFacts: RouteFacts[] = [];
+  const views = new Map<string, { index: number; views: View[] }>();
   for (const route of input.routes) {
     for (let p = 0; p < profiles.length; p++) {
       const profile = profiles[p] as Profile;
@@ -179,15 +202,24 @@ export async function runAudit(input: RunInput): Promise<AuditReport> {
       if (input.page.emulateMedia) await input.page.emulateMedia(profile.media);
       await input.page.goto(joinUrl(input.baseUrl, route));
       const label = profiles.length > 1 ? `${route} [${profile.id}]` : route;
-      const got = await collectLoadedPage(input.page, label, { ...input.options, profile, keyboard: p === 0 });
+      const got = await collectLoadedPage(input.page, label, { ...input.options, profile, keyboard: p === 0, ...(input.allowHosts ? { allowHosts: input.allowHosts } : {}) });
       let audit = got.audit;
-      if (p === 0) pageFacts.push({ route, facts: got.facts });
+      if (p === 0) {
+        pageFacts.push({ route, facts: got.facts });
+        views.set(route, { index: routes.length, views: [] });
+      }
+      views.get(route)?.views.push({ profile: profile.id, keys: got.controls });
       if (input.context && p === 0) {
         const r = await checkOfflineReload(input.page, input.context, joinUrl(input.baseUrl, route), input.options?.swTimeoutMs);
         audit = addCheck(audit, 'offline', offlineCheckResult(route, r, input.options?.swTimeoutMs));
       }
       routes.push(audit);
     }
+  }
+  for (const v of views.values()) {
+    if (v.views.length < 2) continue;
+    const base = routes[v.index];
+    if (base) routes[v.index] = addCheck(base, 'parity', auditParity(v.views));
   }
   if (pageFacts.length >= 2) routes.push(buildRouteAudit('site', null, { consistency: auditConsistency(pageFacts) }));
   if (input.i18n) {
@@ -215,5 +247,7 @@ export function selfAudit(now: Date): AuditReport {
   const loc = (globalThis as unknown as { location?: { pathname?: string } }).location;
   const route = loc?.pathname ?? '(current page)';
   const facts = probesInPage({ maxElements: MAX_ELEMENTS, helpPattern: HELP_WORDS.source });
-  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts })], now);
+  const resources = resourcesInPage({ max: 400 });
+  const weight = { facts: weightInPage({ max: 400 }), options: {} };
+  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts, resources, weight })], now);
 }

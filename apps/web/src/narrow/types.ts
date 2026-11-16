@@ -27,7 +27,13 @@ export type CheckId =
   | 'non-text-contrast'
   | 'dragging'
   | 'consistency'
-  | 'waiver';
+  | 'waiver'
+  | 'external'
+  | 'manifest'
+  | 'service-worker'
+  | 'parity'
+  | 'budget'
+  | 'weight';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -53,6 +59,12 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   dragging: '2.5.7',
   consistency: '3.2.3',
   waiver: null,
+  external: null,
+  manifest: null,
+  'service-worker': null,
+  parity: '1.3.4',
+  budget: null,
+  weight: null,
 };
 
 export const CHECK_ORDER: readonly CheckId[] = [
@@ -78,6 +90,12 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'dragging',
   'consistency',
   'waiver',
+  'external',
+  'manifest',
+  'service-worker',
+  'parity',
+  'budget',
+  'weight',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -103,6 +121,12 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   dragging: { en: 'Dragging alternatives', fr: 'Alternatives au glisser-déposer' },
   consistency: { en: 'Consistency across pages', fr: 'Cohérence entre les pages' },
   waiver: { en: 'Waivers', fr: 'Dérogations' },
+  external: { en: 'External hosts', fr: 'Hôtes externes' },
+  manifest: { en: 'Web app manifest', fr: 'Manifeste de l’application web' },
+  'service-worker': { en: 'Service worker', fr: 'Service worker' },
+  parity: { en: 'Same content in every view', fr: 'Même contenu dans chaque affichage' },
+  budget: { en: 'Failure budget', fr: 'Budget d’anomalies' },
+  weight: { en: 'Page weight and images', fr: 'Poids de la page et images' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */
