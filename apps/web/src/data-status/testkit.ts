@@ -1,5 +1,5 @@
 /** Test helpers shared by the panel, page and bootstrap tests (not exported from index.ts). */
-import type { DatasetRecord, PanelHost, StorageLike } from './index';
+import { auditHtml, describeProblems, type CacheLike, type CacheStorageLike, type DatasetRecord, type HeadersLike, type PanelHost, type ResponseLike, type StorageLike } from './index';
 
 export class FakeHost implements PanelHost {
   innerHTML = '';
@@ -54,40 +54,66 @@ export const RECORDS: DatasetRecord[] = [
   { id: 'r', name: 'Routes', kind: 'routes', sources: [{ id: 'c' }] },
 ];
 
-/** Tags a keyboard or touch user can operate; each needs a 44px target (checkbox is sized by its label). */
+/** 44px target problems only (see htmlAudit for the full rule set). */
 export function targetsBelow44(html: string): string[] {
-  const bad: string[] = [];
-  for (const m of html.matchAll(/<(a|button|select|input)\b[^>]*>/g)) {
-    const tag = m[0];
-    if (tag.includes('class="ds-skip"') || tag.includes('type="checkbox"')) continue;
-    if (!tag.includes('min-height:44px')) bad.push(tag);
-  }
-  return bad;
+  return auditHtml(html).filter((p) => p.code === 'small-target').map((p) => p.detail);
 }
 
-/** Duplicate ids, unlabeled form controls, captionless tables, unscoped headers. */
+/** Every other markup problem: ids, labels, captions, headers, scroll regions, time elements. */
 export function structureProblems(html: string): string[] {
-  const out: string[] = [];
-  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1] as string);
-  const seen = new Set<string>();
-  for (const id of ids) {
-    if (seen.has(id)) out.push(`duplicate id: ${id}`);
-    seen.add(id);
+  return describeProblems(auditHtml(html).filter((p) => p.code !== 'small-target'));
+}
+
+export class FakeHeaders implements HeadersLike {
+  private readonly map = new Map<string, string>();
+  constructor(init: Record<string, string> = {}) {
+    for (const [k, v] of Object.entries(init)) this.map.set(k.toLowerCase(), v);
   }
-  for (const m of html.matchAll(/<(select|input)\b[^>]*\bid="([^"]+)"[^>]*>/g)) {
-    const id = m[2] as string;
-    const labelled = html.includes(`for="${id}"`) || new RegExp(`<label[^>]*>\\s*<input[^>]*id="${id}"`).test(html);
-    if (!labelled) out.push(`unlabelled control: ${id}`);
+  get(name: string): string | null {
+    return this.map.get(name.toLowerCase()) ?? null;
   }
-  const tables = (html.match(/<table\b/g) ?? []).length;
-  const captions = (html.match(/<caption>/g) ?? []).length;
-  if (tables !== captions) out.push(`tables without caption: ${tables - captions}`);
-  for (const m of html.matchAll(/<th(?=[\s>])(?![^>]*scope=)[^>]*>/g)) out.push(`th without scope: ${m[0]}`);
-  for (const m of html.matchAll(/<div class="ds-scroll"[^>]*>/g)) {
-    if (!m[0].includes('tabindex="0"') || !m[0].includes('aria-label=') || !m[0].includes('role="region"')) out.push(`scroll region not operable: ${m[0]}`);
+}
+
+export class FakeResponse implements ResponseLike {
+  readonly headers: FakeHeaders;
+  constructor(
+    readonly body: string,
+    readonly status = 200,
+    headers: Record<string, string> = {},
+  ) {
+    this.headers = new FakeHeaders(headers);
   }
-  for (const m of html.matchAll(/<time\b[^>]*>/g)) {
-    if (!/datetime="\d{4}-\d{2}-\d{2}"/.test(m[0])) out.push(`bad time element: ${m[0]}`);
+  get ok(): boolean {
+    return this.status >= 200 && this.status < 300;
   }
-  return out;
+  clone(): FakeResponse {
+    return this;
+  }
+}
+
+export class FakeCache implements CacheLike {
+  readonly entries = new Map<string, ResponseLike>();
+  failPut = false;
+  async match(key: string) {
+    return this.entries.get(key);
+  }
+  async put(key: string, res: ResponseLike) {
+    if (this.failPut) throw new Error('quota');
+    this.entries.set(key, res);
+  }
+}
+
+export class FakeCacheStorage implements CacheStorageLike {
+  readonly caches = new Map<string, FakeCache>();
+  async open(name: string) {
+    let c = this.caches.get(name);
+    if (!c) this.caches.set(name, (c = new FakeCache()));
+    return c;
+  }
+  async keys() {
+    return [...this.caches.keys()];
+  }
+  async delete(name: string) {
+    return this.caches.delete(name);
+  }
 }

@@ -1,4 +1,5 @@
 /** Browser entry for the standalone data-status page: wires real globals into bootstrap(). */
+import { registerOfflineSupport } from '../registerOffline';
 import { bootstrap } from './bootstrap';
 
 const host = document.getElementById('data-status');
@@ -31,4 +32,5 @@ if (host) {
       URL.revokeObjectURL(url);
     },
   });
+  void registerOfflineSupport(navigator, { scriptUrl: 'sw.js', isSecureContext: window.isSecureContext });
 }

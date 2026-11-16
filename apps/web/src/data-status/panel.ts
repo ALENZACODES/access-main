@@ -7,10 +7,13 @@
 import { badgeInlineStyle, buttonInlineStyle } from './a11y';
 import { buildAttributions, renderAttributionHtml } from './attribution';
 import { coverageTable, type AttributeDef } from './coverage';
+import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
-import { applyFilters, FILTER_KINDS, FILTER_STATES, hasActiveFilters, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, serializeFilters, type Filters } from './filters';
+import { applyFilters, FILTER_KINDS, FILTER_STATES, hasActiveFilters, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
+import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
+import { tCount } from './plural';
 import { isDatasetKind } from './freshnessPolicy';
 import { t, type MessageKey } from './i18n';
 import { formatDisplayDate } from './locale';
@@ -18,6 +21,7 @@ import { buildQaReport, renderQaReportHtml } from './qaReport';
 import { diffRegistries, renderChangesHtml, type Change } from './registryDiff';
 import { createSnapshot, type Snapshot, type SnapshotStore } from './snapshot';
 import { escapeHtml } from './sourceList';
+import { renderThresholdsHtml, serializeViewState, type Thresholds } from './thresholds';
 
 export type SnapshotNote = 'none' | 'unreadable' | null;
 
@@ -36,6 +40,15 @@ export interface PanelState {
   changes?: readonly Change[] | null;
   /** Plain-text notices shown at the top (already localized). */
   notices?: readonly string[];
+  /** Staleness thresholds in days per dataset type (defaults apply to the rest). */
+  thresholds?: Thresholds;
+  /** Saved totals from earlier visits; shown when present. */
+  history?: readonly HistoryEntry[] | null;
+  /**
+   * Server-rendered mode: filters become a GET form and downloads become links,
+   * so the page works without scripts. Hrefs are paths without a query string.
+   */
+  staticView?: { action: string; csvHref: string; creditsHref: string; summaryHref: string };
 }
 
 const esc = escapeHtml;
@@ -64,10 +77,11 @@ function datasetTable(audit: AuditResult, locale: Locale): string {
   return scrollable(t(locale, 'tbl.datasets'), table);
 }
 
-export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters): string {
+export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date): string {
   const unknown = t(locale, 'unknown');
   const shown = applyFilters(audit.sources, filters);
-  const count = `<p>${esc(t(locale, 'flt.result', { shown: shown.length, total: audit.sources.length }))}</p>`;
+  const total = audit.sources.length;
+  const count = `<p>${esc(tCount(locale, 'flt.result', locale === 'fr' ? shown.length : total, { shown: shown.length, total }))}</p>`;
   if (shown.length === 0) {
     return count + (audit.sources.length === 0 ? '' : `<p>${esc(t(locale, 'flt.noMatch'))}</p>`);
   }
@@ -81,7 +95,8 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
       const date =
         s.retrievedIso === null
           ? esc(unknown)
-          : `<time datetime="${esc(s.retrievedIso)}">${esc(formatDisplayDate(s.retrievedIso, locale))}</time>`;
+          : `<time datetime="${esc(s.retrievedIso)}">${esc(formatDisplayDate(s.retrievedIso, locale))}</time>` +
+            (now ? ` (${esc(ageLabel(s.retrievedIso, now, locale))})` : '');
       return (
         `<tr><th scope="row">${name}</th><td>${esc(s.licence ?? unknown)}</td><td>${date}</td>` +
         `<td>${statusBadge(s.state, locale)}</td></tr>`
@@ -102,7 +117,12 @@ function option(value: string, label: string, selected: boolean): string {
   return `<option value="${esc(value)}"${selected ? ' selected' : ''}>${esc(label)}</option>`;
 }
 
-export function renderFilterControls(locale: Locale, f: Filters): string {
+export interface FilterFormOptions {
+  action: string;
+  thresholds?: Thresholds;
+}
+
+export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions): string {
   const stateOpts =
     option('any', t(locale, 'flt.any'), f.state === 'any') +
     FILTER_STATES.map((s) => option(s, t(locale, `state.${s}`), f.state === s)).join('');
@@ -111,20 +131,29 @@ export function renderFilterControls(locale: Locale, f: Filters): string {
     FILTER_KINDS.map((k) => option(k, t(locale, `kind.${k}`), f.kind === k)).join('');
   const field = (id: string, key: MessageKey, control: string) =>
     `<div><label for="${id}">${esc(t(locale, key))}</label> ${control}</div>`;
-  return (
+  const controls =
     `<fieldset><legend>${esc(t(locale, 'flt.legend'))}</legend>` +
-    field('ds-f-state', 'flt.state', `<select id="ds-f-state" data-filter="state" style="${FIELD_STYLE}">${stateOpts}</select>`) +
-    field('ds-f-kind', 'flt.kind', `<select id="ds-f-kind" data-filter="kind" style="${FIELD_STYLE}">${kindOpts}</select>`) +
+    field('ds-f-state', 'flt.state', `<select id="ds-f-state" name="state" data-filter="state" style="${FIELD_STYLE}">${stateOpts}</select>`) +
+    field('ds-f-kind', 'flt.kind', `<select id="ds-f-kind" name="kind" data-filter="kind" style="${FIELD_STYLE}">${kindOpts}</select>`) +
     field(
       'ds-f-q',
       'flt.query',
-      `<input id="ds-f-q" type="search" data-filter="query" maxlength="${MAX_QUERY_LENGTH}" autocomplete="off" value="${esc(f.query)}" style="${FIELD_STYLE}">`,
+      `<input id="ds-f-q" name="q" type="search" data-filter="query" maxlength="${MAX_QUERY_LENGTH}" autocomplete="off" value="${esc(f.query)}" style="${FIELD_STYLE}">`,
     ) +
     `<div><label style="display:inline-flex;align-items:center;gap:8px;min-height:44px">` +
-    `<input type="checkbox" id="ds-f-issues" data-filter="onlyIssues" style="width:24px;height:24px"${f.onlyIssues ? ' checked' : ''}>` +
-    `${esc(t(locale, 'flt.onlyIssues'))}</label></div>` +
-    `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button>` +
-    `</fieldset>`
+    `<input type="checkbox" id="ds-f-issues" name="issues" value="1" data-filter="onlyIssues" style="width:24px;height:24px"${f.onlyIssues ? ' checked' : ''}>` +
+    `${esc(t(locale, 'flt.onlyIssues'))}</label></div>`;
+  if (!form) {
+    return controls + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
+  }
+  const hidden = Object.entries(form.thresholds ?? {})
+    .map(([k, v]) => `<input type="hidden" name="stale_${esc(k)}" value="${esc(String(v))}">`)
+    .join('');
+  return (
+    `<form method="get" action="${esc(form.action)}">${controls}${hidden}` +
+    `<button type="submit" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.apply'))}</button> ` +
+    `<a href="${esc(form.action)}" style="display:inline-flex;align-items:center;min-width:44px;min-height:44px">${esc(t(locale, 'flt.reset'))}</a>` +
+    `</fieldset></form>`
   );
 }
 
@@ -161,22 +190,34 @@ function snapshotLine(state: PanelState): string {
   return '';
 }
 
+function downloadLink(href: string, label: string): string {
+  return `<a href="${esc(href)}" style="display:inline-flex;align-items:center;min-width:44px;min-height:44px">${esc(label)}</a>`;
+}
+
 export function renderDataStatusPanel(state: PanelState): string {
   const { locale } = state;
   const filters = state.filters ?? NO_FILTERS;
-  const audit = auditRegistry(state.records, state.now);
+  const thresholds = state.thresholds ?? {};
+  const audit = auditRegistry(state.records, state.now, thresholds);
   const btn = (action: string, label: string) =>
     `<button type="button" data-action="${action}" style="${buttonInlineStyle()}">${esc(label)}</button>`;
   const notices = (state.notices ?? []).map((n) => `<p role="status">${esc(n)}</p>`).join('');
+  const sv = state.staticView;
+  const query = serializeViewState({ filters, thresholds });
+  const actions = sv
+    ? `<div>${downloadLink(sv.csvHref + query, t(locale, 'act.exportCsv'))} ${downloadLink(sv.creditsHref, t(locale, 'dl.credits'))} ${downloadLink(sv.summaryHref, t(locale, 'dl.summary'))}</div>`
+    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))}</div>`;
   return (
     notices +
     snapshotLine(state) +
-    `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))}</div>` +
+    actions +
     renderQaReportHtml(buildQaReport(audit, locale), locale) +
     (state.changes ? renderChangesHtml(state.changes, locale) : '') +
+    (state.history ? renderHistoryHtml(state.history, locale) : '') +
     datasetTable(audit, locale) +
-    renderFilterControls(locale, filters) +
-    `<div data-region="sources" aria-live="polite">${renderSourcesRegion(audit, locale, filters)}</div>` +
+    renderThresholdsHtml(thresholds, locale) +
+    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds } : undefined) +
+    `<div data-region="sources" aria-live="polite">${renderSourcesRegion(audit, locale, filters, state.now)}</div>` +
     coverageSection(state) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale))
   );
@@ -210,7 +251,11 @@ export interface MountOptions {
   onExport?: (csv: string, filename: string) => void;
   /** Starting filters (for example parsed from the URL). */
   initialFilters?: Filters;
-  /** Called with the new query string ('' or '?state=…') after filters change. */
+  /** Staleness thresholds in days per dataset type (for example parsed from the URL). */
+  thresholds?: Thresholds;
+  /** On-device history of totals; today's totals are recorded when live data loads. */
+  history?: HistoryStore;
+  /** Called with the new query string ('' or '?state=…', thresholds included) after filters change. */
   onFiltersChange?: (search: string) => void;
   /** Extra localized notices, for example files that could not be read. */
   getNotices?: (locale: Locale) => readonly string[];
@@ -226,6 +271,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   let lastRecords: readonly DatasetRecord[] = [];
   let filters: Filters = { ...(opts.initialFilters ?? NO_FILTERS) };
   let baseline: Snapshot | null | undefined; // undefined until the first refresh
+  const thresholds: Thresholds = { ...(opts.thresholds ?? {}) };
+  const view = (): string => serializeViewState({ filters: { ...filters, query: normaliseQuery(filters.query) }, thresholds });
 
   const nowFn = opts.now ?? (() => new Date());
 
@@ -236,6 +283,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     let snapshotSavedAt: string | null = null;
     let snapshotNote: SnapshotNote = null;
     let changes: Change[] | null = null;
+    let history: readonly HistoryEntry[] | null = null;
 
     if (baseline === undefined) {
       const first = opts.store?.load();
@@ -249,7 +297,9 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     if (records !== null) {
       if (baseline) changes = diffRegistries(baseline.records, records);
       opts.store?.save(createSnapshot(records, now));
+      if (opts.history) history = opts.history.record(entryFromAudit(auditRegistry(records, now, thresholds), now));
     } else if (opts.store) {
+      if (opts.history) history = opts.history.load();
       const loaded = opts.store.load();
       if (loaded.ok) {
         records = loaded.snapshot.records;
@@ -273,6 +323,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       attributes: opts.attributes,
       attributeRecords: opts.getAttributeRecords?.(),
       filters,
+      thresholds,
+      history,
       changes,
       notices: opts.getNotices?.(locale),
     });
@@ -284,8 +336,9 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       refresh();
       return;
     }
-    const audit = auditRegistry(lastRecords, nowFn());
-    region.innerHTML = renderSourcesRegion(audit, opts.getLocale(), filters);
+    const now = nowFn();
+    const audit = auditRegistry(lastRecords, now, thresholds);
+    region.innerHTML = renderSourcesRegion(audit, opts.getLocale(), filters, now);
   };
 
   const onFilterEvent = (ev: unknown): void => {
@@ -299,7 +352,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     else if (key === 'onlyIssues') filters = { ...filters, onlyIssues: el.checked === true };
     else return;
     updateResults();
-    opts.onFiltersChange?.(serializeFilters({ ...filters, query: normaliseQuery(filters.query) }));
+    opts.onFiltersChange?.(view());
   };
 
   const onClick = (ev: unknown): void => {
@@ -310,9 +363,9 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       if (!hasActiveFilters(filters) && filters.query === '') return;
       filters = { ...NO_FILTERS };
       refresh();
-      opts.onFiltersChange?.('');
+      opts.onFiltersChange?.(view());
     } else if (action === 'export-csv' && opts.onExport) {
-      const audit = auditRegistry(lastRecords, nowFn());
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
       opts.onExport(auditedSourcesToCsv(applyFilters(audit.sources, filters), opts.getLocale()), 'data-sources.csv');
     }
   };

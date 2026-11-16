@@ -123,7 +123,7 @@ describe('filters in the rendered panel', () => {
   it('region shows a count, a table, or a no-match message (never an empty table)', () => {
     expect(renderSourcesRegion(audit, 'en', NO_FILTERS)).toContain('3 of 3 sources shown');
     const none = renderSourcesRegion(audit, 'fr', { ...NO_FILTERS, query: 'zzz' });
-    expect(none).toContain('0 sources affichées sur 3');
+    expect(none).toContain('0 source affichée sur 3');
     expect(none).toContain('Aucune source ne correspond à ces filtres.');
     expect(none).not.toContain('<table');
     const empty = renderSourcesRegion(auditRegistry([], NOW), 'en', NO_FILTERS);
