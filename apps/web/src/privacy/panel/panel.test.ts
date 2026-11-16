@@ -41,7 +41,9 @@ describe("renderInventoryTableHtml", () => {
   it("shows missing fields as unknown, never as a value", () => {
     const html = renderInventoryTableHtml("en", FIXTURE);
     const settings = html.slice(html.indexOf('data-id="settings"'));
-    expect(settings).toContain("<td>Not known</td><td>Not known</td><td>Not known</td>");
+    expect(settings.match(/>Not known<\/td>/g)).toHaveLength(3);
+    expect(settings).toContain("data-label=\"Why\">Not known");
+    expect(settings).toContain("data-label=\"How long\">Not known");
   });
   it("records source, licence and date for each row", () => {
     const html = renderInventoryTableHtml("en", FIXTURE);
@@ -52,7 +54,7 @@ describe("renderInventoryTableHtml", () => {
     const html = renderInventoryTableHtml("fr", FIXTURE);
     expect(html).toContain("Lieux enregistrés");
     expect(html).toContain("Reste sur cet appareil");
-    expect(html).toContain("<td>Inconnu</td>");
+    expect(html).toContain(">Inconnu</td>");
     expect(html).toContain("Données d’essai");
   });
   it("escapes entry text", () => {
