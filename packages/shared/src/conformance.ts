@@ -1,3 +1,4 @@
+import { DIRECTORY_TIER_FIELD } from "./protocolFields.ts";
 import { validateDirectoryRecord } from "./directory.ts";
 import {
   FINDER_KINDS,
@@ -58,8 +59,8 @@ export function checkModuleItem(id: ModuleId, item: unknown, at = "items[0]"): F
       break;
     case "navigator":
       issues.push(...validateDirectoryRecord(item).map((issue) => ({ ...issue, field: `${at}.${issue.field}` })));
-      if (canonicalTierFromForeign(item.verificationTier) !== "E") {
-        issues.push({ field: `${at}.verificationTier`, code: "invalid_tier" });
+      if (canonicalTierFromForeign(item[DIRECTORY_TIER_FIELD]) !== "E") {
+        issues.push({ field: `${at}.${DIRECTORY_TIER_FIELD}`, code: "invalid_tier" });
       }
       break;
     case "games":

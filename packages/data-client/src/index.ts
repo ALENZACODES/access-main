@@ -177,7 +177,7 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       for (const part of parts) if (!(await readPart(part.sha256))) missingHashes.push(part.sha256);
       return {
         id: region.id, label: region.label, cells: region.cells, bytes: parts.reduce((n, p) => n + p.bytes, 0),
-        downloaded: !!stored && missingHashes.length === 0, verified: !!stored && missingHashes.length === 0,
+        downloaded: !!stored && missingHashes.length === 0, integrityChecked: !!stored && missingHashes.length === 0,
         missingCells: region.cells.filter((cell) => partsIn(pack, [cell]).some((part) => missingHashes.includes(part.sha256))),
         builtAt: pack.builtAt, count: parts.filter((part) => part.sourceId).reduce((n, p) => n + p.count, 0),
       };
@@ -311,7 +311,7 @@ export function createFixtureSource(records: PackRecord[], sources: PackSourceEn
     async search(text, opts) { if (!downloaded) return []; const q = norm(text); return records.filter((record) => !opts.tranches || opts.tranches.includes(record.tranche)).map((record) => ({ record, name: record.fields.name?.value })).filter(({ record, name }) => typeof name === "string" && name !== "UNKNOWN" && sources.some((source) => source.inWebPack && Object.values(record.fields).some((field) => field.source_id === source.sourceId))).map(({ record, name }) => ({ id: record.id, tranche: record.tranche, name: String(name), nameNorm: norm(String(name)), lat: Number(record.fields.lat?.value ?? 0), lon: Number(record.fields.lon?.value ?? 0) })).filter((hit) => rank(hit.nameNorm, q) < 3).sort((a, b) => rank(a.nameNorm, q) - rank(b.nameNorm, q) || (opts.near ? distance(a, opts.near) - distance(b, opts.near) : 0)).slice(0, opts.limit ?? 50); },
     async get(id) { return downloaded ? records.find((record) => record.id === id) ?? null : null; },
     sourcesFor(record) { return sources.filter((source) => source.inWebPack && Object.values(record.fields).some((field) => field.source_id === source.sourceId)); },
-    async regions() { return [{ id: "fixture", label: { en: "Fixture", fr: "Exemple" }, cells, bytes: 0, downloaded, verified: downloaded, missingCells: downloaded ? [] : cells, builtAt: manifest.builtAt, count: records.length }]; },
+    async regions() { return [{ id: "fixture", label: { en: "Fixture", fr: "Exemple" }, cells, bytes: 0, downloaded, integrityChecked: downloaded, missingCells: downloaded ? [] : cells, builtAt: manifest.builtAt, count: records.length }]; },
     async downloadRegion() {
       downloaded = true;
       const status = (await this.regions())[0];
