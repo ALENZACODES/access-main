@@ -130,3 +130,71 @@ describe("renderPrivacyPanelHtml", () => {
     expect(html).toContain("does not mean no data is kept");
   });
 });
+
+import type { Purpose } from "./consent";
+import { setConsent } from "./consent";
+
+const PURPOSES: readonly Purpose[] = [
+  {
+    id: "saved-places",
+    label: { en: "Saved places", fr: "Lieux enregistrés" },
+    description: { en: "Remember places on this device", fr: "Garder des lieux sur cet appareil" },
+    wordingVersion: 1,
+  },
+];
+
+describe("consent section", () => {
+  it("is absent without purposes", () => {
+    expect(renderPrivacyPanelHtml(view())).not.toContain("data-privacy-consent");
+  });
+  it("shows an undecided purpose with neither button pressed", () => {
+    const html = renderPrivacyPanelHtml(view({ purposes: PURPOSES, consent: {} }));
+    expect(html).toContain("Not decided yet");
+    expect(html.match(/aria-pressed="false"/g)).toHaveLength(2);
+    expect(html).not.toContain('aria-pressed="true"');
+  });
+  it("marks the chosen button as pressed and shows the date", () => {
+    const consent = setConsent({}, PURPOSES[0]!, "granted", new Date(2026, 10, 15));
+    const html = renderPrivacyPanelHtml(view({ purposes: PURPOSES, consent }));
+    expect(html).toContain("Allowed since 2026-11-15");
+    expect(html).toMatch(/data-action="consent-grant"[^>]*aria-pressed="true"/);
+    expect(html).toMatch(/data-action="consent-decline"[^>]*aria-pressed="false"/);
+  });
+  it("shows a refusal", () => {
+    const consent = setConsent({}, PURPOSES[0]!, "declined", new Date(2026, 10, 15));
+    const html = renderPrivacyPanelHtml(view({ purposes: PURPOSES, consent }));
+    expect(html).toContain("Not allowed since 2026-11-15");
+    expect(html).toMatch(/data-action="consent-decline"[^>]*aria-pressed="true"/);
+  });
+  it("asks again, and says why, when the wording changed", () => {
+    const consent = setConsent({}, PURPOSES[0]!, "granted", new Date(2026, 10, 15));
+    const newer = [{ ...PURPOSES[0]!, wordingVersion: 2 }];
+    const html = renderPrivacyPanelHtml(view({ purposes: newer, consent }));
+    expect(html).toContain("The wording changed. Please decide again.");
+    expect(html).not.toContain('aria-pressed="true"');
+  });
+  it("names each button with its purpose and keeps the visible word first", () => {
+    const html = renderPrivacyPanelHtml(view({ purposes: PURPOSES }));
+    expect(html).toContain('aria-label="Allow: Saved places"');
+    expect(html).toContain('aria-label="Do not allow: Saved places"');
+    expect(html).toMatch(/aria-describedby="privacy-consent-status-saved-places"/);
+  });
+  it("renders in French", () => {
+    const html = renderPrivacyPanelHtml(view({ locale: "fr", purposes: PURPOSES }));
+    expect(html).toContain("Fonctions facultatives");
+    expect(html).toContain('aria-label="Autoriser\u00a0: Lieux enregistrés"');
+    expect(html).toContain("Pas encore décidé");
+  });
+  it("gives the consent buttons a 44 px minimum size", () => {
+    const html = renderPrivacyPanelHtml(view({ purposes: PURPOSES }));
+    const consentButtons = (html.match(/<button[^>]*data-purpose[^>]*>/g) ?? []);
+    expect(consentButtons).toHaveLength(2);
+    for (const b of consentButtons) expect(b).toContain("min-width:44px;min-height:44px");
+  });
+  it("escapes purpose text", () => {
+    const evil = [{ ...PURPOSES[0]!, label: { en: "<b>x</b>", fr: "<b>x</b>" } }];
+    const html = renderPrivacyPanelHtml(view({ purposes: evil }));
+    expect(html).toContain("&lt;b&gt;x&lt;/b&gt;");
+    expect(html).not.toContain("<b>x");
+  });
+});
