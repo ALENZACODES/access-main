@@ -84,7 +84,7 @@ export function createLinkedModules(source: PackSource): ModuleRegistry {
     finders: deferredFinders(source),
     help: deferredHelp(),
   });
-  // `get` is checked by getPlaceDetail, so it is set again here in case the guard rebuilt the places module.
+  // `get` is checked by getPlaceDetail, so it is set again in case the guard rebuilt the places module.
   return { ...guarded, places: { ...guarded.places, get } };
 }
 
