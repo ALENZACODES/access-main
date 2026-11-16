@@ -107,7 +107,7 @@ async function seedCachedRecord(page: Page) {
         tx.objectStore("cacheEntries").put({
           id: "rec-e2e",
           kind: "place",
-          title: "Prototype sample",
+          title: "E2E cached place",
           stored_at: "2026-11-13T12:00:00.000Z",
           provenance: {
             source_name: "Example open data",
@@ -148,7 +148,7 @@ async function expectClearCacheFocus(
   await page.keyboard.press("Escape");
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
   await expect(clear).toBeFocused();
-  await expect(page.getByText("Prototype sample")).toBeVisible();
+  await expect(page.getByText("E2E cached place")).toBeVisible();
 
   await clear.click();
   await page.getByRole("alertdialog").getByRole("button", { name: copy.cancel, exact: true }).click();
@@ -159,7 +159,7 @@ async function expectClearCacheFocus(
   const cleared = page.getByText(copy.cleared);
   await expect(cleared).toBeVisible();
   await expect(cleared).toBeFocused();
-  await expect(page.getByText("Prototype sample")).toHaveCount(0);
+  await expect(page.getByText("E2E cached place")).toHaveCount(0);
   await expect(clear).toBeDisabled();
 }
 
