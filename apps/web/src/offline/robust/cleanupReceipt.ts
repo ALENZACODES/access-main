@@ -110,7 +110,7 @@ export function cleanupReceiptCopy(language: Language): typeof RECEIPT_COPY["en"
 }
 
 function cleanField(value: string): string {
-  return value.replace(/[\r\n\t\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/gu, " ");
+  return value.replace(/[\p{Cc}\u202a-\u202e\u2066-\u2069]/gu, " ");
 }
 
 /** UTF-8 text includes its own source/licence/date columns. */
