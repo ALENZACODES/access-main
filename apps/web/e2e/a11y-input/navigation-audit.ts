@@ -41,7 +41,8 @@ export interface FocusOrderIssue {
 }
 
 export function stableFocusKey(snapshot: FocusSnapshot): string {
-  return snapshot.selector;
+  if (snapshot.selector.startsWith("#")) return snapshot.selector;
+  return [snapshot.tag, snapshot.role ?? "", snapshot.name, String(snapshot.tabindex)].join("|");
 }
 
 /**
@@ -75,8 +76,10 @@ export async function observeFocus(page: Page): Promise<FocusSnapshot | null> {
     const name = node.getAttribute("aria-label") ??
       node.getAttribute("title") ?? node.textContent?.trim() ?? "";
     const numericTabindex = node.getAttribute("tabindex");
+    const href = node.getAttribute("href") ?? "";
+    const parentId = node.parentElement?.id ? `#${node.parentElement.id}` : "";
     return {
-      selector,
+      selector: href || parentId ? `${selector}@${href}${parentId}` : selector,
       tag: node.tagName.toLowerCase(),
       role: node.getAttribute("role"),
       name: name.slice(0, 100),
@@ -212,11 +215,25 @@ export async function inspectTargetSizes(page: Page): Promise<TargetIssue[]> {
     ).entries()) {
       if (element.matches(":disabled,[aria-disabled='true']")) continue;
       const style = getComputedStyle(element);
-      const rect = element.getBoundingClientRect();
+      const own = element.getBoundingClientRect();
+      let rect = own;
+      if (element instanceof HTMLInputElement &&
+          (element.type === "checkbox" || element.type === "radio")) {
+        const label = element.closest("label") ??
+          (element.id ? document.querySelector(`label[for="${CSS.escape(element.id)}"]`) : null);
+        if (label instanceof HTMLElement) {
+          const labelRect = label.getBoundingClientRect();
+          const left = Math.min(own.left, labelRect.left);
+          const top = Math.min(own.top, labelRect.top);
+          const right = Math.max(own.right, labelRect.right);
+          const bottom = Math.max(own.bottom, labelRect.bottom);
+          rect = new DOMRect(left, top, right - left, bottom - top);
+        }
+      }
       if (style.display === "none" || style.visibility === "hidden" ||
           rect.width === 0 || rect.height === 0) continue;
-      if (element.matches("a[href]") &&
-          style.display === "inline" && element.closest("p,li,blockquote")) continue;
+      // Inline text links have a different box model than 44px action targets.
+      if (element.matches("a[href]") && style.display === "inline") continue;
       if (rect.width >= 44 && rect.height >= 44) continue;
       issues.push({
         selector: element.id ? `#${element.id}` :

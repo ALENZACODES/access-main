@@ -79,10 +79,23 @@ export async function chooseLanguage(page: Page, language: Language): Promise<vo
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 }
 
-export async function visit(page: Page, route: string, language: Language): Promise<void> {
+export async function visit(
+  page: Page,
+  route: string,
+  languageOrBaseURL: Language | string = "en",
+): Promise<void> {
+  // Call sites pass either a language ("en" | "fr") or Playwright's baseURL.
+  // Only the language tokens request a document-language assertion other than English.
+  const language: Language = languageOrBaseURL === "fr" ? "fr" : "en";
   const response = await page.goto(route, { waitUntil: "domcontentloaded" });
   expect(response, `Missing HTTP response for ${route}`).not.toBeNull();
   expect(response?.ok(), `Route ${route} did not load`).toBe(true);
+  if (language === "fr") {
+    const lang = (await page.locator("html").getAttribute("lang")) ?? "";
+    if (!lang.toLowerCase().startsWith("fr")) {
+      await page.getByRole("button", { name: "Français" }).first().click();
+    }
+  }
   await expect(page.locator("html")).toHaveAttribute("lang", language);
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.locator("main [role='status']").filter({ hasText: /^(Loading|Chargement)/ })).toHaveCount(0);

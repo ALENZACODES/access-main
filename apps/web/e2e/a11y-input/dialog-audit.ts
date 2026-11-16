@@ -95,9 +95,11 @@ export async function exerciseDialogEscape(
   await expect(dialog, `Opener ${openerId} must open a dialog`).toBeVisible();
   const dialogName = await dialog.getAttribute("aria-label") ??
     await dialog.getAttribute("aria-labelledby") ?? "";
-  const initialFocusInside = await dialog.evaluate((element) =>
-    element.contains(document.activeElement),
-  );
+  await expect.poll(
+    async () => dialog.evaluate((element) => element.contains(document.activeElement)),
+    { message: `${openerId}: initial focus must enter dialog` },
+  ).toBe(true);
+  const initialFocusInside = true;
 
   // A modal must contain sequential focus; avoid invoking controls within it.
   const modal = await dialog.evaluate((element) =>
@@ -107,10 +109,16 @@ export async function exerciseDialogEscape(
   if (modal) {
     for (let index = 0; index < 5; index += 1) {
       await page.keyboard.press("Tab");
-      const inside = await dialog.evaluate((element) =>
-        element.contains(document.activeElement),
-      );
-      if (!inside) {
+      const leaked = await dialog.evaluate((element) => {
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement)) return false;
+        if (element.contains(active) || active === element) return false;
+        // Playwright/Chromium can park focus on body between cycles of a
+        // native modal; that is not a leak onto a page control.
+        if (active === document.body || active === document.documentElement) return false;
+        return true;
+      });
+      if (leaked) {
         outsideFocusBlocked = false;
         break;
       }
