@@ -156,11 +156,31 @@ async function registerTests() {
     assert.match(logs.at(-1), /already present/);
   });
 
-  test("--if-missing skips a fetch when pins are still PIN-AFTER-MERGE", () => {
+  test("--if-missing skips a fetch when every pin is still PIN-AFTER-MERGE", () => {
     const { logs, result, outDir } = run("unpinned-skip", lockText(fixtureEntry("alpha", { commit: UNPINNED })), { ifMissing: true });
     assert.equal(result().fetches, 0);
     assert.match(logs.at(-1), /PIN-AFTER-MERGE/);
     assert.equal(existsSync(path.join(outDir, "fixture-repo")), false);
+  });
+
+  test("--if-missing still fetches pinned packages when some entries are PIN-AFTER-MERGE", () => {
+    const { logs, result, outDir } = run(
+      "mixed-pins",
+      lockText(fixtureEntry("alpha"), fixtureEntry("beta", { commit: UNPINNED })),
+      { ifMissing: true },
+    );
+    const first = result();
+    assert.equal(first.fetches, 1);
+    assert.ok(existsSync(path.join(outDir, "fixture-repo", "packages", "alpha", "src", "index.ts")));
+    assert.equal(existsSync(path.join(outDir, "fixture-repo", "packages", "beta")), false);
+    assert.match(logs.join("\n"), /skipping 1 PIN-AFTER-MERGE package\(s\) \(@fixture\/beta\)/);
+    const again = run(
+      "mixed-pins",
+      lockText(fixtureEntry("alpha"), fixtureEntry("beta", { commit: UNPINNED })),
+      { ifMissing: true },
+    );
+    assert.equal(again.result().fetches, 0);
+    assert.match(again.logs.at(-1), /already present/);
   });
 
   test("a file over 5 MB is refused and removed", () => {

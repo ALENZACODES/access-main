@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it } from 'vitest';
 import mainSource from '../main.tsx?raw';
+import globalCss from '../styles/global.css?raw';
 import appShellSource from '../shell/AppShell.tsx?raw';
 import { en } from '../i18n/en.ts';
 import { fr } from '../i18n/fr.ts';
@@ -100,6 +101,13 @@ describe('skip link wiring', () => {
     expect(appShellSource).toMatch(/className="a11y-skip-link"/);
     expect(appShellSource).toMatch(/skipLinkLabel\(/);
     expect(buildA11yCss()).toContain('.a11y-skip-link');
+  });
+
+  it('drops unused .skip-link rules and hides the control with inset-block-start', () => {
+    expect(globalCss).not.toMatch(/(?<!a11y)\.skip-link\b/);
+    expect(globalCss).toContain('.a11y-skip-link');
+    expect(globalCss).toContain('inset-block-start');
+    expect(globalCss).not.toMatch(/\.a11y-skip-link[^{]*\{[^}]*transform:/);
   });
 });
 

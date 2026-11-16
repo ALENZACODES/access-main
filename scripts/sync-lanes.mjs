@@ -145,25 +145,35 @@ export function enforceSizeLimit(dirs, limit = MAX_FILE_BYTES) {
 
 export function syncLanes({ lockPath, outDir, allowUnpinned, remoteBase = "https://github.com", ifMissing = false, log = console.log }) {
   const lock = parseLock(readFileSync(lockPath, "utf8"));
-  if (ifMissing && lock.packages.every((pkg) => existsSync(packageDir(outDir, pkg)))) {
+  const fetchable = allowUnpinned ? lock.packages : lock.packages.filter((pkg) => pkg.commit !== UNPINNED);
+  const skipped = lock.packages.filter((pkg) => !fetchable.includes(pkg));
+  if (fetchable.length === 0) {
+    if (ifMissing) {
+      log(`lanes: skipping fetch; ${UNPINNED} pins are not set yet. The shell uses fallbacks until each package is pinned.`);
+      return { files: 0, bytes: 0, fetches: 0 };
+    }
+    assertPinned(lock, allowUnpinned);
+  }
+  if (ifMissing && fetchable.every((pkg) => existsSync(packageDir(outDir, pkg)))) {
     log("lanes: all packages already present, nothing to do");
     return { files: 0, bytes: 0, fetches: 0 };
   }
-  if (ifMissing && !allowUnpinned && lock.packages.some((pkg) => pkg.commit === UNPINNED)) {
-    log(`lanes: skipping fetch; ${UNPINNED} pins are not set yet. The shell uses fallbacks until each package is pinned.`);
-    return { files: 0, bytes: 0, fetches: 0 };
+  if (allowUnpinned || !ifMissing) {
+    assertPinned(lock, allowUnpinned);
   }
-  assertPinned(lock, allowUnpinned);
   mkdirSync(outDir, { recursive: true });
   writeFileSync(path.join(outDir, ".gitignore"), "*\n");
-  const repos = [...new Set(lock.packages.map((pkg) => repoName(pkg.repo)))];
+  const repos = [...new Set(fetchable.map((pkg) => repoName(pkg.repo)))];
   for (const name of repos) rmSync(path.join(outDir, name), { recursive: true, force: true });
-  const groups = planFetches(lock, allowUnpinned);
+  const groups = planFetches({ version: 1, packages: fetchable }, allowUnpinned);
   groups.forEach((group, index) => {
     log(`lanes: ${group.repo} @ ${group.ref.slice(0, 12)} (${group.packages.map((pkg) => pkg.path).join(", ")})`);
     pullGroup(group, outDir, remoteBase, index);
   });
   const { files, bytes } = enforceSizeLimit(repos.map((name) => path.join(outDir, name)));
+  if (skipped.length > 0) {
+    log(`lanes: skipping ${skipped.length} ${UNPINNED} package(s) (${skipped.map((pkg) => pkg.alias).join(", ")}). Pinned packages are still fetched.`);
+  }
   log(`lanes: ${files} files, ${bytes} bytes in ${outDir}`);
   return { files, bytes, fetches: groups.length };
 }
