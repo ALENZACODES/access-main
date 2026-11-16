@@ -1,5 +1,16 @@
 /** Recovery states never imply that partial data is complete. */
 export type RecoveryLocale = "en" | "fr";
+
+/** Public error-recovery API consumed by offline and feature screens. */
+export {
+  classifyRecoveryError,
+  classifyPackDownloadError,
+  runRecoverable,
+} from "./classify.ts";
+export type { RecoveryResult } from "./classify.ts";
+export { RecoveryNotice } from "./RecoveryNotice.tsx";
+export type { RecoveryNoticeProps } from "./RecoveryNotice.tsx";
+
 export type RecoveryOperation = "pack" | "download" | "export";
 export type RecoveryReason =
   | "offline"
@@ -352,3 +363,4 @@ export type { ChangeKind, LocalReviewLog, PackChange, PackComparison, ReviewEven
 
 export { RecoveryQueuePanel } from "./RecoveryQueuePanel";
 export type { RecoveryQueuePanelProps } from "./RecoveryQueuePanel";
+

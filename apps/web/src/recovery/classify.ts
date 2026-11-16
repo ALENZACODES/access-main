@@ -54,3 +54,35 @@ export async function runRecoverable<T>(
     return { ok: false, failure: classifyRecoveryError(operation, error, source) };
   }
 }
+
+/** Preserve unknown causes unless a known download error code provides evidence. */
+export function classifyPackDownloadError(
+  error: unknown,
+  online: boolean,
+  source?: RecoverySource,
+): RecoveryFailure {
+  const code = error !== null && typeof error === "object" && "code" in error
+    ? (error as { code: unknown }).code
+    : undefined;
+  let reason: RecoveryReason | undefined;
+  switch (code) {
+    case "quota":
+      reason = "quota";
+      break;
+    case "bytes":
+    case "sha256":
+    case "content":
+      reason = "invalid-data";
+      break;
+    case "network":
+      reason = online ? "unknown" : "offline";
+      break;
+    case "missing":
+      reason = "unknown";
+      break;
+    default:
+      reason = undefined;
+  }
+  if (reason === undefined) return classifyRecoveryError("download", error, source);
+  return { operation: "download", reason, ...(source === undefined ? {} : { source }) };
+}
