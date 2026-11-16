@@ -7,6 +7,8 @@ import {
   ROUTE_IDS,
   getEmptyState,
   getErrorState,
+  getRouteEmpty,
+  getRouteError,
   initialConnectivity,
   placeRouteView,
   renderBanner,
@@ -112,14 +114,21 @@ describe("rendering behaviour", () => {
       { locale: "fr" },
     );
     expect(fr).toContain('lang="fr"');
-    expect(fr).toContain("Cette page est introuvable");
+    expect(fr).toContain("Ce lieu n’a pas été trouvé");
   });
   it("uses the route's alert and status roles", () => {
-    expect(renderStateView(getErrorState("server", "en"), opts)).toContain('role="alert"');
-    expect(renderStateView(getEmptyState("no-results", "en"), opts)).toContain('role="status"');
+    expect(renderStateView(getErrorState("load-failed", "en"), opts)).toContain('role="alert"');
+    expect(renderStateView(getEmptyState("search-no-results", "en"), opts)).toContain('role="status"');
   });
   it("covers every route id with a renderer-compatible view", () => {
-    expect(ROUTE_IDS).toEqual(["search", "place", "saved", "map"]);
+    expect(ROUTE_IDS).toEqual(["search", "place", "journey", "finders", "map", "saved"]);
+    for (const id of ROUTE_IDS) {
+      for (const locale of locales) {
+        const empty = getRouteEmpty(id, locale);
+        if (empty) assertAccessibleHtml(renderStateView(empty, { locale, theme: "light" }), locale);
+        assertAccessibleHtml(renderStateView(getRouteError(id, "load-failed", locale), { locale, theme: "light" }), locale);
+      }
+    }
   });
   it("renders nothing for a null banner", () => {
     expect(renderBanner(null, opts)).toBe("");

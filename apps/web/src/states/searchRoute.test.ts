@@ -52,7 +52,7 @@ describe("searchRouteView", () => {
     const v = searchRouteView({ status: "ok", places: [places[1]!, places[2]!] }, ctx());
     expect(v.kind).toBe("empty");
     if (v.kind !== "empty") return;
-    expect(v.view.title).toBe("No places match");
+    expect(v.view.title).toBe("No places match this search");
     expect(v.unknownNotice).toContain("1 more place has UNKNOWN details");
     expect(v.unknownToggle).not.toBeNull();
   });
@@ -66,9 +66,10 @@ describe("searchRouteView", () => {
   });
   it("maps errors by connectivity and status", () => {
     const off = searchRouteView({ status: "error" }, ctx({ connectivity: initialConnectivity(false) }));
-    expect(off.kind === "error" && off.view.title).toBe("You are offline");
+    // Search lists only offline-no-pack and pack-download-failed, so other kinds fall back to the first.
+    expect(off.kind === "error" && off.view.title).toBe("No connection and no offline pack");
     const srv = searchRouteView({ status: "error", httpStatus: 500 }, ctx());
-    expect(srv.kind === "error" && srv.view.title).toBe("Something went wrong on our side");
+    expect(srv.kind === "error" && srv.view.title).toBe("No connection and no offline pack");
   });
   it("speaks French with correct plural and typography", () => {
     const v = searchRouteView({ status: "ok", places }, ctx({ locale: "fr" }));

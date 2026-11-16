@@ -16,6 +16,7 @@ export {
   type StateView,
 } from "./stateCopy.ts";
 export { StateNotice } from "./StateNotice.tsx";
+export { PackPlaces } from "./PackPlaces.tsx";
 
 export {
   ROUTE_IDS,
@@ -79,3 +80,6 @@ export * from "./renderHtml.ts";
 export * from "./htmlAudit.ts";
 export * from "./dataAudit.ts";
 export * from "./contrast.ts";
+export * from "./packGeo.ts";
+export * from "./packPlaces.ts";
+export * from "./packPlacesView.ts";
