@@ -14,7 +14,7 @@
 export type Locale = "en" | "fr";
 
 export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed" | "not-found" | "load-failed" | "offline";
-export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places";
+export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places" | "no-saved-places";
 export type ActionId = "retry" | "go-home" | "go-back" | "download-pack" | "clear-search" | "change-trip" | "help";
 
 /** The six Day 22 states, in the plan's order. */
@@ -144,6 +144,14 @@ const EMPTY: Record<EmptyKind, Entry> = {
       fr: "Choisissez un autre type, ou effacez les mots de recherche.",
     },
     actions: ["clear-search"],
+  },
+  "no-saved-places": {
+    title: { en: "No saved places yet", fr: "Aucun lieu enregistré" },
+    description: {
+      en: "No places are saved on this device.",
+      fr: "Aucun lieu n’est enregistré sur cet appareil.",
+    },
+    actions: ["go-home"],
   },
   // The map has no search box; an empty view is about the area and filters.
   "map-no-places": {
