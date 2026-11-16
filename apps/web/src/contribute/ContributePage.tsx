@@ -89,15 +89,15 @@ export function ContributePage() {
     await refresh();
     event.target.value = "";
   }, t.statusImported);
-  if (isEvent) return <main style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
+  if (isEvent) return <div style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
     <h1>{t.eventTitle}</h1><a href="../contribute" style={focusStyle}>{t.eventBack}</a>
     <p>{t.intro}</p>
     <label style={lineStyle}>{t.eventName}<input style={inputStyle} value={eventName} onChange={(e) => setEventName(e.target.value)} /></label>
     <p aria-live="polite">{t.ready}: {drafts.filter((d) => d.event === eventName.trim() && validateDraft(d)).length}</p>
     <button style={focusStyle} type="button" disabled={!eventName.trim() || selectedDrafts.length === 0} onClick={() => void exportSelected()}>{t.exportEvent}</button>
     <p role="status">{status}</p>
-  </main>;
-  return <main style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
+  </div>;
+  return <div style={{ maxWidth: 840, margin: "auto", padding: "1rem" }}>
     <h1>{t.heading}</h1><p>{t.intro}</p><p>{t.privacy}</p><p>{t.localOnly}</p>
     <section style={sectionStyle} aria-label={t.kind}>
       <label style={lineStyle}>{t.kind}<select style={inputStyle} value={draft.kind} onChange={(e) => update({ kind: e.target.value as Draft["kind"], target: e.target.value === "new-place" ? "new place" : "" })}>
@@ -160,5 +160,5 @@ export function ContributePage() {
       })}</ol>
     </section>
     <a href="contribute/event" style={focusStyle}>{t.eventTitle}</a>
-  </main>;
+  </div>;
 }

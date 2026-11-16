@@ -1,0 +1,31 @@
+/*
+ * Component styles for the chooser when it is embedded in a host page (the web
+ * shell's Settings route). Everything is scoped under .controls-embedded, and
+ * nothing here touches :root, body, main or headings, so the host theme wins.
+ * Colours come from the host's custom properties, with the standalone values
+ * as fallbacks.
+ */
+.controls-embedded { overflow-wrap: anywhere; }
+.controls-embedded fieldset.modes { border: 1px solid var(--line, #5f6368); margin: 1rem 0; padding: 0.5rem 1rem; display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; }
+.controls-embedded .mode-option { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; min-width: 44px; cursor: pointer; }
+.controls-embedded .mode-option input { width: 24px; height: 24px; margin: 0; }
+.controls-embedded .panel,
+.controls-embedded .widget { border: 1px solid var(--line, #5f6368); border-radius: 6px; padding: 0.5rem 1rem; margin: 1rem 0; }
+.controls-embedded .button-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; }
+.controls-embedded button.big,
+.controls-embedded input[type="text"] { min-width: 44px; min-height: 44px; font: inherit; padding: 0.25rem 1rem; }
+.controls-embedded input[type="text"] { border: 2px solid var(--line, #5f6368); border-radius: 6px; max-width: 100%; }
+.controls-embedded .voice-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.controls-embedded .dwell-control { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin: 0.5rem 0; min-height: 44px; }
+.controls-embedded .dwell-control input[type="range"] { flex: 1 1 12rem; min-height: 44px; }
+.controls-embedded .dwell-off { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; cursor: pointer; }
+.controls-embedded .dwell-off input { width: 24px; height: 24px; margin: 0; }
+.controls-embedded .announcement { border-inline-start: 6px solid currentColor; padding: 0.5rem 1rem; min-height: 44px; }
+.controls-embedded .scan-current { font-weight: 700; text-decoration: underline; }
+.controls-embedded .chooser { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.25rem; }
+.controls-embedded .option { min-height: 44px; display: flex; align-items: center; padding: 0.25rem 1rem; border: 2px solid var(--line, #5f6368); border-radius: 6px; cursor: pointer; }
+.controls-embedded .option[data-current="true"] { border-width: 5px; border-style: double; font-weight: 700; }
+.controls-embedded .option[data-current="true"]::before { content: "\25B8\00a0"; }
+.controls-embedded .option[aria-selected="true"]::after { content: "\00a0\2713"; }
+.controls-embedded .note { font-size: 0.9rem; }
+.controls-embedded button.big[aria-pressed="true"] { font-weight: 700; text-decoration: underline; border: 3px solid currentColor; }
