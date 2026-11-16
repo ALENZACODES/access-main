@@ -17,7 +17,7 @@ import {
   type StorageEstimate,
   pressureView,
 } from "./robust/index.ts";
-import { classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
+import { classifyPackDownloadError, CorruptPackNotice, RecoveryCenter, RecoveryNotice, isSafePackId, type LocalPackStore, type RecoveryFailure } from "../recovery/index.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
@@ -40,6 +40,37 @@ async function cellReports(pack: PackManifest, statuses: RegionStatus[]): Promis
 }
 
 const formatBytes = (bytes: number, language: string) => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bytes / 1024) + " KiB";
+
+
+const recoveryStore: LocalPackStore = {
+  async listIds() {
+    try {
+      return (await source.regions()).map((region) => region.id).filter(isSafePackId);
+    } catch {
+      return [];
+    }
+  },
+  async read(id) {
+    const region = (await source.regions()).find((item) => item.id === id);
+    if (!region) return null;
+    if (!region.downloaded) return null;
+    // Cell-based regions have no single pack digest; do not invent one.
+    return { id, manifest: null, bytes: null };
+  },
+};
+
+function saveRecoveryFile(filename: string, content: string): Promise<void> {
+  const blob = new Blob([content], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  return Promise.resolve();
+}
 
 export function OfflineRegionPage() {
   const { i18n } = useTranslation();
@@ -194,6 +225,7 @@ export function OfflineRegionPage() {
         {busy === region.id && progress && <div className="stack"><label id={progressTitle}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={progressTitle} value={progress.done} max={progress.total || 1}/></div>}
       </li>; })}</ul>
     </>}
+    <RecoveryCenter locale={language} store={recoveryStore} saveFile={saveRecoveryFile} />
     {confirmation && <dialog open aria-labelledby={dialogTitle} className="panel stack" onKeyDown={(event) => {
       if (event.key === "Escape") setConfirmation(null);
       if (event.key === "Tab") { const buttons = [keepRef.current, deleteRef.current].filter(Boolean); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1]?.focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0]?.focus(); } }

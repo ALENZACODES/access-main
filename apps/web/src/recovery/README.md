@@ -43,3 +43,28 @@ fault, and Dismiss.
 and offer a re-download. On `/offline`, Check again re-reads the stored parts; a
 region whose parts are no longer all on the device shows the notice. A pack is
 never treated as complete when the digest or size cannot be confirmed.
+
+
+## P17C: local recovery centre
+
+`RecoveryCenter` is mounted on the live `/offline` page. It lists enumerated
+region IDs from the same pack source the page already uses, inspects them
+locally, and can export a JSON status report to a file the user chooses. A
+cell-based region that is present but has no single pack digest is shown as
+UNKNOWN; that status is not inferred from partial cell bytes. Download of a
+replacement pack stays on the existing region controls, so this component does
+not add a second “Download” button.
+
+`inspectPack` checks bytes on every inspection: absent, damaged and UNKNOWN packs
+cannot be opened by `canOpenPack`. A successful digest is a pack-content check,
+not a claim about accessibility of any place.
+
+`PackDownloadSession.start` consumes a caller-supplied asynchronous byte stream,
+limits allocation to 32 MiB by default, checks byte count and SHA-256 against
+an independently supplied manifest, and then invokes an atomic replacement
+callback. Cancellation is explicit. No automatic retry.
+
+`createRecoveryExport` makes a bounded, sorted JSON status report of local pack
+IDs, states and supplied provenance only.
+
+Tests: `vitest run apps/web/src/recovery/{packInventory,downloadSession,recoveryExport}.test.ts`.

@@ -303,3 +303,45 @@ export type {
 } from "./packIntegrity.ts";
 export { CorruptPackNotice } from "./CorruptPackNotice.tsx";
 export type { CorruptPackNoticeProps } from "./CorruptPackNotice.tsx";
+
+
+// P17C: public recovery shell and the local, fail-closed operations it mounts.
+export { RecoveryCenter } from "./RecoveryCenter.tsx";
+export type { RecoveryCenterProps } from "./RecoveryCenter.tsx";
+export {
+  canOpenPack,
+  inspectInstalledPacks,
+  inspectPack,
+  inventoryCopy,
+  isSafePackId,
+  knownPackIds,
+  openCheckedPack,
+} from "./packInventory.ts";
+export type {
+  LocalPackRecord,
+  LocalPackState,
+  LocalPackStore,
+  PackAvailability,
+  PackProblem,
+  StoredPack as InventoryStoredPack,
+  OpenPackResult,
+} from "./packInventory.ts";
+export {
+  DEFAULT_MAX_PACK_BYTES,
+  PackDownloadSession,
+  downloadCopy,
+} from "./downloadSession.ts";
+export type {
+  ChunkSource,
+  DownloadOutcome,
+  DownloadPhase,
+  DownloadSnapshot,
+  SessionOptions,
+} from "./downloadSession.ts";
+export { createRecoveryExport, exportCopy, saveRecoveryExport } from "./recoveryExport.ts";
+export type {
+  RecoveryExportEnvelope,
+  RecoveryExportRecord,
+  RecoveryExportResult,
+  SaveTextFile,
+} from "./recoveryExport.ts";
