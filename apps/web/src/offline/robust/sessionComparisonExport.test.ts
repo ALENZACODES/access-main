@@ -49,7 +49,7 @@ describe("offline session comparison export", () => {
     const text = encodeSessionComparison(result);
     expect(encodeSessionComparison(result)).toBe(text);
     expect(JSON.parse(text)).toMatchObject({
-      schema: "offline-session-comparison-v1", state: "complete", newlySaved: 1,
+      schema: "offline-session-comparison-v1", status: "complete", newlySaved: 1,
     });
   });
 

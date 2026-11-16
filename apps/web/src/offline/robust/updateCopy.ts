@@ -50,7 +50,7 @@ export const UPDATE_COPY = {
     countUnknown: "Cells with UNKNOWN status",
     remaining: "Listed bytes not saved",
     quota: "Estimated available space",
-    budgetEnough: "Estimate indicates space for these downloads. Storage can still change.",
+    budgetEnough: "The estimate indicates space for these downloads. Storage can still change.",
     budgetLow: "Estimated space is insufficient for these downloads.",
     budgetUnknown: "Storage estimate is UNKNOWN. No space assumption has been made.",
     budgetEmpty: "No downloads suggested from this review.",

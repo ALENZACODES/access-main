@@ -27,7 +27,8 @@ describe("offline storage-pressure status", () => {
       const view = pressureView(state, language);
       expect(view.disabled).toBe(false);
       expect(view.details).toContain("1");
-      expect(view.details).toContain(language === "fr" ? "INCONNUES" : "UNKNOWN");
+      expect(view.details).toContain(language === "fr" ? "Cellules non téléchargées" : "Cells not downloaded");
+      expect(view.details).toContain(language === "fr" ? "ne sont pas disponibles hors ligne" : "are not available offline");
       expect(view.message).not.toBe("");
     }
   });

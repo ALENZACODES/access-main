@@ -164,9 +164,18 @@ export function browseCleanup(
   const matchesFilter = (cell: CleanupCandidate): boolean =>
     filter === "all" || cell.reason === filter ||
     (filter === "unknown" && cell.reason !== "saved");
+  // A cell ID matches anywhere; source, licence and date match from the start of a word,
+  // so a one-letter query does not match every record through its source name.
+  const startsWord = (value: string): boolean => {
+    const text = value.toLocaleLowerCase();
+    for (let at = text.indexOf(search); at !== -1; at = text.indexOf(search, at + 1)) {
+      if (at === 0 || !/[\p{L}\p{N}]/u.test(text[at - 1]!)) return true;
+    }
+    return false;
+  };
   const matchesText = (cell: CleanupCandidate): boolean =>
-    !search || [cell.id, cell.provenance.source, cell.provenance.licence,
-      cell.provenance.date].some((value) => value.toLocaleLowerCase().includes(search));
+    !search || cell.id.toLocaleLowerCase().includes(search) ||
+    [cell.provenance.source, cell.provenance.licence, cell.provenance.date].some(startsWord);
   const matching = all.filter((cell) => matchesFilter(cell) && matchesText(cell));
   if (order === "largest") matching.sort((a, b) => b.expectedBytes - a.expectedBytes || a.position - b.position);
   if (order === "smallest") matching.sort((a, b) => a.expectedBytes - b.expectedBytes || a.position - b.position);

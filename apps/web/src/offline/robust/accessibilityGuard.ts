@@ -44,7 +44,7 @@ export function auditOfflineCopy(
   }
   for (const language of [english, french]) {
     for (const value of Object.values(language)) {
-      if (/\b(?:verified|vérifié(?:e|s|es)?|real-time|partnership|guarantee(?:d|s)?|aaa-conformant)\b/i.test(value)) {
+      if (/(?<![\p{L}\p{N}])(?:verified|vérifié(?:e|s|es)?|real-time|partnership|guarantee(?:d|s)?|aaa-conformant)(?![\p{L}\p{N}])/iu.test(value)) {
         findings.push("disallowed-claim");
       }
     }

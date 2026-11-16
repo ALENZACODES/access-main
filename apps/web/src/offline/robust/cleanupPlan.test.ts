@@ -293,3 +293,12 @@ describe("source summary keeps separate licences and dates", () => {
     expect(groupCleanupSources(changed)).toHaveLength(3);
   });
 });
+
+describe("cleanup search matching", () => {
+  it("matches a cell ID anywhere and provenance text only from the start of a word", () => {
+    expect(browseCleanup(inventory, { text: "open data" }).cells.map((c) => c.id)).toEqual(["c", "d"]);
+    expect(browseCleanup(inventory, { text: "listing" }).cells.map((c) => c.id)).toEqual(["a", "b", "e"]);
+    expect(browseCleanup(inventory, { text: "isting" }).matched).toBe(0);
+    expect(browseCleanup(inventory, { text: "04-01" }).matched).toBe(3);
+  });
+});
