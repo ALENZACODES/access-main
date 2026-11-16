@@ -31,3 +31,5 @@ export { createPrivacyController } from "./controller";
 export type { ControllerDeps, PrivacyAction, PrivacyController, PrivacyState } from "./controller";
 export { adaptElement, browserDownload, mountPrivacyPanel } from "./mount";
 export type { MountOptions, PanelEvent, PanelRoot } from "./mount";
+export * from "./consent";
+export * from "./expiry";
