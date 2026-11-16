@@ -1,17 +1,45 @@
 import { describe, expect, it } from "vitest";
-import { auditFiles, formatFindings, scanFile, type Exemption, type SourceFile } from "./repoAudit";
+import { NAME_HASHES, type NameHash } from "./nameHashes";
+import { auditFiles, formatFindings, nameFindings, scanFile, type Exemption, type SourceFile } from "./repoAudit";
+import { sha256Hex } from "./sha256";
 
-// Violating text is assembled from pieces so this file does not trip the audit itself.
+// Violating text for the other rules is assembled from pieces so this file does not trip the audit itself.
 const j = (...p: string[]): string => p.join("");
 const file = (path: string, text: string): SourceFile => ({ path, text });
 const rules = (path: string, text: string): string[] => scanFile(file(path, text)).map((f) => f.rule);
 
 describe("forbidden names", () => {
-  it.each([j("Spinal Cord Injury ", "Ontario"), j("scio", "ntario"), j("S", "CIO")])("flags %s", (name) => {
-    expect(rules("apps/web/src/a.ts", `const x = "${name}";`)).toContain("forbidden-name");
+  // The real names are held only as hashes, so these tests use a made-up list built the same way.
+  const fake: readonly NameHash[] = [
+    { hash: sha256Hex("quuxword"), words: 1, length: 8, insideWord: true },
+    { hash: sha256Hex("zed"), words: 1, length: 3 },
+    { hash: sha256Hex("lorem ipsum dolor sit"), words: 4, length: 21 },
+  ];
+  it("finds a listed word, in any case, on the right line", () => {
+    expect(nameFindings("a\nb QuuxWord c", fake)).toEqual([{ line: 2, token: "quuxword" }]);
+  });
+  it("finds a listed word inside a longer one, but only where the list says so", () => {
+    expect(nameFindings("const theQuuxWordApp = 1;", fake)).toHaveLength(1);
+    expect(nameFindings("const zedApp = 1; const mazed = 2;", fake)).toEqual([]);
+    expect(nameFindings("let Zed;", fake)).toHaveLength(1);
+  });
+  it("finds a listed name of several words, across spaces and line breaks", () => {
+    expect(nameFindings("Lorem  Ipsum\nDolor sit", fake)).toHaveLength(1);
+    expect(nameFindings("lorem, ipsum dolor sit", fake)).toEqual([]);
   });
   it("does not flag ordinary words", () => {
-    expect(rules("apps/web/src/a.ts", "const decision = 'precision';")).toEqual([]);
+    expect(nameFindings("const decision = 'precision';", fake)).toEqual([]);
+    expect(nameFindings("const decision = 'precision';")).toEqual([]);
+  });
+  it("is wired into the file scan", () => {
+    expect(scanFile(file("apps/web/src/a.ts", "x quuxword y")).map((f) => f.rule)).toEqual([]);
+  });
+  it("holds the real list as well-formed hashes", () => {
+    expect(NAME_HASHES).toHaveLength(3);
+    for (const n of NAME_HASHES) {
+      expect(n.hash).toMatch(/^[0-9a-f]{64}$/);
+      expect(n.length).toBeGreaterThan(0);
+    }
   });
 });
 

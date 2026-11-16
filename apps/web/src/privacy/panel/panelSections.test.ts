@@ -8,6 +8,7 @@ import { reconcile, type Reconciled } from "./reconcile";
 import { createMemoryStorage } from "./storage";
 import { putExpiring } from "./expiry";
 import { auditHtml } from "../audit/htmlAudit";
+import { omit } from "./omit";
 
 const AT = new Date(2026, 10, 15, 20, 5).toISOString();
 const PURPOSES: readonly Purpose[] = [
@@ -82,7 +83,7 @@ describe("renderStoredHtml", () => {
     expect(html).not.toContain("<table");
   });
   it("explains entries that cannot be matched, even when nothing is stored", () => {
-    const { storageKeys: _k, ...unkeyed } = inventory[0]!;
+    const unkeyed = omit(inventory[0]!, "storageKeys");
     const html = renderStoredHtml("en", reconcile(createMemoryStorage(), "app.", [unkeyed]), [unkeyed]);
     expect(html).toContain("cannot be matched here");
   });

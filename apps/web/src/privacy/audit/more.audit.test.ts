@@ -14,6 +14,7 @@ import { IMPORT_PROBLEM_CODES } from "../panel/importData";
 import { createMemoryStorage } from "../panel/storage";
 import { assertParity, checkParity } from "./parity";
 import { auditHtml, formatViolations } from "./htmlAudit";
+import { omit } from "../panel/omit";
 
 const LOCALES: readonly Locale[] = ["en", "fr"];
 const NOW = new Date(2026, 10, 15, 9, 0, 0);
@@ -36,9 +37,11 @@ const STATUSES: readonly MoreStatus[] = [
 
 describe.each(LOCALES)("wording lint (%s)", (loc) => {
   it("static copy passes", () => {
-    const { status: _s, printable, network, ...rest } = MORE_STRINGS[loc];
-    const { generated: _g, reviewed: _r, ...printableText } = printable;
-    const { summary: _sum, ...networkText } = network;
+    const moreLoc = MORE_STRINGS[loc];
+    const { printable, network } = moreLoc;
+    const rest = omit(moreLoc, "status", "printable", "network");
+    const printableText = omit(printable, "generated", "reviewed");
+    const networkText = omit(network, "summary");
     expect(lintTable(loc, { ...rest, printable: printableText, network: networkText })).toEqual([]);
   });
   it("every status and generated line passes", () => {
@@ -62,7 +65,7 @@ describe("EN and FR parity", () => {
   it("is not vacuous: an untranslated line and a missing key are caught", () => {
     const untranslated = { ...MORE_STRINGS.fr, buttons: MORE_STRINGS.en.buttons };
     expect(checkParity(MORE_STRINGS.en, untranslated, { samples }).map((p) => p.code)).toContain("identical");
-    const { buttons: _b, ...dropped } = MORE_STRINGS.fr;
+    const dropped = omit(MORE_STRINGS.fr, "buttons");
     expect(checkParity(MORE_STRINGS.en, dropped, { samples }).map((p) => p.code)).toContain("missing-in-fr");
   });
   it("has one problem message per code in both languages", () => {

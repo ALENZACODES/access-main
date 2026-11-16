@@ -7,6 +7,7 @@ import { EXTRA_STRINGS } from "../panel/copyExtra";
 import { MORE_STRINGS, type MoreStatus } from "../panel/copyMore";
 import { IMPORT_PROBLEM_CODES } from "../panel/importData";
 import { PANEL_STRINGS, type Status } from "../panel/strings";
+import { omit } from "../panel/omit";
 
 export interface CopyItem {
   source: string;
@@ -47,21 +48,25 @@ const STATUSES: readonly Status[] = [
 export function collectCopy(locale: Locale): CopyItem[] {
   const out: CopyItem[] = [];
   leaves("notice", NOTICE[locale], out);
-  const { status: _s, consent: c, ...panel } = PANEL_STRINGS[locale];
+  const panelStrings = PANEL_STRINGS[locale];
+  const c = panelStrings.consent;
+  const panel = omit(panelStrings, "status", "consent");
   leaves("panel", panel, out);
-  const { granted: _g, declined: _d, ariaAllow: _a, ariaDecline: _ad, ...consent } = c;
+  const consent = omit(c, "granted", "declined", "ariaAllow", "ariaDecline");
   leaves("panel.consent", consent, out);
   const { activity, stored, changes, list, csvHeader } = EXTRA_STRINGS[locale];
   leaves("extra.activity", activity, out);
   leaves("extra.stored", stored, out);
-  const { none: _n, since: _si, ...changeText } = changes;
+  const changeText = omit(changes, "none", "since");
   leaves("extra.changes", changeText, out);
   leaves("extra.list", list, out);
   leaves("extra.csvHeader", csvHeader, out);
-  const { status: _ms, printable, network, ...more } = MORE_STRINGS[locale];
+  const moreStrings = MORE_STRINGS[locale];
+  const { printable, network } = moreStrings;
+  const more = omit(moreStrings, "status", "printable", "network");
   leaves("more", more, out);
   leaves("more.printable.static", { title: printable.title, heading: printable.heading, storedHeading: printable.storedHeading }, out);
-  const { summary: _sum, ...networkText } = network;
+  const networkText = omit(network, "summary");
   leaves("more.network", networkText, out);
   STATUSES.forEach((s, i) => out.push({ source: `status.${s.kind}.${i}`, text: PANEL_STRINGS[locale].status(s) }));
   out.push({ source: "more.network.summary", text: network.summary(3, 2) });

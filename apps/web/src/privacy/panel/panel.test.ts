@@ -31,19 +31,31 @@ describe("renderInventoryTableHtml", () => {
     expect(html).toContain('class="privacy-inventory"');
     expect(html).toMatch(/@media\s*\(max-width:\s*40em\)/);
     expect(html).toMatch(/display:\s*block/);
-    expect(html).toContain('data-label="Where it is kept"');
-    expect(html).toContain('data-label="Why"');
-    expect(html).toContain('data-label="How long"');
-    expect(html).toContain('data-label="Source and date"');
+    expect(html).not.toContain("content:attr");
+    expect(html).not.toContain("td::before");
+  });
+  it("puts column names in the DOM so screen readers get them in English and French", () => {
+    const en = renderInventoryTableHtml("en", FIXTURE);
     const fr = renderInventoryTableHtml("fr", FIXTURE);
-    expect(fr).toContain("data-label=\"Où c’est conservé\"");
+    for (const label of ["Where it is kept", "Why", "How long", "Source and date"]) {
+      const needle = `<span class="privacy-inventory-label">${label}</span>`;
+      expect(en).toContain(needle);
+      expect((en.match(new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) ?? []).length).toBe(FIXTURE.length);
+    }
+    for (const label of ["Où c’est conservé", "Pourquoi", "Durée", "Source et date"]) {
+      const needle = `<span class="privacy-inventory-label">${label}</span>`;
+      expect(fr).toContain(needle);
+      expect((fr.match(new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) ?? []).length).toBe(FIXTURE.length);
+    }
+    expect(en).not.toMatch(/privacy-inventory-label[^>]*aria-hidden/);
+    expect(fr).not.toMatch(/privacy-inventory-label[^>]*aria-hidden/);
   });
   it("shows missing fields as unknown, never as a value", () => {
     const html = renderInventoryTableHtml("en", FIXTURE);
     const settings = html.slice(html.indexOf('data-id="settings"'));
     expect(settings.match(/>Not known<\/td>/g)).toHaveLength(3);
-    expect(settings).toContain("data-label=\"Why\">Not known");
-    expect(settings).toContain("data-label=\"How long\">Not known");
+    expect(settings).toContain('<span class="privacy-inventory-label">Why</span>Not known');
+    expect(settings).toContain('<span class="privacy-inventory-label">How long</span>Not known');
   });
   it("records source, licence and date for each row", () => {
     const html = renderInventoryTableHtml("en", FIXTURE);

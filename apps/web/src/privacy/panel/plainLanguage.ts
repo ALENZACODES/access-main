@@ -51,7 +51,7 @@ export function splitSentences(text: string): string[] {
   const parts = text
     .replace(/(\d)\.(\d)/g, "$1\u0000$2")
     .split(/(?<=[.!?…])[\s\u00a0\u202f]+/u)
-    .map((s) => s.replace(/\u0000/g, ".").trim())
+    .map((s) => s.split(String.fromCharCode(0)).join(".").trim())
     .filter((s) => s !== "");
   return parts;
 }
