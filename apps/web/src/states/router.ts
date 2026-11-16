@@ -6,7 +6,7 @@
 import type { Locale } from "./stateCopy";
 import { isPlaceId } from "./placeRecord";
 
-export type RouteName = "search" | "place" | "saved" | "map" | "compare" | "sources" | "settings" | "report";
+export type RouteName = "search" | "place" | "saved" | "map" | "compare" | "sources" | "settings" | "report" | "coverage" | "offline";
 
 export const SLUGS: Readonly<Record<RouteName, Readonly<Record<Locale, string>>>> = {
   search: { en: "search", fr: "recherche" },
@@ -17,6 +17,8 @@ export const SLUGS: Readonly<Record<RouteName, Readonly<Record<Locale, string>>>
   sources: { en: "sources", fr: "sources" },
   settings: { en: "settings", fr: "parametres" },
   report: { en: "report", fr: "signaler" },
+  coverage: { en: "coverage", fr: "couverture" },
+  offline: { en: "offline", fr: "hors-ligne" },
 };
 
 export const ROUTE_NAMES = Object.keys(SLUGS) as RouteName[];

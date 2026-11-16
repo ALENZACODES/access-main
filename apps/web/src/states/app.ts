@@ -7,16 +7,21 @@ import { type Locale, getErrorState, errorKindFromStatus } from "./stateCopy";
 import { buildSubmission, validateCorrection, type CorrectionValues } from "./correction";
 import { compareRouteView } from "./compare";
 import { decodeFilter } from "./urlState";
-import { parseNear } from "./geo";
+import { nearFromQuery } from "./geo";
 import { message } from "./messages";
 import { mapRouteView } from "./mapRoute";
 import { type ConnectivityState } from "./offline";
-import { type PlaceRecord } from "./placeRecord";
+import { coverageRouteView } from "./coverage";
+import { CSV_FILENAMES, placeToText, placesToCsv } from "./exportData";
+import { REGISTER_SCRIPT, DEFAULT_SW_CONFIG, buildServiceWorker, type SwConfig } from "./serviceWorker";
+import { buildManifest } from "./manifest";
+import { type PlacesLoad, type Timers, safeLoad } from "./resilience";
+import { type ResponseKind, securityHeaders } from "./securityHeaders";
 import { placeRouteView } from "./placeRoute";
 import { renderPage, themeFor } from "./pageShell";
 import { type Preferences, preferencesFromForm } from "./preferences";
 import {
-  renderCompareRoute, renderConfirmation, renderCorrectionForm, renderMapRoute, renderSettingsForm, renderSourcesRoute,
+  renderCompareRoute, renderConfirmation, renderCorrectionForm, renderCoverageRoute, renderMapRoute, renderOfflinePage, renderSettingsForm, renderSourcesRoute,
 } from "./renderPages";
 import { type RenderOptions, escapeHtml, renderPlaceRoute, renderSavedRoute, renderSearchRoute, renderStateView, renderLink } from "./renderHtml";
 import { type Resolved, alternateHref, hrefFor, parseAcceptLanguage, resolveRoute } from "./router";
@@ -25,10 +30,6 @@ import { savedRouteView } from "./savedRoute";
 import { searchRouteView } from "./searchRoute";
 import { sourcesRouteView } from "./sourcesPage";
 import { type SubmissionQueue } from "./submissionQueue";
-
-export type PlacesLoad =
-  | { readonly status: "ok"; readonly places: readonly PlaceRecord[]; readonly fromSavedCopy: boolean }
-  | { readonly status: "error"; readonly httpStatus?: number };
 
 export interface AppDeps {
   loadPlaces(): Promise<PlacesLoad>;
@@ -40,6 +41,11 @@ export interface AppDeps {
   readonly queue: SubmissionQueue;
   newId(): string;
   savePreferences?(p: Preferences): void;
+  /** Milliseconds to wait for loadPlaces before showing the timeout error. Default 8000. */
+  readonly loadTimeoutMs?: number;
+  readonly timers?: Timers;
+  /** Service worker overrides, e.g. a new cache version on deploy. */
+  readonly serviceWorker?: Partial<SwConfig>;
 }
 
 export interface AppRequest {
@@ -55,21 +61,20 @@ export interface AppResponse {
   readonly html: string;
 }
 
-const HTML = { "content-type": "text/html; charset=utf-8" } as const;
 
-export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<AppResponse> {
+async function dispatch(req: AppRequest, deps: AppDeps): Promise<AppResponse> {
   const pref = deps.preferences.locale;
   const preferred: Locale = pref === "auto" ? parseAcceptLanguage(req.acceptLanguage) : pref;
   const resolved = resolveRoute(req.url, preferred);
 
-  if (resolved.kind === "redirect") return { status: 302, headers: { location: resolved.to }, html: "" };
+  if (resolved.kind === "redirect") return { status: 302, headers: { ...securityHeaders("redirect"), location: resolved.to }, html: "" };
 
   const locale = resolved.locale;
   const theme = themeFor(deps.preferences);
   const base: RenderOptions = { locale, theme, placeHref: (id) => hrefFor(locale, "place", { id }) };
   const page = (current: Parameters<typeof renderPage>[0]["current"], heading: string, body: string, status: number, r: Resolved): AppResponse => ({
     status,
-    headers: HTML,
+    headers: securityHeaders("html"),
     html: renderPage({
       locale, current, heading, body, preferences: deps.preferences,
       alternateHref: r.kind === "route" ? alternateHref(r) : null,
@@ -83,9 +88,12 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
 
   const { route, id, query } = resolved;
   const ctx = { locale, connectivity: deps.connectivity };
-  const load = await deps.loadPlaces();
+  const needsData = route !== "settings" && route !== "offline";
+  const load: PlacesLoad = needsData
+    ? await safeLoad(deps.loadPlaces, deps.loadTimeoutMs ?? 8000, deps.timers)
+    : { status: "ok", places: [], fromSavedCopy: false };
   const failed = load.status === "error";
-  const errorView = (kind: ReturnType<typeof errorKindFromStatus>, name: Parameters<typeof EXTRA_ROUTES.getRouteError>[0] | null) => {
+  const errorView = (kind: ReturnType<typeof errorKindFromStatus>, name: Parameters<typeof EXTRA_ROUTES.getRouteError>[0] | null): AppResponse => {
     const v = name ? EXTRA_ROUTES.getRouteError(name, kind, locale) : getErrorState(kind, locale);
     return page(route, v.title, renderStateView(v, { ...base, idPrefix: "err" }), 503, resolved);
   };
@@ -97,16 +105,25 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
       return page(route, message("search.heading", locale), renderSearchRoute(v, base), v.kind === "error" ? 503 : 200, resolved);
     }
     case "map": {
-      const v = mapRouteView(load, { ...ctx, near: parseNear(query.get("near")) });
+      const nq = nearFromQuery(query);
+      const v = mapRouteView(load, { ...ctx, near: nq.near, nearInput: nq.input, nearError: nq.error });
       return page(route, message("map.heading", locale), renderMapRoute(v, base), v.kind === "error" ? 503 : 200, resolved);
     }
     case "saved": {
       const saved = new Set(deps.savedIds);
-      const v = savedRouteView(
-        load.status === "ok" ? { status: "ok", places: load.places.filter((p) => saved.has(p.id)) } : load,
-        { ...ctx, today: deps.today },
-      );
-      return page(route, message("saved.heading", locale), renderSavedRoute(v, base), v.kind === "error" ? 503 : 200, resolved);
+      const mine = load.status === "ok" ? load.places.filter((p) => saved.has(p.id)) : [];
+      if (load.status === "ok" && query.get("format") === "csv") {
+        return {
+          status: 200,
+          headers: { ...securityHeaders("csv"), "content-disposition": `attachment; filename="${CSV_FILENAMES[locale]}"` },
+          html: placesToCsv(mine, { bom: true }),
+        };
+      }
+      const v = savedRouteView(load.status === "ok" ? { status: "ok", places: mine } : load, { ...ctx, today: deps.today });
+      const csv = load.status === "ok" && mine.length > 0
+        ? `<p>${renderLink(hrefFor(locale, "saved", { query: "format=csv" }), message("export.csv", locale), theme)}</p>`
+        : "";
+      return page(route, message("saved.heading", locale), renderSavedRoute(v, base) + csv, v.kind === "error" ? 503 : 200, resolved);
     }
     case "compare": {
       const ids = (query.get("ids") ?? "").split(",").filter((x) => x !== "");
@@ -116,6 +133,17 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
     case "sources": {
       const v = sourcesRouteView(load, ctx);
       return page(route, message("sources.heading", locale), renderSourcesRoute(v, base), v.kind === "error" ? 503 : 200, resolved);
+    }
+    case "coverage": {
+      const v = coverageRouteView(load, { ...ctx, today: deps.today });
+      return page(route, message("coverage.heading", locale), renderCoverageRoute(v, base), v.kind === "error" ? 503 : 200, resolved);
+    }
+    case "offline": {
+      const links = [
+        { href: hrefFor(locale, "saved"), label: message("nav.saved", locale) },
+        { href: hrefFor(locale, "search"), label: message("nav.search", locale) },
+      ];
+      return page(route, getErrorState("offline", locale).title, renderOfflinePage({ ...base, idPrefix: "offline" }, links), 200, resolved);
     }
     case "settings": {
       if (req.method === "POST") {
@@ -128,7 +156,7 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
           alternateHref: hrefFor(shown === "en" ? "fr" : "en", "settings"),
           body: renderSettingsForm(parsed.prefs, { ...base, locale: shown, theme: themeFor(parsed.prefs) }, notice),
         });
-        return { status: parsed.repaired ? 422 : 200, headers: HTML, html: out };
+        return { status: parsed.repaired ? 422 : 200, headers: securityHeaders("html"), html: out };
       }
       return page(route, message("settings.heading", locale), renderSettingsForm(deps.preferences, base), 200, resolved);
     }
@@ -139,8 +167,13 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
         const v = getErrorState("not-found", locale);
         return page(route, v.title, renderStateView(v, { ...base, idPrefix: "nf" }), 404, resolved);
       }
+      if (query.get("format") === "text") {
+        return { status: 200, headers: securityHeaders("text"), html: placeToText(place, locale, deps.today) };
+      }
       const view = placeRouteView({ status: "ok", place, fromSavedCopy: load.fromSavedCopy }, { ...ctx, today: deps.today });
-      const suggest = `<p>${renderLink(hrefFor(locale, "report", { id: place.id }), message("report.heading", locale), theme)}</p>`;
+      const suggest =
+        `<p>${renderLink(hrefFor(locale, "report", { id: place.id }), message("report.heading", locale), theme)}</p>` +
+        `<p>${renderLink(hrefFor(locale, "place", { id: place.id, query: "format=text" }), message("export.text", locale), theme)}</p>`;
       return page(route, place.name, renderPlaceRoute(view, base) + suggest, 200, resolved);
     }
     case "report": {
@@ -165,5 +198,44 @@ export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<App
       const back = hrefFor(locale, "place", { id: place.id });
       return page(route, heading, renderConfirmation(message("report.saved", locale), back, place.name, base), 200, resolved);
     }
+  }
+}
+
+function staticAsset(req: AppRequest, deps: AppDeps): AppResponse | null {
+  const path = new URL(req.url, "https://app.invalid").pathname;
+  const pref = deps.preferences.locale;
+  const locale: Locale = pref === "auto" ? parseAcceptLanguage(req.acceptLanguage) : pref;
+  const ok = (kind: ResponseKind, body: string): AppResponse => ({ status: 200, headers: securityHeaders(kind), html: body });
+  switch (path) {
+    case "/sw.js":
+      return ok("script", buildServiceWorker({ ...DEFAULT_SW_CONFIG, ...deps.serviceWorker }));
+    case "/register-sw.js":
+      return ok("script", REGISTER_SCRIPT);
+    case "/manifest.webmanifest":
+      return ok("manifest", JSON.stringify(buildManifest(locale)));
+    default:
+      return null;
+  }
+}
+
+/**
+ * Handle one request. Never throws: an unexpected failure becomes a generic error page
+ * that reveals nothing about the cause. Every response carries the security headers.
+ */
+export async function handleRequest(req: AppRequest, deps: AppDeps): Promise<AppResponse> {
+  if (req.method !== undefined && req.method !== "GET" && req.method !== "POST") {
+    return { status: 405, headers: { ...securityHeaders("text"), allow: "GET, POST" }, html: "" };
+  }
+  try {
+    return staticAsset(req, deps) ?? (await dispatch(req, deps));
+  } catch {
+    const pref = deps.preferences.locale;
+    const locale: Locale = pref === "auto" ? parseAcceptLanguage(req.acceptLanguage) : pref;
+    const view = getErrorState("data-load-failed", locale);
+    const html = renderPage({
+      locale, current: null, heading: view.title, preferences: deps.preferences, alternateHref: null,
+      body: renderStateView(view, { locale, theme: themeFor(deps.preferences), idPrefix: "fatal" }),
+    });
+    return { status: 500, headers: securityHeaders("html"), html };
   }
 }

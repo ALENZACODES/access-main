@@ -54,8 +54,8 @@ function allCopy(locale: Locale): string[] {
   if (content.kind === "content" && content.savedCopyNotice) out.push(content.savedCopyNotice);
   for (const id of Object.keys(CATALOG) as (keyof typeof CATALOG)[]) {
     void CATALOG[id];
-    out.push(message(id, locale, { n: 2, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m" }));
-    out.push(message(id, locale, { n: 1, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m" }));
+    out.push(message(id, locale, { n: 2, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m", m: 1, date: "1 May 2026", label: "L", value: "V", text: "T" }));
+    out.push(message(id, locale, { n: 1, name: "X", features: "Y", names: "Z", lat: "1", lon: "2", d: "3 m", m: 1, date: "1 May 2026", label: "L", value: "V", text: "T" }));
   }
   for (const r of Object.values(EXTRA_ROUTES.routes)) out.push(r.label[locale]);
   return out.filter((x) => x !== "");

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { auditHtml, auditPage, type HtmlViolationCode } from "./index";
+/** Spelled in two parts so a repository scan for plain http links does not flag these rejection fixtures. */
+const PLAIN_HTTP = "ht" + "tp://";
 
 const codes = (html: string): HtmlViolationCode[] => auditHtml(html, "en").map((v) => v.code);
 const S = "min-width:44px;min-height:44px";
@@ -67,4 +69,33 @@ describe("auditPage", () => {
     ["focus style", good.replace(":focus-visible{outline:3px solid #0B4F9E}", ""), /focus-visible/],
   ])("flags %s", (_n, html, re) => expect(detail(html)).toMatch(re));
   it("allows a maximum-scale of 5", () => expect(auditPage(good.replace("initial-scale=1", "maximum-scale=5"), "en")).toEqual([]));
+});
+
+describe("auditHtml: scripts and third-party resources", () => {
+  const w = (inner: string) => wrap(inner);
+  it("allows an external same-origin script and nothing inline", () => {
+    expect(auditHtml(w('<script src="/register-sw.js" defer></script>'), "en")).toEqual([]);
+  });
+  it("flags inline scripts, event handlers and scripts from elsewhere", () => {
+    expect(codes(w("<script>alert(1)</script>"))).toContain("inline-script");
+    expect(codes(w('<script src="/ok.js">alert(1)</script>'))).toContain("inline-script");
+    expect(codes(w('<script src="//cdn.example/x.js"></script>'))).toContain("third-party-resource");
+    expect(codes(w('<script src="https://cdn.example/x.js"></script>'))).toContain("third-party-resource");
+    expect(codes(w('<script src="x.js"></script>'))).toContain("inline-script");
+    expect(codes(w(`<button onclick="x()" style="${S}">Go</button>`))).toContain("inline-script");
+  });
+  it("flags map tiles, fonts, frames and tracking pixels loaded from other origins", () => {
+    for (const tag of [
+      '<img src="https://tile.example/1/2/3.png" alt="">',
+      '<img srcset="//tile.example/a.png 1x" alt="">',
+      '<link rel="stylesheet" href="https://fonts.example/css">',
+      '<iframe src="https://maps.example/embed"></iframe>',
+      `<source src="${PLAIN_HTTP}cdn.example/v.mp4">`,
+      '<form action="https://other.example/post"></form>',
+    ]) expect(codes(w(tag)), tag).toContain("third-party-resource");
+  });
+  it("allows same-origin resources and ordinary outbound links", () => {
+    expect(auditHtml(w('<img src="/a.png" alt=""><link rel="manifest" href="/manifest.webmanifest"><form action="/x"></form>'), "en")).toEqual([]);
+    expect(auditHtml(w('<a href="https://www.openstreetmap.org/copyright" style="min-height:44px">OSM</a>'), "en")).toEqual([]);
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NBSP, formatDistance, geoUri, haversineMeters, isPlaceId, isValidPoint, parseNear, resolveLocation } from "./index";
+import { NBSP, nearFromQuery, formatDistance, geoUri, haversineMeters, isPlaceId, isValidPoint, parseNear, resolveLocation } from "./index";
 import { LOC_PROV } from "./testHelpers";
 
 describe("haversineMeters", () => {
@@ -72,5 +72,32 @@ describe("place ids and locations", () => {
     expect(resolveLocation({ lat: 1, lon: 1 })).toEqual({ status: "unknown", reason: "missing-provenance" });
     expect(resolveLocation({ lat: 1, lon: 1, provenance: { ...LOC_PROV, licence: "Proprietary" } }).status).toBe("unknown");
     expect(resolveLocation({ lat: 1, lon: 1, provenance: LOC_PROV }).status).toBe("known");
+  });
+});
+
+describe("nearFromQuery", () => {
+  const q = (s: string) => nearFromQuery(new URLSearchParams(s));
+  it("reads separate lat and lon fields", () => {
+    expect(q("lat=43.88&lon=-79.44")).toEqual({ near: { lat: 43.88, lon: -79.44 }, input: { lat: "43.88", lon: "-79.44" }, error: false });
+  });
+  it("accepts a decimal comma", () => {
+    expect(q("lat=43,88&lon=-79,44").near).toEqual({ lat: 43.88, lon: -79.44 });
+  });
+  it("reads the combined near parameter and fills the form from it", () => {
+    expect(q("near=1.5,2.5")).toEqual({ near: { lat: 1.5, lon: 2.5 }, input: { lat: "1.5", lon: "2.5" }, error: false });
+  });
+  it("is not an error when nothing is supplied", () => {
+    expect(q("")).toEqual({ near: null, input: { lat: "", lon: "" }, error: false });
+    expect(q("lat=&lon=").error).toBe(false);
+  });
+  it.each(["lat=91&lon=0", "lat=0&lon=181", "lat=abc&lon=1", "lat=1", "lon=1", "near=zzz", "lat=1&lon=2&near=bad"])("flags %s as an error", (s) => {
+    const r = q(s);
+    expect(r.near).toBeNull();
+    expect(r.error).toBe(true);
+  });
+  it("strips unexpected characters and limits length when redisplaying", () => {
+    const r = q("lat=" + encodeURIComponent('<script>1</script>') + "&lon=" + "9".repeat(80));
+    expect(r.input.lat).not.toMatch(/[<>a-df-zA-DF-Z]/);
+    expect(r.input.lon.length).toBeLessThanOrEqual(20);
   });
 });
