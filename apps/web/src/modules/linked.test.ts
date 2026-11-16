@@ -98,10 +98,23 @@ describe.skipIf(!mapsReady)("linked registry over two real ODbL records (maps)",
     expectProvenance(result);
   });
 
-  it("journey: ready, with provenance on any item", async () => {
+  it("journey: unavailable until origin and destination coordinates are wired, with no invented trip", async () => {
     const result = await registry().journey.plan({ originLabel: null, destinationLabel: null, routingPreference: null, offline: false }, ctx);
-    expect(result.availability).toBe("ready");
-    expectProvenance(result);
+    expect(result).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
+  });
+
+  it("places stays unavailable when the pack cannot be read", async () => {
+    const source = createFixtureSource(records, sources);
+    const modules = createLinkedModules({
+      ...source,
+      manifest: async () => {
+        throw new Error("manifest response");
+      },
+    });
+    const search = await modules.places.search({ text: firstName }, ctx);
+    expect(search).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
+    const detail = await modules.places.get(records[0]!.id, ctx);
+    expect(detail).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
   });
 
   it("places.get returns the record with its sources, and nothing for an unknown id", async () => {
