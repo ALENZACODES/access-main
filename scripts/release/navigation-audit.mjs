@@ -12,7 +12,10 @@ const DOWNLOAD_SCHEME = /^(?:mailto|tel|sms):/i;
 const REMOTE = /^(?:https?:)?\/\//i;
 const LANGUAGE = /^(en|fr)(?:-[a-z]{2,8})?$/i;
 const FRAGMENT = /#([^#]*)$/;
-const VALID_ID = /^[^\s\u0000-\u001f]+$/;
+const VALID_ID = /^[^\s]+$/;
+function validId(value) {
+  return VALID_ID.test(value) && [...value].every((char) => (char.codePointAt(0) ?? 0) > 31);
+}
 const URL_ATTRS = new Map([
   ['a', 'href'], ['area', 'href'], ['form', 'action'],
 ]);
@@ -247,7 +250,7 @@ export function inspectNavigationHtml(html, file) {
       issues.push(finding('NAV_EMPTY_FRAGMENT_ACTION', file,
         'Hash-only anchor needs a meaningful destination'));
     }
-    if (tag.attrs.id && !VALID_ID.test(tag.attrs.id)) {
+    if (tag.attrs.id && !validId(tag.attrs.id)) {
       issues.push(finding('NAV_INVALID_FRAGMENT_ID', file,
         'Fragment identifier contains invalid characters'));
     }
