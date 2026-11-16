@@ -2,7 +2,21 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { DEMO_AS_OF, DEMO_OBSERVATIONS } from "../demo.ts";
 import { LANGS, isLang, t, type Lang, type MessageKey } from "../i18n/index.ts";
 import { buildEvidencePack, packFilename, serialisePack } from "../pack.ts";
+import {
+  DEMO_CITATIONS,
+  DEMO_CONSENT_LEDGER,
+  DEMO_DELIVERIES,
+  DEMO_INPUT_SETS,
+  DEMO_PURPOSE,
+  DEMO_REGIONS,
+  DEMO_REPORTS,
+  DEMO_REPORT_AS_OF,
+  DEMO_REVIEWS,
+} from "../reports/demo.ts";
+import type { KpiRecords } from "../reports/kpi.ts";
+import type { PackFile, ReportPackInput, ReportPackOptions } from "../reports/pack.ts";
 import type { Cell, PublishedCell, SuppressedCell, UnknownCell } from "../types.ts";
+import { ReportsPanel } from "./ReportsPanel.tsx";
 import "./styles.css";
 
 export interface AppProps {
@@ -11,7 +25,21 @@ export interface AppProps {
   initialLang?: Lang;
   /** Receives the pack JSON and a file name. The default saves a file from the browser. */
   onExport?: (json: string, filename: string) => void;
+  /** Consented reports for the report tables. The default is the labelled demonstration set. */
+  reportInput?: ReportPackInput;
+  reportOptions?: ReportPackOptions;
+  reportLogs?: Omit<KpiRecords, "packs">;
+  onExportReportFiles?: (files: PackFile[]) => void;
 }
+
+const DEMO_REPORT_INPUT: ReportPackInput = {
+  reports: DEMO_REPORTS,
+  inputSets: DEMO_INPUT_SETS,
+  regions: DEMO_REGIONS,
+  consentLedger: DEMO_CONSENT_LEDGER,
+};
+const DEMO_REPORT_OPTIONS: ReportPackOptions = { asOf: DEMO_REPORT_AS_OF, requiredPurpose: DEMO_PURPOSE };
+const DEMO_REPORT_LOGS: Omit<KpiRecords, "packs"> = { deliveries: DEMO_DELIVERIES, citations: DEMO_CITATIONS, reviews: DEMO_REVIEWS };
 
 function saveJson(json: string, filename: string): void {
   const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
@@ -97,7 +125,16 @@ function UnknownItem({ cell, tr }: { cell: UnknownCell; tr: Translate }) {
   );
 }
 
-export function App({ observations = DEMO_OBSERVATIONS, asOf = DEMO_AS_OF, initialLang, onExport = saveJson }: AppProps) {
+export function App({
+  observations = DEMO_OBSERVATIONS,
+  asOf = DEMO_AS_OF,
+  initialLang,
+  onExport = saveJson,
+  reportInput = DEMO_REPORT_INPUT,
+  reportOptions = DEMO_REPORT_OPTIONS,
+  reportLogs = DEMO_REPORT_LOGS,
+  onExportReportFiles,
+}: AppProps) {
   const [lang, setLang] = useState<Lang>(initialLang ?? langFromLocation());
   const [exportedAs, setExportedAs] = useState<string | null>(null);
   const { pack } = useMemo(() => buildEvidencePack(observations, { asOf }), [observations, asOf]);
@@ -205,6 +242,8 @@ export function App({ observations = DEMO_OBSERVATIONS, asOf = DEMO_AS_OF, initi
             ))}
           </ul>
         </section>
+
+        <ReportsPanel lang={lang} input={reportInput} options={reportOptions} logs={reportLogs} onExportFiles={onExportReportFiles} />
       </main>
       <footer className="page-footer">
         <p>{tr("footer.note")}</p>

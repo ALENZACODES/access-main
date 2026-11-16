@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { forbiddenOrgNeedles } from "../../../shared/test/forbiddenOrg.ts";
 import { catalogs, t } from "./index.ts";
 
 const en = catalogs.en;
 const fr = catalogs.fr;
-/** Organisation names and endorsement wording the App must never carry. Built from parts so this file holds no such name. */
-const BANNED = ["sc" + "io", "access" + "now", "goo" + "gle", "endorse", "partner"];
+/** Endorsement wording the App must never carry. Organisation names come from the shared helper only. */
+const BANNED = [...forbiddenOrgNeedles(), "endorse", "partner"];
 
 describe("catalogs", () => {
   it("have the same keys and no empty strings", () => {
@@ -30,7 +31,7 @@ describe("catalogs", () => {
 
   it("name no organisation, and make no claim of endorsement", () => {
     for (const value of [...Object.values(en), ...Object.values(fr)]) {
-      for (const banned of BANNED) expect(value.toLowerCase()).not.toContain(banned);
+      for (const banned of BANNED) expect(value.toLowerCase().includes(banned.toLowerCase())).toBe(false);
     }
   });
 
