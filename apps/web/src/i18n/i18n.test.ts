@@ -39,10 +39,24 @@ describe("shell strings", () => {
     }
   });
 
-  it("puts a narrow no-break space before a French colon", () => {
+  it("puts a no-break space before a French colon", () => {
     for (const [key, value] of french) {
       expect(value, key).not.toMatch(/ :/);
-      if (value.includes(":")) expect(value, key).toContain("\u202f:");
+      expect(value, key).not.toContain("\u202f:");
+      if (value.includes(":")) expect(value, key).toContain("\u00a0:");
+    }
+  });
+
+  it("puts a narrow no-break space before French ; ! ? and inside guillemets", () => {
+    for (const [key, value] of french) {
+      expect(value, key).not.toMatch(/ [;!?]/);
+      for (const mark of [";", "!", "?"]) {
+        if (value.includes(mark)) expect(value, key).toContain(`\u202f${mark}`);
+      }
+      if (value.includes("«") || value.includes("»")) {
+        expect(value, key).toContain("«\u202f");
+        expect(value, key).toContain("\u202f»");
+      }
     }
   });
 
