@@ -54,7 +54,7 @@ function CellIdentity({ cell, tr }: { cell: Cell; tr: Translate }) {
 
 function dataStatus(cell: PublishedCell | UnknownCell, tr: Translate): string {
   const tiers = cell.provenance.tiers.map((tier) => tr(`tier.${tier}`));
-  const labels = cell.provenance.prototype_labels.map((label) => tr(`label.${label}`));
+  const labels = cell.provenance.prototype_labels.map((label) => tr(label === "PROTOTYPE-UNVERIFIED" ? "label.prototypeSample" : "label.SEEDED-OPEN-DATA"));
   return [...tiers, ...labels].join(", ");
 }
 
