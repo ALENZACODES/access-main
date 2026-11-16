@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  mediaBlocks, mediaTracks, describeMedia, inspectMediaBlock,
+  mediaBlocks, mediaTracks, describeMedia,
   inspectHtmlMedia, inspectWebVtt,
 } from './media-audit.mjs';
 
