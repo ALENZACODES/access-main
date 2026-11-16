@@ -132,12 +132,24 @@ export async function walkSequentialFocus(
       trapped: false, error: "No keyboard focus target found",
     };
   }
-  // One additional Tab may wrap to browser chrome. Re-establish focus at the
-  // final recorded control by walking from the beginning rather than storing
-  // an element handle that may become detached during a route transition.
-  await resetSequentialFocus(page);
-  for (let index = 0; index < forward.length; index += 1) {
-    await page.keyboard.press("Tab");
+  // A wrapped Tab is already sitting on the first recorded control. A Tab
+  // that leaves the document instead sits in browser chrome or on the body.
+  // Reverse that *one* exploratory Tab to regain the actual last control.
+  // Never reconstruct the walk from body: browser chrome, SPA render timing,
+  // and per-control DOM updates can yield a different entry point.
+  if (wrapped || forward.length < maxSteps) {
+    await page.keyboard.press("Shift+Tab");
+  }
+  const last = await observeFocus(page);
+  const expectedLast = forward[forward.length - 1];
+  const atLast = last !== null &&
+    stableFocusKey(last) === stableFocusKey(expectedLast);
+  if (!atLast) {
+    return {
+      forward, backwards: [], returnedToStart: false,
+      trapped: !wrapped && forward.length === maxSteps,
+      error: `Reverse focus mismatch at last step ${forward.length - 1}`,
+    };
   }
   const backwards: FocusSnapshot[] = [];
   let mismatch: string | null = null;
