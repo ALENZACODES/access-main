@@ -183,6 +183,8 @@ export interface FocusSnapshot {
   readonly secondVisible: boolean;
   readonly forwardCount: number;
   readonly visitedMain: boolean;
+  /** Focusable, enabled, visible controls inside main when the walk started. Absent means not measured. */
+  readonly mainTargets?: number;
   readonly endedOnBody: boolean;
   readonly traps: readonly string[];
 }
@@ -196,7 +198,8 @@ export function focusFindings(focus: FocusSnapshot, context: Context): Finding[]
     issues.push(finding(context, "focus-reverse", `Expected ${focus.firstTab}; received ${focus.returnedTab ?? "none"}`));
   }
   if (!focus.forwardCount) issues.push(finding(context, "focus-no-walk", "No keyboard sequence observed"));
-  if (!focus.visitedMain) issues.push(finding(context, "focus-main", "No keyboard target within main"));
+  // Only a finding when main holds something that can take focus and the walk never got there.
+  if (!focus.visitedMain && focus.mainTargets !== 0) issues.push(finding(context, "focus-main", "No keyboard target within main"));
   for (const trap of focus.traps) issues.push(finding(context, "focus-trap", trap));
   return issues;
 }
@@ -330,7 +333,8 @@ export function linkFindings(links: readonly LinkSnapshot[], context: Context, o
     if (item.width < 44 || item.height < 44) issues.push(finding(context, "link-44", `${item.href}: ${item.width}x${item.height}`));
     try {
       const parsed = new URL(item.href, origin);
-      if (!["http:", "https:"].includes(parsed.protocol) && !item.href.startsWith("#")) {
+      // tel: and mailto: are ordinary contact links; script and data schemes are not.
+      if (!["http:", "https:", "tel:", "mailto:"].includes(parsed.protocol) && !item.href.startsWith("#")) {
         issues.push(finding(context, "link-scheme", item.href));
       }
       if (item.target === "_blank" && !item.rel.split(/\s+/).includes("noopener")) {

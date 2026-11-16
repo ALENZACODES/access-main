@@ -146,7 +146,7 @@ const SPDX_OPEN = new Set([
   "OGL-Canada-2.0", "OGL-ON-1.0", "MIT", "Apache-2.0",
 ]);
 const CLOSED_WORDS = /\b(?:proprietary|all rights reserved|private licence|unlicensed)\b/i;
-const FORBIDDEN_OVERCLAIMS = /\b(?:verified|verify|vérifié|real[ -]time|partnership|guarantee)\b/i;
+const FORBIDDEN_OVERCLAIMS = /(?<![\p{L}\p{N}])(?:verified|verify|vérifié|real[ -]time|partnership|guarantee)(?![\p{L}\p{N}])/iu;
 const MEDICAL_ADVICE = /\b(?:diagnos(?:e|is)|prescri(?:be|ption)|treatment plan|medical advice|avis médical|diagnostic médical)\b/i;
 const UNKNOWN_WORDS = /^(?:unknown|inconnu|inconnue|non connu|non connue|non renseigné|non renseignée|indéterminé|indéterminée|not known|non disponible)$/i;
 

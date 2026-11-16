@@ -13,7 +13,7 @@ export interface TextColour {
   readonly visible: boolean;
 }
 export function readColour(value: string): Rgb | null {
-  const match = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)(?:\s*[,\/]\s*(\d+(?:\.\d+)?))?\s*\)$/.exec(value);
+  const match = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)(?:\s*[,/]\s*(\d+(?:\.\d+)?))?\s*\)$/.exec(value);
   if (!match) return null;
   const channels = [Number(match[1]), Number(match[2]), Number(match[3])];
   if (channels.some((channel) => channel < 0 || channel > 255)) return null;

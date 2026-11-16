@@ -337,7 +337,7 @@ export function tabFindings(steps: readonly TabStep[], url: string): Finding[] {
 export function frenchTypographyFindings(text: string, url: string): Finding[] {
   const problems: Finding[] = [];
   const colon = /\S :(?!\/)/g;
-  const narrow = /\S[;!?]/g;
+  const narrow = /(?<!\u202f)[;!?]/g;
   const quotes = /«(?!\u202f)|(?<!\u202f)»/g;
   if (colon.test(text)) problems.push(finding("fr-colon-spacing", url, "Use U+00A0 before colon"));
   if (narrow.test(text)) problems.push(finding("fr-punctuation-spacing", url, "Use U+202F before ; ! ?"));

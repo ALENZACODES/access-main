@@ -31,7 +31,10 @@ export async function inspectControls(page: Page): Promise<ControlGeometry[]> {
       const own = node.getAttribute("aria-label")?.trim() ?? "";
       const by = node.getAttribute("aria-labelledby")?.split(/\s+/).map((id) =>
         document.getElementById(id)?.textContent?.trim() ?? "").join(" ").trim() ?? "";
-      const labelText = input?.labels?.[0]?.textContent?.trim() ?? "";
+      // input, select and textarea are all labelable; a label names each of them.
+      const labelable = node instanceof HTMLInputElement || node instanceof HTMLSelectElement ||
+        node instanceof HTMLTextAreaElement ? node : null;
+      const labelText = labelable?.labels?.[0]?.textContent?.trim() ?? "";
       const name = own || by || labelText || node.getAttribute("title") ||
         node.textContent?.trim() || (input?.value && input.type === "submit" ? input.value : "") || "";
       const disabled = node.matches(":disabled, [aria-disabled='true']") ||
@@ -172,6 +175,18 @@ export async function inspectLinks(page: Page): Promise<LinkSnapshot[]> {
 
 /** Keyboard probe records actual DOM targets, not a guessed CSS focus order. */
 export async function probeFocus(page: Page, maxSteps = 48): Promise<FocusSnapshot> {
+  // Lazy routes render disabled controls first and enable them once their data is ready.
+  // Wait for a control in main that can take keyboard focus, so the walk measures the settled page.
+  // A route can legitimately have nothing to focus in main, for example a form that stays
+  // disabled while no records are loaded. Count what can take focus so the policy can tell
+  // "nothing to reach" from "something that the keyboard cannot reach".
+  const mainTargets = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>(
+    "main a[href], main button, main input:not([type='hidden']), main select, main textarea, main summary, main [tabindex]:not([tabindex='-1'])",
+  )].filter((node) => {
+    const box = node.getBoundingClientRect();
+    return !node.matches(":disabled") && node.getAttribute("tabindex") !== "-1" && box.width > 0 && box.height > 0 &&
+      getComputedStyle(node).visibility !== "hidden" && !node.closest("[hidden], [inert]");
+  }).length);
   await page.locator("body").click({ position: { x: 1, y: 1 }, force: true });
   await page.keyboard.press("Tab");
   const identify = () => page.evaluate(() => {
@@ -179,9 +194,20 @@ export async function probeFocus(page: Page, maxSteps = 48): Promise<FocusSnapsh
     if (!(node instanceof HTMLElement) || node === document.body) return null;
     const style = getComputedStyle(node);
     const box = node.getBoundingClientRect();
+    // Two different controls can share a visible name (a header link and a card link).
+    // Each focused element gets its own number, so only a real return to the same element repeats.
+    const registry = window as unknown as { focusProbeIds?: WeakMap<Element, number>; focusProbeNext?: number };
+    registry.focusProbeIds ??= new WeakMap();
+    let serial = registry.focusProbeIds.get(node);
+    if (serial === undefined) {
+      serial = (registry.focusProbeNext ?? 0) + 1;
+      registry.focusProbeNext = serial;
+      registry.focusProbeIds.set(node, serial);
+    }
+    const label = node.id || node.getAttribute("aria-label") || node.getAttribute("name") ||
+      node.textContent?.slice(0, 80).trim() || node.tagName;
     return {
-      id: node.id || node.getAttribute("aria-label") || node.getAttribute("name") ||
-        node.textContent?.slice(0, 80).trim() || node.tagName,
+      id: `${label} [${serial}]`,
       visible: box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none",
       inMain: Boolean(node.closest("main, [role='main']")),
     };
@@ -218,6 +244,7 @@ export async function probeFocus(page: Page, maxSteps = 48): Promise<FocusSnapsh
     secondVisible: second?.visible ?? false,
     forwardCount,
     visitedMain,
+    mainTargets,
     endedOnBody: !first,
     traps,
   };

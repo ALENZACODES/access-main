@@ -332,6 +332,10 @@ test.describe("P20G keyboard, language, dialogs", () => {
   test("main region must be keyboard accessible when audited", () => {
     expect(rules(focusFindings(focus({ visitedMain: false }), ctx))).toContain("focus-main");
   });
+  test("a main with nothing focusable is not a keyboard failure", () => {
+    expect(rules(focusFindings(focus({ visitedMain: false, mainTargets: 0 }), ctx))).not.toContain("focus-main");
+    expect(rules(focusFindings(focus({ visitedMain: false, mainTargets: 2 }), ctx))).toContain("focus-main");
+  });
   test("keyboard trap fails", () => {
     expect(rules(focusFindings(focus({ traps: ["Repeated control"] }), ctx))).toContain("focus-trap");
   });
