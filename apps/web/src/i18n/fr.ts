@@ -86,7 +86,7 @@ export const fr: Messages = {
     whereOnDevice: "Reste sur cet appareil",
     whereSentToServer: "Envoyé à un serveur",
     whereUnknown: "Inconnu",
-    reviewed: "Dernière révision\u202f: {{date}}",
+    reviewed: "Dernière révision\u00A0: {{date}}",
     empty: "Cette liste est vide. Cela ne signifie pas qu’aucune donnée n’est conservée.",
     dismiss: "Fermer",
     itemProfile: "Profil",
