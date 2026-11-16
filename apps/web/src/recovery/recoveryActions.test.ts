@@ -15,6 +15,10 @@ describe("live recovery inventory", () => {
     expect(recoveryItems([{ ...item, downloaded: true }], "fr")[0]?.state).toBe("downloaded");
     expect(RECOVERY_COPY.fr.downloaded).toContain("INCONNU");
   });
+  it("does not mark an inconsistent downloaded region as complete", () => {
+    const inconsistent = { ...item, downloaded: true, missingCells: ["cell"] };
+    expect(recoveryItems([inconsistent], "en")[0]?.state).toBe("missing");
+  });
   it("has complete bilingual text and safe touch target wiring", () => {
     const en = Object.keys(RECOVERY_COPY.en);
     expect(Object.keys(RECOVERY_COPY.fr)).toEqual(en);

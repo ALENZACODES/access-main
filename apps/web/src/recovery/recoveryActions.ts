@@ -7,7 +7,11 @@ export function recoveryItems(regions: readonly RegionStatus[], locale: "en" | "
   return regions.map((region) => ({
     id: region.id,
     label: region.label[locale],
-    state: region.downloaded ? "downloaded" : region.missingCells.length > 0 ? "missing" : "unknown",
+    state: region.downloaded && region.missingCells.length === 0
+      ? "downloaded"
+      : region.missingCells.length > 0
+        ? "missing"
+        : "unknown",
   }));
 }
 

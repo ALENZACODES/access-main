@@ -20,6 +20,7 @@ import {
 } from "./robust/index.ts";
 import { classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
 import { RecoveryCenter } from "../recovery/RecoveryCenter.tsx";
+import { assessStoredRegion } from "../recovery/regionRecheck.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
@@ -170,18 +171,25 @@ export function OfflineRegionPage() {
       await refresh().catch(() => undefined);
     } finally { abortRef.current = null; setBusy(null); }
   }
-  /** Re-reads the stored parts. A region with parts no longer on the device cannot be treated as complete. */
+  /** Re-read the current inventory and ledger without claiming a byte digest. */
   async function recheck(id: string) {
-    setPackStatus(null); setMessage("");
-    const statuses = await source.regions();
-    setRegions(statuses);
-    // The installed PackSource API exposes region completeness but not stored byte
-    // checks. Do not call a region intact merely because its entry exists.
-    const pack = await source.manifest();
-    const reports = await cellReports(pack, statuses);
-    setCells(reports);
+    setPackStatus(null);
+    setMessage("");
     setPackRegion(id);
-    setPackStatus("unknown");
+    try {
+      const pack = await source.manifest();
+      const statuses = await source.regions();
+      const reports = await cellReports(pack, statuses);
+      setRegions(statuses);
+      setCells(reports);
+      const result = assessStoredRegion(
+        statuses.find((region) => region.id === id),
+        reports[id],
+      );
+      setPackStatus(result.status);
+    } catch {
+      setPackStatus("unknown");
+    }
   }
   async function remove() {
     const id = confirmation;
