@@ -27,6 +27,11 @@ export interface Style {
   textDecorationLine: string;
   textOverflow: string;
   content: string;
+  lineHeight: string;
+  textAlign: string;
+  fontStyle: string;
+  flexDirection: string;
+  order: string;
 }
 
 export interface Scroll {
@@ -62,6 +67,9 @@ export interface Spec {
   props?: Record<string, unknown>;
   /** Style of the ::after pseudo element while this element has focus. */
   afterFocusStyle?: Partial<Style>;
+  /** Style of the ::before and ::after pseudo elements at all times. */
+  before?: Partial<Style>;
+  after?: Partial<Style>;
 }
 
 const DEFAULT_STYLE: Style = {
@@ -91,6 +99,11 @@ const DEFAULT_STYLE: Style = {
   textDecorationLine: 'none',
   textOverflow: 'clip',
   content: 'normal',
+  lineHeight: 'normal',
+  textAlign: 'start',
+  fontStyle: 'normal',
+  flexDirection: 'row',
+  order: '0',
 };
 
 export interface World {
@@ -112,6 +125,9 @@ export class FakeEl {
     this.tagName = spec.tag.toUpperCase();
     this.id = spec.id ?? '';
     if (spec.props) Object.assign(this, spec.props);
+  }
+  get children(): Array<FakeEl> {
+    return this.kids;
   }
   get childNodes(): Array<{ nodeType: number; textContent: string | null; tagName?: string }> {
     const text = this.spec.text ? [{ nodeType: 3, textContent: this.spec.text }] : [];
@@ -167,7 +183,8 @@ export class FakeEl {
   style(pseudo?: string): Style {
     const active = this.world.active;
     if (pseudo) {
-      return { ...DEFAULT_STYLE, ...(active === this ? this.spec.afterFocusStyle : undefined) };
+      const own = pseudo === '::before' ? this.spec.before : this.spec.after;
+      return { ...DEFAULT_STYLE, ...own, ...(active === this ? this.spec.afterFocusStyle : undefined) };
     }
     const within = active && active !== this && this.contains(active) ? this.spec.focusWithinStyle : undefined;
     return { ...DEFAULT_STYLE, ...this.spec.style, ...(active === this ? this.spec.focusStyle : undefined), ...within };

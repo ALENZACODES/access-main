@@ -52,7 +52,13 @@ export type CheckId =
   | 'locale'
   | 'sensory'
   | 'text-zoom'
-  | 'headings';
+  | 'headings'
+  | 'handlers'
+  | 'typography'
+  | 'order'
+  | 'generated'
+  | 'lookalike'
+  | 'regions';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -103,6 +109,12 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   sensory: '1.3.3',
   'text-zoom': '1.4.4',
   headings: '2.4.6',
+  handlers: '2.1.1',
+  typography: '1.4.8',
+  order: '1.3.2',
+  generated: '1.3.1',
+  lookalike: '1.3.1',
+  regions: '1.3.1',
 };
 
 export const CHECK_ORDER: readonly CheckId[] = [
@@ -153,6 +165,12 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'sensory',
   'text-zoom',
   'headings',
+  'handlers',
+  'typography',
+  'order',
+  'generated',
+  'lookalike',
+  'regions',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -203,6 +221,12 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   sensory: { en: 'Instructions that need sight or hearing', fr: 'Consignes qui exigent la vue ou l’ouïe' },
   'text-zoom': { en: 'Text at double size', fr: 'Texte au double de la taille' },
   headings: { en: 'Headings and page title', fr: 'Titres et titre de la page' },
+  handlers: { en: 'Mouse-only handlers in markup', fr: 'Gestionnaires réservés à la souris dans le balisage' },
+  typography: { en: 'Text layout for reading', fr: 'Mise en page du texte pour la lecture' },
+  order: { en: 'Visual order and reading order', fr: 'Ordre visuel et ordre de lecture' },
+  generated: { en: 'Text made by CSS', fr: 'Texte produit par le CSS' },
+  lookalike: { en: 'Fake headings and lists', fr: 'Faux titres et fausses listes' },
+  regions: { en: 'Content outside landmarks', fr: 'Contenu hors des repères' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */

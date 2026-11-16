@@ -27,11 +27,17 @@ import { auditBypass } from './bypass.js';
 import { auditFrames } from './frames.js';
 import { auditImages } from './images.js';
 import { auditLinks } from './links.js';
+import { auditGenerated } from './generated.js';
+import { auditLookalike } from './lookalike.js';
+import { auditRegions } from './regions.js';
+import { auditHandlers } from './handlers.js';
 import { auditHeadings } from './headings.js';
 import { auditLocale } from './locale.js';
+import { auditOrder } from './order.js';
 import { auditPlain } from './plain.js';
 import { auditSensory } from './sensory.js';
 import { auditTextZoom } from './textzoom.js';
+import { auditTypography } from './typography.js';
 import type { ProseFacts } from './prose.js';
 import { auditPurpose } from './purpose.js';
 import { auditTables } from './tables.js';
@@ -288,6 +294,28 @@ export function sampleEntries(): Entry[] {
     ...auditLocale(SAMPLE_PROSE_FR).entries,
     ...auditSensory(SAMPLE_PROSE_EN).entries,
     ...auditSensory(SAMPLE_PROSE_FR).entries,
+    ...auditHandlers(SAMPLE_HANDLER_HTML).entries,
+    ...auditTypography({
+      blocks: [{ id: 'p[0]', words: 60, chars: 480, fontSize: 10, leading: 1, lines: 4, textAlign: 'justify', italic: true }],
+      truncated: false,
+    }).entries,
+    ...auditOrder({
+      reordered: [
+        { id: 'div[0]', kind: 'reverse', children: 3, focusable: 2 },
+        { id: 'ul[0]', kind: 'order', children: 4, focusable: 0 },
+      ],
+      truncated: false,
+    }).entries,
+    ...auditGenerated({
+      items: [
+        { id: 'label[0]::before', pseudo: '::before', text: 'Required' },
+        { id: 'i[0]::after', pseudo: '::after', text: '\uE900' },
+      ],
+      checked: 2,
+      truncated: false,
+    }).entries,
+    ...auditLookalike(SAMPLE_LOOKALIKE_HTML).entries,
+    ...auditRegions({ landmarks: 1, checked: 6, outside: ['p[2]'], outsideCount: 2, truncated: false }).entries,
     ...SAMPLE_HEADINGS.flatMap((f) => auditHeadings(f).entries),
     ...auditTextZoom({ checked: 2, newlyClipped: [{ id: 'div[2]', scrollWidth: 100, clientWidth: 100, scrollHeight: 60, clientHeight: 20 }] }).entries,
     ...auditBudget(waiverReport, { version: 1, checks: { contrast: { fail: 0, unknown: 0 } } }).entries,
@@ -357,6 +385,11 @@ export const SAMPLE_HEADINGS: readonly ProseFacts[] = [
   proseBlocks('fr', [], { title: 'Heures de la clinique', headings: heads([[1, 'Stationnement']]) }),
 ];
 
+/** Markup that breaks every inline handler rule. */
+export const SAMPLE_HANDLER_HTML =
+  '<div onclick="go()">a</div><div tabindex="0" onclick="go()">b</div><button onmousedown="go()">c</button>' +
+  '<div onmouseover="go()">d</div><div tabindex="0" ondblclick="go()">e</div><span title="Opens the booking form in a new window">f</span>';
+
 /** One text that breaks each wording rule, keyed by rule id. */
 export const SAMPLE_TEXT: Readonly<Record<string, string>> = {
   'claim-checked': 'Verified by our team',
@@ -371,3 +404,7 @@ export const SAMPLE_TEXT: Readonly<Record<string, string>> = {
   'advice-medical': 'Consult your doctor',
   'claim-complete': 'Always up to date',
 };
+
+/** Markup for the look-alike structure sample: one finding of each rule. */
+export const SAMPLE_LOOKALIKE_HTML =
+  '<main><p><strong>Getting here</strong></p><p>• Ramp</p><p>• Lift</p><p>• Stairs</p><p></p></main>';
