@@ -9,6 +9,7 @@ import {
   createPackCellStore,
   downloadRegion as downloadRegionCells,
   downloadResultText,
+  mountStoragePressurePanel,
   OFFLINE_STRINGS,
   regionCellReport,
   regionManifestFor,
@@ -17,7 +18,8 @@ import {
   type StorageEstimate,
   pressureView,
 } from "./robust/index.ts";
-import { classifyPackDownloadError, CorruptPackNotice, RecoveryCenter, RecoveryNotice, isSafePackId, type LocalPackStore, type RecoveryFailure } from "../recovery/index.ts";
+import { classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
+import { RecoveryCenter } from "../recovery/RecoveryCenter.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
@@ -42,34 +44,42 @@ async function cellReports(pack: PackManifest, statuses: RegionStatus[]): Promis
 const formatBytes = (bytes: number, language: string) => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bytes / 1024) + " KiB";
 
 
-const recoveryStore: LocalPackStore = {
-  async listIds() {
-    try {
-      return (await source.regions()).map((region) => region.id).filter(isSafePackId);
-    } catch {
-      return [];
-    }
-  },
-  async read(id) {
-    const region = (await source.regions()).find((item) => item.id === id);
-    if (!region) return null;
-    if (!region.downloaded) return null;
-    // Cell-based regions have no single pack digest; do not invent one.
-    return { id, manifest: null, bytes: null };
-  },
-};
-
-function saveRecoveryFile(filename: string, content: string): Promise<void> {
-  const blob = new Blob([content], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-  return Promise.resolve();
+/** Inventory and storage-headroom dashboard for one region, mounted on the live /offline page. */
+function RegionInventoryDashboard({ pack, regionId, language }: { pack: PackManifest; regionId: string; language: "en" | "fr" }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    let cancelled = false;
+    let unmount: (() => void) | undefined;
+    void (async () => {
+      try {
+        const status = (await source.regions()).find((region) => region.id === regionId);
+        const manifest = regionManifestFor(pack, regionId);
+        const store = createPackCellStore({
+          manifest,
+          ledger,
+          missingCells: new Set(status?.missingCells ?? manifest.cells.map((cell) => cell.id)),
+        });
+        if (cancelled) return;
+        unmount = mountStoragePressurePanel(root, manifest, {
+          store,
+          estimateStorage,
+          fetchCell: async (rid, cell) => {
+            if (!source.downloadCell) throw new PackClientError("missing", rid);
+            return source.downloadCell(rid, cell.id);
+          },
+        }, language);
+      } catch {
+        // Existing region controls stay usable if the inventory panel cannot mount.
+      }
+    })();
+    return () => {
+      cancelled = true;
+      unmount?.();
+    };
+  }, [pack, regionId, language]);
+  return <div ref={rootRef} className="offline-inventory" data-testid={`offline-inventory-${regionId}`} />;
 }
 
 export function OfflineRegionPage() {
@@ -94,6 +104,7 @@ export function OfflineRegionPage() {
   const abortRef = useRef<AbortController | null>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
+  const confirmDeleteRef = useRef<HTMLButtonElement>(null);
   const dialogTitle = useId();
   const progressTitle = useId();
   useEffect(() => { if (confirmation) keepRef.current?.focus(); }, [confirmation]);
@@ -164,8 +175,13 @@ export function OfflineRegionPage() {
     setPackStatus(null); setMessage("");
     const statuses = await source.regions();
     setRegions(statuses);
-    if (statuses.find((region) => region.id === id)?.downloaded) { setMessage(c.downloaded); return; }
-    setPackRegion(id); setPackStatus("unknown");
+    // The installed PackSource API exposes region completeness but not stored byte
+    // checks. Do not call a region intact merely because its entry exists.
+    const pack = await source.manifest();
+    const reports = await cellReports(pack, statuses);
+    setCells(reports);
+    setPackRegion(id);
+    setPackStatus("unknown");
   }
   async function remove() {
     const id = confirmation;
@@ -184,7 +200,7 @@ export function OfflineRegionPage() {
       <CorruptPackNotice
         status={packStatus}
         locale={language}
-        onRedownload={() => { if (packRegion) void download(packRegion); setPackStatus(null); }}
+        onRedownload={() => { if (packRegion) setConfirmation(packRegion); setPackStatus(null); }}
         onDismiss={() => setPackStatus(null)}
         busy={!!busy}
       />
@@ -222,18 +238,20 @@ export function OfflineRegionPage() {
           {(region.downloaded || statuses.some((status) => status === "available" || status === "stale")) && <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => setConfirmation(region.id)}>{c.delete}</button>}
         </div>
         {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
-        {busy === region.id && progress && <div className="stack"><label id={progressTitle}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={progressTitle} value={progress.done} max={progress.total || 1}/></div>}
+        {busy === region.id && progress && <div className="stack"><label id={`${progressTitle}-${region.id}`}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={`${progressTitle}-${region.id}`} value={progress.done} max={progress.total || 1}/></div>}
+        {manifest && <RegionInventoryDashboard pack={manifest} regionId={region.id} language={language} />}
       </li>; })}</ul>
     </>}
-    <RecoveryCenter locale={language} store={recoveryStore} saveFile={saveRecoveryFile} />
+    <RecoveryCenter locale={language} regions={regions} onRecheck={(id) => void recheck(id)} onDownload={(id) => void download(id)} busy={busy !== null} />
     {confirmation && <dialog open aria-labelledby={dialogTitle} className="panel stack" onKeyDown={(event) => {
       if (event.key === "Escape") setConfirmation(null);
-      if (event.key === "Tab") { const buttons = [keepRef.current, deleteRef.current].filter(Boolean); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1]?.focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0]?.focus(); } }
+      if (event.key === "Tab") { const buttons = [keepRef.current, confirmDeleteRef.current].filter(Boolean); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1]?.focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0]?.focus(); } }
     }}>
       <h2 id={dialogTitle}>{c.confirm}</h2><div className="button-row">
         <button ref={keepRef} type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => setConfirmation(null)}>{c.keep}</button>
-        <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => void remove()}>{c.delete}</button>
+        <button ref={confirmDeleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => void remove()}>{c.delete}</button>
       </div>
     </dialog>}
   </div>;
 }
+

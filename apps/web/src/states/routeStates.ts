@@ -78,7 +78,7 @@ export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
     label: { en: "Place details", fr: "Fiche du lieu" },
     // Missing accessibility data is shown as UNKNOWN, never inferred.
     empty: "accessibility-unknown",
-    errors: ["offline-no-pack", "pack-download-failed"],
+    errors: ["offline-no-pack", "pack-download-failed", "not-found", "load-failed", "offline"],
   },
   journey: {
     label: { en: "Journey", fr: "Itinéraire" },
