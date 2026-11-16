@@ -26,7 +26,6 @@ export const EXEMPTIONS: readonly Exemption[] = [
   { path: "apps/web/src/narrow/structure.test.ts", rule: "insecure-url", reason: WHY_OTHER_FIXTURE, recordedOn: "2026-11-16" },
   { path: "apps/web/src/data-status/fuzzKit.ts", rule: "insecure-url", reason: WHY_HTTP, recordedOn: "2026-11-16" },
   { path: "apps/web/src/states/dataAudit.test.ts", rule: "insecure-url", reason: WHY_HTTP, recordedOn: "2026-11-16" },
-  { path: "apps/web/src/hub/i18n.ts", rule: "claim-wording", reason: WHY_OTHER_LANE, recordedOn: "2026-11-16" },
   { path: "apps/web/src/states/provenance.test.ts", rule: "insecure-url", reason: WHY_HTTP, recordedOn: "2026-11-16" },
   { path: "apps/web/src/data-status/http.test.ts", rule: "insecure-url", reason: WHY_HTTP, recordedOn: "2026-11-16" },
   { path: "apps/web/src/data-status/offline.test.ts", rule: "insecure-url", reason: WHY_HTTP, recordedOn: "2026-11-16" },
