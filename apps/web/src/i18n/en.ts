@@ -160,6 +160,7 @@ export const en = {
   },
   modules: {
     ready: "These records come from the linked part of the App. Each one shows its source, licence, date, and tier. Unknown stays unknown.",
+    gamesReady: "These games come from the linked part of the App. A game is not a record of a place, so it has no source or tier.",
     empty: "No records are shown.",
     noMatches: "No matching records were found. The search ran on the linked part of the App. Unknown stays unknown.",
     error: "This part of the App could not load. No records are shown. Try again later.",
@@ -202,10 +203,10 @@ export const en = {
       "Washrooms, parking, charging, repair, and adult change tables are not listed, because no records are loaded. A municipal accessible flag is not a measurement of turning space, transfer side, or a hoist.",
     navigatorTitle: "Services directory",
     navigatorBody:
-      "The directory will link to official program pages and show the date of the link. It does not decide eligibility. Nothing from a benefits site is copied here.",
+      "The directory lists programs by name, with the source, the date the official page was read, and the tier of each entry. It does not decide eligibility. Nothing from a benefits site is copied here.",
     gamesTitle: "Games",
     gamesBody:
-      "The games hub is not connected. Games are not therapy, not a test of ability, and not medical advice. Games that flash are out of scope.",
+      "This page lists the games in this build. To play them, open More, then Games. Games are not therapy, not a test of ability, and not medical advice. Games that flash are out of scope.",
     helpTitle: "Help",
     helpArticles: "Articles from the help centre are not connected yet.",
   },

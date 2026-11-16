@@ -53,6 +53,9 @@ function placeLaneAlias() {
 const slimLaneAliases = Object.fromEntries([
   slimLane("@access-tools/finders/shell", "access-tools", "packages/finders", "src/shell.ts", path.resolve(root, "apps/web/src/modules/finders-shell-fallback.ts")),
   slimLane("@access/help/shell", "access-help", "packages/help", "src/shell.ts", path.resolve(root, "apps/web/src/modules/help-shell-fallback.ts")),
+  slimLane("@access-tools/games/shell", "access-tools", "packages/games", "src/shell.ts", path.resolve(root, "apps/web/src/modules/games-shell-fallback.ts")),
+  slimLane("@access-tools/games/library", "access-tools", "packages/games", "src/library.ts", path.resolve(root, "apps/web/src/modules/games-shell-fallback.ts")),
+  slimLane("@access-tools/navigator/shell", "access-tools", "packages/navigator", "src/shell.ts", path.resolve(root, "apps/web/src/modules/navigator-shell-fallback.ts")),
 ]);
 
 /** More hub packages, synced by scripts/sync-hub.mjs. Same list as hubAliases in apps/web/vite.config.ts. */

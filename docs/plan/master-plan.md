@@ -26,7 +26,7 @@ Rules that do not bend:
 
 | Repository | Role | State |
 | --- | --- | --- |
-| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Every entry in `lanes.lock.json` is pinned to a merged commit. |
+| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Every entry in `lanes.lock.json` is pinned to a merged commit. Places, finders, navigator, games, and help use the real adapter from their package; journey has no adapter yet, because the planner takes coordinates and the shell form does not. |
 | access-maps | Open-data pipeline, journey engine, map interface, conditions | Imports are in place with tier 0 and tier 1 values only. Verified (tier 2–3) total is 0. |
 | access-tools | Place pages, search, finders, directory, games, importers | Place pages and finders run on labelled fixtures. Ten of fifty games ship. |
 | access-help | Help centre, onboarding, glossary, peers, events, the cross-repository test harness | Built on demonstration and sample data. French is a draft. |
@@ -71,7 +71,7 @@ Reachable from the shell after the integration round of 16 November (routes, pac
 
 | Lane | Reachable at | Not reachable yet |
 | --- | --- | --- |
-| Games | `/more/games`: 19 games and the dwell select setting | Dwell select outside the games |
+| Games | `/more/games`: 19 games and the dwell select setting. `/games` lists the 19 names | Dwell select outside the games |
 | Work and home | `/more/employment`: listings with the access record, commute check and referral summary | Housing unit and room depth finder and the barrier evidence form: `/more/housing` stays on the earlier pin until a repeated-landmark fault in the package is fixed |
 | Auditors | `/more/auditors`: observations, programme, venue responses, cases and service summary | — |
 | Conditions | `/more/route-reports` (list; the form needs a place) and `/more/accessible-taxis` (zero records, shown as unknown) | A link from a place page to the report form; routing facts are not used by the journey route |

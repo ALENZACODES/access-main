@@ -60,3 +60,19 @@ declare module "@access-tools/finders/shell" {
 declare module "@access/help/shell" {
   export const helpShellModule: import("@access/shared").HelpModule;
 }
+
+declare module "@access-tools/games/shell" {
+  export function listGamesForShell(
+    catalog?: readonly { id: string; name: string }[],
+  ): import("@access/shared").ModuleResult<import("@access/shared").ActivityDefinition>;
+}
+
+declare module "@access-tools/games/library" {
+  export const GAME_LIBRARY: readonly { id: string; name: string }[];
+}
+
+declare module "@access-tools/navigator/shell" {
+  export function listForShell(
+    ctx: import("@access/shared").ModuleContext,
+  ): import("@access/shared").ModuleResult<import("@access/shared").DirectoryEntry>;
+}
