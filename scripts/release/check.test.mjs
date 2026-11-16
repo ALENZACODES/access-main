@@ -65,9 +65,11 @@ test('rejects every user-facing form of verified and vérifier, including denial
     'en-source.html': 'verified source',
     'en-unverified.html': 'Records are unverified.',
     'en-verify.html': 'Click Verify to continue.',
+    'en-verification.html': 'Complete the verification step.',
     'fr-verifie.html': 'Ce lieu est vérifié.',
     'fr-verifiee.html': 'Source vérifiée.',
     'fr-verifier.html': 'Veuillez vérifier la fiche.',
+    'fr-verification.html': 'Cette vérification est incomplète.',
   };
   await withRelease(samples, async (dir) => {
     const issues = (await inspectRelease(dir)).issues.join('\n');
