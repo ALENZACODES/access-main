@@ -55,10 +55,10 @@ export function licenceKind(licence: string | null | undefined): LicenceKind {
 }
 
 export interface Provenance {
-  source?: string | null;
-  licence?: string | null;
+  source?: string | null | undefined;
+  licence?: string | null | undefined;
   /** ISO 8601 date (YYYY-MM-DD) or date-time the data was retrieved. */
-  retrievedAt?: string | null;
+  retrievedAt?: string | null | undefined;
 }
 
 export type ProvenanceIssue =
