@@ -28,3 +28,12 @@ mountDataStatusPanel(document.getElementById('data-status')!, {
 Every record shown must carry its own source, licence (open licences only) and retrieved date; this folder displays them and does not supply them.
 
 Run the tests: `npx vitest run apps/web/src/data-status`
+
+## Performance: kept out of the initial bundle
+
+This folder is imported statically only by `pages/DataStatusPage.tsx`, which the
+router loads on demand (`perf/routeChunks.ts`). `initialBundle.test.ts` fails if
+any other source file imports it statically, if `DataStatusPage` is imported
+statically, or if a module here touches `window`/`document` at load. It reads
+source text; bundle bytes and the LCP / first-result gates are measured by
+`npm run build` and `e2e/perf.spec.ts`, whose thresholds are unchanged.

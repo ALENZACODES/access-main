@@ -19,11 +19,11 @@ describe("renderOnDeviceNoticeHtml", () => {
     expect(html).toContain("Feedback &lt;note&gt;");
     expect(html).not.toContain("<note>");
   });
-  it("renders FR with lang, typographic apostrophe and narrow no-break space before a colon", () => {
+  it("renders FR with lang, typographic apostrophe and a no-break space before a colon", () => {
     const html = renderOnDeviceNoticeHtml({ locale: "fr", items, reviewedOn: "2026-11-15" });
     expect(html).toContain('lang="fr"');
-    expect(html).toContain("Dernière révision\u202f: 2026-11-15");
-    expect(html).toContain("Lieux enregistrés\u202f: <strong>Reste sur cet appareil");
+    expect(html).toContain("Dernière révision\u00A0: 2026-11-15");
+    expect(html).toContain("Lieux enregistrés\u00A0: <strong>Reste sur cet appareil");
     expect(STRINGS.fr.empty).toContain("’");
     expect(STRINGS.fr.empty).not.toContain("'");
   });
