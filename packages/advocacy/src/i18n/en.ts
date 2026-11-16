@@ -47,7 +47,7 @@ export const en = {
   "tier.0": "Tier 0: open-data import",
   "tier.1": "Tier 1: operator claim",
   "tier.E": "Tier E: desk check of an official page",
-  "label.PROTOTYPE-UNVERIFIED": "Prototype sample label",
+  "label.prototypeSample": "Prototype sample label",
   "label.SEEDED-OPEN-DATA": "Seeded open data",
   "export.button": "Export pack",
   "export.done": "Evidence pack exported as {file}.",
@@ -63,7 +63,7 @@ export const en = {
   "pack.method.4":
     "No total is printed across cells, and no province-wide total is printed, so a suppressed cell cannot be recovered by subtraction.",
   "pack.method.5":
-    "Records marked as demonstration or example are not headline counts. Only prototype tiers 0, 1 and E and the labels PROTOTYPE-UNVERIFIED and SEEDED-OPEN-DATA are accepted. Nothing in this pack carries a confirmation label.",
+    "Records marked as demonstration or example are not headline counts. Only prototype tiers 0, 1 and E and their permitted sample labels are accepted. Nothing in this pack carries a confirmation label.",
   "pack.counting":
     "Headline eligibility follows the piece-counting rules in packages/schema/docs/counting-rules.md. Records with example set to true or fixture identifiers, values older than 730 days, status observations outside the 30-day window, and values with no date are not counted. Unknown values are not counted.",
   "pack.rule.small_cell_threshold": "Counts below {k} are suppressed.",
