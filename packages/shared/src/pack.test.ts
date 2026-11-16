@@ -66,7 +66,7 @@ describe("pack checks refuse what the rules forbid", () => {
     changed.places[1]!.wheelchair = "";
     changed.places[2]!.provenance = { ...changed.places[2]!.provenance, licence: "" };
     const codes = validatePackContent(changed, manifest).map((issue) => `${issue.field}:${issue.code}`);
-    expect(codes).toContain("places[0].provenance.tier:verified_not_in_prototype");
+    expect(codes).toContain("places[0].provenance.tier:refused_label_not_in_prototype");
     expect(codes).toContain("places[1].wheelchair:blank_not_unknown");
     expect(codes).toContain("places[2].provenance.licence:missing_licence");
   });

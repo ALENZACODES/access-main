@@ -28,7 +28,7 @@ function entry(id: string, overrides: Partial<CacheEntry["provenance"]> = {}, ki
 
 describe("build card summary", () => {
   it("reports zero honestly for an empty device", () => {
-    expect(summarizeEntries([])).toEqual({ total: 0, byKind: [], byTier: [], sources: [], verifiedClaims: 0, undated: 0 });
+    expect(summarizeEntries([])).toEqual({ total: 0, byKind: [], byTier: [], sources: [], refusedLabelCount: 0, undated: 0 });
   });
 
   it("groups by kind, tier with label, and source, licence, and date", () => {
@@ -54,9 +54,9 @@ describe("build card summary", () => {
     ]);
   });
 
-  it("counts verified claims and undated records instead of hiding them", () => {
+  it("counts refused confirmation labels and undated records instead of hiding them", () => {
     const summary = summarizeEntries([entry("v", { prototype_label: "VERIFIED" }), entry("t3", { tier: 3, prototype_label: null }), entry("u", { source_date: "" })]);
-    expect(summary.verifiedClaims).toBe(2);
+    expect(summary.refusedLabelCount).toBe(2);
     expect(summary.undated).toBe(1);
     expect(summary.sources.find((line) => line.source_date === "")?.records).toBe(1);
   });

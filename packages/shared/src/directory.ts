@@ -1,3 +1,4 @@
+import { DIRECTORY_PLAIN_FIELD, DIRECTORY_TIER_FIELD } from "./protocolFields.ts";
 import type { FieldIssue } from "./provenance.ts";
 
 /**
@@ -103,8 +104,8 @@ const DIRECTORY_KEYS = new Set([
   "sourceName",
   "retrievedOn",
   "nextReviewOn",
-  "verificationTier",
-  "verificationPlain",
+  DIRECTORY_TIER_FIELD,
+  DIRECTORY_PLAIN_FIELD,
   "neverMeans",
   "licenceNote",
   "notEligibilityAdvice",
@@ -166,14 +167,14 @@ export function validateDirectoryRecord(value: unknown): FieldIssue[] {
   if (typeof value.retrievedOn !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value.retrievedOn)) {
     issues.push({ field: "payload.retrievedOn", code: "invalid_date" });
   }
-  if (value.verificationTier !== "administrator_page") {
-    issues.push({ field: "payload.verificationTier", code: "invalid_tier" });
+  if (value[DIRECTORY_TIER_FIELD] !== "administrator_page") {
+    issues.push({ field: `payload.${DIRECTORY_TIER_FIELD}`, code: "invalid_tier" });
   }
   if ("tier" in value) {
     issues.push({ field: "payload.tier", code: "invalid_tier" });
   }
   if (value.notEligibilityAdvice !== true) issues.push({ field: "payload.notEligibilityAdvice", code: "eligibility_advice" });
-  for (const field of ["verificationPlain", "neverMeans", "licenceNote", "framing"] as const) {
+  for (const field of [DIRECTORY_PLAIN_FIELD, "neverMeans", "licenceNote", "framing"]) {
     if (!isText(value[field])) issues.push({ field: `payload.${field}`, code: "invalid_directory" });
     issues.push(...textKeyIssues(value[field], `payload.${field}`));
   }

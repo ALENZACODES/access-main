@@ -32,7 +32,7 @@ test("a fresh offline copy still supports the core help flow in English and Fren
     await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
   }
   await page.goto("/help");
-  await expect(page.getByRole("heading", { level: 2, name: "What unverified means" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "What these records are" })).toBeVisible();
   await expect(page.getByText("the App does not give medical advice and does not decide benefits eligibility.")).toBeVisible();
 
   await page.getByRole("button", { name: "Français" }).click();
