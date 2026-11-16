@@ -170,9 +170,9 @@ describe('in-page helpers', () => {
   });
   it('readPageStateInPage spots Chrome and Firefox error pages', () => {
     g['document'] = { querySelector: (s: string) => (s === '#main-frame-error' ? {} : null), body: { innerText: 'x' } };
-    expect(readPageStateInPage(null)).toEqual({ errorPage: true, textLength: 1 });
+    expect(readPageStateInPage()).toEqual({ errorPage: true, textLength: 1 });
     g['document'] = { querySelector: () => null, documentURI: 'about:neterror?e=x', body: { innerText: '' } };
-    expect(readPageStateInPage(null)).toEqual({ errorPage: true, textLength: 0 });
+    expect(readPageStateInPage()).toEqual({ errorPage: true, textLength: 0 });
   });
   it('swReadyInPage is unsupported without a service worker API', async () => {
     const saved = Object.getOwnPropertyDescriptor(globalThis, 'navigator');

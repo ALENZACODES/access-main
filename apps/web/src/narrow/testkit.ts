@@ -160,10 +160,10 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
     scrollTo: g['scrollTo'],
   };
   g['document'] = {
-    querySelectorAll: (_sel: string) => all.filter((e) => e.spec.interactive),
+    querySelectorAll: () => all.filter((e) => e.spec.interactive),
     querySelector: (sel: string) => (sel.includes('manifest') && opts.manifest ? {} : null),
     getElementById: (id: string) => byId.get(id) ?? null,
-    body: { querySelectorAll: (_sel: string) => all },
+    body: { querySelectorAll: () => all },
     get activeElement() {
       return world.active;
     },
@@ -173,12 +173,12 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
       getAttribute: (n: string) => (n === 'lang' ? (opts.lang ?? 'en') : null),
     },
     head: {
-      appendChild: (_s: unknown) => {
+      appendChild: () => {
         world.spacingOn = true;
         world.styleElements++;
       },
     },
-    createElement: (_tag: string) => ({
+    createElement: () => ({
       textContent: '' as string | null,
       remove() {
         world.spacingOn = false;
