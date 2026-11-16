@@ -6,7 +6,7 @@ import "./i18n";
 const sections = [
   { key: "everyday", pages: [["employment", "employment"], ["housing", "housing"], ["diary", "diary"], ["auditors", "auditors"], ["handoff", "handoff"], ["games", "games"]] },
   { key: "travel", pages: [["safety", "safety"], ["routeReports", "route-reports"], ["wav", "accessible-taxis"]] },
-  { key: "community", pages: [["peers", "peers"], ["events", "events"], ["eventOrganiser", "event-organiser"], ["eventPlan", "event-plan"]] },
+  { key: "community", pages: [["peers", "peers"], ["events", "events"], ["eventOrganiser", "event-organiser"], ["eventPlan", "event-plan"], ["reports", "reports"]] },
 ] as const;
 
 export function HubIndex() {

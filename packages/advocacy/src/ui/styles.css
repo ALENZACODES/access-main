@@ -119,8 +119,8 @@ h4 {
   margin: 1rem 0;
 }
 
-.table-scroll {
-  overflow-x: auto;
+.table-fit {
+  max-width: 100%;
 }
 
 table {
@@ -140,7 +140,14 @@ td {
   text-align: start;
   vertical-align: top;
   border: 1px solid #5b5b5b;
-  overflow-wrap: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 30em) {
+  th,
+  td {
+    padding: 6px 6px;
+  }
 }
 
 thead th {

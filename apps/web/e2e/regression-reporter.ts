@@ -34,8 +34,8 @@ export const SHELL_NOT_RUN: NotRunCheck[] = [
   { id: "G2-map-layer", gate: "Gate 2", title: "Map attribution and a complete list equivalent", reason: "The shell does not mount a map (docs/repo-map.md)." },
   { id: "G2-offline-pack", gate: "Gate 2", title: "Core flows work offline from the place pack", reason: "The shell does not bundle place data, so there is no place pack to check here." },
   { id: "G3-demo-journeys", gate: "Gate 3", title: "All three demo journeys pass on the fixed build", reason: NOT_IN_SHELL },
-  { id: "G3-games-hub", gate: "Gate 3", title: "Games hub keyboard and notice checks", reason: "Games are not wired into the shell in this build. access-tools runs the games checks." },
-  { id: "D28-finders", gate: "Post-demo", title: "Washroom and parking finders", reason: "Finders are not wired into the shell in this build. access-tools runs the finder checks." },
+  { id: "G3-games-hub", gate: "Gate 3", title: "Games hub keyboard and notice checks", reason: "Games are in the shell: /games lists the game library and /more/games mounts the games hub. No shell test carries this check yet; access-tools runs the games keyboard and notice checks." },
+  { id: "D28-finders", gate: "Post-demo", title: "Washroom and parking finders", reason: "/finders lists finder results from the data pack, but no shell test carries this check yet. access-tools runs the finder checks." },
 ];
 
 interface Options {

@@ -8,10 +8,10 @@ type ToolProps = Record<string, unknown>;
 
 export type HubPage =
   | "employment" | "housing" | "safety" | "diary" | "auditors" | "handoff"
-  | "games" | "routeReports" | "wav" | "eventOrganiser" | "eventPlan";
+  | "games" | "routeReports" | "wav" | "eventOrganiser" | "eventPlan" | "reports";
 
 /** Pages whose records are labelled demonstration or sample data. */
-const DEMONSTRATION: readonly HubPage[] = ["employment", "housing", "handoff", "eventPlan"];
+const DEMONSTRATION: readonly HubPage[] = ["employment", "housing", "handoff", "eventPlan", "reports"];
 
 /**
  * Keeps a mounted tool inside a 320 px wide page: long choices and grouped fields shrink to the page

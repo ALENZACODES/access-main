@@ -37,6 +37,14 @@ function saveFiles(files: PackFile[]): void {
   }
 }
 
+/**
+ * Each table fits the width it is given: long words may break inside a cell instead of widening the table.
+ * So no table needs a scrolling box, and nothing on this screen takes keyboard focus except its controls.
+ * A screen reader still reads every table with its caption and its row and column headers.
+ * The rule is inline so it holds in any page that mounts this panel, with or without this package's styles.
+ */
+const FIT_TABLE = { width: "100%", maxWidth: "100%", overflowWrap: "anywhere" } as const;
+
 function TableView({ table, lang, tr, k }: { table: ProtectedTable; lang: Lang; tr: Translate; k: number }) {
   const caption = tr("rp.table.caption", { kind: tr(`rp.kind.${table.kind}`), period: periodLabel(lang, table.period) });
   const captionId = `rp-table-${table.id.replace(/[^a-z0-9]/gi, "-")}`;
@@ -50,9 +58,8 @@ function TableView({ table, lang, tr, k }: { table: ProtectedTable; lang: Lang; 
   }
   return (
     <div className="report-table">
-      {/* The scrolling box takes focus so a keyboard user can scroll a wide table. */}
-      <div className="table-scroll" role="group" aria-labelledby={captionId} tabIndex={0}>
-        <table>
+      <div className="table-fit">
+        <table style={FIT_TABLE}>
           <caption id={captionId}>{caption}</caption>
           <thead>
             <tr>
@@ -138,8 +145,8 @@ function Indicators({ results, tr }: { results: KpiResult[]; tr: Translate }) {
       <h2 id="kpi-heading">{tr("kpi.heading")}</h2>
       <p>{tr("kpi.intro")}</p>
       {logicModel(results).map((group) => (
-        <div key={group.stage} className="report-table table-scroll" role="group" aria-labelledby={`kpi-stage-${group.stage}`} tabIndex={0}>
-          <table>
+        <div key={group.stage} className="report-table table-fit">
+          <table style={FIT_TABLE}>
             <caption id={`kpi-stage-${group.stage}`}>{tr(`kpi.stage.${group.stage}`)}</caption>
             <thead>
               <tr>

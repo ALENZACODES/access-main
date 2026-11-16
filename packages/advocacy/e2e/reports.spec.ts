@@ -18,13 +18,22 @@ test("the report pack exports five files from the keyboard", async ({ page }) =>
   ]);
 });
 
-test("a wide table scrolls inside its own box at 320 px, and the box takes focus with a visible ring", async ({ page }) => {
+test("every table fits the page at 320 px with no scrolling box, and only controls take focus", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto("/?lang=fr");
-  const box = page.getByRole("group", { name: "Stationnement, 2026-10" });
-  await box.focus();
-  await expect(box).toBeFocused();
-  expect(await box.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe("none");
+  await expect(page.getByRole("table", { name: "Stationnement, 2026-10" })).toBeVisible();
+  const tables = page.getByRole("table");
+  expect(await tables.count()).toBeGreaterThanOrEqual(6);
+  for (const table of await tables.all()) {
+    const fit = await table.evaluate((el) => ({ table: el.getBoundingClientRect().right, page: document.documentElement.clientWidth, scroll: el.scrollWidth - el.clientWidth }));
+    expect(fit.table).toBeLessThanOrEqual(fit.page);
+    expect(fit.scroll).toBeLessThanOrEqual(0);
+  }
+  const nonNative = await page.evaluate(() =>
+    Array.from(document.querySelectorAll<HTMLElement>("[tabindex]:not([tabindex='-1'])"))
+      .filter((el) => !["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA", "SUMMARY"].includes(el.tagName)).length,
+  );
+  expect(nonNative).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
 });
 
