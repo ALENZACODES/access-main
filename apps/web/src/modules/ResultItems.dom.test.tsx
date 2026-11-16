@@ -98,5 +98,25 @@ describe("ResultItems", () => {
         liveStatus: "unavailable",
       }),
     ).toBe("modules.ready");
+    expect(
+      statusKey({
+        moduleId: "places",
+        availability: "ready",
+        items: [],
+        messageKey: "placeDetail.notFound",
+        asOf: null,
+        liveStatus: "unavailable",
+      }),
+    ).toBe("modules.empty");
+    expect(
+      statusKey({
+        moduleId: "places",
+        availability: "ready",
+        items: [],
+        messageKey: "modules.ready",
+        asOf: null,
+        liveStatus: "unavailable",
+      }),
+    ).toBe("modules.empty");
   });
 });

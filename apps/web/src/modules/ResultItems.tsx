@@ -17,8 +17,8 @@ export interface ItemView {
 /** Lane message keys are not shell strings. The shell chooses its own sentence for each state. */
 export function statusKey(result: ModuleResult<unknown>): string {
   if (result.availability === "ready") {
-    if (result.items.length === 0 && result.messageKey === "finder.shell.noMatches") {
-      return "modules.noMatches";
+    if (result.items.length === 0) {
+      return result.messageKey === "finder.shell.noMatches" ? "modules.noMatches" : "modules.empty";
     }
     return "modules.ready";
   }

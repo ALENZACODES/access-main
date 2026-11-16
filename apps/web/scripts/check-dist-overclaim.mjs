@@ -49,24 +49,10 @@ function decodeEscapes(text) {
     .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
 }
 
-// Honest denials that would otherwise trip a blunt keyword rule.
-const DENIALS = [
-  /pas une garantie/gi,
-  /not a guarantee/gi,
-  /n['\u2019]est pas une garantie/gi,
-  /is not a partnership/gi,
-  /n['\u2019]est pas un partenariat/gi,
-  /live or real-time/gi,
-];
-
-function maskDenials(text) {
-  return DENIALS.reduce((body, pattern) => body.replace(pattern, " "), text);
-}
-
 const hits = [];
 for (const file of walk(distDir)) {
   const raw = fs.readFileSync(file, "utf8");
-  const text = maskDenials(decodeEscapes(raw));
+  const text = decodeEscapes(raw);
   const where = path.relative(path.resolve(here, "../.."), file);
   for (const rule of RULES) {
     rule.pattern.lastIndex = 0;
