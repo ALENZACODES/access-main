@@ -92,12 +92,12 @@ test.skip("Day 11: legacy Toronto pack page French render is no longer mounted a
   await expect(page.getByRole("button", { name: "Télécharger les données de Toronto" })).toBeVisible();
   await page.getByRole("button", { name: "Télécharger les données de Toronto" }).click();
   await expect(page.getByText(/^Téléchargement terminé\./)).toBeVisible();
-  await expect(page.getByText(/Dernière vérification le/).first()).toBeVisible();
+  await expect(page.getByText(/Dernier contrôle le/).first()).toBeVisible();
   await axeClean(page, "french");
 });
 
 // The fixture is served by the same-origin test server at data/pack/v1/.
-// Tests do not label demonstration data as verified real-world accessibility facts.
+// Tests do not label demonstration data as confirmed real-world accessibility facts.
 for (const language of ["en", "fr"] as const) {
   test(`offline regions keyboard and accessibility (${language})`, async ({ page, context }) => {
     await page.goto("/offline");

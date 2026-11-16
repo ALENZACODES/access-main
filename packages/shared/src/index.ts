@@ -4,6 +4,7 @@ export {
   PROTOTYPE_CACHE_LABELS,
   PROTOTYPE_CACHE_TIERS,
   PROTOTYPE_LABELS,
+  REFUSED_PROTOTYPE_LABEL,
   canonicalTierFromForeign,
   isLiveTier,
   isPrototypeLabel,

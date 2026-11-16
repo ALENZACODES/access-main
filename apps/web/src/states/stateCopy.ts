@@ -82,7 +82,7 @@ const ERRORS: Record<ErrorKind, Entry> = {
     title: { en: "The pack did not finish downloading", fr: "Le pack n’a pas fini de se télécharger" },
     description: {
       en: "The download stopped before it was complete. Check the connection and the space on this device, then try again.",
-      fr: "Le téléchargement s’est arrêté avant la fin. Vérifiez la connexion et l’espace libre sur cet appareil, puis réessayez.",
+      fr: "Le téléchargement s’est arrêté avant la fin. Contrôlez la connexion et l’espace libre sur cet appareil, puis réessayez.",
     },
     actions: ["retry", "help"],
   },
@@ -109,7 +109,7 @@ const EMPTY: Record<EmptyKind, Entry> = {
     title: { en: "No route found for this trip", fr: "Aucun itinéraire trouvé pour ce trajet" },
     description: {
       en: "Check the start and the destination, or choose places nearby.",
-      fr: "Vérifiez le départ et la destination, ou choisissez des lieux à proximité.",
+      fr: "Contrôlez le départ et la destination, ou choisissez des lieux à proximité.",
     },
     actions: ["change-trip", "help"],
   },

@@ -58,7 +58,7 @@ export interface RegionStatus {
   cells: string[];
   bytes: number;
   downloaded: boolean;
-  verified: boolean;
+  integrityChecked: boolean;
   missingCells: string[];
   builtAt: string;
   count: number;
