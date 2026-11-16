@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { containsForbiddenOrg } from "../../../../packages/shared/test/forbiddenOrg.ts";
 import {
   ERROR_KINDS,
   ROUTE_IDS,
@@ -53,13 +54,11 @@ describe("route states (via package index)", () => {
   });
 
   it("route labels avoid banned and prohibited wording", () => {
-    const banned = new RegExp(
-      ["verified", "vérifié", "AAA", String.raw`\bAI\b`, String.raw`\bIA\b`, "sci" + "ontario", "SCI" + "O"].join("|"),
-      "i",
-    );
+    const banned = new RegExp(["verified", "vérifié", "AAA", String.raw`\bAI\b`, String.raw`\bIA\b`].join("|"), "i");
     for (const r of ROUTE_IDS) {
       for (const l of locales) {
         expect(ROUTE_STATES[r].label[l]).not.toMatch(banned);
+        expect(containsForbiddenOrg(ROUTE_STATES[r].label[l])).toBe(false);
       }
     }
   });
