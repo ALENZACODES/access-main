@@ -19,11 +19,27 @@ import {
   pressureView,
 } from "./robust/index.ts";
 import { classifyPackDownloadError, CorruptPackNotice, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
+import { RecoveryCenter } from "../recovery/RecoveryCenter.tsx";
+import type { LocalPackStore } from "../recovery/packInventory.ts";
+import { assessStoredRegion } from "../recovery/regionRecheck.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
 const source = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
 const ledger = createIndexedDbLedger();
+/** The current data client exposes parsed storage status, not compressed pack bytes. */
+const recoveryStore: LocalPackStore = {
+  async listIds() {
+    return (await source.regions()).map((item) => item.id);
+  },
+  async read(id) {
+    const region = (await source.regions()).find((item) => item.id === id);
+    if (!region || !region.downloaded) return null;
+    // No independent digest is exposed here; status must remain UNKNOWN.
+    return { id, manifest: null, bytes: null };
+  },
+};
+
 const estimateStorage = async (): Promise<StorageEstimate> => (await globalThis.navigator?.storage?.estimate?.()) ?? {};
 
 /** Per-cell report for every region; a region whose manifest cannot be read reads UNKNOWN cell by cell. */
@@ -103,6 +119,7 @@ export function OfflineRegionPage() {
   const abortRef = useRef<AbortController | null>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
+  const confirmDeleteRef = useRef<HTMLButtonElement>(null);
   const dialogTitle = useId();
   const progressTitle = useId();
   useEffect(() => { if (confirmation) keepRef.current?.focus(); }, [confirmation]);
@@ -168,13 +185,25 @@ export function OfflineRegionPage() {
       await refresh().catch(() => undefined);
     } finally { abortRef.current = null; setBusy(null); }
   }
-  /** Re-reads the stored parts. A region with parts no longer on the device cannot be treated as complete. */
+  /** Re-read the current inventory and ledger without claiming a byte digest. */
   async function recheck(id: string) {
-    setPackStatus(null); setMessage("");
-    const statuses = await source.regions();
-    setRegions(statuses);
-    if (statuses.find((region) => region.id === id)?.downloaded) { setMessage(c.downloaded); return; }
-    setPackRegion(id); setPackStatus("unknown");
+    setPackStatus(null);
+    setMessage("");
+    setPackRegion(id);
+    try {
+      const pack = await source.manifest();
+      const statuses = await source.regions();
+      const reports = await cellReports(pack, statuses);
+      setRegions(statuses);
+      setCells(reports);
+      const result = assessStoredRegion(
+        statuses.find((region) => region.id === id),
+        reports[id],
+      );
+      setPackStatus(result.status);
+    } catch {
+      setPackStatus("unknown");
+    }
   }
   async function remove() {
     const id = confirmation;
@@ -193,7 +222,7 @@ export function OfflineRegionPage() {
       <CorruptPackNotice
         status={packStatus}
         locale={language}
-        onRedownload={() => { if (packRegion) void download(packRegion); setPackStatus(null); }}
+        onRedownload={() => { if (packRegion) setConfirmation(packRegion); setPackStatus(null); }}
         onDismiss={() => setPackStatus(null)}
         busy={!!busy}
       />
@@ -231,18 +260,20 @@ export function OfflineRegionPage() {
           {(region.downloaded || statuses.some((status) => status === "available" || status === "stale")) && <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => setConfirmation(region.id)}>{c.delete}</button>}
         </div>
         {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
-        {busy === region.id && progress && <div className="stack"><label id={progressTitle}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={progressTitle} value={progress.done} max={progress.total || 1}/></div>}
+        {busy === region.id && progress && <div className="stack"><label id={`${progressTitle}-${region.id}`}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={`${progressTitle}-${region.id}`} value={progress.done} max={progress.total || 1}/></div>}
         {manifest && <RegionInventoryDashboard pack={manifest} regionId={region.id} language={language} />}
       </li>; })}</ul>
     </>}
+    <RecoveryCenter locale={language} store={recoveryStore} />
     {confirmation && <dialog open aria-labelledby={dialogTitle} className="panel stack" onKeyDown={(event) => {
       if (event.key === "Escape") setConfirmation(null);
-      if (event.key === "Tab") { const buttons = [keepRef.current, deleteRef.current].filter(Boolean); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1]?.focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0]?.focus(); } }
+      if (event.key === "Tab") { const buttons = [keepRef.current, confirmDeleteRef.current].filter(Boolean); if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[1]?.focus(); } else if (!event.shiftKey && document.activeElement === buttons[1]) { event.preventDefault(); buttons[0]?.focus(); } }
     }}>
       <h2 id={dialogTitle}>{c.confirm}</h2><div className="button-row">
         <button ref={keepRef} type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => setConfirmation(null)}>{c.keep}</button>
-        <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => void remove()}>{c.delete}</button>
+        <button ref={confirmDeleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => void remove()}>{c.delete}</button>
       </div>
     </dialog>}
   </div>;
 }
+
