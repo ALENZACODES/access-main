@@ -75,6 +75,29 @@ describe("data client", () => {
     expect((await client.regions())[0]?.downloaded).toBe(false);
     expect(await client.get("osm:one")).toBeNull();
   });
+  it("downloads one cell at a time and keeps earlier cells after a later cell fails", async () => {
+    const f = fixture();
+    const later = f.manifest.search[cells[1]!]?.path;
+    if (!later) throw new Error("missing search fixture");
+    f.setCorrupt(later);
+    const client = createPackSource({ baseUrl: "/data/", fetch: f.fetcher, db: "memory" });
+    let seen = 0;
+    const bytes = await client.downloadCell!("toronto", cells[0]!, (size) => { seen += size; });
+    expect(bytes).toBeGreaterThan(0);
+    expect(seen).toBe(bytes);
+    await expect(client.downloadCell!("toronto", cells[1]!)).rejects.toMatchObject({ code: "bytes", part: later });
+    const status = (await client.regions())[0];
+    expect(status?.downloaded).toBe(false);
+    expect(status?.missingCells).toEqual([cells[1]]);
+    expect(await client.get("osm:one")).not.toBeNull();
+    expect(await client.get("osm:two")).toBeNull();
+    await expect(client.downloadCell!("toronto", "outside")).rejects.toMatchObject({ code: "missing" });
+    f.setCorrupt("");
+    await client.downloadCell!("toronto", cells[1]!);
+    expect((await client.regions())[0]?.downloaded).toBe(true);
+    await client.deleteRegion("toronto");
+    expect((await client.regions())[0]?.missingCells).toEqual(cells);
+  });
   it("fetches a manifest once and excludes held sources", async () => {
     const f = fixture();
     const client = createPackSource({ baseUrl: "/data/", fetch: f.fetcher, db: "memory" });
