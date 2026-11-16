@@ -17,8 +17,8 @@ const RULES = [
   { id: "verified-claim", pattern: /(?<!un)(?<!not )\bverified (place|places|data|record|records|accessible|entrance|source|sources)\b/i },
   { id: "verified-claim-fr", pattern: /(?<!non )\b(lieu|lieux|données|enregistrement)s? vérifiée?s?(?![a-zà-ÿ])/i },
   { id: "verified-source-fr", pattern: /sources vérifiées/i },
-  { id: "guarantee", pattern: /(?<!not )(?<!no )(?<!pas une )(?<!pas de )\b(guaranteed|always accessible|fully accessible|100% accessible|garanti(?:e|s)?|entièrement accessible)\b/i },
-  { id: "live-claim", pattern: /(?<!or )(?<!not )\b(real-time|live status is (on|shown|current))\b|(?<!pas en )\ben temps réel\b/i },
+  { id: "guarantee", pattern: /\b(guaranteed|always accessible|fully accessible|100% accessible|garanti(e|s)?|entièrement accessible)\b/i },
+  { id: "live-claim", pattern: /\b(real-time|live status is (on|shown|current))\b|\ben temps réel\b/i },
 ];
 
 function fail(message) {
