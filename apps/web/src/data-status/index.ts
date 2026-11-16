@@ -57,3 +57,5 @@ export * from "./sorting.ts";
 export * from "./paging.ts";
 export * from "./tableView.ts";
 export * from "./catalogue.ts";
+export * from "./cacheRecords.ts";
+export * from "./exportFiles.ts";

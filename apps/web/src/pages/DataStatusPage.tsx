@@ -1,13 +1,35 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DISPLAY_TIERS, tierMessageKey, type CacheEntry } from "@access/shared";
-import { DEFAULT_STALE_AFTER_DAYS, buildSourceList, dataBadge, formatRate, renderSourceListHtml, type DataBadge } from "../data-status/index.ts";
+import {
+  DEFAULT_STALE_AFTER_DAYS,
+  buildCacheRecords,
+  buildExportFiles,
+  buildSourceList,
+  dataBadge,
+  formatRate,
+  mountDataStatusPanel,
+  renderSourceListHtml,
+  type DataBadge,
+  type ExportFile,
+  type MountedPanel,
+} from "../data-status/index.ts";
 import { Button } from "../design/Button.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
 import { ErrorActions } from "../shell/ErrorActions.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { clearCachedRecords, listCacheEntries, summarizeStorage, type StorageSummary } from "../storage/repository.ts";
+
+/** Saves text as a file on this device. Nothing is sent anywhere. */
+function saveTextFile(text: string, filename: string, mime: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: mime }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 export function DataStatusPage() {
   const { t, i18n } = useTranslation();
@@ -17,8 +39,13 @@ export function DataStatusPage() {
   const [worker, setWorker] = useState<"unknown" | "active" | "inactive" | "unsupported">("unknown");
   const [confirming, setConfirming] = useState(false);
   const [cleared, setCleared] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const clearRef = useRef<HTMLButtonElement>(null);
   const clearedRef = useRef<HTMLParagraphElement>(null);
+  const panelHostRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<MountedPanel | null>(null);
+  const panelKey = useRef("");
+  const panelInputs = useRef({ records: buildCacheRecords([], "en"), locale: "en" as "en" | "fr" });
   useDocumentTitle(t("data.title"));
 
   useEffect(() => {
@@ -32,7 +59,10 @@ export function DataStatusPage() {
 
   const load = () => {
     void summarizeStorage().then(setSummary);
-    void listCacheEntries().then(setEntries);
+    void listCacheEntries().then((list) => {
+      setEntries(list);
+      setLoaded(true);
+    });
   };
 
   useEffect(() => {
@@ -71,6 +101,39 @@ export function DataStatusPage() {
   }
   const sourceRows = buildSourceList([...bySource.values()], locale, now);
   const sourceListHtml = renderSourceListHtml(sourceRows, locale);
+
+  // The panel and the export files read the same records: one dataset per cache kind, one source per cached record.
+  const panelRecords = useMemo(() => buildCacheRecords(entries, locale), [entries, locale]);
+  panelInputs.current = { records: panelRecords, locale };
+  // The panel has its own source-list (CSV) button, which respects its filters, so the file list here leaves CSV out.
+  const exportFiles: ExportFile[] = buildExportFiles(panelRecords, locale, now);
+
+  // The panel mounts once the saved records have been read, so it never shows an empty
+  // inventory for a moment while records are still loading.
+  useEffect(() => {
+    const host = panelHostRef.current;
+    if (!loaded || !host) return;
+    const mounted = mountDataStatusPanel(host, {
+      getRecords: () => panelInputs.current.records,
+      getLocale: () => panelInputs.current.locale,
+      onExport: (csv, filename) => saveTextFile(csv, filename, "text/csv;charset=utf-8"),
+      plainTables: true,
+    });
+    panelRef.current = mounted;
+    panelKey.current = JSON.stringify([panelInputs.current.locale, panelInputs.current.records]);
+    return () => {
+      mounted.destroy();
+      panelRef.current = null;
+    };
+  }, [loaded]);
+
+  // Redraw only when the records or the language really changed, so a reload that finds the same data leaves the panel alone.
+  useEffect(() => {
+    const key = JSON.stringify([locale, panelRecords]);
+    if (key === panelKey.current) return;
+    panelKey.current = key;
+    panelRef.current?.refresh();
+  }, [panelRecords, locale]);
 
   return (
     <div className="stack">
@@ -186,6 +249,25 @@ export function DataStatusPage() {
           <div dangerouslySetInnerHTML={{ __html: sourceListHtml }} />
         </section>
       ) : null}
+      <section className="stack">
+        {loaded ? <div ref={panelHostRef} /> : null}
+      </section>
+      <section className="stack" aria-labelledby="export-title">
+        <h2 id="export-title">{locale === "fr" ? "Télécharger" : "Downloads"}</h2>
+        <p>{locale === "fr" ? "Les fichiers sont créés sur cet appareil à partir des données enregistrées ci-dessus." : "Files are made on this device from the saved records above."}</p>
+        <div className="button-row">
+          {exportFiles.filter((file) => file.id !== "csv").map((file) => (
+            <Button
+              key={file.id}
+              variant="secondary"
+              isDisabled={entries.length === 0}
+              onPress={() => saveTextFile(file.text, file.filename, file.mime)}
+            >
+              {file.label}
+            </Button>
+          ))}
+        </div>
+      </section>
       <section className="stack" aria-labelledby="legend-title">
         <h2 id="legend-title">{t("data.legendTitle")}</h2>
         <dl className="review-list">

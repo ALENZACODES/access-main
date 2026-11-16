@@ -35,12 +35,12 @@ describe('copy rules flag violations', () => {
 
 describe('copy rules leave ordinary copy alone', () => {
   it.each([
-    'Recently updated',
+    'Within its review period',
     'May be out of date',
     'Update date unknown',
     'Licence to review',
     'Source: Open Data Ontario · Licence: OGL-Ontario',
-    'Mis à jour récemment',
+    'Dans sa période de révision',
     'Possiblement périmé',
     'Aiden and Maia went to Paris and the MAIN street',
     'Sources possiblement périmées',
