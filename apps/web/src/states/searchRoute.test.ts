@@ -69,7 +69,7 @@ describe("searchRouteView", () => {
     // Search lists only offline-no-pack and pack-download-failed, so other kinds fall back to the first.
     expect(off.kind === "error" && off.view.title).toBe("No connection and no offline pack");
     const srv = searchRouteView({ status: "error", httpStatus: 500 }, ctx());
-    expect(srv.kind === "error" && srv.view.title).toBe("No connection and no offline pack");
+    expect(srv.kind === "error" && srv.view.title).toBe("The places could not be loaded");
   });
   it("speaks French with correct plural and typography", () => {
     const v = searchRouteView({ status: "ok", places }, ctx({ locale: "fr" }));

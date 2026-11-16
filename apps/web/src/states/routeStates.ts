@@ -54,7 +54,9 @@ export function createRouteStates<R extends string>(
     getRouteError(route, kind, locale) {
       if (!isRouteId(route)) return withRoute(getErrorState("offline-no-pack", locale), null, locale);
       // ErrorKind has no "unknown"; use the route's first listed kind instead.
-      const allowed = routes[route].errors.includes(kind) ? kind : (routes[route].errors[0] ?? "offline-no-pack");
+      // A generic load failure uses the data wording on routes that list it, so it is not shown as "offline".
+      const wanted = kind === "load-failed" && !routes[route].errors.includes(kind) && routes[route].errors.includes("data-load-failed") ? "data-load-failed" : kind;
+      const allowed = routes[route].errors.includes(wanted) ? wanted : (routes[route].errors[0] ?? "offline-no-pack");
       return withRoute(getErrorState(allowed, locale), route, locale);
     },
     getRouteEmpty(route, locale) {
@@ -72,7 +74,7 @@ export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
   search: {
     label: { en: "Search", fr: "Recherche" },
     empty: "search-no-results",
-    errors: ["offline-no-pack", "pack-download-failed"],
+    errors: ["offline-no-pack", "pack-download-failed", "data-load-failed"],
   },
   place: {
     label: { en: "Place details", fr: "Fiche du lieu" },
@@ -93,13 +95,13 @@ export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
   map: {
     label: { en: "Map", fr: "Carte" },
     empty: "map-no-places",
-    errors: ["offline-no-pack"],
+    errors: ["offline-no-pack", "data-load-failed"],
   },
   saved: {
     label: { en: "Saved places", fr: "Lieux enregistrés" },
     empty: "no-saved-places",
     // An online failure with no listed kind falls back to the first one.
-    errors: ["offline-no-pack", "offline"],
+    errors: ["offline-no-pack", "offline", "data-load-failed"],
   },
 };
 
