@@ -238,3 +238,210 @@ describe("expired items", () => {
     expect(make({}, null).c.getState().status).toBeNull();
   });
 });
+
+import { loadActivity } from "./activityLog";
+import { loadSeen, seenKey } from "./changes";
+import type { InventoryEntry } from "./inventory";
+
+describe("data list downloads", () => {
+  it("prepares a CSV with the entries, including the panel's own, and says so", () => {
+    const { c } = make();
+    const st = c.dispatch({ type: "export-list-csv" });
+    expect(st.lastExport?.mime).toBe("text/csv");
+    expect(st.lastExport?.filename).toBe("the-app-data-list-2026-11-15.csv");
+    expect(st.lastExport?.text).toContain("Your language choice");
+    expect(st.lastExport?.text).toContain("Saved places");
+    expect(st.status).toEqual({ kind: "list-exported", format: "csv" });
+    expect(c.html()).toContain("Data list prepared as CSV.");
+  });
+  it("uses a semicolon in French, for French spreadsheets", () => {
+    const { c } = make();
+    c.dispatch({ type: "set-locale", locale: "fr" });
+    const f = c.dispatch({ type: "export-list-csv" }).lastExport;
+    expect(f?.text.split("\r\n")[0]).toContain(";");
+    expect(f?.filename).toBe("l-app-liste-des-donnees-2026-11-15.csv");
+  });
+  it("prepares plain text with the review date", () => {
+    const { c } = make({ reviewedOn: "2026-11-10" });
+    const st = c.dispatch({ type: "export-list-text" });
+    expect(st.lastExport?.mime).toBe("text/plain");
+    expect(st.lastExport?.text).toContain("Last reviewed: 2026-11-10");
+    expect(c.html()).toContain("Data list prepared as text.");
+  });
+  it("works when storage is unavailable", () => {
+    const { c } = make({}, null);
+    expect(c.dispatch({ type: "export-list-csv" }).lastExport?.count).toBeGreaterThan(0);
+  });
+});
+
+describe("the panel's own entries", () => {
+  it("are shown in the table, matching only the features that are on", () => {
+    const off = make().c.html();
+    expect(off).toContain("Your language choice");
+    expect(off).not.toContain("Recent privacy actions");
+    expect(off).not.toContain("The last data list you saw");
+    expect(off).not.toContain("Your choices about optional features");
+    const on = make({ purposes: PURPOSES, logActivity: true, trackChanges: true }).c.html();
+    expect(on).toContain("Your choices about optional features");
+    expect(on).toContain("The last data list you saw");
+    expect(on).toContain("Up to 90 days after the latest action");
+  });
+  it("refuses a caller entry that uses the reserved id prefix", () => {
+    expect(() => make({ inventory: [{ ...FIXTURE[0]!, id: "privacy-mine" }] })).toThrow(/reserved-id/);
+  });
+  it("refuses a caller entry that claims a storage name the panel uses", () => {
+    expect(() => make({ inventory: [{ ...FIXTURE[0]!, storageKeys: ["prefs.v1"] }] })).toThrow(/duplicate-storage-key/);
+  });
+});
+
+describe("stored items", () => {
+  it("shows what is stored now, matched to the list, and flags the rest", () => {
+    const { c, storage } = make({ inventory: [{ ...FIXTURE[0]!, storageKeys: ["a"] }, ...FIXTURE.slice(1)] });
+    expect(c.html()).toContain('data-key="a"');
+    storage?.setItem(`${PREFIX}surprise`, "1");
+    expect(c.html()).toContain("Not described in the list above: 2.");
+  });
+  it("reads the current storage each time, not a copy", () => {
+    const { c, storage } = make({}, createMemoryStorage());
+    expect(c.html()).toContain("No items from the App are stored in this browser.");
+    storage?.setItem(`${PREFIX}x`, "1");
+    expect(c.html()).toContain('data-key="x"');
+  });
+});
+
+describe("activity log", () => {
+  const withLog = (storage?: StorageLike | null) => make({ logActivity: true, purposes: PURPOSES }, storage);
+
+  it("is off by default and writes nothing", () => {
+    const { c, storage } = make();
+    c.dispatch({ type: "set-locale", locale: "fr" });
+    expect(c.html()).not.toContain("data-privacy-activity");
+    expect(storage?.getItem(`${PREFIX}activity.v1`)).toBeNull();
+  });
+  it("starts empty when on", () => {
+    expect(withLog().c.html()).toContain("No actions are listed.");
+  });
+  it("records language changes, but not a choice of the language already in use", () => {
+    const { c, storage } = withLog();
+    c.dispatch({ type: "set-locale", locale: "en" });
+    c.dispatch({ type: "set-locale", locale: "fr" });
+    const log = loadActivity(storage!, PREFIX, NOW);
+    expect(log.map((e) => [e.kind, e.lang])).toEqual([["language", "fr"]]);
+  });
+  it("records consent choices by purpose id", () => {
+    const { c, storage } = withLog();
+    c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" });
+    c.dispatch({ type: "consent", purposeId: "map-hints", value: "declined" });
+    expect(loadActivity(storage!, PREFIX, NOW).map((e) => [e.kind, e.purposeId])).toEqual([
+      ["consent-declined", "map-hints"],
+      ["consent-granted", "saved-places"],
+    ]);
+  });
+  it("records a download with its item count, but not an empty one", () => {
+    const { c, storage } = withLog();
+    c.dispatch({ type: "export" });
+    expect(loadActivity(storage!, PREFIX, NOW).some((e) => e.kind === "export")).toBe(true);
+    const empty = withLog(createMemoryStorage());
+    empty.c.dispatch({ type: "export" });
+    expect(loadActivity(empty.storage!, PREFIX, NOW)).toEqual([]);
+  });
+  it("records list downloads with their format", () => {
+    const { c, storage } = withLog();
+    c.dispatch({ type: "export-list-csv" });
+    c.dispatch({ type: "export-list-text" });
+    expect(loadActivity(storage!, PREFIX, NOW).map((e) => e.format)).toEqual(["text", "csv"]);
+  });
+  it("records removal of expired items at start-up", () => {
+    const storage = createMemoryStorage();
+    putExpiring(storage, `${PREFIX}old`, "a", new Date(2026, 9, 1), 1);
+    createPrivacyController({ storage, prefix: PREFIX, inventory: FIXTURE, now: () => NOW, logActivity: true });
+    expect(loadActivity(storage, PREFIX, NOW)).toMatchObject([{ kind: "expired-removed", count: 1 }]);
+  });
+  it("shows the entries on the page, newest first, with purpose labels in the page language", () => {
+    const { c } = withLog();
+    c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" });
+    c.dispatch({ type: "set-locale", locale: "fr" });
+    const html = c.html();
+    expect(html).toContain("Langue changée\u00a0: français");
+    expect(html).toContain("Autorisé\u00a0: «\u202fLieux enregistrés\u202f»");
+    expect(html.indexOf("Langue changée")).toBeLessThan(html.indexOf("Autorisé\u00a0:"));
+  });
+  it("is removed with everything else when local data is erased, and erasing is not logged", () => {
+    const { c, storage } = withLog();
+    c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" });
+    c.dispatch({ type: "erase-ask" });
+    c.dispatch({ type: "erase-confirm" });
+    expect(loadActivity(storage!, PREFIX, NOW)).toEqual([]);
+    expect(listKeys(storage!, PREFIX)).toEqual([]);
+    expect(c.html()).toContain("No actions are listed.");
+  });
+  it("does not fail when storage is unavailable", () => {
+    const { c } = withLog(null);
+    expect(() => c.dispatch({ type: "consent", purposeId: "saved-places", value: "granted" })).not.toThrow();
+    expect(c.html()).toContain("No actions are listed.");
+  });
+});
+
+describe("change tracking", () => {
+  const track = (inventory: readonly InventoryEntry[], storage: StorageLike | null) =>
+    createPrivacyController({ storage, prefix: PREFIX, inventory, now: () => NOW, trackChanges: true });
+
+  it("is off by default: no section, nothing stored", () => {
+    const { c, storage } = make();
+    expect(c.getState().changes).toBeNull();
+    expect(c.html()).not.toContain("data-privacy-changes");
+    expect(storage?.getItem(seenKey(PREFIX))).toBeNull();
+  });
+  it("the first time compares nothing and remembers the list as the starting point", () => {
+    const storage = createMemoryStorage();
+    const c = track(FIXTURE, storage);
+    expect(c.getState().changes).toEqual({ kind: "first-view" });
+    expect(c.html()).toContain("first time the list is shown");
+    expect(loadSeen(storage, PREFIX, NOW)?.seenOn).toBe("2026-11-15");
+  });
+  it("the next visit reports no change when the list is the same", () => {
+    const storage = createMemoryStorage();
+    track(FIXTURE, storage);
+    expect(track(FIXTURE, storage).getState().changes).toEqual({ kind: "none", seenOn: "2026-11-15" });
+  });
+  it("the next visit lists what changed, and mark-seen clears it", () => {
+    const storage = createMemoryStorage();
+    track(FIXTURE, storage);
+    const changed = [{ ...FIXTURE[0]!, where: "sent-to-server" as const }, ...FIXTURE.slice(1)];
+    const c = track(changed, storage);
+    expect(c.getState().changes).toMatchObject({ kind: "diff", changed: [{ en: "Saved places" }] });
+    expect(c.html()).toContain("Changed: Saved places");
+    const st = c.dispatch({ type: "mark-seen" });
+    expect(st.changes).toEqual({ kind: "none", seenOn: "2026-11-15" });
+    expect(st.status).toEqual({ kind: "seen-saved" });
+    expect(track(changed, storage).getState().changes?.kind).toBe("none");
+  });
+  it("mark-seen does nothing when tracking is off", () => {
+    const { c } = make();
+    const before = c.getState();
+    expect(c.dispatch({ type: "mark-seen" })).toBe(before);
+  });
+  it("erasing local data goes back to the first-view state without writing a new baseline", () => {
+    const storage = createMemoryStorage();
+    const c = track(FIXTURE, storage);
+    c.dispatch({ type: "erase-ask" });
+    expect(c.dispatch({ type: "erase-confirm" }).changes).toEqual({ kind: "first-view" });
+    expect(storage.getItem(seenKey(PREFIX))).toBeNull();
+  });
+  it("works without storage, always as a first view", () => {
+    expect(track(FIXTURE, null).getState().changes).toEqual({ kind: "first-view" });
+  });
+});
+
+describe("subscribe", () => {
+  it("calls listeners after every dispatch, and stops after unsubscribe", () => {
+    const { c } = make();
+    const seen: string[] = [];
+    const stop = c.subscribe((s) => seen.push(s.prefs.locale));
+    c.dispatch({ type: "set-locale", locale: "fr" });
+    c.dispatch({ type: "erase-ask" });
+    stop();
+    c.dispatch({ type: "set-locale", locale: "en" });
+    expect(seen).toEqual(["fr", "fr"]);
+  });
+});
