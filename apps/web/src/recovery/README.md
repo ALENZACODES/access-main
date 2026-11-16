@@ -1,22 +1,38 @@
 # Pack, download and export error recovery
 
-This directory provides typed error classification, bilingual recovery text and
-an accessible notice for failed pack, download and export operations.
+Typed error classification, English and French recovery copy, and an
+accessible notice for failed pack, download and export operations.
 
-Integrate by wrapping the existing user-triggered operation with
-`runRecoverable("download", () => downloadFile())`. On a failed result, render
-`<RecoveryNotice failure={result.failure} locale="en" onRetry={retry}
-onDismiss={dismiss} />` and supply `onCheckInput` if appropriate. Retry handlers
-must be explicitly user-triggered; storage guidance does not delete files.
+## Where it is used
 
-The wrapper does not validate file integrity, resume transfers, remove partial
-files, or persist anything. Callers must independently validate final output
-before marking it complete. Unknown errors remain `unknown` and no exception
-message is exposed in user-facing text. Pass an actual `source` with name,
-open licence and source date when sourced data is involved; missing metadata
-is not invented. The notice displays provenance only when all three fields
-are provided. Localised strings are provided for English and French. All
-notice buttons have a minimum 44 by 44 CSS-pixel touch target.
+| Failure path | Component | Operation |
+| --- | --- | --- |
+| Region download on `/offline` | `offline/RegionPackPage.tsx` | `download`, classified by `classifyPackDownloadError` |
+| Preferences export (text and JSON) on `/profile` | `pages/ProfilePage.tsx` | `export`, through `runRecoverable` |
+| Evidence pack export on `/more/advocacy` | `features/routes.tsx` (AdvocacyScreen) | `export`, through `classifyRecoveryError` |
 
-Run `vitest run apps/web/src/recovery/recovery.test.ts` from a workspace with
-Vitest installed.
+Each shows `<RecoveryNotice>` with Try again (a user-pressed retry, never
+automatic), Correct the data (moves focus to the input) where the input is at
+fault, and Dismiss.
+
+## Rules
+
+- Raw exception text, part paths and byte counts are never shown.
+- Pack download codes from `packages/data-client` map as follows: size, digest
+  or record-count mismatch → invalid data; quota → storage; a failed fetch →
+  offline only when the device reports it is offline, otherwise unknown.
+- Unknown causes stay unknown. Nothing is described as verified.
+- The notice shows source, licence and date only when all three are supplied.
+- Storage guidance never deletes files.
+- Buttons are at least 44 × 44 CSS pixels; the notice is a labelled `alert`
+  with its own `lang`, and it does not move focus.
+
+## Tests
+
+- `recovery.test.ts`: copy coverage and classification.
+- `RecoveryNotice.dom.test.tsx`: every operation and reason in EN and FR,
+  rendered and checked with axe (WCAG 2.2 AA tags), handlers, provenance, and a
+  check that no copy says verified or vérifié.
+- `e2e/recovery.spec.ts`: a failed pack download on `/offline` in EN and FR
+  (notice, 44 px targets, axe, retry), and a failed preferences export on
+  `/profile` (notice, axe, retry saves the file).

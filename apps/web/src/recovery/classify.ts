@@ -54,3 +54,26 @@ export async function runRecoverable<T>(
     return { ok: false, failure: classifyRecoveryError(operation, error, source) };
   }
 }
+
+/**
+ * Pack download failures from packages/data-client carry a code. Size, digest
+ * and record-count mismatches are invalid data; a failed fetch is offline only
+ * when the device reports it is offline, otherwise the cause stays unknown.
+ */
+export function classifyPackDownloadError(
+  error: unknown,
+  online: boolean,
+  source?: RecoverySource,
+): RecoveryFailure {
+  const code = error !== null && typeof error === "object" && "code" in error ? (error as { code: unknown }).code : undefined;
+  let reason: RecoveryReason | undefined;
+  switch (code) {
+    case "quota": reason = "quota"; break;
+    case "bytes": case "sha256": case "content": reason = "invalid-data"; break;
+    case "network": reason = online ? "unknown" : "offline"; break;
+    case "missing": reason = "unknown"; break;
+    default: reason = undefined;
+  }
+  if (reason === undefined) return classifyRecoveryError("download", error, source);
+  return { operation: "download", reason, ...(source === undefined ? {} : { source }) };
+}

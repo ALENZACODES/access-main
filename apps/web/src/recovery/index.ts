@@ -62,13 +62,13 @@ const EN: CopyTable = {
     },
     interrupted: {
       title: "Pack interrupted",
-      description: "The pack operation did not finish. Check the pack before using it.",
+      description: "The pack operation did not finish. Do not use it as a complete pack.",
       actionLabel: "Try again",
       action: "retry",
     },
     "invalid-data": {
       title: "Pack could not be read",
-      description: "The pack data did not pass validation. Check the source file.",
+      description: "The pack data is not in the expected format. Check the source file.",
       actionLabel: "Check file",
       action: "check-input",
     },
@@ -105,8 +105,8 @@ const EN: CopyTable = {
       action: "retry",
     },
     "invalid-data": {
-      title: "Download not verified",
-      description: "The downloaded data did not pass validation. Do not use the incomplete file.",
+      title: "Download failed its checks",
+      description: "The downloaded data did not match its expected size, fingerprint or record count. Nothing from it was saved.",
       actionLabel: "Try again",
       action: "retry",
     },
@@ -138,14 +138,14 @@ const EN: CopyTable = {
     },
     interrupted: {
       title: "Export interrupted",
-      description: "The export did not finish. Check the file before sharing it.",
+      description: "The export did not finish. Do not share a partial file.",
       actionLabel: "Try again",
       action: "retry",
     },
     "invalid-data": {
-      title: "Export data not verified",
-      description: "Check the input data before exporting again.",
-      actionLabel: "Check input",
+      title: "Export data could not be read",
+      description: "The data to export is not in the expected format. Correct it, then export again.",
+      actionLabel: "Correct the data",
       action: "check-input",
     },
     unknown: {
@@ -173,20 +173,20 @@ const FR: CopyTable = {
     },
     permission: {
       title: "Accès à l’ensemble bloqué",
-      description: "L’ensemble est inaccessible. Vérifiez les autorisations du navigateur ou de l’appareil.",
+      description: "L’ensemble est inaccessible. Contrôlez les autorisations du navigateur ou de l’appareil.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     interrupted: {
       title: "Opération interrompue",
-      description: "L’opération sur l’ensemble est inachevée. Vérifiez l’ensemble avant de l’utiliser.",
+      description: "L’opération sur l’ensemble est inachevée. Ne l’utilisez pas comme ensemble complet.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     "invalid-data": {
       title: "Lecture de l’ensemble impossible",
-      description: "Les données n’ont pas été validées. Vérifiez le fichier source.",
-      actionLabel: "Vérifier le fichier",
+      description: "Les données ne respectent pas le format attendu. Contrôlez le fichier source.",
+      actionLabel: "Contrôler le fichier",
       action: "check-input",
     },
     unknown: {
@@ -211,7 +211,7 @@ const FR: CopyTable = {
     },
     permission: {
       title: "Téléchargement bloqué",
-      description: "Le fichier n’a pas été enregistré. Vérifiez les autorisations de téléchargement.",
+      description: "Le fichier n’a pas été enregistré. Contrôlez les autorisations de téléchargement.",
       actionLabel: "Réessayer",
       action: "retry",
     },
@@ -222,8 +222,8 @@ const FR: CopyTable = {
       action: "retry",
     },
     "invalid-data": {
-      title: "Téléchargement non vérifié",
-      description: "Les données téléchargées n’ont pas été validées. N’utilisez pas le fichier incomplet.",
+      title: "Échec des contrôles du téléchargement",
+      description: "Les données téléchargées ne correspondent pas à la taille, à l’empreinte ou au nombre de fiches attendus. Rien n’a été enregistré.",
       actionLabel: "Réessayer",
       action: "retry",
     },
@@ -237,7 +237,7 @@ const FR: CopyTable = {
   export: {
     offline: {
       title: "Exportation indisponible",
-      description: "L’exportation est inachevée. Vérifiez la connexion si elle est nécessaire.",
+      description: "L’exportation est inachevée. Contrôlez la connexion si elle est nécessaire.",
       actionLabel: "Réessayer",
       action: "retry",
     },
@@ -249,20 +249,20 @@ const FR: CopyTable = {
     },
     permission: {
       title: "Exportation bloquée",
-      description: "L’exportation n’a pas été enregistrée. Vérifiez les autorisations d’accès aux fichiers.",
+      description: "L’exportation n’a pas été enregistrée. Contrôlez les autorisations d’accès aux fichiers.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     interrupted: {
       title: "Exportation interrompue",
-      description: "L’exportation est inachevée. Vérifiez le fichier avant de le partager.",
+      description: "L’exportation est inachevée. Ne partagez pas un fichier partiel.",
       actionLabel: "Réessayer",
       action: "retry",
     },
     "invalid-data": {
-      title: "Données non validées",
-      description: "Vérifiez les données avant de relancer l’exportation.",
-      actionLabel: "Vérifier les données",
+      title: "Données à exporter illisibles",
+      description: "Les données à exporter ne respectent pas le format attendu. Corrigez-les, puis relancez l’exportation.",
+      actionLabel: "Corriger les données",
       action: "check-input",
     },
     unknown: {
@@ -285,6 +285,6 @@ export function getRecoveryMessage(
   };
 }
 
-export { classifyRecoveryError, runRecoverable, type RecoveryResult } from "./classify.ts";
+export { classifyPackDownloadError, classifyRecoveryError, runRecoverable, type RecoveryResult } from "./classify.ts";
 export { RecoveryNotice, type RecoveryNoticeProps } from "./RecoveryNotice.tsx";
 

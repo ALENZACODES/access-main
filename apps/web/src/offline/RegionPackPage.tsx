@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createPackSource, PackClientError, type PackManifest, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { createPackSource, type PackManifest, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
 import { offlineCatalog } from "./catalog.ts";
+import { classifyPackDownloadError, RecoveryNotice, type RecoveryFailure } from "../recovery/index.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 
@@ -21,6 +22,7 @@ export function OfflineRegionPage() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [failure, setFailure] = useState<{ region: string; failure: RecoveryFailure } | null>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const dialogTitle = useId();
@@ -36,12 +38,14 @@ export function OfflineRegionPage() {
   }, [c.unavailable]);
   async function refresh() { setRegions(await source.regions()); }
   async function download(id: string) {
-    setBusy(id); setError(""); setMessage(""); setProgress(null);
+    setBusy(id); setError(""); setMessage(""); setProgress(null); setFailure(null);
     try {
       await source.downloadRegion(id, (done, total) => setProgress({ done, total }));
       await refresh(); setMessage(c.complete);
     } catch (cause) {
-      setError(cause instanceof PackClientError ? `${cause.code === "quota" ? c.storage : c.error}: ${cause.message}` : c.error);
+      // Recovery copy names the cause and the next step; raw error text is never shown.
+      setFailure({ region: id, failure: classifyPackDownloadError(cause, navigator.onLine) });
+      await refresh().catch(() => undefined);
     } finally { setBusy(null); }
   }
   async function remove() {
@@ -49,7 +53,7 @@ export function OfflineRegionPage() {
     if (!id) return;
     setConfirmation(null); setBusy(id);
     try { await source.deleteRegion(id); await refresh(); setMessage(c.deleted); setProgress(null); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : c.error); }
+    catch { setError(c.error); }
     finally { setBusy(null); requestAnimationFrame(() => deleteRef.current?.focus()); }
   }
   return <div className="stack">
@@ -70,9 +74,10 @@ export function OfflineRegionPage() {
         <p>{region.downloaded ? c.downloaded : c.notDownloaded}</p>
         <div className="button-row">
           {!region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!online || !!busy} onClick={() => void download(region.id)}>{c.download}</button>}
-          {region.downloaded && <><button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => void refresh().then(() => setMessage(c.downloaded))}>{c.verify}</button>
+          {region.downloaded && <><button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => void refresh().then(() => setMessage(c.downloaded))}>{c.recheck}</button>
           <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => setConfirmation(region.id)}>{c.delete}</button></>}
         </div>
+        {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
         {busy === region.id && progress && <div className="stack"><label id={progressTitle}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={progressTitle} value={progress.done} max={progress.total || 1}/></div>}
       </li>)}</ul>
     </>}
