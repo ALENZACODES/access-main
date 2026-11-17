@@ -154,11 +154,13 @@ export function MapPage() {
         protocol = new tiles.Protocol();
         lib.addProtocol("pmtiles", protocol.tile);
         // The tile files come from the pack manifest's tile list; none is at a fixed path.
-        let files: TileFile[] = [];
+        // Without a readable tile list there is no map data, so no map is drawn and its controls stay off.
+        let files: TileFile[];
         try {
           files = (await readTileList()).files;
         } catch {
           if (!disposed) { setTileListUnavailable(true); setLoading(false); }
+          return;
         }
         if (disposed || !canvas.current) return;
         map = new lib.Map({
