@@ -26,7 +26,7 @@ Rules that do not bend:
 
 | Repository | Role | State |
 | --- | --- | --- |
-| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Every entry in `lanes.lock.json` is pinned to a merged commit. Places, finders, navigator, games, and help use the real adapter from their package; journey has no adapter yet, because the planner takes coordinates and the shell form does not. |
+| access-main | The shell: routes, profile, settings, offline, data status, shared contracts, schema | Built and tested. Module routes for places, journey, finders, navigator, games, and help go through one seam (`createModules`). Every entry in `lanes.lock.json` is pinned to a merged commit. Places, finders, navigator, games, and help use the real adapter from their package; journey has no adapter yet, because the planner takes coordinates and the shell form does not. The pack's place records carry sourced `lat` and `lon`, so the place search can supply them; the build is designed step by step in `docs/repo-map.md` ("Journey from the place search"). |
 | access-maps | Open-data pipeline, journey engine, map interface, conditions | Imports are in place with tier 0 and tier 1 values only. Verified (tier 2–3) total is 0. |
 | access-tools | Place pages, search, finders, directory, games, importers | Place pages and finders run on labelled fixtures. Ten of fifty games ship. |
 | access-help | Help centre, onboarding, glossary, peers, events, the cross-repository test harness | Built on demonstration and sample data. French is a draft. |
@@ -72,10 +72,10 @@ Reachable from the shell after the integration round of 16 November (routes, pac
 | Lane | Reachable at | Not reachable yet |
 | --- | --- | --- |
 | Games | `/more/games`: 25 games and the dwell select setting. `/games` lists the 25 names | Dwell select outside the games |
-| Work and home | `/more/employment`: listings with the access record, commute check and referral summary | Housing unit and room depth finder and the barrier evidence form: `/more/housing` stays on the earlier pin until a repeated-landmark fault in the package is fixed |
+| Work and home | `/more/employment`: listings with the access record, commute check and referral summary. `/more/housing`: the housing finder, the unit and room depth finder and the on-device barrier evidence form | Real listings |
 | Auditors | `/more/auditors`: observations, programme, venue responses, cases and service summary | — |
-| Conditions | `/more/route-reports` (list; the form needs a place) and `/more/accessible-taxis` (zero records, shown as unknown) | A link from a place page to the report form; routing facts are not used by the journey route |
-| Peers | `/more/peers`: topic list only | The peer request flow: the package holds wording the post-build check rejects |
+| Conditions | `/more/route-reports` (list, and the form for a place opened from its place page) and `/more/accessible-taxis` (zero records, shown as unknown) | Routing facts are not used by the journey route |
+| Peers | `/more/peers` (topic list) and `/more/peer-request` (the request flow with itemised consent, crisis signposting and on-device history) | Routing to a real peer programme: the recorded routing table holds no streams |
 | Events | `/more/event-organiser` and `/more/event-plan` | The per-event access page and journey hand-off, which need an event record; `/more/events` still lists demonstration events without them |
 | Advocacy | `/settings/advocacy`: the evidence pack export, as before. `/more/reports`: report tables and indicators on the package's labelled demonstration set; saving files needs the evidence-export permission | Tables from real consented reports; none exist |
 

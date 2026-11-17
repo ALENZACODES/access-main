@@ -24,6 +24,7 @@ export const LANE_STRINGS = {
       notFound: "No record with this identifier is in the data pack. Nothing is shown for it.",
       unavailable: "This record could not be read, or one of its facts has no source, licence, date or tier. Nothing is shown for it.",
       attribution: "Attribution",
+      reportRoute: "Report a route condition here",
     },
   },
   fr: {
@@ -43,6 +44,7 @@ export const LANE_STRINGS = {
       notFound: "Aucune fiche portant cet identifiant ne figure dans le jeu de données. Rien n’est affiché.",
       unavailable: "Cette fiche n’a pas pu être lue, ou l’un de ses faits n’a ni source, ni licence, ni date, ni niveau. Rien n’est affiché.",
       attribution: "Attribution",
+      reportRoute: "Signaler une condition du trajet à cet endroit",
     },
   },
 } as const;

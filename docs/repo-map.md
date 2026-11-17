@@ -38,23 +38,30 @@ Every result still passes through `guardModules`. When a package is not in `.lan
 | Route | Package and screen | Data shown |
 | --- | --- | --- |
 | `/more/employment` | access-tools `employment`: `EmploymentView`, with the commute check and referral summary | Labelled demonstration listings |
-| `/more/housing` | access-tools `housing`: `HousingFinder`, at the earlier pin `8befe99` | Labelled demonstration rooms |
+| `/more/housing` | access-tools `housing`: `HousingFinder`, with the unit and room depth finder and the on-device barrier evidence form | Labelled demonstration rooms and units; the person's own reports, on the device |
 | `/more/diary` | access-tools `diary` | Not changed or inspected in this round |
 | `/more/auditors` | access-tools `auditors`: `App`, with the record, programme, venue, cases and service panels | Labelled fixtures and the person's own entries |
 | `/more/handoff` | access-tools `handoff` | Labelled demonstration records |
 | `/more/games` | access-tools `games`: `GamesApp`, 25 games, dwell select setting | Rounds and settings, on the device |
 | `/more/safety` | access-tools `safety` | Not changed or inspected in this round |
-| `/more/route-reports` | access-maps `conditions`: `RouteReportsList`, and `RouteReportForm` when a place in the data is given with `?place=<id>` | Reports saved on the device. None ship |
+| `/more/route-reports` | access-maps `conditions`: `RouteReportsList`, and `RouteReportForm` when a place in the data is given with `?place=<id>`. Each place page (`/places/:id`) links there with its id ("Report a route condition here") | Reports saved on the device. None ship |
 | `/more/accessible-taxis` | access-maps `conditions`: `WavFinder` over `datasets/wav-services.json` | The published list, which holds zero records |
-| `/more/peers` | access-help `peers`: topic list | Topic names only |
+| `/more/peers` | access-help `peers`: topic list, and a link to the request flow | Topic names only |
+| `/more/peer-request` | access-help `peers`: `PeerRequestFlow`, with the package's on-device history | The person's own request, on the device. The recorded routing table holds no streams, so every request routes to Unknown. Nothing is sent |
 | `/more/events` | access-help `event-access`: demonstration records | Labelled demonstration events |
 | `/more/event-organiser` | access-help `event-access`: `OrganiserForm` | The organiser's own answers, on the device |
 | `/more/event-plan` | access-help `outings`: `EventOutingPlanner` | Labelled sample events and the person's own plans |
 | `/more/reports` | access-main `advocacy`: `ReportsPanel` | The package's labelled demonstration set. Saving files needs the evidence-export permission |
 
-Not mounted, and the change each one needs in its own package:
+All four package blockers recorded here on 16 November are fixed at the source and mounted: the report tables (access-main #143), the peer request flow (access-help #66), the housing depth finder and evidence form (access-tools #74; its aggregate counts are saved from a button, not a `data:` link, since access-tools #76). The games package's own shell list now defaults to all 25 games (access-tools #75); the shell still passes `GAME_LIBRARY` explicitly.
 
-- **Housing depth finder and barrier evidence form** (access-tools `housing` at `72d5580`, still true at that commit). `DepthFinder.tsx` renders `<section className="room-facts" aria-labelledby=...>` for every room of every unit, and the room names repeat from unit to unit (axe reports "unit entry"), so the page has several region landmarks with the same name and fails the axe `landmark-unique` rule. Change that `<section>` to a `<div>` (the `<h4>` already labels it), or name each region with the unit as well. Then move the `housing` pin in `lanes.hub.json`.
-- **Peer request flow** (access-help `peers`, `PeerRequestFlow`, still true at `4870fa9`). `src/strings.ts` holds the sentence "The App is not affiliated with or endorsed by any organisation." The post-build wording check (`apps/web/scripts/check-dist-overclaim.mjs`) fails on the words "endorsed by" anywhere in the bundle. Reword it in both languages without those words, for example "No organisation has endorsed the App."
-- **Route report form from a place page.** The form needs a place the shell has already resolved. `/more/route-reports?place=<id>` accepts one, but no page links to it yet; the place page belongs to another lane.
-- **Games list default** (access-tools `games`, `src/shell.ts`). `gamesShellModule.list()` and `listGamesForShell()` without an argument still list only the first ten games (`CATALOG`). The shell passes `GAME_LIBRARY` itself, so `/games` lists all 25. Making `GAME_LIBRARY` the default in the package would let any other host get the full list.
+### Journey from the place search (designed, not built)
+
+`/journey` stays unavailable. The access-maps `journey-data` planner (`createJourneyModule(source).plan({ origin, destination, profile, now, offline })`) takes two points; the shell form has two text fields. The pack can supply the points: every place record carries its own `lat` and `lon` fields with source, licence, date and tier, and `PackSource.search` finds a place by name. The build:
+
+1. **Resolve a place to a point** (`apps/web/src/modules/journey-resolve.ts`, new). `resolvePoint(source, label)` calls `source.search(label, { tranches: ["venue", "washroom", "transit"], limit: 10 })` and keeps hits whose normalised name equals the normalised label. None: `not-found`. More than one id: `ambiguous`, with the names, so the person chooses; the shell never chooses for them. Exactly one: `source.get(id)`, then the record's own `lat` and `lon` fields, used only when both exist, are finite and in range, and each has a source, licence, date and tier. `SearchHit.lat`/`lon` are not used: the in-memory search sets a missing coordinate to 0.
+2. **Choose from the search in the form** (`ModulePage.tsx`, journey form). Under each text field, the matches from the same `places.search` the `/places` page uses, each with a "Use this place" button; the chosen id is kept. Typed text that was not chosen goes through step 1.
+3. **Adapter** (`apps/web/src/modules/lane-adapters.ts`). Wrap the package's `createJourneyModule(source)`. Unavailable when the pack cannot be read, as `/places` is. When either place has no position: ready, no items, message key `journey.noCoordinates`, shown as "The planner is not available for this area: this place has no recorded position." (French: « Le planificateur n’est pas offert pour ce secteur : ce lieu n’a pas de position enregistrée. »), through a new case in `statusKey`. `RollProfile`: `stepFreeRequired: true`; grade and width limits only when the person recorded them, otherwise null.
+4. **Result** (`JourneyPlan`). One item for the rolling route when `roll` is not null: summary from the package's own `messages` (status and distance), provenance from the route evidence with the lowest tier and its `prototype_label`; the package notices are shown as text. Transit options are not mapped until a timetable source is pinned; the package already reports missing timetables.
+5. **Types.** Replace the `@access-maps/journey-data` declaration in `apps/web/src/modules/lane-packages.d.ts` with the package's real request and result types (it does not return the shell's `JourneyModule`).
+6. **Tests.** `resolvePoint`: exact match, none, ambiguous, no `lat`, `lat` without a source. Adapter mapping over a labelled fixture pack. The `ModulePage` "no position" state in both languages. The e2e checks that expect the journey form to be disabled stay true, because the e2e build has no data pack.

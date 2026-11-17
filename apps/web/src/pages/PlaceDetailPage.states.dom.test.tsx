@@ -113,4 +113,32 @@ describe("placeRouteView on the live place page", () => {
     expect(await screen.findByText(/d’une copie enregistrée/)).toBeTruthy();
     expect(screen.getByText(/d’une copie enregistrée/).textContent).not.toContain("'");
   });
+
+  it("links a found place to the route condition report form, in English and French", async () => {
+    get.mockResolvedValue(
+      ready([
+        {
+          id: "osm/node 1",
+          name: "Hall",
+          record: { id: "osm/node 1", tranche: "venue", region: "toronto", fields: {} },
+          sources: [],
+        },
+      ]),
+    );
+    for (const [lang, name] of [["en", "Report a route condition here"], ["fr", "Signaler une condition du trajet à cet endroit"]] as const) {
+      await i18n.changeLanguage(lang);
+      renderPage();
+      const link = await screen.findByRole("link", { name });
+      expect(link.getAttribute("href")).toBe("/more/route-reports?place=osm%2Fnode%201");
+      cleanup();
+    }
+  });
+
+  it("offers no report link when the place was not found", async () => {
+    get.mockResolvedValue(ready([]));
+    await i18n.changeLanguage("en");
+    renderPage();
+    await screen.findByRole("heading", { name: "This place was not found" });
+    expect(screen.queryByRole("link", { name: "Report a route condition here" })).toBeNull();
+  });
 });
