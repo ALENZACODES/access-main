@@ -33,6 +33,10 @@
 
 Every result still passes through `guardModules`. When a package is not in `.lanes/`, its route falls back to the unavailable state.
 
+### Map tiles (`/map`)
+
+`apps/web/src/map/tileCache.ts` reads the tile list from the pack manifest (`manifest.tiles`, written by access-maps since ce63f18): keys `open`, `odbl`, `odbl/n43` or `odbl/n43-w080`, each with `path`, `bytes`, `sha256`, `licence` and `bbox`. An entry with an unexpected key or path, a bad digest or size, no bounds, or ODbL data outside the `odbl` family is not loaded. Only the files whose bounds cover the visible area are loaded. Each whole file is checked against its size and SHA-256 before it is used or stored in the Cache API (`map-tiles-v2`); a file that fails is fetched once more with `cache: "no-store"`, and if it fails again it is listed as unavailable (`TileBandNotice`, a status region, English and French) while the other files keep working. A stored copy is checked again before use. The last tile list read is kept (`map-tile-list-v1`) so an offline visit finds the stored files. The OpenStreetMap credit reads "© OpenStreetMap contributors" in both languages.
+
 ### Routes under `/more` (16 November 2026)
 
 | Route | Package and screen | Data shown |
