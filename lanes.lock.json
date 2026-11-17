@@ -1,10 +1,10 @@
 {
   "version": 1,
   "packages": [
-    { "repo": "ALENZACODES/access-maps", "path": "packages/places-shell", "alias": "@access-maps/places-shell", "commit": "4274cd0c12d6cdd8061a08f1dedc2af744263234" },
-    { "repo": "ALENZACODES/access-maps", "path": "packages/journey", "alias": "@access-maps/journey", "commit": "4274cd0c12d6cdd8061a08f1dedc2af744263234" },
-    { "repo": "ALENZACODES/access-maps", "path": "packages/map-ui", "alias": "@access-maps/map-ui", "commit": "4274cd0c12d6cdd8061a08f1dedc2af744263234" },
-    { "repo": "ALENZACODES/access-maps", "path": "packages/journey-data", "alias": "@access-maps/journey-data", "commit": "4274cd0c12d6cdd8061a08f1dedc2af744263234" },
+    { "repo": "ALENZACODES/access-maps", "path": "packages/places-shell", "alias": "@access-maps/places-shell", "commit": "ce63f18a08e21ca86c42c5bdc9a02a11a711da4e" },
+    { "repo": "ALENZACODES/access-maps", "path": "packages/journey", "alias": "@access-maps/journey", "commit": "ce63f18a08e21ca86c42c5bdc9a02a11a711da4e" },
+    { "repo": "ALENZACODES/access-maps", "path": "packages/map-ui", "alias": "@access-maps/map-ui", "commit": "ce63f18a08e21ca86c42c5bdc9a02a11a711da4e" },
+    { "repo": "ALENZACODES/access-maps", "path": "packages/journey-data", "alias": "@access-maps/journey-data", "commit": "ce63f18a08e21ca86c42c5bdc9a02a11a711da4e" },
     { "repo": "ALENZACODES/access-tools", "path": "packages/finders", "alias": "@access-tools/finders", "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44" },
     { "repo": "ALENZACODES/access-tools", "path": "packages/place", "alias": "@access-tools/place", "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44" },
     { "repo": "ALENZACODES/access-tools", "path": "packages/navigator", "alias": "@access-tools/navigator", "commit": "6f35cecd184fc6e87b44930e2bb67ae7b1574f44" },

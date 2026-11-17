@@ -6,7 +6,8 @@ import { FeatureList } from "./FeatureList.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { StateNotice, getRouteEmpty, getRouteError } from "../states/index.ts";
-import { CachedPMTilesSource, tileArchiveUrl, warmRegionTiles } from "./tileCache.ts";
+import { TileBandNotice, type TileFailure } from "./TileBandNotice.tsx";
+import { filesForView, readTileList, TileFileUnavailable, VerifiedPMTilesSource, warmRegionTiles, type BBox, type TileFile } from "./tileCache.ts";
 import "./map.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -102,6 +103,10 @@ export function MapPage() {
   const canvas = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapInstance | null>(null);
   const layerIds = useRef<string[]>([]);
+  const layerCategories = useRef(new Map<string, Category>());
+  const enabledRef = useRef<Category[]>(categories);
+  const [tileFailures, setTileFailures] = useState<TileFailure[]>([]);
+  const [tileListUnavailable, setTileListUnavailable] = useState(false);
   const [places, setPlaces] = useState<Place[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [enabled, setEnabled] = useState<Category[]>(categories);
@@ -146,15 +151,16 @@ export function MapPage() {
         const [lib, tiles] = await Promise.all([import("maplibre-gl"), import("pmtiles")]);
         if (disposed || !canvas.current) return;
         maplibre = lib;
-        const url = tileArchiveUrl();
-        const archive = new tiles.PMTiles(new CachedPMTilesSource(url));
         protocol = new tiles.Protocol();
-        protocol.add(archive);
         lib.addProtocol("pmtiles", protocol.tile);
-        const metadata = await archive.getMetadata() as { vector_layers?: Array<{ id: string }> };
+        // The tile files come from the pack manifest's tile list; none is at a fixed path.
+        let files: TileFile[] = [];
+        try {
+          files = (await readTileList()).files;
+        } catch {
+          if (!disposed) { setTileListUnavailable(true); setLoading(false); }
+        }
         if (disposed || !canvas.current) return;
-        const layers = (metadata.vector_layers ?? []).map(({ id }) => ({ id, category: tileLayerName(id) }))
-          .filter((item): item is { id: string; category: Category } => item.category !== null);
         map = new lib.Map({
           container: canvas.current,
           attributionControl: false,
@@ -162,7 +168,7 @@ export function MapPage() {
           keyboard: false,
           style: {
             version: 8,
-            sources: { places: { type: "vector", url: `pmtiles://${url}` } },
+            sources: {},
             layers: [{ id: "plain-background", type: "background", paint: { "background-color": "#eeeae1" } }],
           },
           center: [-79.38, 43.65], zoom: 11, fadeDuration: 0,
@@ -173,22 +179,50 @@ export function MapPage() {
         silenceMapMotion(activeMap);
         activeMap.getCanvas().tabIndex = -1;
         activeMap.getCanvas().setAttribute("aria-hidden", "true");
-        activeMap.on("load", () => {
-          if (disposed) return;
-          for (const layer of layers) {
-            const id = `places-${layer.id}`;
-            activeMap.addLayer({
-              id, type: "circle", source: "places", "source-layer": layer.id,
-              paint: {
-                "circle-color": ["match", ["downcase", ["to-string", ["coalesce", ["get", "wheelchair"], "unknown"]]],
-                  "yes", PAINT.yes, "true", PAINT.yes, "no", PAINT.no, "false", PAINT.no, PAINT.unknown],
-                "circle-radius": 8, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
-              },
-            });
-            layerIds.current.push(id);
+        // Each file is added once, when it first covers the view, and only after it passed its check.
+        const started = new Set<string>();
+        const addFile = async (file: TileFile, index: number) => {
+          const archive = new tiles.PMTiles(new VerifiedPMTilesSource(file));
+          try {
+            const metadata = await archive.getMetadata() as { vector_layers?: Array<{ id: string }> };
+            if (disposed) return;
+            protocol?.add(archive);
+            const sourceId = `tiles-${index}`;
+            activeMap.addSource(sourceId, { type: "vector", url: `pmtiles://${file.url}` });
+            for (const { id: sourceLayer } of metadata.vector_layers ?? []) {
+              const category = tileLayerName(sourceLayer);
+              if (!category) continue;
+              const id = `${sourceId}-${sourceLayer}`;
+              activeMap.addLayer({
+                id, type: "circle", source: sourceId, "source-layer": sourceLayer,
+                layout: { visibility: enabledRef.current.includes(category) ? "visible" : "none" },
+                paint: {
+                  "circle-color": ["match", ["downcase", ["to-string", ["coalesce", ["get", "wheelchair"], "unknown"]]],
+                    "yes", PAINT.yes, "true", PAINT.yes, "no", PAINT.no, "false", PAINT.no, PAINT.unknown],
+                  "circle-radius": 8, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+                },
+              });
+              layerIds.current.push(id);
+              layerCategories.current.set(id, category);
+            }
+          } catch (cause) {
+            if (disposed) return;
+            const reason = cause instanceof TileFileUnavailable ? cause.reason : "integrity";
+            setTileFailures((current) => current.some((item) => item.file.key === file.key) ? current : [...current, { file, reason }]);
           }
+        };
+        const coverView = async () => {
+          if (disposed) return;
+          const bounds = activeMap.getBounds();
+          const view: BBox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+          const wanted = filesForView(files, view).filter((file) => !started.has(file.key));
+          for (const file of wanted) started.add(file.key);
+          await Promise.all(wanted.map((file) => addFile(file, files.indexOf(file))));
           refresh();
-        });
+          if (!disposed && files.length > 0 && layerIds.current.length === 0) setLoading(false);
+        };
+        activeMap.on("load", () => { void coverView(); });
+        activeMap.on("moveend", () => { void coverView(); });
         activeMap.on("idle", refresh);
         activeMap.on("click", (event) => {
           const features = activeMap.queryRenderedFeatures(event.point, { layers: layerIds.current });
@@ -201,8 +235,8 @@ export function MapPage() {
         activeMap.on("error", () => setError(true));
         // Downloaded regions from I3 may dispatch this event after a completed download.
         const onRegion = (event: Event) => {
-          const detail = (event as CustomEvent<{ bbox?: [number, number, number, number] }>).detail;
-          if (detail?.bbox) void warmRegionTiles(archive, detail.bbox);
+          const detail = (event as CustomEvent<{ bbox?: BBox }>).detail;
+          if (detail?.bbox) void warmRegionTiles(files, detail.bbox);
         };
         window.addEventListener("access:region-downloaded", onRegion);
         cleanupRegion = () => window.removeEventListener("access:region-downloaded", onRegion);
@@ -211,6 +245,7 @@ export function MapPage() {
       }
     };
     let cleanupRegion = () => {};
+    const categoriesForLayers = layerCategories.current;
     void init();
     return () => {
       disposed = true;
@@ -219,16 +254,18 @@ export function MapPage() {
       if (maplibre && protocol) maplibre.removeProtocol("pmtiles");
       mapRef.current = null;
       layerIds.current = [];
+      categoriesForLayers.clear();
       setMapReady(false);
     };
   }, [refresh]);
 
   // Map instance is assigned only after construction, not after the first render.
   useEffect(() => {
+    enabledRef.current = enabled;
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
     for (const id of layerIds.current) {
-      const category = tileLayerName(id);
+      const category = layerCategories.current.get(id) ?? null;
       map.setLayoutProperty(id, "visibility", category && enabled.includes(category) ? "visible" : "none");
     }
     refresh();
@@ -279,6 +316,7 @@ export function MapPage() {
         <div ref={canvas} className="map-viewport" aria-hidden="true" data-testid="map-viewport" />
         <section className="map-results" aria-label={t("map.list")}>
           <p role="status">{loading ? t("map.loading") : `${visible.length} ${t("map.records")}`}</p>
+          <TileBandNotice failures={tileFailures} listUnavailable={tileListUnavailable} />
           {libraryError && <p id="map-library-error" role="alert">{t("map.libraryUnavailable")} {t("map.controlsUnavailable")}</p>}
           {/* Offline, the map's data cannot load: say so with the offline state. Online, a load
               failure is not a pack download, so the map's own message is kept. */}
