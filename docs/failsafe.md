@@ -18,15 +18,18 @@ The import and pack side of the same guarantee is in access-maps `docs/failsafe.
 - That the data is complete or current. A stale cell is the last verified copy, not today's data.
 - That a part which never decompresses can be partly used. It fails as a whole after its hash check.
 - That a cell with one failed part shows its other parts (see `docs/failsafe-audit.md`).
-- That the app shows these states. The data client reports them; the screens must show them (next section).
 
-## Wiring for the integration lane
+## Where the app shows these states
 
-The data client exports everything needed; no app file was changed by this lane. Suggested changes, owned by the integration lane:
+The data client exports everything needed. The `/offline` page (`apps/web/src/offline/RegionPackPage.tsx`, `RegionFailsafeNotes`) shows, for each region, in English and French:
 
-- `apps/web/src/offline/RegionPackPage.tsx`: after `regions()`, show `status.unavailable` as "Unavailable" for those cells (reason in a details row), `status.staleCells` as "Showing the last verified copy", and `status.droppedRecords > 0` as "N records could not be checked and are not shown". English and French strings go in the app catalogue.
-- Map and list screens that call `records()` need no change: dropped records are never yielded.
-- `apps/web/src/modules/data-client-fallback.ts` and `lane-packages.d.ts` may add the optional `staleCells`, `droppedRecords` and `unavailable` fields to their `RegionStatus` copy if they mirror it.
+- each cell in `status.unavailable` as "Unavailable", with the reason the pack builder recorded (two withheld parts in one cell read as one cell with both reasons);
+- the cells in `status.staleCells`, under a note that the last checked copy saved on the device is shown for them;
+- `status.droppedRecords > 0` as "N records failed the checks on this device and are not shown".
+
+The notes sit in one `role="status"` container per region, so a change after a download or a check is announced. Strings are in `apps/web/src/offline/catalog.ts`. Tests: `RegionPackPage.dom.test.tsx` (both languages, axe) and `apps/web/e2e/offline-robust.spec.ts` (a served fixture pack with a withheld part, a record without a licence and a rebuilt cell; both languages, axe).
+
+Map and list screens that call `records()` need no change: dropped records are never yielded.
 
 ## Reading the counters
 

@@ -43,7 +43,9 @@ function build(builtAt: string, label: string) {
   return { manifest, files };
 }
 
-async function serve(page: Page, initial: ReturnType<typeof build>) {
+type ServedPack = { manifest: object; files: Map<string, Buffer> };
+
+async function serve(page: Page, initial: ServedPack) {
   let pack = initial;
   let failing = "";
   await page.route("**/data/**", async (route) => {
@@ -54,7 +56,7 @@ async function serve(page: Page, initial: ReturnType<typeof build>) {
     return route.fulfill({ body, contentType: "application/octet-stream" });
   });
   return {
-    use(next: ReturnType<typeof build>) { pack = next; },
+    use(next: ServedPack) { pack = next; },
     fail(path: string) { failing = path; },
   };
 }
@@ -151,3 +153,69 @@ test("offline regions: low storage stops before a cell and names what is not dow
   await expect(region.locator(`[data-cell-status="unknown"]`)).toHaveCount(0);
   await axeClean(page, "quota");
 });
+
+// Fail-safe states the data client reports (docs/failsafe.md): a withheld part,
+// a record that fails the device check, and a cell shown from its last checked
+// copy after a rebuild changes the part behind the same path. Test data only.
+function buildFailsafe(builtAt: string, label: string) {
+  const files = new Map<string, Buffer>();
+  const tranche: Record<string, { bbox: [number, number, number, number]; parts: object[] }> = {};
+  const search: Record<string, object> = {};
+  const field = (value: string, licence = "ODbL-1.0") => ({ value, source_id: "osm-test", licence, retrieved_at: "2026-11-01", tier: 1 });
+  cells.forEach((cell, index) => {
+    const name = index === 0 ? `Test venue ${label}` : "Test venue steady";
+    const good = { id: `test:${index}`, tranche: "venue", region: "toronto", fields: { name: field(name) } };
+    // The first cell also carries a record with no licence: the device check drops and counts it.
+    const lines = index === 0 ? [good, { id: "test:bad", tranche: "venue", region: "toronto", fields: { name: field("Test venue bad", "") } }] : [good];
+    const venue = gz(lines.map((line) => JSON.stringify(line)).join("\n") + "\n");
+    // Same path in every build, so a rebuilt first cell is stale until it is downloaded again.
+    const venuePath = `venues/osm-test/${cell}.ndjson.gz`;
+    files.set(venuePath, venue.bytes);
+    tranche[cell] = { bbox: [-80, 43.5 + index / 2, -79.5, 44 + index / 2], parts: [{ path: venuePath, bytes: venue.bytes.byteLength, sha256: venue.sha256, count: lines.length, sourceId: "osm-test" }] };
+    const hits = gz(JSON.stringify([{ id: good.id, tranche: "venue", name, nameNorm: name.toLowerCase(), lat: 43.7 + index / 2, lon: -79.7 }]));
+    const searchPath = `pack/v1/search/${cell}-${index === 0 ? label : "steady"}.json.gz`;
+    files.set(searchPath, hits.bytes);
+    search[cell] = { path: searchPath, bytes: hits.bytes.byteLength, sha256: hits.sha256, count: 1 };
+  });
+  const manifest = {
+    version: 1, builtAt, sourceCommit: "e2e",
+    sources: [{ sourceId: "osm-test", name: "OpenStreetMap", licence: "ODbL-1.0", retrieved: "2026-11-01", inWebPack: true }],
+    regions: [{ id: "toronto", label: { en: "Toronto", fr: "Toronto" }, bbox: [-80, 43.5, -79.5, 44.5], cells: [...cells] }],
+    tranches: { venue: { cells: tranche } }, search, tiles: {},
+    counts: { records: 3, byTranche: { venue: 3 }, bySource: { "osm-test": 3 } },
+    withheld: [{ path: `paths/osm-test/${cells[1]}.ndjson.gz`, sourceId: "osm-test", tranche: "path", cell: cells[1], reason: "held-for-review" }],
+  };
+  return { manifest, files };
+}
+
+for (const language of ["en", "fr"] as const) {
+  test(`offline regions: unavailable, dropped and last-checked-copy states are shown (${language})`, async ({ page }) => {
+    const c = offlineCatalog[language];
+    const server = await serve(page, buildFailsafe("2026-10-01T12:00:00Z", "v1"));
+    await page.goto("/offline");
+    if (language === "fr") await page.getByRole("button", { name: "Français" }).click();
+    const region = page.locator(".record-list > li").filter({ has: page.getByRole("heading", { name: "Toronto" }) });
+    const notes = region.getByTestId("failsafe-toronto");
+    await expect(notes).toHaveAttribute("role", "status");
+
+    // Withheld before anything is downloaded: the cell reads Unavailable with the builder's reason.
+    await expect(notes.locator('[data-failsafe="unavailable"]')).toHaveText(`${cells[1]} — ${c.failsafeUnavailable}. ${c.failsafeReason}held-for-review`);
+    await expect(notes.locator('[data-failsafe="dropped"]')).toHaveCount(0);
+    await axeClean(page, `${language} unavailable`);
+
+    // After the download, the record that failed the device check is counted, not shown.
+    await region.getByRole("button", { name: text[language].download, exact: true }).click();
+    await expect(page.getByText(c.complete)).toBeVisible();
+    await expect(notes.locator('[data-failsafe="dropped"]')).toHaveText(c.failsafeDroppedOne);
+    await expect(page.getByText("Test venue bad")).toHaveCount(0);
+    await axeClean(page, `${language} dropped`);
+
+    // A rebuild changes the first cell behind the same path: its last checked copy stands in.
+    server.use(buildFailsafe("2026-11-15T12:00:00Z", "v2"));
+    await page.reload();
+    await expect(notes).toContainText(c.failsafeStale);
+    await expect(notes.locator('[data-failsafe="stale"]')).toHaveText([cells[0]]);
+    await expect(notes.locator('[data-failsafe="unavailable"]')).toHaveCount(1);
+    await axeClean(page, `${language} stale`);
+  });
+}
