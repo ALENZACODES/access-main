@@ -54,7 +54,7 @@ export const en = {
   },
   areas: {
     places: "Place pages will list only records that carry a source, a licence, a date, and a tier.",
-    journey: "Door-to-door planning is not connected. Live elevator status is not available in this shell.",
+    journey: "Plans a rolling route between two places in the data pack, where its recorded paths cover the area. Live elevator status is not available in this shell.",
     finders: "Washroom, parking, charging, and repair search will not treat a municipal flag as a measurement.",
     navigator: "A services directory of links. It will not say whether you qualify for a program.",
     games: "Games hub. Not therapy, not an assessment, and not medical advice.",
@@ -197,7 +197,7 @@ export const en = {
       "Place pages will show a source, a licence, a date, and a verification tier on every record. Nothing is loaded. Unknown stays unknown.",
     journeyTitle: "Journey",
     journeyBody:
-      "Door-to-door planning for travel in Ontario is not connected. Route preferences in settings stay on this device and are not sent anywhere. Live elevator status is unavailable. An offline plan, when one exists, will show an as-of time.",
+      "Plans a rolling route between two places in the data pack on this device, using only the paths that pack records. Route preferences in settings stay on this device and are not sent anywhere. Live elevator status is unavailable. A plan shows its source, its date and what is Unknown.",
     findersTitle: "Finders",
     findersBody:
       "Washrooms, parking, charging, repair, and adult change tables are not listed, because no records are loaded. A municipal accessible flag is not a measurement of turning space, transfer side, or a hoist.",

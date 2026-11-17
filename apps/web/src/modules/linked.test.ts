@@ -98,9 +98,10 @@ describe.skipIf(!mapsReady)("linked registry over two real ODbL records (maps)",
     expectProvenance(result);
   });
 
-  it("journey: unavailable until origin and destination coordinates are wired, with no invented trip", async () => {
+  it("journey: ready and waiting for two places, with no invented trip", async () => {
+    // The planner is mounted (lane-adapters.ts): with no place asked for it plans nothing.
     const result = await registry().journey.plan({ originLabel: null, destinationLabel: null, routingPreference: null, offline: false }, ctx);
-    expect(result).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
+    expect(result).toMatchObject({ availability: "ready", items: [], messageKey: "journey.awaiting" });
   });
 
   it("places stays unavailable when the pack cannot be read", async () => {

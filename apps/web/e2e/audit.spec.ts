@@ -186,6 +186,7 @@ test("Day 17: every shell route is audited in English and French", async ({ page
   const screens: Array<{ route: string; language: Language; firstStop: string; stops: number; noTrap: boolean; axe: string[] }> = [];
   const fail = (failure: Omit<Failure, "id">) => failures.push({ ...failure, id: `F${failures.length + 1}` });
   expect(ROUTES.length, "the shell route list shrank, so routes may have dropped out of the audit").toBeGreaterThanOrEqual(31);
+  expect(ROUTES, "the journey planner route must stay in the audit").toContain("/journey");
 
   for (const language of ["en", "fr"] as const) {
     if (language === "fr") {

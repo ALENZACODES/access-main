@@ -87,8 +87,12 @@ test("module pages do not invent places and axe is clean", { annotation: [{ type
 
   await page.goto("/finders");
   await expect(page.getByRole("radio", { name: "Washroom" })).toBeDisabled();
+  // No data pack in the e2e build: the mounted planner is unavailable, and every journey control stays off.
   await page.goto("/journey");
+  await expect(page.getByText("This part of the App is not available yet. No records are shown.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Plan this journey" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Find places for From" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Find places for To" })).toBeDisabled();
   await page.goto("/help");
   await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
 });
