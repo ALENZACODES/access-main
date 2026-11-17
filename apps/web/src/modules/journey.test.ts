@@ -147,7 +147,7 @@ describe("journey adapter over the labelled fixture pack", () => {
     const item = result.items[0]!;
     const copy = LANE_STRINGS[locale].journey;
     expect(item.summary).toContain(copy.stepFree);
-    expect(item.summary).toMatch(locale === "en" ? /^Rolling route: 111 m\./ : /^Parcours en fauteuil : 111 m\./);
+    expect(item.summary).toMatch(locale === "en" ? /^Rolling route: 111 m\./ : /^Parcours en fauteuil\u00a0: 111\u00a0m\./);
     expect(item.provenance).toMatchObject({ source_name: "Fixture source (test data)", licence: "ODbL-1.0", tier: 1, prototype_label: "PROTOTYPE-UNVERIFIED", source_date: "2026-11-01" });
     expect(item.endpoints?.map((end) => [end.role, end.id, end.position.source_name, end.position.tier])).toEqual([
       ["origin", "fixture:a", "Fixture source (test data)", 1],

@@ -85,7 +85,7 @@ export function rollPlan(
   const names = new Map(result.sources.map((entry) => [entry.sourceId, entry.name]));
   return {
     id: `roll:${origin.id}:${destination.id}`,
-    summary: `${messages[locale].roll}${locale === "fr" ? " :" : ":"} ${distance}. ${status}`,
+    summary: `${messages[locale].roll}${locale === "fr" ? "\u00a0:" : ":"} ${distance}. ${status}`,
     provenance: {
       source_name: evidence.sourceName,
       source_url: null,

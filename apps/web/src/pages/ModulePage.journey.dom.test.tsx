@@ -154,7 +154,7 @@ describe("/journey with the planner mounted", () => {
   it.each(["en", "fr"] as const)("shows what the planner returned with its provenance, positions and notes (%s)", async (lang) => {
     const item: JourneyPlan = {
       id: "roll:fixture:a:fixture:b",
-      summary: lang === "en" ? "Rolling route: 111 m. Fixture summary." : "Parcours en fauteuil : 111 m. Résumé d’exemple.",
+      summary: lang === "en" ? "Rolling route: 111 m. Fixture summary." : "Parcours en fauteuil\u00a0: 111\u00a0m. Résumé d’exemple.",
       provenance: provenance as JourneyPlan["provenance"],
       liveStatus: "unavailable",
       notices: ["Fixture planner note"],
