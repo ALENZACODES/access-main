@@ -109,8 +109,20 @@ export interface PlacesModule {
 export interface JourneyRequest {
   originLabel: string | null;
   destinationLabel: string | null;
+  /** Record id the person chose from the place search. When set, it is used instead of the label. */
+  originId?: string | null;
+  destinationId?: string | null;
   routingPreference: RoutingPreference | null;
   offline: boolean;
+}
+
+/** One end of a planned journey: the place and the source of its recorded position. */
+export interface JourneyEndpoint {
+  role: "origin" | "destination";
+  id: string;
+  name: string;
+  /** The source of the record's own latitude and longitude, as the pack records it. */
+  position: { source_id: string; source_name: string; licence: string; retrieved_at: string; tier: 0 | 1 | 2 | 3 | 4 };
 }
 
 export interface JourneyPlan {
@@ -118,6 +130,9 @@ export interface JourneyPlan {
   summary: string;
   provenance: Provenance;
   liveStatus: "unavailable";
+  /** The planner's own notes (Unknown fields, missing timetables, limits), shown as text. */
+  notices?: string[];
+  endpoints?: JourneyEndpoint[];
 }
 
 export interface JourneyModule {

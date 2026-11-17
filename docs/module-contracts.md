@@ -5,7 +5,7 @@
 | Id | Route | Package this route calls | This build |
 | --- | --- | --- | --- |
 | `places` | `/places` | `access-maps` (`ALENZACODES/access-maps`) | Search stays off. No records, because the open-data files are not bundled. No map canvas and no map attribution. |
-| `journey` | `/journey` | `@access-maps/journey` | Origin and destination stay off. No itinerary. Live elevator status stays unavailable. |
+| `journey` | `/journey` | `@access-maps/journey-data` | Rolling route from the planner over the data pack, between places with recorded positions. No transit times without a timetable source. Live elevator status stays unavailable. |
 | `finders` | `/finders` | `@access-tools/finders` | Kind and text stay off. No washroom, parking, charging, repair, or adult-change records. Fixture places are not copied. |
 | `navigator` | `/navigator` | `@access-tools/navigator` at `5f893a8` | No directory links are bundled in the page. A stored entry is `directory-record-1.0.0` with `verificationTier: "administrator_page"`, `notEligibilityAdvice: true`, and an `https` `officialUrl`. The cache provenance tier is `E`. A `directory-record-1.1.0` payload, or a payload field named `tier`, is rejected. |
 | `games` | `/games` | `@access-tools/games` at `5f893a8` | No activities yet. A real activity must set `clinicalClaim` and `seizureRiskFlash` to `false`. |
@@ -19,7 +19,7 @@ Tier ids and the access-tools string map, including `administrator_page` → `E`
 
 The directory payload matches access-tools pull request 2 (`DirectoryRecord` in `packages/navigator`). Unknown keys are rejected, including a key named `eligibility`. `packages/schema/TIERS.md` maps `administrator_page` to tier `E`: a desk check of an official page, not an eligibility decision. A stored directory link uses that mapping: `canonicalTierFromForeign` reads `verificationTier` and the provenance tier must match. It is not a hard-coded `E`.
 
-`SHELL_CONTRACT_VERSION` is `1.1.0`. Bump it when a field changes meaning.
+`SHELL_CONTRACT_VERSION` is `1.2.0`. Bump it when a field changes meaning. Optional fields added without a change of meaning: `JourneyRequest.originId` and `destinationId` (a record id chosen from the place search), and `JourneyPlan.notices` and `endpoints` (the planner's notes, and the source of each end's position).
 
 ## Contract check before display
 

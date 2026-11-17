@@ -37,6 +37,16 @@ describe("statusKey", () => {
     expect(statusKey({ ...games, items: [] })).toBe("modules.empty");
   });
 
+  it("uses the journey adapter's own sentence for a ready journey result", () => {
+    const journey = (messageKey: string, items: unknown[] = []) => ({ ...result("ready", items, messageKey), moduleId: "journey" as const });
+    expect(statusKey(journey("journey.noCoordinates"))).toBe("journey.noCoordinates");
+    expect(statusKey(journey("journey.planned", [{ id: "roll" }]))).toBe("journey.planned");
+    // Only ready journey results, and only keys in the journey namespace.
+    expect(statusKey(journey("modules.ready"))).toBe("modules.empty");
+    expect(statusKey({ ...journey("journey.noArea"), availability: "stub" })).toBe("modules.unavailable");
+    expect(statusKey(result("ready", [], "journey.noArea"))).toBe("modules.empty");
+  });
+
   it("keeps unavailable and error states", () => {
     expect(statusKey(result("stub", []))).toBe("modules.unavailable");
     expect(statusKey(result("error", [], "modules.contractError"))).toBe("modules.contractError");
