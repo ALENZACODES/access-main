@@ -61,6 +61,39 @@ async function cellReports(pack: PackManifest, statuses: RegionStatus[]): Promis
 const formatBytes = (bytes: number, language: string) => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bytes / 1024) + " KiB";
 
 
+/**
+ * Fail-safe states the data client reports for one region (docs/failsafe.md):
+ * cells the pack builder withheld, cells shown from the last checked copy, and
+ * records that failed the device check. The container is a status region so a
+ * change after a download or a check is announced.
+ */
+export function RegionFailsafeNotes({ region, language }: { region: RegionStatus; language: "en" | "fr" }) {
+  const c = offlineCatalog[language];
+  const unavailable = new Map<string, string[]>();
+  for (const item of region.unavailable ?? []) {
+    const key = item.cell ?? item.path;
+    const reasons = unavailable.get(key) ?? [];
+    if (!reasons.includes(item.reason)) reasons.push(item.reason);
+    unavailable.set(key, reasons);
+  }
+  const stale = region.staleCells ?? [];
+  const dropped = region.droppedRecords ?? 0;
+  const droppedText = dropped === 1 ? c.failsafeDroppedOne : c.failsafeDroppedMany.replace("{count}", dropped.toLocaleString(language));
+  return <div role="status" className="stack" data-testid={`failsafe-${region.id}`}>
+    {unavailable.size > 0 && <div className="stack">
+      <p>{c.failsafeUnavailableIntro}</p>
+      <ul>{[...unavailable].map(([cell, reasons]) => <li key={cell} data-failsafe="unavailable">
+        <span lang="und">{cell}</span> — <strong>{c.failsafeUnavailable}</strong>. {c.failsafeReason}{reasons.map((reason, index) => <span key={reason}>{index > 0 ? "; " : ""}<span lang="und">{reason}</span></span>)}
+      </li>)}</ul>
+    </div>}
+    {stale.length > 0 && <div className="stack">
+      <p>{c.failsafeStale}</p>
+      <ul>{stale.map((cell) => <li key={cell} data-failsafe="stale"><span lang="und">{cell}</span></li>)}</ul>
+    </div>}
+    {dropped > 0 && <p data-failsafe="dropped">{droppedText}</p>}
+  </div>;
+}
+
 /** Inventory and storage-headroom dashboard for one region, mounted on the live /offline page. */
 function RegionInventoryDashboard({ source, pack, regionId, language }: { source: PackSource; pack: PackManifest; regionId: string; language: "en" | "fr" }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -290,6 +323,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         <h2>{region.label[language]}</h2>
         <p>{c.size}: {formatBytes(region.bytes, language)}. {c.counts}: {region.count.toLocaleString(language)}.</p>
         <p data-testid="region-state">{checkedStatuses[region.id] === "corrupt" ? packIntegrityCopy(language, "corrupt").title : checkedStatuses[region.id] === "unknown" ? c.unknown : region.downloaded ? c.downloaded : statuses.includes("stale") ? r.staleRegion : partial ? r.partial : c.notDownloaded}</p>
+        <RegionFailsafeNotes region={region} language={language} />
         {report.length > 0 && <details className="region-cells">
           <summary style={{ minHeight: 44, display: "flex", alignItems: "center" }}>{cellSummaryText(language, statuses)}</summary>
           <ul>{report.map((cell) => <li key={cell.id} data-cell-status={cell.lookup.status}>
