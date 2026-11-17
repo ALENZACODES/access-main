@@ -52,7 +52,7 @@ function part(overrides: Partial<RegionIntegrityPart> = {}): RegionIntegrityPart
   };
 }
 
-function mockSource(options: { parts: RegionIntegrityPart[]; fetchBytes?: Uint8Array }): PackSource {
+function mockSource(options: { parts: RegionIntegrityPart[]; fetchBytes?: Uint8Array; regions?: () => Promise<RegionStatus[]> }): PackSource {
   return {
     manifest: async () => manifest,
     cellsFor: async () => ["n43.5_w079.5"],
@@ -60,7 +60,7 @@ function mockSource(options: { parts: RegionIntegrityPart[]; fetchBytes?: Uint8A
     search: async () => [],
     get: async () => null,
     sourcesFor: () => [],
-    regions: async () => [status],
+    regions: options.regions ?? (async () => [status]),
     downloadRegion: async () => status,
     deleteRegion: async () => undefined,
     storedRegionIntegrity: async () => ({ regionId: "toronto", cellCount: 1, parts: options.parts }),
@@ -130,5 +130,63 @@ describe("offline region integrity re-check", () => {
     await waitFor(() => expect(source.commitCheckedRegion).toHaveBeenCalledTimes(1));
     expect(await screen.findByText(offlineCatalog.en.complete)).toBeTruthy();
     expect(screen.queryByRole("heading", { name: packIntegrityCopy("en", "corrupt").title })).toBeNull();
+  });
+});
+
+describe("offline region fail-safe states (docs/failsafe.md)", () => {
+  const failsafe: RegionStatus = {
+    ...status,
+    cells: ["n43.5_w079.5", "n44.0_w079.5", "n44.5_w079.5"],
+    unavailable: [
+      { path: "venues/osm-test/n44.0_w079.5.ndjson.gz", sourceId: "osm-test", tranche: "venue", cell: "n44.0_w079.5", reason: "source-held" },
+      { path: "paths/osm-test/n44.0_w079.5.ndjson.gz", sourceId: "osm-test", tranche: "path", cell: "n44.0_w079.5", reason: "too-large" },
+    ],
+    staleCells: ["n44.5_w079.5"],
+    droppedRecords: 3,
+  };
+
+  it.each(["en", "fr"] as const)("names unavailable cells with the builder's reason, stale cells and the dropped count (%s)", async (locale) => {
+    const c = offlineCatalog[locale];
+    const { container } = await view(locale, mockSource({ parts: [part()], regions: async () => [failsafe] }));
+    await screen.findByRole("heading", { name: c.title });
+    const notes = await screen.findByTestId("failsafe-toronto");
+    await waitFor(() => expect(notes.querySelector('[data-failsafe="dropped"]')).not.toBeNull());
+    expect(notes.getAttribute("role")).toBe("status");
+    expect(notes.textContent).toContain(c.failsafeUnavailableIntro);
+    const unavailable = notes.querySelectorAll('[data-failsafe="unavailable"]');
+    // Two withheld parts in one cell read as one unavailable cell with both reasons.
+    expect(unavailable).toHaveLength(1);
+    expect(unavailable[0]?.textContent).toBe(`n44.0_w079.5 — ${c.failsafeUnavailable}. ${c.failsafeReason}source-held; too-large`);
+    expect(notes.textContent).toContain(c.failsafeStale);
+    expect([...notes.querySelectorAll('[data-failsafe="stale"]')].map((item) => item.textContent)).toEqual(["n44.5_w079.5"]);
+    expect(notes.querySelector('[data-failsafe="dropped"]')?.textContent).toBe(c.failsafeDroppedMany.replace("{count}", "3"));
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it.each(["en", "fr"] as const)("uses the singular for one dropped record and shows nothing else (%s)", async (locale) => {
+    const c = offlineCatalog[locale];
+    await view(locale, mockSource({ parts: [part()], regions: async () => [{ ...status, staleCells: [], unavailable: [], droppedRecords: 1 }] }));
+    const notes = await screen.findByTestId("failsafe-toronto");
+    await waitFor(() => expect(notes.textContent).toBe(c.failsafeDroppedOne));
+    expect(notes.querySelector('[data-failsafe="unavailable"]')).toBeNull();
+    expect(notes.querySelector('[data-failsafe="stale"]')).toBeNull();
+  });
+
+  it("keeps the status region empty when the data client reports no fail-safe state", async () => {
+    await view("en", mockSource({ parts: [part()] }));
+    const notes = await screen.findByTestId("failsafe-toronto");
+    expect(notes.getAttribute("role")).toBe("status");
+    expect(notes.textContent).toBe("");
+  });
+
+  it("announces a new fail-safe state in the same status region after a check", async () => {
+    let current: RegionStatus = { ...status, droppedRecords: 0 };
+    await view("en", mockSource({ parts: [part()], regions: async () => [current] }));
+    const notes = await screen.findByTestId("failsafe-toronto");
+    expect(notes.textContent).toBe("");
+    current = { ...status, droppedRecords: 2 };
+    fireEvent.click(screen.getByRole("button", { name: offlineCatalog.en.recheck }));
+    await waitFor(() => expect(screen.getByTestId("failsafe-toronto").textContent).toBe(offlineCatalog.en.failsafeDroppedMany.replace("{count}", "2")));
+    expect(screen.getByTestId("failsafe-toronto")).toBe(notes);
   });
 });
