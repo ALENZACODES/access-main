@@ -57,7 +57,7 @@ export const fr: Messages = {
   },
   areas: {
     places: "Les fiches de lieux n'afficheront que des enregistrements avec une source, une licence, une date et un niveau.",
-    journey: "La planification de porte à porte n'est pas branchée. L'état des ascenseurs en direct n'est pas disponible dans cette interface.",
+    journey: "Planifie un parcours en fauteuil entre deux lieux du jeu de données, là où ses chemins enregistrés couvrent le secteur. L'état des ascenseurs en direct n'est pas disponible dans cette interface.",
     finders:
       "La recherche de toilettes, de stationnement, de recharge et de réparation ne prendra pas un indicateur municipal pour une mesure.",
     navigator: "Un répertoire de liens vers des services. Il ne tranche pas l'admissibilité à un programme.",
@@ -206,7 +206,7 @@ export const fr: Messages = {
       "Les fiches de lieux afficheront une source, une licence, une date et un niveau de vérification sur chaque enregistrement. Rien n'est chargé. L'inconnu reste inconnu.",
     journeyTitle: "Trajet",
     journeyBody:
-      "La planification de porte à porte pour les déplacements en Ontario n'est pas branchée. Les préférences d'itinéraire des réglages restent sur cet appareil et ne sont envoyées nulle part. L'état des ascenseurs en direct n'est pas disponible. Un plan hors ligne, quand il existera, affichera une date.",
+      "Planifie un parcours en fauteuil entre deux lieux du jeu de données de cet appareil, à partir des seuls chemins qu'il contient. Les préférences d'itinéraire des réglages restent sur cet appareil et ne sont envoyées nulle part. L'état des ascenseurs en direct n'est pas disponible. Un plan indique sa source, sa date et ce qui est inconnu.",
     findersTitle: "Recherche",
     findersBody:
       "Les toilettes, le stationnement, la recharge, la réparation et les tables à langer pour adultes ne sont pas listés, parce qu'aucun enregistrement n'est chargé. Un indicateur municipal d'accessibilité n'est pas une mesure de l'espace de rotation, du côté de transfert ou d'un lève-personne.",

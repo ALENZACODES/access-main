@@ -10,6 +10,7 @@ test("P20 route inventory is derived from app routes", () => {
   expect(new Set(ROUTES).size).toBe(39);
   expect(ROUTES).toContain("/dev/narrow");
   expect(ROUTES).toContain("/places");
+  expect(ROUTES).toContain("/journey");
   expect(ROUTES).toContain("/help");
 });
 
