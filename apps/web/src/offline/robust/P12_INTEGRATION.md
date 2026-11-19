@@ -23,3 +23,8 @@ cleanup call disappears during a subsequent update.
 Apply these complete files to the pinned current main branch. Preserve all
 other files on main. Run `npm run lint`, `npm run typecheck`, and `npm test`
 from the repository root after installing locked dependencies.
+
+The integration regression also checks the explicit diagnostics barrel export,
+its dashboard import and unmount call, and the other four feature mounts.
+The archive changes the two main integration files and adds modules not yet
+merged into the baseline; it does not replace any other main-branch files.

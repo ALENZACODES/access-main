@@ -323,7 +323,7 @@ export function mountOfflineDashboard(
         definition(copy.missing, String(state.inventory.unknownCount)),
         definition(copy.remaining, formatBinaryBytes(plan.remainingBytes, language)),
         definition(copy.free, plan.freeBytes === null ?
-          (language === "fr" ? "UNKNOWN" : "UNKNOWN") : formatBinaryBytes(plan.freeBytes, language)),
+          "UNKNOWN" : formatBinaryBytes(plan.freeBytes, language)),
         definition(copy.reserve, formatBinaryBytes(plan.reserveBytes, language)),
       );
     }
