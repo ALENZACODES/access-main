@@ -22,7 +22,8 @@ describe("live recovery shell integration", () => {
   });
   it("routes the import-preview error through StateNotice", () => {
     expect(ledger).toContain('import { StateNotice } from "../states/StateNotice"');
-    expect(ledger).toContain("<StateNotice view=");
+    expect(ledger).toContain("<StateNotice");
+    expect(ledger).toContain("onAction={{ retry:");
     expect(ledger).not.toContain('<p role="alert">');
   });
   it("exports both new panels and their models", () => {

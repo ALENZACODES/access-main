@@ -213,7 +213,16 @@ export function RecoveryProvenanceLedger({
         <p>{copy.collisions}{locale === "fr" ? "\u00a0: " : ": "}{preview.value.collisions.length}</p>
         <button type="button" style={controls} onClick={applyPreview}
           disabled={preview.value.collisions.length !== 0}>{copy.apply}</button>
-      </> : <StateNotice view={{ title: copy.stage, description: preview ? copy.issues[preview.issue] : copy.failed, actions: [], role: "alert" }} lang={locale} />}
+      </> : <StateNotice
+        view={{
+          title: copy.stage,
+          description: preview ? copy.issues[preview.issue] : copy.failed,
+          actions: [{ id: "retry", label: locale === "fr" ? "Reprendre" : "Try again", minTargetPx: 44 }],
+          role: "alert",
+        }}
+        lang={locale}
+        onAction={{ retry: () => { setStaged(null); setMessage(""); uploadRef.current?.focus(); } }}
+      />}
       <button type="button" style={controls} onClick={() => { setStaged(null); setMessage(""); }}>
         {copy.cancel}
       </button>
