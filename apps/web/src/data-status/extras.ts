@@ -21,3 +21,5 @@ export * from './recordFacts';
 export * from './factsCsv';
 export * from './glossary';
 export * from './textSummary';
+export * from './quickFilters';
+export * from './statusByTier';
