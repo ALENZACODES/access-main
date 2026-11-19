@@ -24,6 +24,7 @@ import { RecoveryWorkbench } from "./RecoveryWorkbench";
 import { RecoveryQueuePanel } from "./RecoveryQueuePanel";
 import { RecoveryPlanReview } from "./RecoveryPlanReview";
 import { planPackRepairs } from "./recoveryPolicy";
+import { RecoveryCaseJournal } from "./RecoveryCaseJournal";
 
 /** This is a complete local shell widget; routes can mount it without a service. */
 export interface RecoveryCenterProps {
@@ -188,6 +189,8 @@ export function RecoveryCenter({
       <RecoveryPlanReview locale={locale} current={policy}
         inspected={hasInspected && !checking && !inventoryFailure}
         onInspect={() => { void refresh(); }} saveFile={saveFile} />
+      <RecoveryCaseJournal locale={locale} records={inventory}
+        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>
