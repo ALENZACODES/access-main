@@ -169,4 +169,4 @@ for (const [name, changes, code] of commandDefects) {
 }
 test("invalid keyboard commands input fails", () => has(auditKeyboardCommands(null), "command.array"));
 test("focus summary counts severity", () => assert.deepEqual(summarizeFocusFindings([{ code: "a", severity: "error" }, { code: "b", severity: "review" }]), { error: 1, review: 1, codes: [["a", 1], ["b", 1]] }));
-test("focus audits do not mutate observations", () => { const records = forward(); const copy = structuredClone(records); auditForwardWalk(records); assert.deepEqual(records, copy); });
+test("focus audits do not mutate observations", () => { const records = forward(); const copy = JSON.parse(JSON.stringify(records)); auditForwardWalk(records); assert.deepEqual(records, copy); });
