@@ -83,7 +83,7 @@ export function describeShared(report: AuditReport, lang: Lang, max = 10): strin
   );
   const limit = Math.max(1, Math.floor(max));
   for (const c of shared.slice(0, limit)) {
-    const status = c.entry.status === 'fail' ? (fr ? 'À CORRIGER' : 'FAIL') : fr ? 'INCONNU' : 'UNKNOWN';
+    const status = c.entry.status === 'fail' ? (fr ? 'À CORRIGER' : 'FAIL') : 'UNKNOWN';
     const shown = c.routes.slice(0, 5).join(', ');
     const more = c.routes.length - 5;
     lines.push(

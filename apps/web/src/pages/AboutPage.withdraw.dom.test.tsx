@@ -40,4 +40,21 @@ describe("About page, privacy panel", () => {
     expect(localStorage.getItem("access.language")).toBe("en");
     expect(container.querySelector("[data-privacy-status]")?.textContent).toContain("Removed from this device: 1 item.");
   });
+
+  it("says what the erase button does not reach, in English and French", async () => {
+    for (const [lang, heading, item] of [["en", "Also kept on this device", "Your display preferences"], ["fr", "Aussi conservé sur cet appareil", "Vos préférences d’affichage"]] as const) {
+      await i18n.changeLanguage(lang);
+      const { container, unmount } = render(
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter><AboutPage /></MemoryRouter>
+        </I18nextProvider>,
+      );
+      await waitFor(() => expect(container.querySelector("[data-privacy-outside]")).not.toBeNull());
+      const box = container.querySelector("[data-privacy-outside]");
+      expect(box?.textContent).toContain(heading);
+      expect(box?.textContent).toContain(item);
+      unmount();
+    }
+    await i18n.changeLanguage("en");
+  });
 });

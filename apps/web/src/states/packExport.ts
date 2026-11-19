@@ -118,21 +118,21 @@ export function packPlaceToText(r: ExportRecord, locale: Locale, today: string):
   const lines = [
     name,
     "=".repeat(Math.min(name.length, 60)),
-    t(locale, `Wheelchair tag as reported: ${TAG_WORD[p.tag][locale]}`, `Indication pour fauteuil roulant telle que signalée : ${TAG_WORD[p.tag][locale]}`),
-    t(locale, `Kind as tagged: ${orUnknown(p.category)}`, `Type indiqué : ${orUnknown(p.category)}`),
-    t(locale, `Address: ${orUnknown(p.address)}`, `Adresse : ${orUnknown(p.address)}`),
+    t(locale, `Wheelchair tag as reported: ${TAG_WORD[p.tag][locale]}`, `Indication pour fauteuil roulant telle que signalée\u00a0: ${TAG_WORD[p.tag][locale]}`),
+    t(locale, `Kind as tagged: ${orUnknown(p.category)}`, `Type indiqué\u00a0: ${orUnknown(p.category)}`),
+    t(locale, `Address: ${orUnknown(p.address)}`, `Adresse\u00a0: ${orUnknown(p.address)}`),
     p.location
-      ? t(locale, `Position: ${p.location.lat.toFixed(4)}, ${p.location.lon.toFixed(4)}`, `Position : ${p.location.lat.toFixed(4)}, ${p.location.lon.toFixed(4)}`)
-      : t(locale, `Position: ${UNKNOWN_TOKEN}`, `Position : ${UNKNOWN_TOKEN}`),
-    t(locale, `Tier: ${orUnknown(r.tier)}`, `Niveau : ${orUnknown(r.tier)}`),
+      ? t(locale, `Position: ${p.location.lat.toFixed(4)}, ${p.location.lon.toFixed(4)}`, `Position\u00a0: ${p.location.lat.toFixed(4)}, ${p.location.lon.toFixed(4)}`)
+     : t(locale, `Position: ${UNKNOWN_TOKEN}`, `Position\u00a0: ${UNKNOWN_TOKEN}`),
+    t(locale, `Tier: ${orUnknown(r.tier)}`, `Niveau\u00a0: ${orUnknown(r.tier)}`),
   ];
-  if (p.note) lines.push(t(locale, `Note from contributors: ${p.note}`, `Note des contributeurs : ${p.note}`));
+  if (p.note) lines.push(t(locale, `Note from contributors: ${p.note}`, `Note des contributeurs\u00a0: ${p.note}`));
   if (p.provenance) {
     lines.push("", attributionLine(p.provenance, locale), ageLabel(p.provenance.retrievedOn, today, locale));
     if (isStale(p.provenance.retrievedOn, today)) lines.push(t(locale, "This may be out of date.", "Ces renseignements peuvent être périmés."));
     if (p.provenance.url) lines.push(p.provenance.url);
   } else {
-    lines.push("", t(locale, "No usable source is recorded for this place, so the tag above is not shown as known.", "Aucune source utilisable n’est consignée pour ce lieu : l’indication ci-dessus n’est pas présentée comme connue."));
+    lines.push("", t(locale, "No usable source is recorded for this place, so the tag above is not shown as known.", "Aucune source utilisable n’est consignée pour ce lieu\u00a0: l’indication ci-dessus n’est pas présentée comme connue."));
   }
   if (p.provenance?.licence === "ODbL-1.0" || /openstreetmap/i.test(p.provenance?.source ?? "")) lines.push("", "© OpenStreetMap contributors");
   return lines.join("\n") + "\n";

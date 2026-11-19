@@ -114,7 +114,7 @@ describe('describeComparison', () => {
     expect(en).toContain('  1 finding is unchanged.');
     expect(fr).toContain('  1 nouvelle anomalie, dont 1 au statut À CORRIGER.');
     expect(fr).toContain('  1 anomalie n’est plus signalée, dont 1 au statut À CORRIGER.');
-    expect(fr).toContain('  1 anomalie a changé de statut\u00A0: 1 de INCONNU vers À CORRIGER, 0 dans l’autre sens.');
+    expect(fr).toContain('  1 anomalie a changé de statut\u00A0: 1 de UNKNOWN vers À CORRIGER, 0 dans l’autre sens.');
     expect(fr).toContain('  1 anomalie inchangée.');
   });
   it('never says fixed, and says why', () => {
@@ -163,7 +163,7 @@ describe('renderComparisonMarkdown', () => {
     const fr = renderComparisonMarkdown(compareReports(before, after), 'fr');
     expect(fr).toContain('# Audit écran étroit – ce qui a changé');
     expect(fr).toContain('## Nouvelles anomalies');
-    expect(fr).toContain('- **À CORRIGER** (avant INCONNU) `/` `contrast/image` `p[5]`');
+    expect(fr).toContain('- **À CORRIGER** (avant UNKNOWN) `/` `contrast/image` `p[5]`');
     expect(fr).toContain('## Anomalies qui ne sont plus signalées');
   });
   it('leaves out the sections that are empty', () => {

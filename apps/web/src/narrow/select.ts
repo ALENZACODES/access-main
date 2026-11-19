@@ -29,7 +29,7 @@ export function parseCheckIds(value: string): ParsedIds {
         ok: false,
         error: {
           en: `Unknown check “${name}”. Known checks: ${CHECK_ORDER.filter((c) => !FIXED_CHECKS.includes(c)).join(', ')}.`,
-          fr: `Contrôle inconnu «\u202F${name}\u202F». Contrôles connus\u00A0: ${CHECK_ORDER.filter((c) => !FIXED_CHECKS.includes(c)).join(', ')}.`,
+          fr: `Contrôle non reconnu «\u202F${name}\u202F». Contrôles connus\u00A0: ${CHECK_ORDER.filter((c) => !FIXED_CHECKS.includes(c)).join(', ')}.`,
         },
       };
     }

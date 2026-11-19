@@ -108,7 +108,7 @@ describe('describeByOwner', () => {
         '@web: 0 to fix, 1 item to check\n  UNKNOWN images/alt-generic img#logo (/)\n',
     );
     expect(fr).toContain('@design\u00A0: 2 à corriger, 1 point à contrôler\n  À CORRIGER contrast/low a#nav-help (/)');
-    expect(fr).toContain('  INCONNU contrast/image h1[0] (/)');
+    expect(fr).toContain('  UNKNOWN contrast/image h1[0] (/)');
   });
   it('names the group with no owner and cuts long lists', () => {
     const text = describeByOwner(smallSite(), owners(''), 'en', 2);

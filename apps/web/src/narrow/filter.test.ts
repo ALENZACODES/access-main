@@ -107,7 +107,7 @@ describe('parseFilter', () => {
     ['status:pass', 'is not fail or unknown', 'n’est ni fail ni unknown'],
     ['status:fail status:unknown', 'two different statuses', 'deux statuts différents'],
     ['id:a id:b', 'id more than once', 'id plus d’une fois'],
-    ['check:contrast', 'is not known', 'est inconnue'],
+    ['check:contrast', 'is not known', 'n’est pas reconnue'],
   ])('rejects "%s" in both languages', (text, en, fr) => {
     const p = parseFilter(text);
     expect(p.ok).toBe(false);

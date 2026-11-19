@@ -78,7 +78,14 @@ const MESSAGES: Messages<Key> = {
 export const STATUS_BY_TIER_MESSAGES = MESSAGES;
 const tx = createTranslator(MESSAGES);
 
-export function renderStatusByTierHtml(b: StatusByTier, locale: Locale): string {
+/** An extra last row: a row heading and one cell of ready-made HTML for each status column. */
+export interface StatusColumnExtra {
+  heading: string;
+  cell: (state: FreshnessState) => string;
+}
+
+/** With `extra`, a status that no record has gets an empty cell. */
+export function renderStatusByTierHtml(b: StatusByTier, locale: Locale, extra?: StatusColumnExtra): string {
   const heading = `<h2 id="ds-statustier-title">${escapeHtml(tx(locale, 'st.title'))}</h2>`;
   if (b.total === 0) return `<section aria-labelledby="ds-statustier-title">${heading}<p>${escapeHtml(tx(locale, 'st.none'))}</p></section>`;
   const cells = (counts: Record<FreshnessState, number>, total: number) => STATUS_COLUMNS.map((s) => `<td>${counts[s]}</td>`).join('') + `<td>${total}</td>`;
@@ -88,6 +95,8 @@ export function renderStatusByTierHtml(b: StatusByTier, locale: Locale): string 
     `<section aria-labelledby="ds-statustier-title">${heading}<p>${escapeHtml(tx(locale, 'st.intro'))}</p>` +
     `<table><caption>${escapeHtml(tx(locale, 'st.caption'))}</caption><thead><tr><th scope="col">${escapeHtml(tx(locale, 'st.colTier'))}</th>${head}` +
     `<th scope="col">${escapeHtml(tx(locale, 'st.colTotal'))}</th></tr></thead><tbody>${rows}</tbody>` +
-    `<tfoot><tr><th scope="row">${escapeHtml(tx(locale, 'st.rowTotal'))}</th>${cells(b.totals, b.total)}</tr></tfoot></table></section>`
+    `<tfoot><tr><th scope="row">${escapeHtml(tx(locale, 'st.rowTotal'))}</th>${cells(b.totals, b.total)}</tr>` +
+    (extra ? `<tr><th scope="row">${escapeHtml(extra.heading)}</th>${STATUS_COLUMNS.map((s) => `<td>${b.totals[s] > 0 ? extra.cell(s) : ''}</td>`).join('')}<td></td></tr>` : '') +
+    `</tfoot></table></section>`
   );
 }

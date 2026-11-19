@@ -109,14 +109,14 @@ export function describeTrend(tr: Trend | null, lang: Lang): string {
   if (!tr.previous) {
     lines.push(
       lang === 'fr'
-        ? `Première exécution enregistrée${colon} ${tr.current.failed} anomalies, ${tr.current.unknown} inconnus.`
+        ? `Première exécution enregistrée${colon} ${tr.current.failed} anomalies, ${tr.current.unknown} UNKNOWN.`
         : `First run recorded${colon} ${tr.current.failed} failures, ${tr.current.unknown} unknown.`,
     );
     return lines.join('\n');
   }
   lines.push(
     lang === 'fr'
-      ? `Depuis le ${date(tr.previous.at)}${colon} anomalies ${tr.current.failed} (${signed(tr.failedDelta)}), inconnus ${tr.current.unknown} (${signed(tr.unknownDelta)}).`
+      ? `Depuis le ${date(tr.previous.at)}${colon} anomalies ${tr.current.failed} (${signed(tr.failedDelta)}), UNKNOWN ${tr.current.unknown} (${signed(tr.unknownDelta)}).`
       : `Since ${date(tr.previous.at)}${colon} failures ${tr.current.failed} (${signed(tr.failedDelta)}), unknown ${tr.current.unknown} (${signed(tr.unknownDelta)}).`,
   );
   const names = (ids: readonly CheckId[]): string => ids.map((i) => CHECK_LABELS[i][lang]).join(', ');

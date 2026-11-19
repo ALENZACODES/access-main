@@ -140,7 +140,7 @@ describe('describeReview', () => {
   it('counts notes by decision and what is still waiting', () => {
     expect(en.split('\n')[0]).toBe('Hand review: 2 unknown items have a recent note, 1 waiting.');
     expect(en).toContain('  1 with a problem found, 1 with no problem found, 0 not sure.');
-    expect(fr.split('\n')[0]).toBe('Revue à la main\u00A0: 2 points inconnus ont une note récente, 1 en attente.');
+    expect(fr.split('\n')[0]).toBe('Revue à la main\u00A0: 2 points UNKNOWN ont une note récente, 1 en attente.');
     expect(fr).toContain('  1 avec un problème constaté, 1 sans problème constaté, 0 sans certitude.');
   });
   it('says that no problem found is not a pass', () => {
@@ -155,7 +155,7 @@ describe('describeReview', () => {
     expect(en).toContain('  1 note is too old: the item is waiting again.');
     expect(en).toContain('  1 note matches no unknown item of this report: the finding may be gone, or have changed status or element.');
     expect(fr).toContain('  1 note est trop ancienne\u00A0: le point est de nouveau en attente.');
-    expect(fr).toContain('  1 note ne correspond à aucun point inconnu de ce rapport\u00A0:');
+    expect(fr).toContain('  1 note ne correspond à aucun point UNKNOWN de ce rapport\u00A0:');
   });
   it('mentions notes dated in the future', () => {
     const future = describeReview(applyReview(smallSite(), file(note(K.h1, 'problem', '2027-01-01')), nov(19)), 'en');
@@ -163,7 +163,7 @@ describe('describeReview', () => {
   });
   it('is short when nobody has looked yet', () => {
     expect(describeReview(applyReview(smallSite(), EMPTY_REVIEW, nov(19)), 'en')).toBe('Hand review: 0 unknown items have a recent note, 3 waiting.\n');
-    expect(describeReview(applyReview(smallSite(), EMPTY_REVIEW, nov(19)), 'fr')).toBe('Revue à la main\u00A0: 0 point inconnu a une note récente, 3 en attente.\n');
+    expect(describeReview(applyReview(smallSite(), EMPTY_REVIEW, nov(19)), 'fr')).toBe('Revue à la main\u00A0: 0 point UNKNOWN a une note récente, 3 en attente.\n');
   });
   it('follows French typography and the copy rules in its own words', () => {
     const own = fr.split('\n').filter((l) => !l.includes('Sam'));

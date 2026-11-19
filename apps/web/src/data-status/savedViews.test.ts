@@ -17,6 +17,9 @@ import {
   viewLabel,
   viewQuery,
   cleanViewName,
+  describeRenameOutcome,
+  renameViewAt,
+  viewRenameAction,
   MAX_VIEW_NAME_LENGTH,
   savedViewLabel,
   viewsToStored,
@@ -361,14 +364,15 @@ describe('view names', () => {
     expect(savedViewLabel(v('?tier=E'), 'en')).toBe('Tier: E');
     expect(savedViewLabel(v('?tier=E', 'Bureau'), 'fr')).toBe('Bureau (Niveau : E)');
   });
-  it('offers a labelled name field with the save control, and only then', () => {
+  it('offers a labelled name field when a view can be saved or renamed, and not otherwise', () => {
     const html = renderSavedViewsHtml([], 'en', { durable: false, active: TIER_E, draftName: 'Half typed' });
     expect(html).toContain('<label for="ds-view-name">Name for the view (optional)</label>');
     expect(html).toContain(`maxlength="${MAX_VIEW_NAME_LENGTH}"`);
     expect(html).toContain('value="Half typed"');
     expect(html).toContain('data-filter="viewName"');
     expect(renderSavedViewsHtml([], 'en', { durable: false, active: NO_FILTERS })).not.toContain('ds-view-name');
-    expect(renderSavedViewsHtml([v('?tier=E')], 'en', { durable: false, active: TIER_E })).not.toContain('ds-view-name');
+    expect(renderSavedViewsHtml([v('?tier=E')], 'en', { durable: false, active: TIER_E })).toContain('ds-view-name');
+    expect((renderSavedViewsHtml([v('?tier=E')], 'en', { durable: false, active: STALE }).match(/id="ds-view-name"/g) ?? []).length).toBe(1);
   });
   it('escapes a name in the field and in the list', () => {
     const html = renderSavedViewsHtml([v('?state=stale', '<b>"x"</b>')], 'en', { durable: false, active: TIER_E, draftName: '"><i>' });
@@ -460,5 +464,123 @@ describe('how many sources a saved view lists now', () => {
       expect(targetsBelow44(html)).toEqual([]);
       if (locale === 'fr') expect(lintFrench(visibleText(html))).toEqual([]);
     }
+  });
+});
+
+describe('renaming a saved view', () => {
+  it('gives a view a name, or a new one, and keeps its filters and its place', () => {
+    const store = createSavedViewStore(null);
+    store.save([v('?tier=E'), v('?state=stale', 'Old')]);
+    expect(renameViewAt(store, 0, '  Desk  checks ')).toEqual({ outcome: 'renamed', views: [v('?tier=E', 'Desk checks'), v('?state=stale', 'Old')] });
+    expect(renameViewAt(store, 1, 'Older').outcome).toBe('renamed');
+    expect(store.load()).toEqual([v('?tier=E', 'Desk checks'), v('?state=stale', 'Older')]);
+  });
+  it('changes nothing without a usable name', () => {
+    const store = createSavedViewStore(null);
+    store.save([v('?tier=E', 'Keep')]);
+    for (const name of ['', '   ', null, undefined, 7]) expect(renameViewAt(store, 0, name).outcome).toBe('noName');
+    expect(store.load()).toEqual([v('?tier=E', 'Keep')]);
+  });
+  it('says so when the name is the one the view already has', () => {
+    const store = createSavedViewStore(null);
+    store.save([v('?tier=E', 'Keep')]);
+    expect(renameViewAt(store, 0, ' Keep ').outcome).toBe('same');
+  });
+  it('changes nothing for a position that does not exist', () => {
+    const store = createSavedViewStore(null);
+    store.save([v('?tier=E')]);
+    for (const i of [-1, 1, 0.5, NaN]) expect(renameViewAt(store, i, 'Name').outcome).toBe('missing');
+    expect(store.load()).toEqual([v('?tier=E')]);
+  });
+  it('reports a failed write and leaves the list as it was', () => {
+    const storage = memoryStorage();
+    createSavedViewStore(storage).save([v('?tier=E')]);
+    const store = createSavedViewStore({ ...storage, setItem: () => { throw new Error('quota'); } });
+    expect(renameViewAt(store, 0, 'Name')).toEqual({ outcome: 'failed', views: [v('?tier=E')] });
+  });
+  it('two views may share a name; they are still told apart by their filters', () => {
+    const store = createSavedViewStore(null);
+    store.save([v('?tier=E', 'Same'), v('?state=stale')]);
+    expect(renameViewAt(store, 1, 'Same').outcome).toBe('renamed');
+    expect(savedViewLabel(store.load()[0]!, 'en')).not.toBe(savedViewLabel(store.load()[1]!, 'en'));
+  });
+  it('reads the rename action and rejects malformed ones', () => {
+    expect(parseViewAction(viewRenameAction(3))).toEqual({ kind: 'rename', index: 3 });
+    for (const a of ['view-rename:', 'view-rename:x', 'view-rename:-1', 'view-rename:100']) expect(parseViewAction(a)).toBeNull();
+  });
+  it('has something to say for every outcome but a missing view, in both languages', () => {
+    expect(describeRenameOutcome('missing', 'en')).toBeNull();
+    expect(describeRenameOutcome('renamed', 'en')).toBe('View renamed.');
+    expect(describeRenameOutcome('failed', 'en')).toBe('The new name could not be saved on this device.');
+    for (const o of ['renamed', 'noName', 'same', 'failed'] as const) expect(describeRenameOutcome(o, 'fr')).not.toBe(describeRenameOutcome(o, 'en'));
+  });
+  it('offers a rename control for each view, named after the view', () => {
+    const html = renderSavedViewsHtml([v('?tier=E', 'Desk'), v('?state=stale')], 'en', { durable: true, active: NO_FILTERS });
+    expect(html).toContain('data-action="view-rename:0"');
+    expect(html).toContain('>Rename with the typed name. Desk (Tier: E)</button>');
+    expect(html).toContain('>Rename with the typed name. Status: May be out of date</button>');
+    expect(html).toContain('id="ds-view-name"');
+  });
+  it('passes the audits with rename controls, in both languages', () => {
+    for (const locale of ['en', 'fr'] as const) {
+      const html = renderSavedViewsHtml([v('?tier=E', 'Desk'), v('?state=stale')], locale, { durable: false, active: NO_FILTERS, countFor: () => 1 });
+      expect(scanHtml(html)).toEqual([]);
+      expect(describeProblems(auditHtml(html))).toEqual([]);
+      expect(targetsBelow44(html)).toEqual([]);
+      if (locale === 'fr') expect(lintFrench(visibleText(html))).toEqual([]);
+    }
+  });
+});
+
+describe('renaming on the panel', () => {
+  const mount = () => {
+    const host = new FakeHost();
+    const store = createSavedViewStore(null);
+    store.save([v('?tier=E'), v('?state=stale', 'Old')]);
+    mountDataStatusPanel(host, { getRecords: () => RECORDS, getLocale: () => 'en', now: () => NOW, savedViews: store });
+    return { host, store };
+  };
+  it('renames with the typed name, says so, clears the field and keeps focus on the control', () => {
+    const { host, store } = mount();
+    host.filter('input', 'viewName', 'Desk checks');
+    host.click(viewRenameAction(0));
+    expect(store.load()[0]).toEqual(v('?tier=E', 'Desk checks'));
+    expect(host.innerHTML).toContain('>Show view. Desk checks (Tier: E)</button>');
+    expect(host.innerHTML).toContain('id="ds-view-name"');
+    expect(host.innerHTML).toMatch(/id="ds-view-name"[^>]* value=""/);
+    expect(host.announce.innerHTML).toContain('View renamed.');
+    expect(host.focused.at(-1)).toBe('[data-action="view-rename:0"]');
+  });
+  it('asks for a name, changes nothing, and moves to the name field when none is typed', () => {
+    const { host, store } = mount();
+    host.click(viewRenameAction(1));
+    expect(store.load()[1]).toEqual(v('?state=stale', 'Old'));
+    expect(host.announce.innerHTML).toContain('Type a name in the name field first.');
+    expect(host.focused.at(-1)).toBe('#ds-view-name');
+  });
+  it('keeps the typed name when the view already has it', () => {
+    const { host } = mount();
+    host.filter('input', 'viewName', 'Old');
+    host.click(viewRenameAction(1));
+    expect(host.announce.innerHTML).toContain('The view already has this name.');
+    expect(host.innerHTML).toContain('value="Old"');
+  });
+  it('ignores a position that does not exist', () => {
+    const { host } = mount();
+    const before = host.innerHTML;
+    host.filter('input', 'viewName', 'Name');
+    host.click(viewRenameAction(5));
+    expect(host.innerHTML).toBe(before);
+    expect(host.focused).toEqual([]);
+  });
+  it('leaves the filters in force alone', () => {
+    const host = new FakeHost();
+    const store = createSavedViewStore(null);
+    store.save([v('?tier=E')]);
+    const panel = mountDataStatusPanel(host, { getRecords: () => RECORDS, getLocale: () => 'en', now: () => NOW, savedViews: store });
+    host.filter('change', 'licence', 'open');
+    host.filter('input', 'viewName', 'Desk');
+    host.click(viewRenameAction(0));
+    expect(panel.getFilters().licence).toBe('open');
   });
 });
