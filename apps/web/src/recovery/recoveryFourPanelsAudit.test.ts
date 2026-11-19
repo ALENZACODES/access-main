@@ -14,6 +14,18 @@ describe("four recovery panels on the live page", () => {
       expect(shell).toContain(`<${name} locale={locale}`);
     }
   });
+  it("keeps all panel mounts together and passes the current inspection date", () => {
+    const entry = shell.indexOf("<RecoveryEvidenceNotebook");
+    const rehearsal = shell.indexOf("<RecoveryDryRunPanel");
+    const journal = shell.indexOf("<RecoveryCaseJournal");
+    const taskBoard = shell.indexOf("<RecoveryTaskBoard");
+    expect(entry).toBeGreaterThan(-1);
+    expect(rehearsal).toBeGreaterThan(entry);
+    expect(journal).toBeGreaterThan(rehearsal);
+    expect(taskBoard).toBeGreaterThan(journal);
+    expect(shell).toContain('inspectionDate={inspectionDate}');
+    expect(shell).toContain('inspected={hasInspected && !checking && !inventoryFailure}');
+  });
   it("keeps the existing recovery plan and download functionality", () => {
     expect(shell).toContain("<RecoveryPlanReview");
     expect(shell).toContain("<RecoveryQueuePanel");

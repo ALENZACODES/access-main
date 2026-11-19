@@ -41,3 +41,10 @@ and retains its original props and behaviour.
 All locale-dependent copy is available in English and French. The unknown-state
 token is spelled **UNKNOWN** in both languages; do not substitute a translation.
 No interface claims that a place can be accessed based on a pack's availability.
+
+## Integration regression
+
+The audit `recoveryFourPanelsAudit.test.ts` checks that all four panels are mounted
+by `RecoveryCenter` in addition to the existing plan, queue, download and export
+controls. It also checks the inspection-date handoff to the storage rehearsal.
+No panel sets another panel's state or treats a missing field as ready.
