@@ -15,10 +15,10 @@ export interface DialogExercise {
   readonly findings: readonly DialogFinding[];
 }
 
-/** All active dialogs, including native modal dialogs, are evaluated. */
+/** Inspect visible dialogs, including native modals and ARIA dialog roots. */
 export async function auditDialogTree(page: Page): Promise<DialogFinding[]> {
   return page.evaluate(() => {
-    const findings: { code: string; target: string; detail: string }[] = [];
+    const findings: DialogFinding[] = [];
     const dialogs = Array.from(document.querySelectorAll<HTMLElement>(
       "dialog[open],[role='dialog'],[role='alertdialog']",
     ));
@@ -68,10 +68,10 @@ export async function auditDialogTree(page: Page): Promise<DialogFinding[]> {
   });
 }
 
-/** A dialog opener must declare a real, unique target; no speculative clicking. */
+/** A dialog opener must declare a real, unique target. */
 export async function auditDialogTriggers(page: Page): Promise<DialogFinding[]> {
   return page.evaluate(() => {
-    const findings: { code: string; target: string; detail: string }[] = [];
+    const findings: DialogFinding[] = [];
     const triggers = Array.from(document.querySelectorAll<HTMLElement>(
       "[aria-haspopup='dialog'],[data-a11y-dialog-trigger]",
     ));
@@ -105,8 +105,55 @@ async function visibleDialog(page: Page): Promise<Locator> {
 }
 
 /**
- * Only activate triggers explicitly marked as opening a dialog. This avoids
- * triggering destructive actions, navigation, or forms in a live audit.
+ * Observe post-close focus moves before asking whether focus was restored.
+ * A final-state-only check can miss a focus diversion if a native dialog
+ * subsequently restores the opener. The observer is scoped to this exercise,
+ * is installed only once the dialog has opened, and is always removed.
+ */
+async function beginFocusRestoreAudit(dialog: Locator, triggerId: string | null): Promise<() => Promise<boolean>> {
+  if (triggerId === null) return async () => false;
+  const stableDialog = await dialog.elementHandle();
+  if (stableDialog === null) return async () => false;
+  const cleanupEvent = "a11y-round4-dialog-audit-end";
+  await stableDialog.evaluate((element, args) => {
+      const opener = document.getElementById(args.openerId);
+      const controller = new AbortController();
+      let closed = false;
+      const isUnrelatedFocus = (target: EventTarget | null): boolean =>
+        opener !== null && target instanceof HTMLElement && target.isConnected &&
+        target !== opener && target !== document.body &&
+        target !== document.documentElement;
+      element.addEventListener("close", () => { closed = true; }, {
+        capture: true, signal: controller.signal,
+      });
+      document.addEventListener("focusin", (event) => {
+        if (closed && isUnrelatedFocus(event.target)) {
+          element.setAttribute("data-a11y-round4-diverted-focus", "true");
+        }
+      }, { capture: true, signal: controller.signal });
+      element.addEventListener(args.eventName, () => {
+        controller.abort();
+        element.removeAttribute("data-a11y-round4-diverted-focus");
+      }, { once: true });
+    }, { openerId: triggerId, eventName: cleanupEvent });
+  return async () => {
+    try {
+      return await stableDialog.evaluate((element, eventName) => {
+        const diverted = element.hasAttribute("data-a11y-round4-diverted-focus");
+        element.dispatchEvent(new Event(eventName));
+        return diverted;
+      }, cleanupEvent);
+    } catch {
+      return false;
+    } finally {
+      await stableDialog.dispose();
+    }
+  };
+}
+
+/**
+ * Exercise only a declared dialog opener: this audit does not click unrelated
+ * controls, submit forms, or infer accessible behaviour from static markup.
  */
 export async function exerciseDeclaredDialog(
   page: Page,
@@ -165,11 +212,7 @@ export async function exerciseDeclaredDialog(
         position: Array.from(modal.querySelectorAll("* ")).indexOf(active),
       };
     });
-    if (!focus) {
-      findings.push({ code: "dialog-tab-escaped", target: actualId ?? "dialog", detail: String(step + 1) });
-      break;
-    }
-    if (!focus.inside) {
+    if (!focus || !focus.inside) {
       findings.push({ code: "dialog-tab-escaped", target: actualId ?? "dialog", detail: String(step + 1) });
       break;
     }
@@ -182,23 +225,33 @@ export async function exerciseDeclaredDialog(
   if (innerTabStops === 0) {
     findings.push({ code: "dialog-no-tab-target", target: actualId ?? "dialog", detail: "No sequential target" });
   }
-  await page.keyboard.press("Escape");
-  // Flush close-event microtasks (including focus overrides) before checking restore.
-  await page.evaluate(() => new Promise<void>((resolve) => queueMicrotask(resolve)));
-  const escaped = await dialog.isHidden().catch(() => true);
+  const endFocusAudit = await beginFocusRestoreAudit(dialog, triggerId);
+  let escaped = false;
+  let returnedToTrigger = false;
+  let focusDiverted = false;
+  let auditFinished = false;
+  try {
+    await page.keyboard.press("Escape");
+    // Observe close handlers, their microtasks, and a rendering opportunity.
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    escaped = await dialog.isHidden().catch(() => true);
+    const finalFocus = await trigger.evaluate((element) => document.activeElement === element)
+      .catch(() => false);
+    focusDiverted = await endFocusAudit();
+    auditFinished = true;
+    returnedToTrigger = finalFocus && !focusDiverted;
+  } finally {
+    // This also cleans listeners if a Playwright action throws partway through.
+    if (!auditFinished) await endFocusAudit();
+  }
   if (!escaped) findings.push({ code: "dialog-escape-failed", target: actualId ?? "dialog", detail: "Still open" });
-  const returnedToTrigger = await trigger.evaluate((element) => document.activeElement === element)
-    .catch(() => false);
   if (!returnedToTrigger) {
     findings.push({ code: "dialog-focus-not-restored", target: triggerId ?? "trigger", detail: "Focus not returned" });
   }
   return { opened, named, escaped, returnedToTrigger, innerTabStops, findings };
 }
 
-export async function assertDeclaredDialog(
-  page: Page,
-  trigger: Locator,
-): Promise<void> {
+export async function assertDeclaredDialog(page: Page, trigger: Locator): Promise<void> {
   const result = await exerciseDeclaredDialog(page, trigger);
   expect(result.findings, "Dialog keyboard activation and Escape lifecycle").toEqual([]);
   expect(result.opened).toBe(true);
