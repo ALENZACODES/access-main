@@ -529,4 +529,29 @@ describe("planning sections and extra downloads on the live panel", () => {
     expect((within(panel).getByLabelText("Tier") as HTMLSelectElement).value).toBe("E");
     expect(Object.keys(localStorage).sort()).toEqual(before);
   });
+
+  it("keeps keyboard focus on a control that redraws the panel, and lists records with an unknown fact", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "No tier stop", source: "Other source", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    const drill = within(panel).getByRole("button", { name: "List these sources. Tier: E" });
+    drill.focus();
+    user.click(drill);
+    const after = within(panel).getByRole("button", { name: "List these sources. Tier: E" });
+    expect(after).not.toBe(drill);
+    expect(document.activeElement).toBe(after);
+    user.click(within(panel).getByRole("button", { name: "List these sources. Unknown: Retrieved date" }));
+    expect((within(panel).getByLabelText("Unknown fact") as HTMLSelectElement).value).toBe("date");
+    hasText(panel, "1 filter in force");
+    const list = within(panel).getByRole("table", { name: "Sources" });
+    expect(within(list).getAllByRole("row")).toHaveLength(2);
+    user.click(within(panel).getByRole("button", { name: "Remove filter. Unknown: Retrieved date" }));
+    expect(document.activeElement).toBe(within(panel).getByRole("button", { name: /Clear filters/ }));
+    expect(panel.querySelectorAll("[tabindex]")).toHaveLength(0);
+  });
 });

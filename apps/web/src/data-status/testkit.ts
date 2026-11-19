@@ -2,9 +2,19 @@
 import { auditHtml, describeProblems, type CacheLike, type CacheStorageLike, type DatasetRecord, type HeadersLike, type PanelHost, type ResponseLike, type StorageLike } from './index';
 
 export class FakeHost implements PanelHost {
-  innerHTML = '';
+  private html = '';
+  /** Setting the whole markup replaces the regions too, as it does in a browser. */
+  get innerHTML(): string {
+    return this.html;
+  }
+  set innerHTML(value: string) {
+    this.html = value;
+    for (const r of [this.region, this.announce, this.quick, this.views]) if (r) r.innerHTML = '';
+  }
   attrs: Record<string, string> = {};
   listeners: Record<'click' | 'change' | 'input', ((ev: unknown) => void)[]> = { click: [], change: [], input: [] };
+  /** The selectors of the controls that were given focus, in order. */
+  focused: string[] = [];
   region = { innerHTML: '' };
   announce = { innerHTML: '' };
   quick = { innerHTML: '' };
@@ -26,6 +36,13 @@ export class FakeHost implements PanelHost {
     if (sel === '[data-region="announce"]') return this.announce;
     if (sel === '[data-region="quick"]') return this.quick;
     if (sel === '[data-region="views"]') return this.views;
+    // Controls: found when the markup on the host, or in a region drawn since, holds a matching attribute.
+    const all = [this.innerHTML, this.region.innerHTML, this.quick.innerHTML, this.views.innerHTML].join('');
+    const exact = /^\[data-action="([^"]*)"\]$/.exec(sel);
+    const prefix = /^\[data-action\^="([^"]*)"\]$/.exec(sel);
+    const id = /^#([\w-]+)$/.exec(sel);
+    const found = exact ? all.includes(`data-action="${exact[1]}"`) : prefix ? all.includes(`data-action="${prefix[1]}`) : id ? all.includes(`id="${id[1]}"`) : false;
+    if (found) return { innerHTML: '', focus: () => void this.focused.push(sel) };
     return null;
   }
   fire(type: 'click' | 'change' | 'input', ev: unknown) {
