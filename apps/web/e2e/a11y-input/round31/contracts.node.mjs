@@ -134,7 +134,7 @@ test("missing translation holds publication", () => assert.equal(readinessForEvi
 test("uncertain evidence remains uncertain", () => assert.equal(readinessForEvidence(bilingual({ extra: [] }).map((x) => ({ ...x, status: "UNKNOWN", tier: "UNKNOWN", offline: { state: "UNKNOWN" } }))).decision, "UNKNOWN"));
 test("unsupported evidence holds publication", () => assert.equal(readinessForEvidence(bilingual().map((x) => ({ ...x, status: "UNSUPPORTED" }))).decision, "HOLD"));
 test("unavailable cache holds publication", () => assert.equal(readinessForEvidence(bilingual().map((x) => ({ ...x, offline: { state: "ABSENT" } }))).decision, "HOLD"));
-test("audit never mutates records", () => { const x = bilingual(); const old = structuredClone(x); auditBilingualEvidence(x); assert.deepEqual(x, old); });
+test("audit never mutates records", () => { const x = bilingual(); const old = JSON.parse(JSON.stringify(x)); auditBilingualEvidence(x); assert.deepEqual(x, old); });
 
 const snapshotMutations = [
   ["missing main", [node({ id: "other", role: "button" })], { nodes: [node({ id: "heading", role: "heading", interactive: false })] }, "document.main-count"],
