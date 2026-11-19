@@ -46,13 +46,13 @@ describe("Shortlist table", () => {
     show();
     const table = screen.getByRole("table", { name: /Shortlisted places side by side \(2\)/ });
     const headers = within(table).getAllByRole("columnheader").map((h) => h.textContent);
-    expect(headers).toEqual(["Place", "Wheelchair tag", "Kind", "Address", "Tier", "Retrieved", "Source", "Licence", "Remove"]);
+    expect(headers).toEqual(["Place", "Wheelchair tag", "Kind", "Address", "Tier", "Retrieved", "Source", "Licence", "Added to list", "Remove"]);
     expect(within(table).getAllByRole("rowheader").map((h) => h.textContent)).toEqual(["Place a", "Beta Court"]);
   });
   it("shows each place's cells under the right header", () => {
     show();
     const row = screen.getByRole("row", { name: /Beta Court/ });
-    expect(within(row).getAllByRole("cell").map((c) => c.textContent)).toEqual(["No", "cafe", "1 Main Street", "Tier 0", "Retrieved 9 days ago", "OpenStreetMap, Geofabrik Ontario extract", "ODbL-1.0", "Remove"]);
+    expect(within(row).getAllByRole("cell").map((c) => c.textContent)).toEqual(["No", "cafe", "1 Main Street", "Tier 0", "Retrieved 9 days ago", "OpenStreetMap, Geofabrik Ontario extract", "ODbL-1.0", "19 November 2026", "Remove"]);
   });
   it("shows UNKNOWN for a place with no name", () => {
     show({ list: [entry("c")] });
@@ -136,6 +136,37 @@ describe("Shortlist actions", () => {
   it("puts the four actions in a named group", () => {
     show();
     expect(within(screen.getByRole("group", { name: "List actions" })).getAllByRole("button")).toHaveLength(4);
+  });
+});
+
+describe("Shortlist order", () => {
+  const three = [entry("a"), entry("b"), entry("c")];
+  const names = () => screen.getAllByRole("rowheader").map((h) => h.textContent);
+  it("offers the order only with two or more places", () => {
+    show({ list: [entry("a")] });
+    expect(screen.queryByRole("radiogroup", { name: "Order of the places" })).toBeNull();
+    cleanup();
+    show({ list: three });
+    expect(screen.getByRole("radiogroup", { name: "Order of the places" })).toBeTruthy();
+  });
+  it("starts in the order places were added and sorts by name on request", () => {
+    show({ list: [entry("b"), entry("a"), entry("c")] });
+    expect(names()).toEqual(["Beta Court", "Place a", "UNKNOWN"]);
+    fireEvent.click(screen.getByRole("radio", { name: "By name" }));
+    expect(names()).toEqual(["Beta Court", "Place a", "UNKNOWN"].sort((x, y) => (x === "UNKNOWN" ? 1 : y === "UNKNOWN" ? -1 : x.localeCompare(y))));
+    fireEvent.click(screen.getByRole("radio", { name: "As added" }));
+    expect(names()).toEqual(["Beta Court", "Place a", "UNKNOWN"]);
+  });
+  it("sorts a list added in the other direction into name order", () => {
+    show({ list: [entry("c"), entry("a"), entry("b")] });
+    expect(names()).toEqual(["UNKNOWN", "Place a", "Beta Court"]);
+    fireEvent.click(screen.getByRole("radio", { name: "By name" }));
+    expect(names()).toEqual(["Beta Court", "Place a", "UNKNOWN"]);
+  });
+  it("is French", () => {
+    show({ list: three, locale: "fr" });
+    expect(screen.getByRole("radiogroup", { name: "Ordre des lieux" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Par nom" })).toBeTruthy();
   });
 });
 

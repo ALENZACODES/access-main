@@ -3,7 +3,8 @@ import { Button } from "../design/Button.tsx";
 import type { PackPlaceRecord } from "./packPlaces.ts";
 import type { Point } from "./packGeo.ts";
 import { type ShortlistEntry, MAX_SHORTLIST, resolveShortlist } from "./shortlist.ts";
-import { buildShortlistTable, differencesLine, differingColumns, missingNotice, shortlistToCsv, shortlistToText } from "./shortlistTable.ts";
+import { ChoiceGroup } from "../design/fields.tsx";
+import { SHORTLIST_ORDERS, type ShortlistOrder, buildShortlistTable, differencesLine, differingColumns, missingNotice, shortlistToCsv, shortlistToText } from "./shortlistTable.ts";
 import type { Locale } from "./stateCopy.ts";
 import { t } from "./typography.ts";
 
@@ -40,7 +41,8 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
   const headingId = useId();
   const textId = useId();
   const resolved = useMemo(() => resolveShortlist(list, places), [list, places]);
-  const table = useMemo(() => buildShortlistTable(resolved, locale, today, from), [resolved, locale, today, from]);
+  const [order, setOrder] = useState<ShortlistOrder>("added");
+  const table = useMemo(() => buildShortlistTable(resolved, locale, today, from, order), [resolved, locale, today, from, order]);
   const [status, setStatus] = useState("");
   const [shown, setShown] = useState<null | "text" | "csv">(null);
   const text = useMemo(() => shortlistToText(resolved, locale, today), [resolved, locale, today]);
@@ -72,6 +74,19 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
       <h2 id={headingId}>{t(locale, `Your list (${list.length} of ${MAX_SHORTLIST})`, `Votre liste (${list.length} sur ${MAX_SHORTLIST})`)}</h2>
       {!kept ? <p>{t(locale, "This list could not be saved on this device. It will be gone when you close the page.", "Cette liste n’a pas pu être enregistrée sur cet appareil. Elle disparaîtra à la fermeture de la page.")}</p> : null}
       {missing ? <p>{missing}</p> : null}
+      {table.rows.length > 1 ? (
+        <ChoiceGroup
+          label={t(locale, "Order of the places", "Ordre des lieux")}
+          value={order}
+          onChange={(value) => {
+            if ((SHORTLIST_ORDERS as readonly string[]).includes(value)) setOrder(value as ShortlistOrder);
+          }}
+          options={[
+            { value: "added", label: t(locale, "As added", "Selon l’ajout") },
+            { value: "name", label: t(locale, "By name", "Par nom") },
+          ]}
+        />
+      ) : null}
       {table.rows.length > 1 ? <p>{differencesLine(table, locale)}</p> : null}
       {table.rows.length > 0 ? (
         // A scrolling region has to be reachable by keyboard, or its far columns cannot be read without a mouse.

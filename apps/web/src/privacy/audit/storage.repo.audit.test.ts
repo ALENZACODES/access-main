@@ -46,6 +46,7 @@ describe("storage keys in the source", () => {
     expect(outside.map((r) => r.key)).toEqual([
       "__map_tile_list",
       "app.corrections.v1",
+      "app.pack-shortlist.v1",
       "app.preferences.v1",
       "data-status:history:v1",
       "data-status:saved-views:v1",

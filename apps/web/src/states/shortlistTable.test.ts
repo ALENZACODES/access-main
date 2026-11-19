@@ -14,13 +14,14 @@ const entry = (id: string): ShortlistEntry => ({ id, addedOn: TODAY });
 const resolve = (items: unknown[], ids: string[]) => resolveShortlist(ids.map(entry), parse(items));
 
 describe("tableHeaders", () => {
-  it("has eight columns, and a ninth for distance only when asked", () => {
-    expect(tableHeaders("en", false)).toEqual(["Place", "Wheelchair tag", "Kind", "Address", "Tier", "Retrieved", "Source", "Licence"]);
+  it("has nine columns, and a tenth for distance only when asked", () => {
+    expect(tableHeaders("en", false)).toEqual(["Place", "Wheelchair tag", "Kind", "Address", "Tier", "Retrieved", "Source", "Licence", "Added to list"]);
     expect(tableHeaders("en", true).at(-1)).toBe("Distance");
-    expect(tableHeaders("en", true)).toHaveLength(9);
+    expect(tableHeaders("en", true)).toHaveLength(10);
   });
   it("is French with the same number of columns", () => {
-    expect(tableHeaders("fr", false)).toHaveLength(8);
+    expect(tableHeaders("fr", false)).toHaveLength(9);
+    expect(tableHeaders("fr", false)[8]).toBe("Ajouté à la liste");
     expect(tableHeaders("fr", false)[1]).toBe("Indication pour fauteuil roulant");
     expect(tableHeaders("fr", true).at(-1)).toBe("Distance");
   });
@@ -34,10 +35,10 @@ describe("buildShortlistTable", () => {
     for (const row of table.rows) expect(row.cells).toHaveLength(table.headers.length);
   });
   it("states a place's facts as the pack reports them", () => {
-    expect(table.rows[0]!.cells).toEqual(["Place a", "Yes", "cafe", "1 Main Street", "Tier 0", "Retrieved 9 days ago", "OpenStreetMap, Geofabrik Ontario extract", "ODbL-1.0"]);
+    expect(table.rows[0]!.cells).toEqual(["Place a", "Yes", "cafe", "1 Main Street", "Tier 0", "Retrieved 9 days ago", "OpenStreetMap, Geofabrik Ontario extract", "ODbL-1.0", "19 November 2026"]);
   });
   it("writes UNKNOWN for every missing value, and for a tag with no source, never an empty cell or a guess", () => {
-    expect(table.rows[1]!.cells).toEqual([UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL, "Tier UNKNOWN", UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL]);
+    expect(table.rows[1]!.cells).toEqual([UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL, "Tier UNKNOWN", UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL, "19 November 2026"]);
     expect(table.rows[1]!.name).toBe(UNKNOWN_CELL);
   });
   it("shows a tag with no usable source as UNKNOWN even when the pack says limited", () => {
@@ -82,6 +83,45 @@ describe("buildShortlistTable", () => {
   });
   it("has no rows for an empty list", () => {
     expect(buildShortlistTable({ found: [], missing: [] }, "en", TODAY).rows).toEqual([]);
+  });
+});
+
+describe("order and the added column", () => {
+  const items = [raw("a", { name: "Zed Bar" }), raw("b", { name: "" }), raw("c", { name: "Alpha Hall" }), raw("d", { name: "alpha hall" })];
+  const resolved = resolve(items, ["a", "b", "c", "d"]);
+  it("keeps the order places were added by default", () => {
+    expect(buildShortlistTable(resolved, "en", TODAY).rows.map((r) => r.id)).toEqual(["a", "b", "c", "d"]);
+    expect(buildShortlistTable(resolved, "en", TODAY, null, "added").rows.map((r) => r.id)).toEqual(["a", "b", "c", "d"]);
+  });
+  it("sorts by name with UNKNOWN names last and the id as the tie-break", () => {
+    expect(buildShortlistTable(resolved, "en", TODAY, null, "name").rows.map((r) => r.id)).toEqual(["c", "d", "a", "b"]);
+  });
+  it("does not change the list it sorts", () => {
+    const before = resolved.found.map((f) => f.place.id);
+    buildShortlistTable(resolved, "en", TODAY, null, "name");
+    expect(resolved.found.map((f) => f.place.id)).toEqual(before);
+  });
+  it("keeps each row's added date with its place when sorted", () => {
+    const list: ShortlistEntry[] = [{ id: "a", addedOn: "2026-11-01" }, { id: "c", addedOn: "2026-11-05" }];
+    const t = buildShortlistTable(resolveShortlist(list, parse(items)), "en", TODAY, null, "name");
+    expect(t.rows.map((r) => [r.id, r.cells[8]])).toEqual([["c", "5 November 2026"], ["a", "1 November 2026"]]);
+  });
+  it("writes UNKNOWN when the stored date was not a valid date", () => {
+    const t = buildShortlistTable(resolveShortlist([{ id: "a", addedOn: null }], parse(items)), "en", TODAY);
+    expect(t.rows[0]!.cells[8]).toBe(UNKNOWN_CELL);
+  });
+  it("writes the date in French", () => {
+    expect(buildShortlistTable(resolve(items, ["a"]), "fr", TODAY).rows[0]!.cells[8]).toBe("19 novembre 2026");
+  });
+  it("does not count the added column as a difference between places", () => {
+    const list: ShortlistEntry[] = [{ id: "a", addedOn: "2026-11-01" }, { id: "c", addedOn: "2026-11-05" }];
+    const t = buildShortlistTable(resolveShortlist(list, parse([raw("a"), raw("c")])), "en", TODAY);
+    expect(differingColumns(t)).toEqual([]);
+    expect(t.rows[0]!.cells[8]).not.toBe(t.rows[1]!.cells[8]);
+  });
+  it("puts the distance after the added column", () => {
+    const t = buildShortlistTable(resolve(items, ["a"]), "en", TODAY, { lat: 43.65, lon: -79.38 });
+    expect(t.headers.slice(-2)).toEqual(["Added to list", "Distance"]);
   });
 });
 
