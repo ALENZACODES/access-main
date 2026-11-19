@@ -48,3 +48,13 @@ The audit `recoveryFourPanelsAudit.test.ts` checks that all four panels are moun
 by `RecoveryCenter` in addition to the existing plan, queue, download and export
 controls. It also checks the inspection-date handoff to the storage rehearsal.
 No panel sets another panel's state or treats a missing field as ready.
+
+## Manual repair attempt notes
+
+The same shell also mounts `RecoveryRepairAttempts`. It records separate,
+source-attributed attempt notes and does not change local pack health or launch
+operations. Each note includes an explicitly selected open licence, date, tier,
+and outcome; the literal `UNKNOWN` applies when no outcome is known. Import is
+staged and non-destructive, and export occurs only after a user action. The
+implementation is covered by `recoveryRepairReceipt.test.ts` and
+`recoveryRepairAudit.test.ts`.

@@ -406,3 +406,8 @@ export { compareCaseDocuments, journalCompareCopy, mergeCaseDocuments } from "./
 export { addRecoveryTask, applyTaskMerge, assessRecoveryTasks, countTaskStates, exportTaskBoard, newTaskBoard, parseTaskBoard, previewTaskMerge, updateRecoveryTask } from "./recoveryTaskBoard";
 export type { RecoveryTask, TaskBoard, TaskKind, TaskProvenance } from "./recoveryTaskBoard";
 export { taskBoardCopy } from "./recoveryTaskCopy";
+
+export { RecoveryRepairAttempts } from "./RecoveryRepairAttempts";
+export type { RecoveryRepairAttemptsProps } from "./RecoveryRepairAttempts";
+export { ATTEMPT_COPY, addRecoveryAttempt, emptyAttemptDocument, exportRecoveryAttempts, isAttemptProvenance, mergeRecoveryAttempts, parseRecoveryAttempts, previewAttemptMerge, replaceRecoveryAttempt, summarizeRecoveryAttempts, validateAttempt, validateAttemptDocument } from "./recoveryRepairReceipt";
+export type { AttemptDocument, AttemptIssue, AttemptKind, AttemptMergePreview, AttemptOutcome, AttemptProvenance, AttemptResult, AttemptSummary, RecoveryAttempt } from "./recoveryRepairReceipt";
