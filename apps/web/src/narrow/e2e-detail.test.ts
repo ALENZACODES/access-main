@@ -4,6 +4,8 @@ import { PROFILES } from './profiles.js';
 import { found, reportOf, route } from './report-fixtures.js';
 import { totals, type AuditReport } from './report.js';
 import { runAudit, type FullPage } from './run.js';
+import { parseManualLog, sampleManualLog } from './manual-log.js';
+import { renderWorksheet } from './worksheet.js';
 
 /**
  * The detailed report under the browser checks of this module: the page is
@@ -43,10 +45,22 @@ function fullReport(): AuditReport {
   };
 }
 
+/** The worksheet with the newest by-hand note in each block, which adds a line of free text a person wrote. */
+function worksheetWithLog(): string {
+  const now = new Date('2026-11-19T12:00:00Z');
+  const log = parseManualLog(sampleManualLog(), now);
+  if (!log.ok) throw new Error(log.error.en);
+  return renderWorksheet(fullReport(), 'fr', { manual: { log: log.value, now } });
+}
+
 const SITE: Record<string, string> = {
+  '/worksheet-log': worksheetWithLog(),
   '/detail-en': renderDetail(fullReport(), 'en'),
   '/detail-fr': renderDetail(fullReport(), 'fr'),
   '/detail-empty': renderDetail(reportOf([]), 'en'),
+  '/worksheet-en': renderWorksheet(fullReport(), 'en'),
+  '/worksheet-fr': renderWorksheet(fullReport(), 'fr'),
+  '/worksheet-2-2': renderWorksheet(reportOf([]), 'en', { since: '2.2' }),
 };
 
 interface Served {
@@ -126,6 +140,26 @@ describe.skipIf(!enabled)('the detailed report in a real browser', () => {
 
   it('has no measured failure for a report with no route', async () => {
     expect(failing(await run(['/detail-empty'], PROFILES.slice(0, 1))).join('\n')).toBe('');
+  }, 120_000);
+
+  it('the worksheet has no measured failure in English, in any profile', async () => {
+    const report = await run(['/worksheet-en']);
+    expect(failing(report).join('\n')).toBe('');
+    expect(totals(report.routes).checked).toBeGreaterThan(300);
+  }, 240_000);
+
+  it('the worksheet has no measured failure in French, in the narrow and dark profiles', async () => {
+    const two = PROFILES.filter((p) => p.id === 'narrow' || p.id === 'dark');
+    expect(two).toHaveLength(2);
+    expect(failing(await run(['/worksheet-fr'], two)).join('\n')).toBe('');
+  }, 180_000);
+
+  it('the worksheet with by-hand notes has no measured failure', async () => {
+    expect(failing(await run(['/worksheet-log'], PROFILES.slice(0, 1))).join('\n')).toBe('');
+  }, 180_000);
+
+  it('a short worksheet has no measured failure', async () => {
+    expect(failing(await run(['/worksheet-2-2'], PROFILES.slice(0, 1))).join('\n')).toBe('');
   }, 120_000);
 
   it('runs the reflow, contrast, target and focus checks on the page', async () => {
