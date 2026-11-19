@@ -6,6 +6,7 @@ import {
   MAX_URLS_PER_GROUP,
   OSM_CREDIT,
   buildCredits,
+  creditRecordsFromPack,
   creditTier,
   creditsToCsv,
   creditsToText,
@@ -204,5 +205,47 @@ describe("CSV output", () => {
     const ids = Object.keys(OPEN_LICENCES) as OpenLicenceId[];
     const csv = creditsToCsv(buildCredits(ids.map((licence, i) => rec({ p: { source: `S${i}`, licence } })), TODAY));
     for (const id of ids) expect(csv).toContain(`,${id},`);
+  });
+});
+
+describe("creditRecordsFromPack", () => {
+  const packProv = (over: Record<string, unknown> = {}) => ({
+    source_name: OSM,
+    source_url: "https://www.openstreetmap.org/way/1",
+    licence: "ODbL-1.0",
+    retrieved_at: "2026-11-13",
+    tier: 0,
+    ...over,
+  });
+  const place = (over: Record<string, unknown> = {}) => ({ id: "a", name: "Hall", wheelchair: "yes", lat: 43.65, lon: -79.38, provenance: packProv(), ...over });
+
+  it("reads provenance and the stated tier from each record", () => {
+    const [r] = creditRecordsFromPack([place({ provenance: packProv({ tier: "E" }) })]);
+    expect(r?.provenance).toEqual({ source: OSM, licence: "ODbL-1.0", retrievedOn: "2026-11-13", url: "https://www.openstreetmap.org/way/1" });
+    expect(r?.tier).toBe("E");
+  });
+  it("keeps a record without provenance, as one with no source", () => {
+    const c = buildCredits(creditRecordsFromPack([place({ id: "a" }), place({ id: "b", provenance: null })]), TODAY);
+    expect(c.recordCount).toBe(2);
+    expect(c.withoutSource).toBe(1);
+  });
+  it("leaves out what the places list would drop and counts a repeated id once", () => {
+    const records = creditRecordsFromPack([place(), place(), { id: "" }, null, 7, place({ id: "z" })]);
+    expect(records).toHaveLength(2);
+  });
+  it("gives nothing when the input is not an array", () => {
+    for (const v of [null, undefined, {}, "places", 3]) expect(creditRecordsFromPack(v)).toEqual([]);
+  });
+  it("leaves the tier UNKNOWN when the pack states none", () => {
+    const c = buildCredits(creditRecordsFromPack([place({ provenance: packProv({ tier: undefined }) })]), TODAY);
+    expect(c.groups[0]?.tierUnknownRecords).toBe(1);
+  });
+  it("credits the shipped pack's records to their source, with no record lost", async () => {
+    const { default: text } = await import("../../public/packs/toronto/content.json?raw");
+    const places = (JSON.parse(text) as { places: unknown[] }).places;
+    const c = buildCredits(creditRecordsFromPack(places), TODAY);
+    expect(c.recordCount).toBe(24);
+    expect(c.groups.reduce((n, g) => n + g.records, 0) + c.withoutSource).toBe(24);
+    expect(c.needsOsmCredit).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FINDER_KINDS, type FinderKind, type JourneyPlan, type ModuleId, type ModuleResult, type PlaceHit } from "@access/shared";
 import { Button } from "../design/Button.tsx";
@@ -12,7 +12,7 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
 import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm.tsx";
-import { PackPlaces, StateNotice, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { DataCredits, PackPlaces, StateNotice, creditRecordsFromPack, ERROR_KINDS, getRouteEmpty, getRouteError, getState, type EmptyKind, type ErrorKind } from "../states/index.ts";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -73,6 +73,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
     );
     return () => { active = false; };
   }, [id]);
+  const packCredits = useMemo(() => creditRecordsFromPack(packPlaces), [packPlaces]);
   const copy = COPY[id];
   useDocumentTitle(t(copy.title));
 
@@ -117,17 +118,15 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   const canSearch = result?.availability === "ready";
   const hasSearch = id === "places" || id === "finders" || id === "journey";
   const locale = i18n.language.startsWith("fr") ? "fr" as const : "en" as const;
-  // A trip that was not planned (no start, no end, not found) is not "no route": only a planned trip with no items is.
-  const tripAsked = asked && !(id === "journey" && result !== null && JOURNEY_NOT_PLANNED.has(result.messageKey));
-  const choice = moduleStateFor({
-    module: id,
-    availability: result ? (result.availability as ModuleAvailability) : "loading",
-    itemCount: result?.items.length ?? 0,
-    asked: tripAsked,
-    online,
-    packStored,
-  });
-  const failures = useFailureStreak(result, result?.availability === "error");
+  const stateKind: ErrorKind | EmptyKind | null = !result
+    ? null
+    : hasSearch && !online && packStored === false && result.availability !== "ready"
+      ? "offline-no-pack"
+      : id === "games" && result.availability === "error"
+        ? "game-load-failed"
+        : asked && result.availability === "ready" && result.items.length === 0
+          ? id === "places" ? "search-no-results" : id === "finders" ? "finder-no-results" : id === "journey" && !JOURNEY_NOT_PLANNED.has(result.messageKey) ? "journey-no-route" : null
+          : null;
   // The /journey place pickers use the same place search as /places.
   const placeSearch = (query: string) => getModules().places.search({ text: query }, {
     locale,
@@ -191,10 +190,18 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
         />
       ) : null}
       <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
-      {choice ? (
+      {stateKind ? (
         <StateNotice
           lang={locale}
-          view={escalateView(moduleStateView(choice, locale), { failures, online, packStored }, locale)}
+          view={
+            (id === "places" || id === "finders" || id === "journey")
+              ? (
+                  (ERROR_KINDS as string[]).includes(stateKind)
+                    ? getRouteError(id === "places" ? "search" : id, stateKind as ErrorKind, locale)
+                    : getRouteEmpty(id === "places" ? "search" : id, locale) ?? getState(stateKind, locale)
+                )
+              : getState(stateKind, locale)
+          }
           onAction={{
             retry: () => setAttempt((count) => count + 1),
             "clear-search": clearSearch,
@@ -214,6 +221,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
         </ul>
       ) : null}
       {id === "places" && packPlaces !== null ? <PackPlaces places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packCredits.length > 0 ? <DataCredits records={packCredits} locale={locale} showOsmCredit={false} /> : null}
       <p>{t("data.liveBody")}</p>
     </div>
   );

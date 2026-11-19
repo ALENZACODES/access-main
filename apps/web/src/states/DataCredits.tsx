@@ -9,6 +9,8 @@ interface Props {
   locale: Locale;
   /** ISO date; defaults to today on this device. */
   today?: string;
+  /** False where the page already shows the OpenStreetMap credit itself. Default true. */
+  showOsmCredit?: boolean;
 }
 
 const localToday = () => {
@@ -25,7 +27,7 @@ function count(n: number, locale: Locale): string {
  * Where the saved records came from: source, open licence, retrieval dates and tiers, grouped.
  * Reading only. Nothing here is fetched; it works from the records already on this device.
  */
-export function DataCredits({ records, locale, today }: Props) {
+export function DataCredits({ records, locale, today, showOsmCredit = true }: Props) {
   const headingId = useId();
   const credits = useMemo(() => buildCredits(records, today ?? localToday()), [records, today]);
   const heading = t(locale, "Sources of the records saved on this device", "Sources des enregistrements sur cet appareil");
@@ -41,7 +43,7 @@ export function DataCredits({ records, locale, today }: Props) {
   return (
     <section aria-labelledby={headingId} lang={locale}>
       <h2 id={headingId}>{heading}</h2>
-      {credits.needsOsmCredit ? <p>{OSM_CREDIT}</p> : null}
+      {credits.needsOsmCredit && showOsmCredit ? <p>{OSM_CREDIT}</p> : null}
       <ul className="credit-list">
         {credits.groups.map((g) => (
           <li key={g.key} className="credit-group">

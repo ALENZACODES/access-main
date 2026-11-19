@@ -46,6 +46,11 @@ describe("DataCredits", () => {
     render(<DataCredits records={[{ provenance: prov({ source: "Open Data Toronto", licence: "CC0-1.0" }), tier: 0 }]} locale="en" today={TODAY} />);
     expect(screen.queryByText("© OpenStreetMap contributors")).toBeNull();
   });
+  it("leaves out the credit line when the page already shows it", () => {
+    render(<DataCredits records={records} locale="en" today={TODAY} showOsmCredit={false} />);
+    expect(screen.queryByText("© OpenStreetMap contributors")).toBeNull();
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+  });
   it("says there is nothing to credit with no records, without a list", () => {
     render(<DataCredits records={[]} locale="en" today={TODAY} />);
     expect(screen.getByText("No saved records on this device, so there is nothing to credit yet.")).toBeTruthy();

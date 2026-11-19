@@ -17,6 +17,8 @@ export {
 } from "./stateCopy.ts";
 export { StateNotice } from "./StateNotice.tsx";
 export { PackPlaces } from "./PackPlaces.tsx";
+export { DataCredits } from "./DataCredits.tsx";
+export * from "./dataCredits.ts";
 
 export {
   ROUTE_IDS,

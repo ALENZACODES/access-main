@@ -10,6 +10,7 @@
 import { canonicalTierFromForeign } from "@access/shared";
 import { OPEN_LICENCES, type OpenLicenceId, type Provenance, STALE_AFTER_DAYS, daysBetween, formatDate, isStale } from "./provenance";
 import { pluralCategory } from "./messages";
+import { parsePackPlace } from "./packPlaces";
 import type { Locale } from "./stateCopy";
 import { t } from "./typography";
 
@@ -220,4 +221,24 @@ export function creditsToCsv(c: Credits): string {
 export function oldestAgeDays(c: Credits, today: string): number | null {
   const dates = c.groups.map((g) => g.earliest).sort();
   return dates.length === 0 ? null : daysBetween(dates[0]!, today);
+}
+
+/**
+ * Credit records for the raw `places` array of a stored pack. Each record is read the way the
+ * places list reads it, so a record the list would drop is not credited either, and a repeated
+ * id is counted once. Anything that is not an array yields no records.
+ */
+export function creditRecordsFromPack(rawPlaces: unknown): CreditRecord[] {
+  if (!Array.isArray(rawPlaces)) return [];
+  const seen = new Set<string>();
+  const out: CreditRecord[] = [];
+  for (const raw of rawPlaces as unknown[]) {
+    const place = parsePackPlace(raw);
+    if (!place || seen.has(place.id)) continue;
+    seen.add(place.id);
+    const prov = (raw as Record<string, unknown>).provenance;
+    const tier = typeof prov === "object" && prov !== null ? (prov as Record<string, unknown>).tier : undefined;
+    out.push({ provenance: place.provenance, tier });
+  }
+  return out;
 }
