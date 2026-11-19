@@ -78,7 +78,9 @@ export type CheckId =
   | 'overlays'
   | 'image-markup'
   | 'focusables'
-  | 'locale-markup';
+  | 'locale-markup'
+  | 'site-links'
+  | 'lang-pairs';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -154,6 +156,8 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   'image-markup': '1.1.1',
   focusables: '4.1.2',
   'locale-markup': '3.1.2',
+  'site-links': '3.2.4',
+  'lang-pairs': null,
   regions: '1.3.1',
 };
 
@@ -231,6 +235,8 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'image-markup',
   'focusables',
   'locale-markup',
+  'site-links',
+  'lang-pairs',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -307,6 +313,8 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   'image-markup': { en: 'Image structure', fr: 'Structure des images' },
   focusables: { en: 'Focus attributes', fr: 'Attributs de focus' },
   'locale-markup': { en: 'Language settings in the markup', fr: 'Réglages de langue dans le balisage' },
+  'site-links': { en: 'Links across pages', fr: 'Liens entre les pages' },
+  'lang-pairs': { en: 'English and French page pairs', fr: 'Paires de pages en anglais et en français' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */

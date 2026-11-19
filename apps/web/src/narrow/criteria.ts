@@ -56,6 +56,7 @@ export const CRITERIA: readonly Criterion[] = [
   { sc: '3.1.5', level: 'AAA', en: 'Reading Level', fr: 'Niveau de lecture' },
   { sc: '3.2.2', level: 'A', en: 'On Input', fr: 'À la saisie' },
   { sc: '3.2.3', level: 'AA', en: 'Consistent Navigation', fr: 'Navigation cohérente' },
+  { sc: '3.2.4', level: 'AA', en: 'Consistent Identification', fr: 'Identification cohérente' },
   { sc: '3.3.2', level: 'A', en: 'Labels or Instructions', fr: 'Étiquettes ou instructions' },
   { sc: '3.3.8', level: 'AA', en: 'Accessible Authentication (Minimum)', fr: 'Authentification accessible (minimum)' },
   { sc: '4.1.2', level: 'A', en: 'Name, Role, Value', fr: 'Nom, rôle et valeur' },

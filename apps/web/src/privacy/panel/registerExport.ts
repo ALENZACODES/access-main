@@ -45,12 +45,12 @@ function localDate(d: Date): string {
 }
 
 /** One line per item. Rows come first, in the language's alphabetical order, then storage that could not be read. */
-export function registerLines(locale: Locale, register: readonly RegisterRow[], unscanned: readonly UnscannedRow[], prefix: string): RegisterLine[] {
+export function registerLines(locale: Locale, register: readonly RegisterRow[], unscanned: readonly UnscannedRow[]): RegisterLine[] {
   const s = REGISTER_STRINGS[locale];
   const rows: RegisterLine[] = register.map((r) => ({
     item: r.holds[locale],
     choice: r.gated ? s.yes : s.no,
-    erase: r.key.startsWith(prefix) ? s.yes : s.no,
+    erase: r.reach === "panel" ? s.yes : s.no,
     source: r.source,
     recordedOn: r.recordedOn,
   }));
@@ -65,11 +65,10 @@ export function registerAsCsv(
   locale: Locale,
   register: readonly RegisterRow[],
   unscanned: readonly UnscannedRow[],
-  prefix: string,
   now: Date,
   delimiter: "," | ";" = ",",
 ): ExportFile {
-  const lines = registerLines(locale, register, unscanned, prefix);
+  const lines = registerLines(locale, register, unscanned);
   const row = (cells: readonly string[]): string => `${cells.map((c) => csvCell(c, delimiter)).join(delimiter)}\r\n`;
   const text = row(REGISTER_STRINGS[locale].header) + lines.map((l) => row([l.item, l.choice, l.erase, l.source, l.recordedOn])).join("");
   const stem = locale === "fr" ? "l-app-ce-qui-est-conserve" : "the-app-what-is-kept";
@@ -80,12 +79,11 @@ export function registerAsText(
   locale: Locale,
   register: readonly RegisterRow[],
   unscanned: readonly UnscannedRow[],
-  prefix: string,
   now: Date,
 ): ExportFile {
   const s = REGISTER_STRINGS[locale];
   const colon = locale === "fr" ? `${NBSP}:` : ":";
-  const lines = registerLines(locale, register, unscanned, prefix);
+  const lines = registerLines(locale, register, unscanned);
   const out: string[] = [s.title, ""];
   for (const l of lines) {
     out.push(l.item);

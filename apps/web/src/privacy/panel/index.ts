@@ -77,12 +77,14 @@ export { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, ROUTE_REPORTS_PURPOS
 export type { SaveResult } from "./live";
 export { groupRefused, refusedLines, renderRefusedHtml, REFUSED_STRINGS } from "./refusedSection";
 export type { RefusedGroup } from "./refusedSection";
-export { OUTSIDE_STRINGS, outsideItems, renderOutsideHtml } from "./outsideSection";
+export { OUTSIDE_STRINGS, outsideItems, outsideItemsForScope, renderOutsideHtml } from "./outsideSection";
 export type { OutsideItem } from "./outsideSection";
-export { STORAGE_REGISTER, UNSCANNED } from "./storageRegister";
+export { STORAGE_REGISTER, UNSCANNED, panelExtraKeys } from "./storageRegister";
 export type { RegisterRow, UnscannedRow } from "./storageRegister";
 export { checkLiveControllerDeps, liveControllerDeps } from "./liveController";
 export type { LiveControllerDeps, LiveControllerOptions } from "./liveController";
 export { REGISTER_STRINGS, registerAsCsv, registerAsText, registerLines } from "./registerExport";
 export type { RegisterLine } from "./registerExport";
+export { assertScope, inScope, prefixScope, scopeKeysPresent, toScope, validateScope } from "./dataScope";
+export type { DataScope, ScopeProblem, ScopeProblemCode } from "./dataScope";
 

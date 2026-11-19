@@ -12,7 +12,7 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
 import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm.tsx";
-import { DataCredits, PackFreshness, PackPlaces, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { DataCredits, PackFreshness, PackPlaces, PackReport, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -215,7 +215,8 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
         </ul>
       ) : null}
       {id === "places" && packPlaces !== null ? <PackPlaces places={packPlaces} locale={locale} /> : null}
-      {id === "places" && packCredits.length > 0 ? <PackFreshness places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packPlaces !== null ? <PackFreshness places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packPlaces !== null ? <PackReport places={packPlaces} locale={locale} /> : null}
       {id === "places" && packCredits.length > 0 ? <DataCredits records={packCredits} locale={locale} showOsmCredit={false} /> : null}
       <p>{t("data.liveBody")}</p>
     </div>

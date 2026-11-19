@@ -78,6 +78,8 @@ measure reports UNKNOWN, never a pass.
 | image-markup | 1.1.1 | read from the markup: a picture with no img, a linked area with no alt, and a figure with two captions or a caption in the middle fail; an image marked as decoration that also has a name, and the longdesc attribute, are UNKNOWN |
 | focusables | 4.1.2 | read from the markup: a tabindex that is not a whole number, an access key longer than one character, and a second autofocus fail; a plain element with tabindex 0 and no role or name, and an editable region with no name, are UNKNOWN |
 | locale-markup | 3.1.2 | read from the markup: a bdo with no dir and a translate value that is not yes or no fail; an empty lang on part of the page, a content-language meta that names another language than the html element, and translation switched off for the whole page are UNKNOWN |
+| site-links | 3.2.4, 2.4.5, 2.4.6 | compares the markup of the pages audited: a link to an id another page does not have fails, and so does a link to a page outside the set when the set is the whole site; one destination under two names, one name for two destinations, a repeated main heading, a page nothing links to and a site with neither search nor site map are UNKNOWN |
+| lang-pairs | none | English and French versions named by `hreflang`: an alternate that is not returned and a page marked in another language than announced fail; a page with no other version, no visible link to it, and versions with different numbers of headings, links, fields, images, tables, list items or buttons are UNKNOWN |
 | budget | none | per-check limits for teams that cannot fix everything at once |
 | provenance | none | data records need source name, https URL, licence and retrieved date |
 

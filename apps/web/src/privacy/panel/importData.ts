@@ -1,8 +1,10 @@
 // Restore a file made by "Download my data". The file is checked completely
 // before anything is written: format, version, prefix, size, every key and
-// every value. Only the App's own keys can be restored. If a write fails part
+// every value. Only names in the data scope can be restored: the App's prefix and
+// the exact extra names listed for it. If a write fails part
 // way, what was written is put back.
 
+import { inScope, toScope, type DataScope } from "./dataScope";
 import type { StorageLike } from "./storage";
 
 export const MAX_IMPORT_BYTES = 1_000_000;
@@ -53,7 +55,9 @@ function fail(code: ImportProblemCode, detail?: string): ImportOutcome {
   return detail === undefined ? { ok: false, code } : { ok: false, code, detail };
 }
 
-export function prepareImport(text: string, storage: StorageLike | null, prefix: string): ImportOutcome {
+export function prepareImport(text: string, storage: StorageLike | null, prefixOrScope: string | DataScope): ImportOutcome {
+  const scope = toScope(prefixOrScope);
+  const prefix = scope.prefix;
   if (encoder.encode(text).length > MAX_IMPORT_BYTES) return fail("too-large");
   let v: unknown;
   try {
@@ -75,8 +79,8 @@ export function prepareImport(text: string, storage: StorageLike | null, prefix:
   const unchanged: string[] = [];
   let bytes = 0;
   for (const [key, value] of entries) {
-    const rel = key.slice(prefix.length);
-    if (!key.startsWith(prefix) || rel === "" || !KEY_RE.test(key) || FORBIDDEN.has(rel)) return fail("bad-key", key);
+    const rel = key.startsWith(prefix) ? key.slice(prefix.length) : key;
+    if (!inScope(scope, key) || rel === "" || !KEY_RE.test(key) || FORBIDDEN.has(rel)) return fail("bad-key", key);
     if (typeof value !== "string") return fail("bad-items", key);
     const size = encoder.encode(value).length;
     if (size > MAX_IMPORT_VALUE_BYTES) return fail("value-too-large", key);

@@ -1,5 +1,7 @@
 import { auditReflow, auditTargets, type Box } from './audit.js';
 import { auditConsistency, type RouteFacts } from './consistency.js';
+import { siteResults } from './sitefiles.js';
+import { readSite, type SitePage } from './sitepages.js';
 import { auditForms } from './forms.js';
 import { auditAuth } from './auth.js';
 import { auditStatus } from './status.js';
@@ -279,6 +281,8 @@ export interface PageResult {
   readonly facts: PageFacts;
   /** Keys of the named controls on the page, for the cross-view check. */
   readonly controls: readonly string[];
+  /** The markup of the page as the browser holds it, for the checks that compare pages. */
+  readonly html: string;
 }
 
 /** Audits the page the browser is on now. Use after goto or setContent. */
@@ -334,7 +338,7 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
     ...(keyboard ? { keyboard } : {}),
     ...(profile.skipContrast ? { skipContrast: true } : {}),
   });
-  return { audit, facts, controls: controlKeys(snapshot.interactive) };
+  return { audit, facts, controls: controlKeys(snapshot.interactive), html };
 }
 
 export async function auditRoute(page: FullPage, baseUrl: string, route: string, opts: LoadedOptions = {}): Promise<RouteAudit> {
@@ -363,6 +367,7 @@ export async function runAudit(input: RunInput): Promise<AuditReport> {
   const profiles = input.profiles && input.profiles.length > 0 ? input.profiles : [DEFAULT_PROFILE];
   const routes: RouteAudit[] = [];
   const pageFacts: RouteFacts[] = [];
+  const sitePages: SitePage[] = [];
   const views = new Map<string, { index: number; views: View[] }>();
   for (const route of input.routes) {
     for (let p = 0; p < profiles.length; p++) {
@@ -376,6 +381,7 @@ export async function runAudit(input: RunInput): Promise<AuditReport> {
       let audit = got.audit;
       if (p === 0) {
         pageFacts.push({ route, facts: got.facts });
+        sitePages.push({ route, html: got.html });
         views.set(route, { index: routes.length, views: [] });
       }
       views.get(route)?.views.push({ profile: profile.id, keys: got.controls });
@@ -391,7 +397,10 @@ export async function runAudit(input: RunInput): Promise<AuditReport> {
     const base = routes[v.index];
     if (base) routes[v.index] = addCheck(base, 'parity', auditParity(v.views));
   }
-  if (pageFacts.length >= 2) routes.push(buildRouteAudit('site', null, { consistency: auditConsistency(pageFacts) }));
+  if (pageFacts.length >= 2) {
+    // The consistency check uses what the browser measured. The two checks that compare markup come after it.
+    routes.push(buildRouteAudit('site', null, { consistency: auditConsistency(pageFacts), ...siteResults(readSite(sitePages)) }));
+  }
   if (input.i18n) {
     routes.push(
       buildRouteAudit('strings', null, {
