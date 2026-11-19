@@ -7,6 +7,7 @@ import { ChoiceGroup } from "../design/fields.tsx";
 import { SHORTLIST_ORDERS, type ShortlistOrder, buildShortlistTable, differencesLine, differingColumns, missingNotice, shortlistToCsv, shortlistToText } from "./shortlistTable.ts";
 import type { Locale } from "./stateCopy.ts";
 import { t } from "./typography.ts";
+import { VisitPlan } from "./VisitPlan.tsx";
 
 interface Props {
   list: readonly ShortlistEntry[];
@@ -140,6 +141,7 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
           {t(locale, "Empty the list", "Vider la liste")}
         </Button>
       </div>
+      {resolved.found.length > 0 ? <VisitPlan found={resolved.found.map((f) => f.place)} missing={resolved.missing.length} locale={locale} today={today} /> : null}
       {shown !== null ? <textarea id={textId} readOnly rows={12} value={shown === "csv" ? csv : text} aria-label={shown === "csv" ? t(locale, "The list as CSV", "La liste en CSV") : t(locale, "The list as text", "La liste en texte")} style={{ width: "100%" }} /> : null}
       <p aria-live="polite">{status}</p>
     </section>

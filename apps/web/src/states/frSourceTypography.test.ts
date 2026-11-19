@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * already be right so a reader and a linter see the same text: a no-break space (U+00A0) before ":",
  * a narrow one (U+202F) before ; ! ? and inside « ». Only the text of a string literal is checked.
  */
-const FILES = ["shortlistTable.ts", "shortlist.ts", "packCategories.ts", "packCategoryExport.ts", "Shortlist.tsx", "PackCategories.tsx", "PackPlaces.tsx", "useShortlist.ts"];
+const FILES = ["shortlistTable.ts", "shortlist.ts", "packCategories.ts", "packCategoryExport.ts", "Shortlist.tsx", "PackCategories.tsx", "PackPlaces.tsx", "useShortlist.ts", "packDiffText.ts", "packCompareCopy.ts", "PackCompare.tsx", "packDiff.ts", "packEarlier.ts", "packEarlierId.ts", "csvParse.ts"];
 
 /** Text parts of every string literal. For a template, the `${...}` code is dropped and its own literals are read separately. */
 function stringLiterals(source: string): string[] {
