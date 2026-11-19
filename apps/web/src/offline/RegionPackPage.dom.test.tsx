@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, configure, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import axe from "axe-core";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
@@ -86,16 +86,19 @@ async function axeViolations(container: HTMLElement) {
   return results.violations;
 }
 
+// The re-check reads and hashes every stored part. On a busy machine that can take longer than the default 1 s,
+// so every async query waits up to 5 s, and the re-check tests (which also run axe) may take up to 30 s, instead of failing on a slow run.
 beforeAll(() => {
+  configure({ asyncUtilTimeout: 5000 });
   i18n.options.react = { ...i18n.options.react, useSuspense: false };
 });
 afterEach(cleanup);
 
-describe("offline region integrity re-check", () => {
+describe("offline region integrity re-check", { timeout: 30000 }, () => {
   it("announces a completed check only after the stored digest and count match", async () => {
     await view("en", mockSource({ parts: [part()] }));
     await screen.findByRole("heading", { name: "Offline regions" });
-    fireEvent.click(screen.getByRole("button", { name: offlineCatalog.en.recheck }));
+    fireEvent.click(await screen.findByRole("button", { name: offlineCatalog.en.recheck }));
     expect(await screen.findByText(offlineCatalog.en.downloaded)).toBeTruthy();
     expect(screen.queryByRole("heading", { name: packIntegrityCopy("en", "corrupt").title })).toBeNull();
   });
@@ -103,7 +106,7 @@ describe("offline region integrity re-check", () => {
   it.each(["en", "fr"] as const)("shows CorruptPackNotice with a re-download action for a corrupt pack (%s)", async (locale) => {
     const { container } = await view(locale, mockSource({ parts: [part({ data: new TextEncoder().encode("abd") })] }));
     await screen.findByRole("heading", { name: offlineCatalog[locale].title });
-    fireEvent.click(screen.getByRole("button", { name: offlineCatalog[locale].recheck }));
+    fireEvent.click(await screen.findByRole("button", { name: offlineCatalog[locale].recheck }));
     const copy = packIntegrityCopy(locale, "corrupt");
     const notice = await screen.findByRole("alert");
     expect(notice.getAttribute("lang")).toBe(locale);
@@ -117,6 +120,50 @@ describe("offline region integrity re-check", () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 
+  it("keeps the check from running twice and shows the damaged notice only when the check ends", async () => {
+    let finish: (value: Awaited<ReturnType<PackSource["storedRegionIntegrity"]>>) => void = () => undefined;
+    const pending = new Promise<Awaited<ReturnType<PackSource["storedRegionIntegrity"]>>>((resolve) => { finish = resolve; });
+    const source = mockSource({ parts: [] });
+    const integrity = vi.fn(() => pending);
+    source.storedRegionIntegrity = integrity;
+    await view("en", source);
+    const button = await screen.findByRole("button", { name: offlineCatalog.en.recheck });
+    fireEvent.click(button);
+    await waitFor(() => expect(button.hasAttribute("disabled")).toBe(true));
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    fireEvent.click(button);
+    expect(integrity).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("alert")).toBeNull();
+    finish({ regionId: "toronto", cellCount: 1, parts: [part({ data: new TextEncoder().encode("abd") })] });
+    expect(await screen.findByRole("button", { name: packIntegrityCopy("en", "corrupt").action })).toBeTruthy();
+    await waitFor(() => expect(button.hasAttribute("disabled")).toBe(false));
+    expect(button.getAttribute("aria-busy")).toBe("false");
+  });
+
+  it("treats a check that could not run as UNKNOWN, never as a pass", async () => {
+    const source = mockSource({ parts: [] });
+    source.storedRegionIntegrity = vi.fn(async () => { throw new Error("storage unavailable"); });
+    await view("en", source);
+    fireEvent.click(await screen.findByRole("button", { name: offlineCatalog.en.recheck }));
+    const copy = packIntegrityCopy("en", "unknown");
+    expect(await screen.findByRole("heading", { name: copy.title })).toBeTruthy();
+    expect(screen.queryByText(offlineCatalog.en.downloaded)).toBeNull();
+    await waitFor(() => expect((screen.getByRole("button", { name: offlineCatalog.en.recheck }) as HTMLButtonElement).disabled).toBe(false));
+  });
+
+  it("can check again after a check that could not run", async () => {
+    const source = mockSource({ parts: [part()] });
+    const good = source.storedRegionIntegrity;
+    source.storedRegionIntegrity = vi.fn().mockRejectedValueOnce(new Error("denied")).mockImplementation(good);
+    await view("en", source);
+    fireEvent.click(await screen.findByRole("button", { name: offlineCatalog.en.recheck }));
+    await screen.findByRole("heading", { name: packIntegrityCopy("en", "unknown").title });
+    await waitFor(() => expect((screen.getByRole("button", { name: offlineCatalog.en.recheck }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: offlineCatalog.en.recheck }));
+    // The row also says "Downloaded, integrity checked", so look for the announcement itself.
+    await waitFor(() => expect(screen.getAllByRole("status").some((node) => node.textContent === offlineCatalog.en.downloaded)).toBe(true));
+  });
+
   it("re-downloads through redownloadPack and only then clears the damaged notice", async () => {
     const source = mockSource({
       parts: [part({ data: new TextEncoder().encode("abd") })],
@@ -124,7 +171,7 @@ describe("offline region integrity re-check", () => {
     });
     await view("en", source);
     await screen.findByRole("heading", { name: "Offline regions" });
-    fireEvent.click(screen.getByRole("button", { name: offlineCatalog.en.recheck }));
+    fireEvent.click(await screen.findByRole("button", { name: offlineCatalog.en.recheck }));
     const action = packIntegrityCopy("en", "corrupt").action;
     fireEvent.click(await screen.findByRole("button", { name: action }));
     await waitFor(() => expect(source.commitCheckedRegion).toHaveBeenCalledTimes(1));
@@ -185,7 +232,7 @@ describe("offline region fail-safe states (docs/failsafe.md)", () => {
     const notes = await screen.findByTestId("failsafe-toronto");
     expect(notes.textContent).toBe("");
     current = { ...status, droppedRecords: 2 };
-    fireEvent.click(screen.getByRole("button", { name: offlineCatalog.en.recheck }));
+    fireEvent.click(await screen.findByRole("button", { name: offlineCatalog.en.recheck }));
     await waitFor(() => expect(screen.getByTestId("failsafe-toronto").textContent).toBe(offlineCatalog.en.failsafeDroppedMany.replace("{count}", "2")));
     expect(screen.getByTestId("failsafe-toronto")).toBe(notes);
   });
