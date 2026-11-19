@@ -57,7 +57,7 @@ export function RecoveryTaskBoard({ locale, records, saveFile }: RecoveryTaskBoa
   const copy = taskBoardCopy(locale);
   const sep = locale === "fr" ? "\u00a0: " : ": ";
   const observedStates: Readonly<Record<LocalPackRecord["state"], string>> = locale === "fr"
-    ? { absent: "Non enregistré", ready: "Présent localement", corrupt: "Endommagé", unknown: "INCONNU" }
+    ? { absent: "Non enregistré", ready: "Présent localement", corrupt: "Endommagé", unknown: "UNKNOWN" }
     : { absent: "Not saved", ready: "Present locally", corrupt: "Damaged", unknown: "UNKNOWN" };
   const heading = useId();
   const fileId = useId();

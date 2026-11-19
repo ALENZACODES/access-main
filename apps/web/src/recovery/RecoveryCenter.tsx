@@ -23,8 +23,11 @@ import { RecoveryNotice } from "./RecoveryNotice";
 import { RecoveryWorkbench } from "./RecoveryWorkbench";
 import { RecoveryQueuePanel } from "./RecoveryQueuePanel";
 import { RecoveryPlanReview } from "./RecoveryPlanReview";
-import { planPackRepairs } from "./recoveryPolicy";
 import { RecoveryEvidenceNotebook } from "./RecoveryEvidenceNotebook";
+import { RecoveryDryRunPanel } from "./RecoveryDryRunPanel";
+import { RecoveryCaseJournal } from "./RecoveryCaseJournal";
+import { RecoveryTaskBoard } from "./RecoveryTaskBoard";
+import { planPackRepairs } from "./recoveryPolicy";
 
 /** This is a complete local shell widget; routes can mount it without a service. */
 export interface RecoveryCenterProps {
@@ -143,14 +146,14 @@ export function RecoveryCenter({
       <section aria-labelledby={inventoryHeading} style={section}>
         <h2 id={inventoryHeading}>{copy.heading}</h2>
         <p>{locale === "fr"
-          ? "Les ensembles sont contrôlés localement. Un état INCONNU ne signifie pas que l’ensemble est utilisable."
+          ? "Les ensembles sont contrôlés localement. Un état UNKNOWN ne signifie pas que l’ensemble est utilisable."
           : "Packs are checked locally. UNKNOWN does not mean a pack can be used."}</p>
         <button type="button" style={button} disabled={checking} onClick={() => { void refresh(); }}>
           {copy.refresh}
         </button>
         <p role="status" aria-live="polite">
           {checking ? copy.pending : inventoryFailure
-            ? (locale === "fr" ? "État local INCONNU" : "Local status UNKNOWN") : ""}
+            ? (locale === "fr" ? "État local UNKNOWN" : "Local status UNKNOWN") : ""}
         </p>
         {hasInspected && !checking && inventory.length === 0 && !inventoryFailure && <p>{copy.empty}</p>}
         <ul>
@@ -190,6 +193,11 @@ export function RecoveryCenter({
         inspected={hasInspected && !checking && !inventoryFailure}
         onInspect={() => { void refresh(); }} saveFile={saveFile} />
       <RecoveryEvidenceNotebook locale={locale} saveFile={saveFile} />
+      <RecoveryDryRunPanel locale={locale} records={inventory} inspectionDate={inspectionDate}
+        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      <RecoveryCaseJournal locale={locale} records={inventory}
+        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      <RecoveryTaskBoard locale={locale} records={inventory} saveFile={saveFile} />
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>

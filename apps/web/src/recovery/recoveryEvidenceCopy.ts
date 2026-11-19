@@ -83,8 +83,8 @@ const EN: EvidenceCopy = {
 
 const FR: EvidenceCopy = {
   title: "Carnet de renseignements de récupération",
-  intro: "Consignez des notes locales sur les fichiers. Une note ne change pas l’état de l’ensemble et ne décrit pas l’accessibilité physique. INCONNU reste INCONNU.",
-  packId: "Identifiant de l’ensemble", field: "Champ du fichier", value: "Valeur consignée", unknownValue: "Garder INCONNU",
+  intro: "Consignez des notes locales sur les fichiers. Une note ne change pas l’état de l’ensemble et ne décrit pas l’accessibilité physique. UNKNOWN reste UNKNOWN.",
+  packId: "Identifiant de l’ensemble", field: "Champ du fichier", value: "Valeur consignée", unknownValue: "Garder UNKNOWN",
   source: "Source", licence: "Licence ouverte", date: "Date de la source", tier: "Niveau de preuve", note: "Note",
   add: "Ajouter une note locale", inspect: "Examiner les notes", save: "Enregistrer le fichier JSON",
   load: "Choisir un fichier JSON local", merge: "Ajouter les notes sans conflit", reset: "Effacer les notes locales",
@@ -92,10 +92,10 @@ const FR: EvidenceCopy = {
   imported: "Notes locales ajoutées.", exported: "Fichier JSON enregistré.",
   stopped: "L’action demandée ne s’est pas terminée.", unsupported: "Ce fichier ne peut pas être utilisé.",
   details: "Comparaison du fichier local", created: "Créé le", changed: "Dernière modification", status: "État de la revue",
-  review: "Examiner l’entrée", summary: "Résumé", all: "Total", known: "Avec une valeur", unknown: "INCONNU",
+  review: "Examiner l’entrée", summary: "Résumé", all: "Total", known: "Avec une valeur", unknown: "UNKNOWN",
   conflicts: "Notes en conflit", duplicates: "Déjà présentes", additions: "Nouvelles notes", cancel: "Fermer l’aperçu",
   state: { open: "À examiner", accepted: "Examinée", superseded: "Remplacée", dismissed: "Écartée" },
-  tiers: { official: "Source publique", community: "Communauté", "self-reported": "Observation personnelle", unknown: "INCONNU" },
+  tiers: { official: "Source publique", community: "Communauté", "self-reported": "Observation personnelle", unknown: "UNKNOWN" },
   issues: {
     "invalid-shape": "La structure du document n’est pas prise en charge.",
     "invalid-version": "Le format du document n’est pas pris en charge.",

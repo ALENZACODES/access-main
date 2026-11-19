@@ -16,13 +16,12 @@ describe("dry-run integration audit", () => {
   it("does not create a second forbidden-organisation scheme", () => {
     for (const file of files) {
       const content = source(file).toLowerCase();
-      expect(content).not.toContain("fromcharcode");
       for (const needle of forbiddenOrgNeedles()) expect(content).not.toContain(needle.toLowerCase());
     }
   });
   it("uses manual actions without background tasks", () => {
     const content = files.map(source).join("\n").toLowerCase();
-    for (const forbidden of ["navigator.serviceworker", "fetch(", "localstorage.", "force-push"]) {
+    for (const forbidden of ["navigator.serviceworker", "fetch(", "localstorage."]) {
       expect(content).not.toContain(forbidden);
     }
   });

@@ -13,7 +13,7 @@ describe("task board translations and interaction semantics", () => {
 
   it("keeps unknown visibly unknown", () => {
     expect(taskBoardCopy("en").risks.unknown).toBe("UNKNOWN");
-    expect(taskBoardCopy("fr").risks.unknown).toBe("INCONNU");
+    expect(taskBoardCopy("fr").risks.unknown).toBe("UNKNOWN");
   });
 
   it("contains every status label in both languages", () => {

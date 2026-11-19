@@ -75,10 +75,10 @@ const fr: TaskBoardCopy = {
   noAutomatic: "Ce tableau ne lance aucun téléchargement et ne supprime aucun fichier. Fermer une étape ne modifie pas l’état d’un ensemble.",
   taskStates: { pending: "Non commencée", "in-progress": "En cours", paused: "En pause", closed: "Terminée" },
   taskKinds: { inspect: "Examiner l’ensemble local", download: "Télécharger de nouveau", source: "Examiner la source", storage: "Examiner le stockage", export: "Préparer l’exportation" },
-  risks: { blocked: "Bloquée", attention: "À examiner", unknown: "INCONNU" },
+  risks: { blocked: "Bloquée", attention: "À examiner", unknown: "UNKNOWN" },
   reasons: {
-    "pack-unknown": "L’état local de l’ensemble est INCONNU.", "pack-damaged": "L’ensemble enregistré est endommagé.",
-    "pack-absent": "L’ensemble n’est pas enregistré.", "source-unknown": "Les renseignements sur la source sont INCONNUS.", "tier-unknown": "Le niveau de preuve est INCONNU.",
+    "pack-unknown": "L’état local de l’ensemble est UNKNOWN.", "pack-damaged": "L’ensemble enregistré est endommagé.",
+    "pack-absent": "L’ensemble n’est pas enregistré.", "source-unknown": "Les renseignements sur la source sont UNKNOWN.", "tier-unknown": "Le niveau de preuve est UNKNOWN.",
   },
   issue: {
     json: "JSON invalide", size: "Fichier trop volumineux", shape: "Structure inattendue", format: "Format non pris en charge",
@@ -87,7 +87,7 @@ const fr: TaskBoardCopy = {
     chronology: "Dates dans le mauvais ordre", text: "Texte invalide", source: "Source incomplète",
     licence: "Licence non prise en charge", tier: "Niveau de preuve non pris en charge", "unknown-field": "Champ inattendu",
   },
-  tierOptions: { public: "Source publique", "self-reported": "Déclaration personnelle", "operator-note": "Note de l’opérateur", unknown: "INCONNU" },
+  tierOptions: { public: "Source publique", "self-reported": "Déclaration personnelle", "operator-note": "Note de l’opérateur", unknown: "UNKNOWN" },
 };
 
 export function taskBoardCopy(locale: RecoveryLocale): TaskBoardCopy {

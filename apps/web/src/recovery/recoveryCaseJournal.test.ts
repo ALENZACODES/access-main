@@ -234,7 +234,7 @@ describe("bilingual copy and safety", () => {
   });
   it("presents unknown explicitly in each language", () => {
     expect(caseViewCopy("en").unknown).toBe("UNKNOWN");
-    expect(caseViewCopy("fr").unknown).toBe("INCONNU");
+    expect(caseViewCopy("fr").unknown).toBe("UNKNOWN");
   });
   it("does not use unapproved user-facing claims", () => {
     for (const locale of ["en", "fr"] as const) {

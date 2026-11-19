@@ -352,9 +352,9 @@ const FR: CaseViewCopy = {
   sourceRequired: "Une étape terminée nécessite une source, une licence ouverte, une date de source et un niveau de preuve.",
   import: "Importer un journal local", export: "Enregistrer le journal", paused: "Suspendre le dossier",
   resumed: "Reprendre le dossier", closed: "Fermer le dossier", empty: "Aucun dossier dans cette session.",
-  unknown: "INCONNU", error: "Le journal n’a pas pu être mis à jour.", done: "Journal enregistré localement.",
+  unknown: "UNKNOWN", error: "Le journal n’a pas pu être mis à jour.", done: "Journal enregistré localement.",
   phase: { open: "Ouvert", paused: "Suspendu", closed: "Fermé" },
-  outcomes: { unknown: "INCONNU", failed: "Échec", incomplete: "Incomplet", complete: "Étape terminée" },
+  outcomes: { unknown: "UNKNOWN", failed: "Échec", incomplete: "Incomplet", complete: "Étape terminée" },
   kinds: { inspection: "Inspection locale", download: "Tentative de téléchargement", export: "Tentative d’exportation", review: "Examen manuel" },
   issues: {
     "invalid-document": "Le fichier ne contient pas un journal pris en charge.",
