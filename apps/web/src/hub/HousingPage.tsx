@@ -2,15 +2,11 @@ import { HousingFinder } from "@access-tools/housing";
 import { HousingLanguageBoundary } from "./HousingLanguageBoundary";
 import { PackageView } from "./PackageView";
 
-/** Local integration boundary: do not replace or reinterpret upstream records. */
-function HousingWithLanguageAnnotations() {
-  return (
-    <HousingLanguageBoundary>
-      <HousingFinder />
-    </HousingLanguageBoundary>
-  );
+/** Wrap only the housing embed; do not alter the shared shell or other tools. */
+function HousingWithLanguageBoundary() {
+  return <HousingLanguageBoundary><HousingFinder /></HousingLanguageBoundary>;
 }
 
 export default function HousingPage() {
-  return <PackageView page="housing" component={HousingWithLanguageAnnotations} />;
+  return <PackageView page="housing" component={HousingWithLanguageBoundary} />;
 }

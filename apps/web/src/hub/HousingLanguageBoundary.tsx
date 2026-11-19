@@ -1,26 +1,21 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { annotateEnglishHousingPassages } from "./HousingLanguageAnnotations";
+import { annotateHousingEnglish } from "./HousingLanguageAnnotations";
 
 /**
- * Keep untranslated, English-only sentences correctly tagged even when the
- * linked housing tool replaces its results after a filter or locale change.
- * Mutation callbacks run before the browser's next paint; no hidden UI,
- * focus change, polling timer, or synthetic accessibility claim is required.
+ * The embedded housing package has English-only depth and privacy sentences.
+ * Annotate those specific passages before paint and after results re-render.
+ * Do not hide controls, replace copy, or rewrite the document language.
  */
 export function HousingLanguageBoundary({ children }: { children: ReactNode }) {
   const host = useRef<HTMLDivElement>(null);
-
   useLayoutEffect(() => {
     const root = host.current;
     if (!root) return;
-    const annotate = (): void => {
-      annotateEnglishHousingPassages(root);
-    };
-    annotate();
-    const observer = new MutationObserver(annotate);
+    const update = (): void => { annotateHousingEnglish(root); };
+    update();
+    const observer = new MutationObserver(update);
     observer.observe(root, { childList: true, characterData: true, subtree: true });
     return () => observer.disconnect();
   }, []);
-
   return <div ref={host}>{children}</div>;
 }
