@@ -4,7 +4,7 @@
 // the About page, which is given the same purposes.
 
 import { loadConsent, type Purpose } from "./consent";
-import { gateStorage, validateRules, type GateRule, type GatedStorage } from "./consentGate";
+import { gateStorage, validateRules, type GateRule, type GatedStorage, type RefusedWrite } from "./consentGate";
 import { safeLocalStorage, type StorageLike } from "./storage";
 
 /** Every storage name the App writes starts with this (the same prefix the panel erases and exports). */
@@ -45,6 +45,17 @@ export function liveStorage(base: StorageLike | null = safeLocalStorage()): Gate
   return gateStorage(base, () => loadConsent(base, PRIVACY_STORAGE_PREFIX, LIVE_PURPOSES), LIVE_PURPOSES, LIVE_RULES);
 }
 
+/** Writes stopped during this visit, shared by every page. Key names only; empty again after a reload. */
+const liveRefusedLog: RefusedWrite[] = [];
+
+export function liveRefused(): readonly RefusedWrite[] {
+  return liveRefusedLog;
+}
+
+export function clearLiveRefused(): void {
+  liveRefusedLog.length = 0;
+}
+
 export type SaveResult = "saved" | "needs-choice" | "declined" | "no-storage";
 
 /**
@@ -57,5 +68,6 @@ export function saveGated(storage: GatedStorage | null, key: string, value: stri
   storage.setItem(key, value);
   const refused = storage.refused();
   if (refused.length === before) return "saved";
+  liveRefusedLog.push(...refused.slice(before));
   return refused[refused.length - 1]?.reason === "declined" ? "declined" : "needs-choice";
 }

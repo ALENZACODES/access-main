@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { BUILD_ID, CONTRACT_VERSION } from "../buildInfo.ts";
 import { summarizeStorage, type StorageSummary } from "../storage/repository.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
-import { LIVE_PURPOSES, PRIVACY_STORAGE_PREFIX } from "../privacy/panel/live.ts";
+import { LIVE_PURPOSES, PRIVACY_STORAGE_PREFIX, liveRefused } from "../privacy/panel/live.ts";
 import { aboutNoticeItems } from "../privacy/onDeviceNotice/index.ts";
 import {
   adaptElement,
@@ -106,6 +106,7 @@ function PrivacyPanelHost({ locale }: { locale: "en" | "fr" }) {
       prefix: PRIVACY_STORAGE_PREFIX,
       inventory: ABOUT_INVENTORY,
       purposes: LIVE_PURPOSES,
+      refused: liveRefused,
       now: () => new Date(),
       reviewedOn: REVIEWED_ON,
       languages: [locale],

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { consentKey, saveConsent, setConsent, type ConsentState } from "./consent";
-import { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, ROUTE_REPORTS_PURPOSE, ROUTE_REPORTS_STORAGE_KEY, assertLiveRules, liveStorage, saveGated } from "./live";
+import { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, ROUTE_REPORTS_PURPOSE, ROUTE_REPORTS_STORAGE_KEY, assertLiveRules, clearLiveRefused, liveRefused, liveStorage, saveGated } from "./live";
 import { validatePurposes } from "./consent";
 import { createMemoryStorage } from "./storage";
 
@@ -53,5 +53,24 @@ describe("liveStorage and saveGated", () => {
     const gate = liveStorage(base);
     expect(saveGated(gate, "access.language", "fr")).toBe("saved");
     expect(gate?.getItem(ROUTE_REPORTS_STORAGE_KEY)).toBe("[9]");
+  });
+});
+
+describe("shared refused list", () => {
+  it("collects refusals across gates, by key name only, and can be cleared", () => {
+    clearLiveRefused();
+    const base = createMemoryStorage();
+    saveGated(liveStorage(base), ROUTE_REPORTS_STORAGE_KEY, "[1]");
+    saveGated(liveStorage(base), ROUTE_REPORTS_STORAGE_KEY, "[2]");
+    expect(liveRefused()).toEqual([
+      { key: ROUTE_REPORTS_STORAGE_KEY, purposeId: "route-reports", reason: "no-choice" },
+      { key: ROUTE_REPORTS_STORAGE_KEY, purposeId: "route-reports", reason: "no-choice" },
+    ]);
+    expect(JSON.stringify(liveRefused())).not.toContain("[1]");
+    saveConsent(base, PRIVACY_STORAGE_PREFIX, decide("granted"));
+    saveGated(liveStorage(base), ROUTE_REPORTS_STORAGE_KEY, "[3]");
+    expect(liveRefused()).toHaveLength(2);
+    clearLiveRefused();
+    expect(liveRefused()).toEqual([]);
   });
 });
