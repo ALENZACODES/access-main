@@ -1,55 +1,50 @@
-# P16 Round 9: keyboard composite and DOM-ID regression gates
+# P16 Round 9 — keyboard composites and DOM-ID regression
 
-This standalone package was originally authored against an earlier `main`.
-Its keyboard contract tests were merged through PR #149 and are already on
-`main`. At the time of this documentation correction, the current `main`
-commit is `f7dac4d62d21ed81cded8ddafaf23de85e92b1ca`.
+The Round 9 browser tests are present on the repository's default branch after
+PR #149. This is a historical description, not a branch-pinning instruction.
+Do not restore the source files from earlier ZIP archives: doing so could
+replace newer mainline content. Begin future work at the live default-branch
+head and retain the existing DOM-ID regression tests.
 
-No unmerged branch or PR is a prerequisite for the Round 9 tests. This
-README correction updates the historical base reference; it does not modify,
-re-land, or change either of the merged Round 9 TypeScript files.
-
-## Existing files on main
+## Files already on main
 
 - `keyboard-contract-round9.ts` — read-only browser-side audit and stable
-  diagnostic output for DOM IDs, ARIA references, and keyboard composites.
-- `keyboard-contract-round9.spec.ts` — isolated DOM fixtures for valid and
-  intentionally invalid semantics, including duplicate IDs and open shadow roots.
+  diagnostics for DOM identifiers, ARIA references and keyboard composites.
+- `keyboard-contract-round9.spec.ts` — isolated fixtures for valid and invalid
+  semantics, duplicate IDs, and open shadow-root ID scopes.
 
-## Local checks
+Neither file is included with this README correction. They already exist on
+main and should be left intact.
 
-Run from the repository root with its dependencies installed:
+## Local test commands
+
+From a checkout with repository dependencies installed:
 
 ```sh
 npm run lint
 npm run typecheck
-npm run test
+npm test
 npx playwright test --config apps/web/playwright.config.ts \
   apps/web/e2e/a11y-input/keyboard-contract-round9.spec.ts --project=chromium
 ```
 
-Do not pass this Playwright file to the Vitest runner. The fixtures use
-`page.setContent` and do not navigate to app routes, access outside resources,
-write storage, or change production source.
+Playwright owns the `.spec.ts` browser fixtures. Vitest must not execute them.
+The fixtures use `page.setContent` without calling outside resources or
+changing application code. They check authored semantics rather than the
+spoken output of an assistive-technology device.
 
-## Scope
+## Scope and limits
 
-The audit examines duplicate and blank IDs, dangling or ambiguous ID
-references, active descendants, roving tab stops, tab/panel associations,
-orphan role items, malformed ARIA state values, positive tabindex, inert
-or hidden focusable controls, and nested interactive content. It supports
-roving tabindex and active-descendant models. Open shadow roots are inspected
-independently. Closed shadow roots are not observable using this test method.
+The audit covers blank and repeated IDs, dangling references, active
+descendants, roving tabindex, tab/panel associations, orphan composite
+items, malformed ARIA states, positive tabindex, hidden focus targets and
+nested interactive elements. An open shadow root has its own ID scope.
+Closed shadow roots are not inspectable by the browser-side probe.
 
-The audit is a regression signal, not a full accessibility conformance
-assessment. Browser DOM checks cannot establish screen-reader speech,
-switch timing, or every permissible composite implementation. New diagnostic
-rules require review against real application patterns before they become
-hard gates on all routes.
+These findings are regression signals, not a complete accessibility
+conformance assessment. Browser DOM inspection does not establish screen-reader
+speech, physical-switch timing or all permissible composite behaviours.
+Manual testing remains necessary.
 
-## Integration
-
-PR #121 and its DOM-ID regression files also remain on `main`. The tests from
-both rounds are separate. This documentation update is the sole Round 9 file
-included in the next P16 archive; the two merged TypeScript files are omitted
-on purpose to prevent stale content from replacing current code.
+The previous DOM-ID regression checks merged through PR #121 are separate and
+remain part of the default branch. No unmerged PR is required to run this suite.
