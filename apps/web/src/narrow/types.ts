@@ -73,7 +73,12 @@ export type CheckId =
   | 'table-markup'
   | 'labels'
   | 'identifiers'
-  | 'name-words';
+  | 'name-words'
+  | 'typing'
+  | 'overlays'
+  | 'image-markup'
+  | 'focusables'
+  | 'locale-markup';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -144,6 +149,11 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   labels: '3.3.2',
   identifiers: '4.1.2',
   'name-words': '4.1.2',
+  typing: '1.3.5',
+  overlays: '4.1.2',
+  'image-markup': '1.1.1',
+  focusables: '4.1.2',
+  'locale-markup': '3.1.2',
   regions: '1.3.1',
 };
 
@@ -216,6 +226,11 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'labels',
   'identifiers',
   'name-words',
+  'typing',
+  'overlays',
+  'image-markup',
+  'focusables',
+  'locale-markup',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -287,6 +302,11 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   labels: { en: 'Label structure', fr: 'Structure des étiquettes' },
   identifiers: { en: 'Ids and how they are referred to', fr: 'Identifiants et façon de les référencer' },
   'name-words': { en: 'Words in names', fr: 'Mots dans les noms' },
+  typing: { en: 'Keyboard and typing help for fields', fr: 'Clavier et aide à la saisie des champs' },
+  overlays: { en: 'Dialogs and popovers', fr: 'Boîtes de dialogue et popovers' },
+  'image-markup': { en: 'Image structure', fr: 'Structure des images' },
+  focusables: { en: 'Focus attributes', fr: 'Attributs de focus' },
+  'locale-markup': { en: 'Language settings in the markup', fr: 'Réglages de langue dans le balisage' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */
