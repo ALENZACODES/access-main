@@ -60,3 +60,8 @@ export * from "./recoveryBatches";
 export * from "./recoveryBatchesCopy";
 export * from "./recoveryBatchesExport";
 export * from "./recoveryBatchesPanel";
+
+export * from "./storageScenario";
+export * from "./storageScenarioCopy";
+export * from "./storageScenarioExport";
+export * from "./storageScenarioPanel";
