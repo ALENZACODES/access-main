@@ -17,6 +17,7 @@ export type Status =
   | { kind: "nothing" }
   | { kind: "unavailable" }
   | { kind: "consent-saved"; value: "granted" | "declined"; label: string }
+  | { kind: "consent-withdrawn"; label: string; removed: number }
   | { kind: "save-failed" }
   | { kind: "expired-removed"; count: number }
   | { kind: "list-exported"; format: "csv" | "text" }
@@ -106,6 +107,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return "This browser does not let the App store data, so there is nothing to download or erase.";
         case "consent-saved":
           return `Saved: ${s.value === "granted" ? "allowed" : "not allowed"} for “${s.label}”.`;
+        case "consent-withdrawn":
+          return `Saved: not allowed for “${s.label}”. Removed from this device: ${count("en", s.removed, "item", "items")}.`;
         case "save-failed":
           return "Your choice could not be saved on this device. It will be lost when this page closes.";
         case "expired-removed":
@@ -168,6 +171,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Ce navigateur ne permet pas à l’App d’enregistrer des données${NBSP}: il n’y a rien à télécharger ni à effacer.`;
         case "consent-saved":
           return `Enregistré${NBSP}: ${s.value === "granted" ? "autorisation accordée" : "autorisation refusée"} pour «${NNBSP}${s.label}${NNBSP}».`;
+        case "consent-withdrawn":
+          return `Enregistré${NBSP}: autorisation refusée pour «${NNBSP}${s.label}${NNBSP}». Retiré de cet appareil${NBSP}: ${count("fr", s.removed, "élément", "éléments")}.`;
         case "save-failed":
           return "Votre choix n’a pas pu être enregistré sur cet appareil. Il sera perdu à la fermeture de cette page.";
         case "expired-removed":
