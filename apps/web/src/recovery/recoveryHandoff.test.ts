@@ -126,22 +126,22 @@ describe("local recovery handoff document", () => {
 
 describe("source metadata and text policy", () => {
   it.each(["", " ", "\t", "\n", "<b>", "Name>sample", "a".repeat(181)])(
-    "rejects source name %j", (name) => {
+    "rejects source name %j", (name: string) => {
       expect(validHandoffSource({ ...source, name })).toBe(false);
     },
   );
   it.each(["private", "all-rights-reserved", "", "MIT", "GPL-3.0"])(
-    "rejects unsupported licence %s", (licence) => {
+    "rejects unsupported licence %s", (licence: string) => {
       expect(validHandoffSource({ ...source, licence })).toBe(false);
     },
   );
   it.each(["", "yesterday", "2026-02-31", "2026-00-01", "2026-13-01", "2026-11-00"])(
-    "rejects invalid source date %s", (date) => {
+    "rejects invalid source date %s", (date: string) => {
       expect(validHandoffSource({ ...source, date })).toBe(false);
     },
   );
   it.each(["", "guessed", "confirmed", "automatic"])(
-    "rejects unsupported evidence tier %s", (tier) => {
+    "rejects unsupported evidence tier %s", (tier: string) => {
       expect(validHandoffSource({ ...source, tier })).toBe(false);
     },
   );
