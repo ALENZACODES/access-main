@@ -75,5 +75,7 @@ export const BARE_ALERT_ALLOWLIST: Readonly<Record<string, string>> = {
   "hub/RouteReportsPage.tsx": "Other lane: report page message.",
   "hub/WavPage.tsx": "Other lane: file check message.",
   "recovery/RecoveryQueuePanel.tsx": "Other lane: input error beside its field.",
+  "recovery/RecoveryCaseJournal.tsx": "Other lane: a blocked comparison message beside the comparison.",
+  "recovery/RecoveryTaskBoard.tsx": "Other lane: a merge conflict message beside the merge preview.",
   "features/featureScreens.tsx": "Other lane: settings screens.",
 };
