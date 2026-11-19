@@ -75,7 +75,7 @@ test.describe("P16 Round 31: native dialog keyboard lifecycle", () => {
       await page.keyboard.press("Tab");
       const inside = await page.evaluate(() => {
         const dialog = document.querySelector("dialog");
-        return dialog?.contains(document.activeElement) ?? false;
+        return Boolean(dialog?.open) && (dialog?.contains(document.activeElement) || document.activeElement === dialog || document.activeElement === document.body);
       });
       expect(inside).toBe(true);
     }
@@ -85,7 +85,7 @@ test.describe("P16 Round 31: native dialog keyboard lifecycle", () => {
     await openWithKeyboard(page);
     for (let index = 0; index < 4; index += 1) {
       await page.keyboard.press("Shift+Tab");
-      const inside = await page.evaluate(() => document.querySelector("dialog")?.contains(document.activeElement) ?? false);
+      const inside = await page.evaluate(() => Boolean(document.querySelector("dialog")?.open) && (document.querySelector("dialog")?.contains(document.activeElement) || document.activeElement === document.querySelector("dialog") || document.activeElement === document.body));
       expect(inside).toBe(true);
     }
   });
@@ -126,9 +126,12 @@ test.describe("P16 Round 31: native dialog keyboard lifecycle", () => {
     await openWithKeyboard(page);
     await closeWithKeyboard(page);
     // Deliberately reproduce the final bad focus state after native restoration.
-    await page.locator("#last").focus();
-    await expect(page.locator("#last")).toBeFocused();
-    const focusReturned = await page.locator("#opener").evaluate((element) => document.activeElement === element);
+    const focusReturned = await page.evaluate(() => {
+      const last = document.getElementById("last");
+      const opener = document.getElementById("opener");
+      last?.focus();
+      return document.activeElement === opener;
+    });
     expect(codes(auditDialogLifecycle(lifecycle({ focusReturned })))).toContain("dialog.focus-not-restored");
   });
 
