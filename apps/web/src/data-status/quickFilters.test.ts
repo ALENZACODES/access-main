@@ -27,6 +27,7 @@ describe('quick filter presets', () => {
     expect(quickFilterFor('review')).toEqual({ ...NO_FILTERS, onlyIssues: true });
     expect(quickFilterFor('undated')).toEqual({ ...NO_FILTERS, state: 'unknown' });
     expect(quickFilterFor('noTier')).toEqual({ ...NO_FILTERS, tier: 'unknown' });
+    expect(quickFilterFor('licence')).toEqual({ ...NO_FILTERS, licence: 'unrecognised' });
   });
   it('survives a trip through the query string', () => {
     for (const id of QUICK_FILTER_IDS) expect(parseFilters(serializeFilters(quickFilterFor(id)))).toEqual(quickFilterFor(id));
@@ -45,7 +46,7 @@ describe('quick filter presets', () => {
 
 describe('buildQuickFilters', () => {
   it('counts what each filter would list on the sample registry', () => {
-    expect(buildQuickFilters(audit).map((q) => [q.id, q.count])).toEqual([['review', 2], ['stale', 1], ['undated', 1], ['noTier', 1]]);
+    expect(buildQuickFilters(audit).map((q) => [q.id, q.count])).toEqual([['review', 2], ['stale', 1], ['undated', 1], ['noTier', 1], ['licence', 1]]);
   });
   it('always agrees with applying the filter, on random registries', () => {
     for (let seed = 1; seed <= 20; seed++) {
@@ -64,13 +65,14 @@ describe('renderQuickFiltersHtml', () => {
     expect(html).toContain('data-action="quick:review" aria-pressed="false"');
     expect(html).toContain('>Needs review (2)</button>');
     expect(html).toContain('>Tier unknown (1)</button>');
-    expect(html.match(/<button/g)).toHaveLength(4);
+    expect(html).toContain('>Licence not on the reference list (1)</button>');
+    expect(html.match(/<button/g)).toHaveLength(5);
   });
   it('leaves out filters that would list nothing', () => {
     const items = buildQuickFilters(audit).map((q) => (q.id === 'stale' ? { ...q, count: 0 } : q));
     const html = renderQuickFiltersHtml(items, 'en', { active: NO_FILTERS });
     expect(html).not.toContain('quick:stale');
-    expect(html.match(/<button/g)).toHaveLength(3);
+    expect(html.match(/<button/g)).toHaveLength(4);
   });
   it('says there is nothing to jump to when no filter lists anything', () => {
     const html = renderQuickFiltersHtml(buildQuickFilters(auditRegistry(CLEAN, NOW, {})), 'en', { active: NO_FILTERS });
