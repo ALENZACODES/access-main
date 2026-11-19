@@ -190,9 +190,14 @@ describe('bootstrap: saved views', () => {
     expect(d.host.innerHTML).toContain('Views are kept on this device only.');
     d.host.click(VIEW_SAVE_ACTION);
     expect(JSON.parse(d.storage.map.get(SAVED_VIEWS_KEY) ?? 'null')).toEqual(['?state=stale']);
+    d.host.filter('change', 'state', 'fresh');
+    d.host.filter('input', 'viewName', 'Recent');
+    d.host.click(VIEW_SAVE_ACTION);
+    expect(JSON.parse(d.storage.map.get(SAVED_VIEWS_KEY) ?? 'null')).toEqual(['?state=stale', { q: '?state=fresh', name: 'Recent' }]);
     const again = deps({ storage: d.storage });
     await bootstrap(again);
     expect(again.host.innerHTML).toContain('Show view. Status: May be out of date');
+    expect(again.host.innerHTML).toContain('Show view. Recent (Status: Within its review period)');
   });
   it('keeps them for the page only when storage is not available', async () => {
     const d = deps({ storage: null, search: '?state=stale' });

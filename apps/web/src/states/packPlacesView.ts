@@ -10,6 +10,7 @@ import { normalizeText } from "./filters";
 import { message, type MessageId } from "./messages";
 import { type PackPlaceRecord, type WheelchairTag, WHEELCHAIR_TAGS, countByTag } from "./packPlaces";
 import { type Point, type PointInput, distanceMetres, formatPackDistance } from "./packGeo";
+import { tierLine } from "./recordTier";
 import { attributionLine, ageLabel, isStale } from "./provenance";
 import { type RouteStateView, getRouteEmpty } from "./routeStates";
 
@@ -42,6 +43,7 @@ export interface PackPlaceCard {
   readonly sourceLine: string | null;
   readonly sourceUrl: string | null;
   readonly sourceLinkLabel: string | null;
+  readonly tierText: string;
   readonly ageText: string | null;
   readonly staleNotice: string | null;
   readonly noSourceNotice: string | null;
@@ -102,6 +104,7 @@ export function toCard(p: PackPlaceRecord, ctx: PackContext, from: Point | null)
     sourceLine: p.provenance ? attributionLine(p.provenance, locale) : null,
     sourceUrl: p.provenance?.url ?? null,
     sourceLinkLabel: p.provenance?.url ? message("pack.openSource", locale, { name: p.name ?? message("pack.nameUnknown", locale) }) : null,
+    tierText: tierLine(p.tier, locale),
     ageText: p.provenance ? ageLabel(p.provenance.retrievedOn, today, locale) : null,
     staleNotice: p.provenance && isStale(p.provenance.retrievedOn, today) ? message("pack.stale", locale) : null,
     noSourceNotice: p.tagUnknownReason === "missing-provenance" ? message("pack.noSource", locale) : null,

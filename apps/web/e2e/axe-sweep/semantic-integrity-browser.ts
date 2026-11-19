@@ -55,6 +55,30 @@ export async function collectSemanticSnapshot(page: Page, route: string): Promis
         text: element.innerText ?? element.textContent ?? "",
         visible: visible(element),
       }));
+    // The previous collector only saw explicit [lang] elements. A missing
+    // marker is the very case WCAG 3.1.2 checks need to observe. Collect
+    // each element's OWN text nodes, not its descendants' translated or
+    // explicitly language-labelled text, to avoid duplicate false positives.
+    const prose = document.querySelectorAll<HTMLElement>(
+      "main h1, main h2, main h3, main p, main label, main button, main a, main li, main dt, main dd, main legend, main summary, main span, main strong, main em, main th, main td, main figcaption",
+    );
+    for (const element of prose) {
+      if (!visible(element) || element.hasAttribute("lang")) continue;
+      const text = [...element.childNodes]
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent ?? "").join(" ").replace(/\s+/g, " ").trim();
+      if (!text) continue;
+      const nearest = element.closest<HTMLElement>("[lang]");
+      const inherited = nearest?.getAttribute("lang") ?? document.documentElement.lang;
+      fragments.push({
+        language: inherited,
+        parentLanguage: inherited,
+        text,
+        visible: true,
+        explicit: false,
+        tag: element.tagName.toLowerCase(),
+      });
+    }
     const focusables: Array<{ selector: string; name: string; visible: boolean; connected: boolean; disabled: boolean }> = [];
     // Unlike the complete control-size sweep, this checks only tabbable elements
     // with a stable semantic label. Programmatically focusable main is excluded.
