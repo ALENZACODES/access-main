@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { ARIA_RULES } from './aria.js';
+import { CONSTRAINT_RULES } from './constraints.js';
+import { LIST_RULES } from './lists.js';
+import { SECTIONING_RULES } from './sectioning.js';
+import { STATE_RULES } from './states.js';
+import { SYMBOL_RULES } from './symbols.js';
 import { renderJunit, renderSarif } from './ci.js';
 import { scanCopy } from './copylint.js';
 import { CSS_RULE_IDS } from './cssrules.js';
@@ -11,12 +16,24 @@ import { INTERACTIVE_SELECTOR } from './page.js';
 import { REFERENCE_RULES } from './references.js';
 import { makeReport, totals } from './report.js';
 import { auditSnapshot, markupResults, selfAudit } from './run.js';
-import { SAMPLE_ARIA_HTML, SAMPLE_CSS_HTML, SAMPLE_HREFS_HTML, SAMPLE_OBSOLETE_HTML, SAMPLE_REFERENCES_HTML, sampleEntries } from './samples.js';
+import {
+  SAMPLE_ARIA_HTML,
+  SAMPLE_CONSTRAINTS_HTML,
+  SAMPLE_CSS_HTML,
+  SAMPLE_HREFS_HTML,
+  SAMPLE_LISTS_HTML,
+  SAMPLE_OBSOLETE_HTML,
+  SAMPLE_REFERENCES_HTML,
+  SAMPLE_SECTIONING_HTML,
+  SAMPLE_STATES_HTML,
+  SAMPLE_SYMBOLS_HTML,
+  sampleEntries,
+} from './samples.js';
 import { selectChecks } from './select.js';
 import { installDom, type Installed } from './testkit.js';
 import { CHECK_LABELS, CHECK_ORDER, CHECK_SC, type CheckId } from './types.js';
 
-const MINE: readonly CheckId[] = ['aria', 'references', 'hrefs', 'css', 'obsolete'];
+const MINE: readonly CheckId[] = ['aria', 'references', 'hrefs', 'css', 'obsolete', 'states', 'lists', 'sectioning', 'constraints', 'symbols'];
 
 const GOOD = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Hours</title>
 <style>
@@ -31,7 +48,8 @@ a:focus-visible,button:focus-visible{outline:3px solid #0b4f9c;outline-offset:2p
 <p>Call <a href="tel:+14165550100">416-555-0100</a> or <a href="mailto:help@example.org">write to us</a>. See <a href="#mon">Monday</a>.</p>
 <table><caption>Opening hours</caption><tr><th id="day">Day</th><th id="open">Open</th></tr><tr><td headers="day" id="mon">Monday</td><td headers="open">9 to 5</td></tr></table>
 <button type="button" aria-expanded="false" aria-controls="more">More</button>
-<label for="q">Search</label><input id="q" name="q" list="towns"><datalist id="towns"><option value="Ottawa"></datalist>
+<form action="/search"><label for="q">Search</label><input id="q" name="q" list="towns"><datalist id="towns"><option value="Ottawa"></datalist><button>Search</button></form>
+<ul><li>Ramp at the side door</li><li>Lift in the back hall</li></ul>
 <img src="plan.png" alt="Floor plan" width="320" height="200">
 </main><footer><a href="/help">Help</a></footer></body></html>`;
 
@@ -42,7 +60,7 @@ afterEach(() => {
 });
 
 describe('check tables', () => {
-  it('list the five markup checks once each, with labels in both languages and a criterion', () => {
+  it('list the ten markup checks once each, with labels in both languages and a criterion', () => {
     for (const id of MINE) {
       expect(CHECK_ORDER.filter((c) => c === id)).toHaveLength(1);
       expect(CHECK_LABELS[id].en.trim()).not.toBe('');
@@ -55,6 +73,11 @@ describe('check tables', () => {
     expect(CHECK_SC.hrefs).toBe('2.4.4');
     expect(CHECK_SC.css).toBe('2.4.7');
     expect(CHECK_SC.obsolete).toBe('1.3.1');
+    expect(CHECK_SC.states).toBe('4.1.2');
+    expect(CHECK_SC.lists).toBe('1.3.1');
+    expect(CHECK_SC.sectioning).toBe('1.3.1');
+    expect(CHECK_SC.constraints).toBe('3.3.2');
+    expect(CHECK_SC.symbols).toBe('1.1.1');
   });
   it('has no check id twice and a label for every id in the order', () => {
     expect(new Set(CHECK_ORDER).size).toBe(CHECK_ORDER.length);
@@ -63,7 +86,7 @@ describe('check tables', () => {
 });
 
 describe('markupResults', () => {
-  it('runs the five checks and nothing else', () => {
+  it('runs the ten checks and nothing else', () => {
     expect(Object.keys(markupResults('<p>x</p>')).sort()).toEqual([...MINE].sort());
   });
   it('finds nothing on a good page and says how much it read', () => {
@@ -74,12 +97,22 @@ describe('markupResults', () => {
     expect(r['hrefs']?.checked).toBe(7);
     expect(r['css']?.checked).toBe(4);
     expect(r['obsolete']?.checked).toBeGreaterThan(30);
+    expect(r['states']?.checked).toBe(1);
+    expect(r['lists']?.checked).toBe(1);
+    expect(r['sectioning']?.checked).toBe(3);
+    expect(r['constraints']?.checked).toBe(2);
+    expect(r['symbols']?.checked).toBeGreaterThan(15);
   });
   it('tags every entry with its own check', () => {
-    const all = SAMPLE_ARIA_HTML + SAMPLE_REFERENCES_HTML + SAMPLE_HREFS_HTML + SAMPLE_CSS_HTML + SAMPLE_OBSOLETE_HTML;
+    const all = SAMPLE_REFERENCES_HTML + SAMPLE_HREFS_HTML + SAMPLE_CSS_HTML + SAMPLE_OBSOLETE_HTML + SAMPLE_STATES_HTML + SAMPLE_LISTS_HTML + SAMPLE_SECTIONING_HTML + SAMPLE_CONSTRAINTS_HTML + SAMPLE_SYMBOLS_HTML + SAMPLE_ARIA_HTML;
+    let seen = 0;
     for (const [id, result] of Object.entries(markupResults(all))) {
-      for (const e of result?.entries ?? []) expect(e.check, e.rule).toBe(id);
+      for (const e of result?.entries ?? []) {
+        expect(e.check, e.rule).toBe(id);
+        seen++;
+      }
     }
+    expect(seen).toBeGreaterThan(40);
   });
 });
 
@@ -138,12 +171,17 @@ describe('selfAudit', () => {
 describe('the sample set', () => {
   const all = sampleEntries();
   const rulesOf = (check: CheckId): Set<string | undefined> => new Set(all.filter((e) => e.check === check).map((e) => e.rule));
-  it('has an entry for each rule of the five checks', () => {
+  it('has an entry for each rule of the ten checks', () => {
     for (const r of ARIA_RULES) expect(rulesOf('aria').has(r), `aria ${r}`).toBe(true);
     for (const r of REFERENCE_RULES) expect(rulesOf('references').has(r), `references ${r}`).toBe(true);
     for (const r of HREF_RULES) expect(rulesOf('hrefs').has(r), `hrefs ${r}`).toBe(true);
     for (const r of CSS_RULE_IDS) expect(rulesOf('css').has(r), `css ${r}`).toBe(true);
     for (const r of OBSOLETE_RULES) expect(rulesOf('obsolete').has(r), `obsolete ${r}`).toBe(true);
+    for (const r of STATE_RULES) expect(rulesOf('states').has(r), `states ${r}`).toBe(true);
+    for (const r of LIST_RULES) expect(rulesOf('lists').has(r), `lists ${r}`).toBe(true);
+    for (const r of SECTIONING_RULES) expect(rulesOf('sectioning').has(r), `sectioning ${r}`).toBe(true);
+    for (const r of CONSTRAINT_RULES) expect(rulesOf('constraints').has(r), `constraints ${r}`).toBe(true);
+    for (const r of SYMBOL_RULES) expect(rulesOf('symbols').has(r), `symbols ${r}`).toBe(true);
   });
   it('has clean French, and both languages differ', () => {
     noFrIssues(all.filter((e) => MINE.includes(e.check)));

@@ -12,6 +12,7 @@ import { buildLicenceBreakdown, kindLabel, LICENCE_BREAKDOWN_MESSAGES, licenceDi
 import { createTranslator, type Messages } from './localText';
 import { buildWorkload, WORKLOAD_MESSAGES, weekRangeText, type WorkloadWeek } from './workload';
 import type { DueItem } from './reviewDue';
+import { tallyTiers, TIER_MESSAGES, tierLabel, tierMeaning, tiersInUse } from './tiers';
 
 type Key = 'tb.section' | 'tb.item' | 'tb.count' | 'tb.detail' | 'tb.pastDue' | 'tb.beyond' | 'tb.unscheduled' | 'tb.sep';
 
@@ -64,6 +65,11 @@ export function buildTablesRows(audit: AuditResult, now: Date, locale: Locale, w
 
   const licTitle = LICENCE_BREAKDOWN_MESSAGES[locale]['lb.title'];
   for (const r of buildLicenceBreakdown(audit).rows) rows.push([licTitle, licenceDisplay(r.licence, locale), String(r.count), kindLabel(r.kind, locale)]);
+
+  const tierTitle = TIER_MESSAGES[locale]['tr.caption'];
+  const tally = tallyTiers(audit.sources);
+  for (const id of tiersInUse(tally)) rows.push([tierTitle, tierLabel(id, locale), String(tally.counts[id]), tierMeaning(id, locale)]);
+  if (tally.unknown > 0) rows.push([tierTitle, tierLabel(null, locale), String(tally.unknown), tierMeaning(null, locale)]);
   return rows;
 }
 

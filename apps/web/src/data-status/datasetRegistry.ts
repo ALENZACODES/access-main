@@ -5,6 +5,7 @@
 import { ageInDays, checkProvenance, freshness, licenceKind, type FreshnessState, type ProvenanceIssue } from './dataStatus';
 import { parseRetrieved } from './dateRules';
 import { cleanValue } from './unknownTokens';
+import { tierOf, type TierId } from './tierValue';
 import { staleAfterFor, type DatasetKind } from './freshnessPolicy';
 import type { SourceInput } from './sourceList';
 
@@ -48,6 +49,8 @@ export interface AuditedSource {
   limitDays: number;
   state: FreshnessState;
   issues: ProvenanceIssue[];
+  /** The tier written on the record (0 to 4, or E); null when none is recorded or the text is not a tier. */
+  tier: TierId | null;
 }
 
 export interface DatasetAudit {
@@ -169,6 +172,7 @@ export function auditRegistry(
         limitDays: days,
         state,
         issues,
+        tier: tierOf(s.tier),
       });
     }
 

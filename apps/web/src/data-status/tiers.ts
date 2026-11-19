@@ -10,36 +10,9 @@ import { t } from './i18n';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 import { cleanValue } from './unknownTokens';
+import { TIER_IDS, readTier, type TierId, type TierRead } from './tierValue';
 
-export const TIER_IDS = ['0', '1', '2', '3', '4', 'E'] as const;
-export type TierId = (typeof TIER_IDS)[number];
-
-export type TierRead =
-  | { kind: 'tier'; tier: TierId }
-  /** Nothing usable is recorded. */
-  | { kind: 'unknown' }
-  /** Something is recorded, but it is not one of the tiers. */
-  | { kind: 'unrecognised'; text: string };
-
-const UNKNOWN: TierRead = { kind: 'unknown' };
-
-export function isTierId(v: unknown): v is TierId {
-  return typeof v === 'string' && (TIER_IDS as readonly string[]).includes(v);
-}
-
-/** Reads one recorded tier. Whole numbers 0 to 4 and the letter E (either case) are tiers; nothing else is. */
-export function readTier(raw: unknown): TierRead {
-  if (typeof raw === 'number') {
-    if (Number.isInteger(raw) && raw >= 0 && raw <= 4) return { kind: 'tier', tier: String(raw) as TierId };
-    return Number.isNaN(raw) ? UNKNOWN : { kind: 'unrecognised', text: String(raw) };
-  }
-  if (typeof raw !== 'string') return UNKNOWN;
-  const text = cleanValue(raw);
-  if (text === null) return UNKNOWN;
-  const upper = text.toUpperCase();
-  if (isTierId(upper)) return { kind: 'tier', tier: upper };
-  return { kind: 'unrecognised', text };
-}
+export { TIER_IDS, isTierId, readTier, tierOf, type TierId, type TierRead } from './tierValue';
 
 export interface TieredRecord {
   datasetId: string;
@@ -120,8 +93,25 @@ export function buildTierBreakdown(records: readonly DatasetRecord[]): TierBreak
   return { counts, unknown, unrecognised, unrecognisedTexts: texts, total: all.length, known: all.length - unknown, datasets: [...byDataset.values()] };
 }
 
+export interface TierTally {
+  counts: TierCounts;
+  unknown: number;
+  total: number;
+}
+
+/** Counts by tier from audited sources, for callers that hold the audit and not the records. */
+export function tallyTiers(sources: readonly { tier: TierId | null }[]): TierTally {
+  const counts = emptyTierCounts();
+  let unknown = 0;
+  for (const s of sources) {
+    if (s.tier === null) unknown += 1;
+    else counts[s.tier] += 1;
+  }
+  return { counts, unknown, total: sources.length };
+}
+
 /** The tiers that at least one record states, in the fixed tier order. */
-export function tiersInUse(b: TierBreakdown): TierId[] {
+export function tiersInUse(b: Pick<TierBreakdown, 'counts'>): TierId[] {
   return TIER_IDS.filter((id) => b.counts[id] > 0);
 }
 

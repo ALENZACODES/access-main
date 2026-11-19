@@ -63,7 +63,12 @@ export type CheckId =
   | 'references'
   | 'hrefs'
   | 'css'
-  | 'obsolete';
+  | 'obsolete'
+  | 'states'
+  | 'lists'
+  | 'sectioning'
+  | 'constraints'
+  | 'symbols';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -124,6 +129,11 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   hrefs: '2.4.4',
   css: '2.4.7',
   obsolete: '1.3.1',
+  states: '4.1.2',
+  lists: '1.3.1',
+  sectioning: '1.3.1',
+  constraints: '3.3.2',
+  symbols: '1.1.1',
   regions: '1.3.1',
 };
 
@@ -186,6 +196,11 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'hrefs',
   'css',
   'obsolete',
+  'states',
+  'lists',
+  'sectioning',
+  'constraints',
+  'symbols',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -247,6 +262,11 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   hrefs: { en: 'Link destinations', fr: 'Destinations des liens' },
   css: { en: 'Style rules in the page', fr: 'Règles de style dans la page' },
   obsolete: { en: 'Old presentational markup', fr: 'Ancien balisage de présentation' },
+  states: { en: 'States written twice or misplaced', fr: 'États en double ou mal placés' },
+  lists: { en: 'List structure', fr: 'Structure des listes' },
+  sectioning: { en: 'Page parts and landmarks', fr: 'Parties de page et repères' },
+  constraints: { en: 'Limits on form entries', fr: 'Limites de saisie des formulaires' },
+  symbols: { en: 'Symbols, emoji and icon fonts', fr: 'Symboles, émojis et polices d’icônes' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */
