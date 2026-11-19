@@ -10,6 +10,7 @@ import type { Locale } from './dataStatus';
 import { createTranslator, type Messages } from './localText';
 import { t } from './i18n';
 import type { SortSpec } from './sorting';
+import { kindLabel } from './licenceBreakdown';
 
 export interface ListState {
   shown: number;
@@ -29,6 +30,8 @@ type Key =
   | 'an.filterKind'
   | 'an.filterTier'
   | 'an.filterTierUnknown'
+  | 'an.filterLicence'
+  | 'an.filterDataset'
   | 'an.col.tier'
   | 'an.filterQuery'
   | 'an.filterIssues'
@@ -55,6 +58,8 @@ const MESSAGES: Messages<Key> = {
     'an.filterKind': 'dataset type {value}',
     'an.filterTier': 'tier {value}',
     'an.filterTierUnknown': 'tier unknown',
+    'an.filterLicence': 'licence type {value}',
+    'an.filterDataset': 'dataset {value}',
     'an.col.tier': 'tier',
     'an.filterQuery': 'name contains “{value}”',
     'an.filterIssues': 'only items to review',
@@ -80,6 +85,8 @@ const MESSAGES: Messages<Key> = {
     'an.filterKind': 'type de jeu de données {value}',
     'an.filterTier': 'niveau {value}',
     'an.filterTierUnknown': 'niveau inconnu',
+    'an.filterLicence': 'type de licence {value}',
+    'an.filterDataset': 'jeu de données {value}',
     'an.col.tier': 'niveau',
     'an.filterQuery': 'le nom contient « {value} »',
     'an.filterIssues': 'seulement les éléments à examiner',
@@ -109,6 +116,8 @@ export function filterParts(f: Filters, locale: Locale): string[] {
   if (q !== '') parts.push(tx(locale, 'an.filterQuery', { value: q }));
   if (f.onlyIssues) parts.push(tx(locale, 'an.filterIssues'));
   if (f.tier !== undefined) parts.push(f.tier === 'unknown' ? tx(locale, 'an.filterTierUnknown') : tx(locale, 'an.filterTier', { value: f.tier }));
+  if (f.licence !== undefined) parts.push(tx(locale, 'an.filterLicence', { value: kindLabel(f.licence, locale).toLowerCase() }));
+  if (f.dataset !== undefined) parts.push(tx(locale, 'an.filterDataset', { value: f.dataset }));
   return parts;
 }
 

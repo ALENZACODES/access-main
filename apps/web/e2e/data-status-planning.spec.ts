@@ -193,3 +193,34 @@ test("Data status: the source list shows each tier and can be filtered by tier",
   await expect(panel.getByRole("table", { name: "Records by tier and status" }).getByRole("row", { name: /^All tiers/ })).toContainText("3");
 });
 
+test("Data status: filters in force are listed above the list and can be removed one at a time", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-desk", kind: "place", title: "Desk place", retrieved_at: daysAgo(4), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: daysAgo(5), tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  await panel.getByLabel("Licence type").selectOption("open");
+  await expect(list).toContainText("1 filter in force");
+  await expect(list.getByRole("row")).toHaveCount(4);
+  await panel.getByLabel("Dataset", { exact: true }).selectOption({ label: "Places" });
+  await expect(list).toContainText("2 filters in force");
+  await expect(list.getByRole("row")).toHaveCount(3);
+  await panel.getByLabel("Licence type").selectOption("unknown");
+  await expect(list).toContainText("No sources match");
+  await expect(list).toContainText("Removing one filter would bring sources back.");
+  await expect(list.getByRole("button", { name: "Remove filter. Licence type: Unknown (shows 2 sources)" })).toBeVisible();
+
+  await list.getByRole("button", { name: "Remove filter. Licence type: Unknown", exact: true }).click();
+  await expect(list).toContainText("1 filter in force");
+  await expect(panel.getByLabel("Licence type")).toHaveValue("any");
+  await expect(panel.getByLabel("Dataset", { exact: true })).not.toHaveValue("any");
+  await expect(list.getByRole("row")).toHaveCount(3);
+  await list.getByRole("button", { name: "Remove filter. Dataset: Places" }).click();
+  await expect(list.getByRole("row")).toHaveCount(4);
+  await expect(list.getByText("filter in force")).toHaveCount(0);
+});
+

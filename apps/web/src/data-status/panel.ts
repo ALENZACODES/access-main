@@ -13,7 +13,7 @@ import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
-import { applyFilters, FILTER_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isTierFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
+import { applyFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
 import { isDatasetKind } from './freshnessPolicy';
@@ -36,7 +36,14 @@ import {
   buildFactsFile,
   buildMarkdownFile,
   buildRecordFacts,
+  buildNoMatchHints,
   buildQuickFilters,
+  clearKeyFromAction,
+  kindLabel,
+  listActiveFilters,
+  renderActiveFiltersHtml,
+  renderNoMatchHintsHtml,
+  withoutFilter,
   buildStatusByTier,
   buildSummaryFile,
   buildSourceDetails,
@@ -227,7 +234,38 @@ export interface FilterFormOptions {
   table?: TableView;
 }
 
-export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions): string {
+/** A dataset offered in the dataset filter. */
+export interface DatasetOption {
+  id: string;
+  name: string;
+}
+
+/** One option per dataset id, in audit order. */
+export function datasetOptions(audit: AuditResult): DatasetOption[] {
+  const seen = new Set<string>();
+  const out: DatasetOption[] = [];
+  for (const d of audit.datasets) {
+    if (seen.has(d.id)) continue;
+    seen.add(d.id);
+    out.push({ id: d.id, name: d.name });
+  }
+  return out;
+}
+
+/** The source list with the filters in force above it; this is what the sources region holds. */
+export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, hrefWithout?: (f: Filters) => string): string {
+  const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
+  const activeList = listActiveFilters(filters, locale, names);
+  const links = hrefWithout ? { hrefFor: (key: Parameters<typeof withoutFilter>[1]) => hrefWithout(withoutFilter(filters, key)) } : {};
+  const active = renderActiveFiltersHtml(activeList, locale, { buttonStyle: buttonInlineStyle(), ...links });
+  const noMatch = audit.sources.length > 0 && applyFilters(audit.sources, filters).length === 0;
+  const hints = noMatch
+    ? renderNoMatchHintsHtml(buildNoMatchHints(audit.sources, filters, locale, names), locale, { buttonStyle: buttonInlineStyle(), activeCount: activeList.length, ...links })
+    : '';
+  return active + renderSourcesRegion(audit, locale, filters, now, nav) + hints;
+}
+
+export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = []): string {
   const stateOpts =
     option('any', t(locale, 'flt.any'), f.state === 'any') +
     FILTER_STATES.map((s) => option(s, t(locale, `state.${s}`), f.state === s)).join('');
@@ -237,6 +275,11 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
   const tierOpts =
     option('any', t(locale, 'flt.any'), f.tier === undefined) +
     FILTER_TIERS.map((v) => option(v, v === 'unknown' ? t(locale, 'unknown') : v, f.tier === v)).join('');
+  const licenceOpts =
+    option('any', t(locale, 'flt.any'), f.licence === undefined) +
+    FILTER_LICENCE_KINDS.map((k) => option(k, kindLabel(k, locale), f.licence === k)).join('');
+  const datasetOpts =
+    option('any', t(locale, 'flt.any'), f.dataset === undefined) + datasets.map((d) => option(d.id, d.name, f.dataset === d.id)).join('');
   const field = (id: string, key: MessageKey, control: string) =>
     `<div><label for="${id}">${esc(t(locale, key))}</label> ${control}</div>`;
   const controls =
@@ -244,6 +287,10 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     field('ds-f-state', 'flt.state', `<select id="ds-f-state" name="state" data-filter="state" style="${FIELD_STYLE}">${stateOpts}</select>`) +
     field('ds-f-kind', 'flt.kind', `<select id="ds-f-kind" name="kind" data-filter="kind" style="${FIELD_STYLE}">${kindOpts}</select>`) +
     field('ds-f-tier', 'flt.tier', `<select id="ds-f-tier" name="tier" data-filter="tier" style="${FIELD_STYLE}">${tierOpts}</select>`) +
+    field('ds-f-licence', 'flt.licence', `<select id="ds-f-licence" name="lic" data-filter="licence" style="${FIELD_STYLE}">${licenceOpts}</select>`) +
+    (datasets.length > 1
+      ? field('ds-f-dataset', 'flt.dataset', `<select id="ds-f-dataset" name="ds" data-filter="dataset" style="${FIELD_STYLE}">${datasetOpts}</select>`)
+      : '') +
     field(
       'ds-f-q',
       'flt.query',
@@ -344,9 +391,9 @@ export function renderDataStatusPanel(state: PanelState): string {
       buttonStyle: buttonInlineStyle(),
       ...(sv ? { hrefFor: (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` } : {}),
     }) +
-    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined) +
+    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit)) +
     (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
-    `<div data-region="sources">${renderSourcesRegion(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined)}</div>` +
+    `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
     coverageSection(state) +
     renderCompletenessHtml(buildCompleteness(audit), locale) +
     renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale) +
@@ -504,7 +551,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     }
     const now = nowFn();
     const audit = auditRegistry(lastRecords, now, thresholds);
-    const results = renderSourcesRegion(audit, opts.getLocale(), filters, now);
+    const results = renderResultsHtml(audit, opts.getLocale(), filters, now);
     region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
     const next = listState(audit);
     announcer.say(describeListChange(lastList, next, opts.getLocale()));
@@ -519,8 +566,11 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     if (key === 'state') filters = { ...filters, state: (FILTER_STATES as readonly string[]).includes(value) ? (value as Filters['state']) : 'any' };
     else if (key === 'kind') filters = { ...filters, kind: isDatasetKind(value) ? value : 'any' };
     else if (key === 'tier') {
-      const rest: Filters = { state: filters.state, kind: filters.kind, query: filters.query, onlyIssues: filters.onlyIssues };
-      filters = isTierFilter(value) ? { ...rest, tier: value } : rest;
+      filters = withOptionalFilter(filters, 'tier', isTierFilter(value) ? value : undefined);
+    } else if (key === 'licence') {
+      filters = withOptionalFilter(filters, 'licence', isLicenceKind(value) ? value : undefined);
+    } else if (key === 'dataset') {
+      filters = withOptionalFilter(filters, 'dataset', isDatasetFilter(value) ? value : undefined);
     }
     else if (key === 'query') filters = { ...filters, query: value.slice(0, MAX_QUERY_LENGTH) };
     else if (key === 'onlyIssues') filters = { ...filters, onlyIssues: el.checked === true };
@@ -558,6 +608,14 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     } else if (action === 'export-tables' && opts.onExportFile) {
       const { text, filename, mime } = buildTablesFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
       opts.onExportFile({ text, filename, mime });
+    } else if (clearKeyFromAction(action) !== null) {
+      const key = clearKeyFromAction(action);
+      if (key === null) return;
+      const before = lastList;
+      filters = withoutFilter(filters, key);
+      refresh();
+      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
+      opts.onFiltersChange?.(view());
     } else if (quickFilterFromAction(action) !== null) {
       const id = quickFilterFromAction(action);
       if (id === null) return;

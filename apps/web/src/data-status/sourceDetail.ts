@@ -126,6 +126,7 @@ function renderOne(d: SourceDetail, locale: Locale): string {
     `<details><summary style="${SUMMARY_STYLE}">${escapeHtml(displayName(d))} (${escapeHtml(tx.count(locale, 'sd.items', d.codes.length))})</summary>` +
     `<dl><dt>${escapeHtml(tx(locale, 'sd.licence'))}</dt><dd>${escapeHtml(s.licence ?? t(locale, 'unknown'))}</dd>` +
     `<dt>${escapeHtml(tx(locale, 'sd.retrieved'))}</dt><dd>${escapeHtml(s.retrievedIso === null ? t(locale, 'unknown') : formatDisplayDate(s.retrievedIso, locale))}</dd>` +
+    `<dt>${escapeHtml(t(locale, 'tbl.tier'))}</dt><dd>${escapeHtml(s.tier ?? t(locale, 'unknown'))}</dd>` +
     `<dt>${escapeHtml(tx(locale, 'sd.status'))}</dt><dd>${escapeHtml(t(locale, `state.${s.state}`))}. ${escapeHtml(basis)}</dd>${link}</dl>` +
     `<h3>${escapeHtml(tx(locale, 'sd.steps'))}</h3><ul>` +
     d.codes.map((c) => `<li><strong>${escapeHtml(remedyTitle(c, locale))}</strong>. ${escapeHtml(remedyStep(c, locale))}</li>`).join('') +
