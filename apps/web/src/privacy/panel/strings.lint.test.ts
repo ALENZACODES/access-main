@@ -16,6 +16,8 @@ const STATUSES: readonly Status[] = [
   { kind: "unavailable" },
   { kind: "consent-saved", value: "granted", label: "Lieux" },
   { kind: "consent-saved", value: "declined", label: "Places" },
+  { kind: "consent-withdrawn", label: "Lieux", removed: 1 },
+  { kind: "consent-withdrawn", label: "Places", removed: 3 },
   { kind: "save-failed" },
   { kind: "expired-removed", count: 0 },
   { kind: "expired-removed", count: 4 },

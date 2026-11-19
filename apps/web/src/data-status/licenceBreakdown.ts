@@ -110,20 +110,28 @@ export function licenceSummary(b: LicenceBreakdown, locale: Locale): string {
   return tx.count(locale, 'lb.summary', b.total, { reusable: b.reusable, total: b.total });
 }
 
-export function renderLicenceBreakdownHtml(b: LicenceBreakdown, locale: Locale): string {
+/** An extra last column on the licence table: a heading and one cell of ready-made HTML for each licence type. */
+export interface LicenceRowExtra {
+  heading: string;
+  cell: (kind: LicenceKind) => string;
+}
+
+/** With `extra`, the cell is drawn on the first row of each licence type only, since it concerns the whole type. */
+export function renderLicenceBreakdownHtml(b: LicenceBreakdown, locale: Locale, extra?: LicenceRowExtra): string {
   const heading = `<h2 id="ds-licences-title">${escapeHtml(tx(locale, 'lb.title'))}</h2>`;
   if (b.total === 0) return `<section aria-labelledby="ds-licences-title">${heading}<p>${escapeHtml(tx(locale, 'lb.none'))}</p></section>`;
   const body = b.rows
     .map(
-      (r) =>
-        `<tr><th scope="row">${escapeHtml(licenceDisplay(r.licence, locale))}</th><td>${escapeHtml(kindLabel(r.kind, locale))}</td><td>${r.count}</td></tr>`,
+      (r, i) =>
+        `<tr><th scope="row">${escapeHtml(licenceDisplay(r.licence, locale))}</th><td>${escapeHtml(kindLabel(r.kind, locale))}</td><td>${r.count}</td>` +
+        `${extra ? `<td>${b.rows.findIndex((x) => x.kind === r.kind) === i ? extra.cell(r.kind) : ''}</td>` : ''}</tr>`,
     )
     .join('');
   return (
     `<section aria-labelledby="ds-licences-title">${heading}<p>${escapeHtml(tx(locale, 'lb.intro'))}</p>` +
     `<table><caption>${escapeHtml(tx(locale, 'lb.caption'))}</caption><thead><tr>` +
     `<th scope="col">${escapeHtml(tx(locale, 'lb.colLicence'))}</th><th scope="col">${escapeHtml(tx(locale, 'lb.colType'))}</th>` +
-    `<th scope="col">${escapeHtml(tx(locale, 'lb.colCount'))}</th></tr></thead><tbody>${body}</tbody></table>` +
+    `<th scope="col">${escapeHtml(tx(locale, 'lb.colCount'))}</th>${extra ? `<th scope="col">${escapeHtml(extra.heading)}</th>` : ''}</tr></thead><tbody>${body}</tbody></table>` +
     `<p>${escapeHtml(licenceSummary(b, locale))}</p></section>`
   );
 }

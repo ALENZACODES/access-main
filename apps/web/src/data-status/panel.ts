@@ -40,6 +40,12 @@ import {
   buildListedSummary,
   buildNoMatchHints,
   clampLimit,
+  drillColumnHeading,
+  drillFilters,
+  parseDrillAction,
+  renderDrillControl,
+  type DrillTarget,
+  MAX_VIEW_NAME_LENGTH,
   LIVE_STEP,
   parseSortValue,
   renderShowMoreHtml,
@@ -84,6 +90,7 @@ import {
   renderTocHtml,
   renderWorkloadHtml,
   runSelfCheck,
+  type SavedView,
   type SavedViewStore,
   quickFilterFor,
   quickFilterFromAction,
@@ -127,7 +134,7 @@ export interface PanelState {
   /** Live panel only: the chosen order and how many rows to draw. Ignored in the static view, which sorts and pages with links. */
   live?: LiveList | undefined;
   /** Saved views to offer (query texts). Leave undefined to leave the section out; it is never shown in the static view. */
-  savedViews?: { views: readonly string[]; durable: boolean } | undefined;
+  savedViews?: { views: readonly SavedView[]; durable: boolean; draftName?: string } | undefined;
 }
 
 const esc = escapeHtml;
@@ -151,17 +158,19 @@ export function plainTables(html: string): string {
   return html.replace(SCROLL_OPEN, '<div class="ds-wrap" style="overflow-wrap:anywhere">');
 }
 
-function datasetTable(audit: AuditResult, locale: Locale): string {
+function datasetTable(audit: AuditResult, locale: Locale, drill?: (target: DrillTarget) => string): string {
   const rows = audit.datasets
     .map(
       (d) =>
-        `<tr><th scope="row">${esc(d.name)}</th><td>${esc(t(locale, `kind.${d.kind}`))}</td><td>${d.sourceCount}</td><td>${statusBadge(d.state, locale)}</td></tr>`,
+        `<tr><th scope="row">${esc(d.name)}</th><td>${esc(t(locale, `kind.${d.kind}`))}</td><td>${d.sourceCount}</td><td>${statusBadge(d.state, locale)}</td>` +
+        // A dataset with no sources, or an id the filter cannot carry, has nothing to list.
+        `${drill ? `<td>${d.sourceCount > 0 && isDatasetFilter(d.id) ? drill({ kind: 'dataset', value: d.id }) : ''}</td>` : ''}</tr>`,
     )
     .join('');
   const table =
     `<table><caption>${esc(t(locale, 'tbl.datasets'))}</caption><thead><tr>` +
     `<th scope="col">${esc(t(locale, 'tbl.dataset'))}</th><th scope="col">${esc(t(locale, 'flt.kind'))}</th>` +
-    `<th scope="col">${esc(t(locale, 'tbl.sourceCount'))}</th><th scope="col">${esc(t(locale, 'tbl.status'))}</th></tr></thead>` +
+    `<th scope="col">${esc(t(locale, 'tbl.sourceCount'))}</th><th scope="col">${esc(t(locale, 'tbl.status'))}</th>${drill ? `<th scope="col">${esc(drillColumnHeading(locale))}</th>` : ''}</tr></thead>` +
     `<tbody>${rows}</tbody></table>`;
   return scrollable(t(locale, 'tbl.datasets'), table);
 }
@@ -291,12 +300,14 @@ export function renderQuickRegion(audit: AuditResult, locale: Locale, filters: F
 }
 
 /** The saved views; this is what the views region holds, so saving is offered as soon as a filter is chosen. */
-export function renderViewsRegion(audit: AuditResult, locale: Locale, filters: Filters, saved: { views: readonly string[]; durable: boolean }): string {
+export function renderViewsRegion(audit: AuditResult, locale: Locale, filters: Filters, saved: { views: readonly SavedView[]; durable: boolean; draftName?: string }): string {
   return renderSavedViewsHtml(saved.views, locale, {
     durable: saved.durable,
     active: filters,
     datasetNames: new Map(datasetOptions(audit).map((d) => [d.id, d.name])),
     buttonStyle: buttonInlineStyle(),
+    countFor: (f: Filters) => applyFilters(audit.sources, f).length,
+    ...(saved.draftName === undefined ? {} : { draftName: saved.draftName }),
   });
 }
 
@@ -424,6 +435,13 @@ export function renderDataStatusPanel(state: PanelState): string {
       (sv.catalogueHref ? ` ${downloadLink(sv.catalogueHref + thrQuery, t(locale, 'dl.catalogue'))}` : '') +
       `</div>`
     : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))}</div>`;
+  const drillNames = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
+  const drill = (target: DrillTarget): string =>
+    renderDrillControl(target, locale, {
+      buttonStyle: buttonInlineStyle(),
+      datasetNames: drillNames,
+      ...(sv ? { hrefFor: (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` } : {}),
+    });
   const head = notices + snapshotLine(state) + actions + renderGlanceHtml(audit, locale);
   const body =
     renderQaReportHtml(buildQaReport(audit, locale), locale) +
@@ -431,7 +449,7 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderSourceDetailsHtml(buildSourceDetails(audit), locale) +
     (state.changes ? renderChangesHtml(state.changes, locale) : '') +
     (state.history ? renderHistoryHtml(state.history, locale) : '') +
-    datasetTable(audit, locale) +
+    datasetTable(audit, locale, drill) +
     renderReviewHtml(buildReviewQueue(audit, state.now), locale) +
     renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
@@ -443,8 +461,8 @@ export function renderDataStatusPanel(state: PanelState): string {
     `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined, sv ? undefined : state.live)}</div>` +
     coverageSection(state) +
     renderCompletenessHtml(buildCompleteness(audit), locale) +
-    renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale) +
-    renderTierBreakdownHtml(buildTierBreakdown(state.records), locale) +
+    renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale, { heading: drillColumnHeading(locale), cell: (kind) => drill({ kind: 'licence', value: kind }) }) +
+    renderTierBreakdownHtml(buildTierBreakdown(state.records), locale, { heading: drillColumnHeading(locale), cell: (tier) => drill({ kind: 'tier', value: tier ?? 'unknown' }) }) +
     renderStatusByTierHtml(buildStatusByTier(audit), locale) +
     renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale) +
@@ -513,6 +531,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   let filters: Filters = { ...(opts.initialFilters ?? NO_FILTERS) };
   let sort: SortSpec | null = opts.initialSort ?? null;
   let limit = LIVE_STEP;
+  // What has been typed as a name for the next saved view. Kept here so redraws do not lose it.
+  let viewName = '';
   let baseline: Snapshot | null | undefined; // undefined until the first refresh
   const thresholds: Thresholds = { ...(opts.thresholds ?? {}) };
   const view = (): string => {
@@ -601,7 +621,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       notices: opts.getNotices?.(locale),
       plainTables: opts.plainTables,
       live: { sort, limit },
-      savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable } : undefined,
+      savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable, draftName: viewName } : undefined,
     });
   };
 
@@ -620,7 +640,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     if (quick !== null) quick.innerHTML = renderQuickRegion(audit, opts.getLocale(), filters);
     const views = host.querySelector?.('[data-region="views"]') ?? null;
     if (views !== null && opts.savedViews) {
-      views.innerHTML = renderViewsRegion(audit, opts.getLocale(), filters, { views: opts.savedViews.load(), durable: opts.savedViews.durable });
+      views.innerHTML = renderViewsRegion(audit, opts.getLocale(), filters, { views: opts.savedViews.load(), durable: opts.savedViews.durable, draftName: viewName });
     }
     const next = listState(audit);
     announcer.say(describeListChange(lastList, next, opts.getLocale()));
@@ -632,6 +652,11 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     const key = el?.getAttribute?.('data-filter');
     if (!key || !el) return;
     const value = typeof el.value === 'string' ? el.value : '';
+    if (key === 'viewName') {
+      // Typing a name changes nothing on screen; it is read when the view is saved.
+      viewName = value.slice(0, MAX_VIEW_NAME_LENGTH);
+      return;
+    }
     // Any change to what is listed, or its order, starts again from the first rows.
     limit = LIVE_STEP;
     if (key === 'sort') sort = parseSortValue(value);
@@ -691,7 +716,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       if (act === null) return;
       const locale = opts.getLocale();
       if (act.kind === 'save') {
-        const { outcome } = addView(opts.savedViews, filters);
+        const { outcome } = addView(opts.savedViews, filters, viewName);
+        if (outcome === 'saved') viewName = '';
         refresh();
         announcer.say(describeSaveOutcome(outcome, locale));
       } else if (act.kind === 'delete') {
@@ -700,7 +726,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         refresh();
         announcer.say(describeViewDeleted(locale));
       } else {
-        const query = opts.savedViews.load()[act.index];
+        const query = opts.savedViews.load()[act.index]?.query;
         if (query === undefined) return;
         const before = lastList;
         filters = parseFilters(query);
@@ -708,6 +734,15 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         if (lastList !== null) announcer.say(describeListChange(before, lastList, locale));
         opts.onFiltersChange?.(view());
       }
+    } else if (parseDrillAction(action) !== null) {
+      const target = parseDrillAction(action);
+      if (target === null) return;
+      const before = lastList;
+      filters = drillFilters(target);
+      limit = LIVE_STEP;
+      refresh();
+      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
+      opts.onFiltersChange?.(view());
     } else if (clearKeyFromAction(action) !== null) {
       const key = clearKeyFromAction(action);
       if (key === null) return;

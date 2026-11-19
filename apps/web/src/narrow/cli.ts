@@ -1,5 +1,10 @@
 import { applyWaivers, describeDiff, describeWaived, diffAgainstBaseline, makeBaseline, parseBaseline, parseWaivers, renderJunit, renderSarif } from './ci.js';
 import { applyBudget, describeBudget, parseBudget, ratchet, type Budget } from './budget.js';
+import { compareReports, describeComparison, renderComparisonMarkdown } from './compare.js';
+import { renderCsv } from './csv.js';
+import { describeDigest, makeDigest } from './digest.js';
+import { renderMarkdown } from './markdown.js';
+import { parseReport } from './reportio.js';
 import { auditCopy, auditCopyDict } from './copylint.js';
 import { appendRun, DEFAULT_HISTORY_MAX, describeTrend, EMPTY_HISTORY, parseHistory, trend } from './history.js';
 import { scanHosts } from './hostlint.js';
@@ -44,6 +49,8 @@ export interface CliArgs {
   readonly budgetFile: string | null;
   readonly writeBudgetFile: string | null;
   readonly historyFile: string | null;
+  /** An earlier narrow-audit.json to compare this run with. */
+  readonly compareFile: string | null;
   readonly historyMax: number | null;
   readonly maxWeightKb: number | null;
   /** Run only these checks. Empty means all. */
@@ -52,7 +59,7 @@ export interface CliArgs {
   readonly skip: readonly CheckId[];
 }
 
-export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit'];
+export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest'];
 
 export type ParsedArgs =
   | { readonly ok: true; readonly args: CliArgs }
@@ -63,10 +70,11 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FILE ...] [--data FILE]\n' +
   '                    [--allow-licence ID ...] [--require-fact KEY ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit] [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest]\n' +
+  '                    [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
   '                    [--manifest FILE ...] [--sw FILE ...] [--scan FILE ...] [--allow-host PATTERN ...]\n' +
   '                    [--budget FILE] [--write-budget FILE] [--history FILE] [--history-max N]\n' +
-  '                    [--max-weight-kb N] [--only CHECK,...] [--skip CHECK,...]\n' +
+  '                    [--max-weight-kb N] [--only CHECK,...] [--skip CHECK,...] [--compare REPORT.json]\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
   '\n' +
@@ -74,10 +82,11 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FICHIER ...] [--data FICHIER]\n' +
   '                    [--allow-licence ID ...] [--require-fact CLÉ ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit] [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest]\n' +
+  '                    [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
   '                    [--manifest FICHIER ...] [--sw FICHIER ...] [--scan FICHIER ...] [--allow-host MOTIF ...]\n' +
   '                    [--budget FICHIER] [--write-budget FICHIER] [--history FICHIER] [--history-max N]\n' +
-  '                    [--max-weight-kb N] [--only CONTRÔLE,...] [--skip CONTRÔLE,...]\n' +
+  '                    [--max-weight-kb N] [--only CONTRÔLE,...] [--skip CONTRÔLE,...] [--compare RAPPORT.json]\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
 
@@ -105,6 +114,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let budgetFile: string | null = null;
   let writeBudgetFile: string | null = null;
   let historyFile: string | null = null;
+  let compareFile: string | null = null;
   let historyMax: number | null = null;
   let maxWeightKb: number | null = null;
   const only: CheckId[] = [];
@@ -204,10 +214,12 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       case '--budget':
       case '--write-budget':
       case '--history':
+      case '--compare':
         got = need(a, next(), 'a file', 'un fichier');
         if (typeof got !== 'string') return got;
         if (a === '--budget') budgetFile = got;
         else if (a === '--write-budget') writeBudgetFile = got;
+        else if (a === '--compare') compareFile = got;
         else historyFile = got;
         break;
       case '--only':
@@ -272,7 +284,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   }
   return {
     ok: true,
-    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, historyMax, maxWeightKb, only, skip },
+    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, compareFile, historyMax, maxWeightKb, only, skip },
   };
 }
 
@@ -411,12 +423,25 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       await deps.writeText(args.historyFile, JSON.stringify(history, null, 2) + '\n');
       deps.log(describeTrend(trend(history), args.lang));
     }
+    if (args.compareFile !== null) {
+      const earlier = parseReport(await deps.readText(args.compareFile));
+      if (!earlier.ok) {
+        deps.log(`${earlier.error.en} / ${earlier.error.fr}`);
+        return 2;
+      }
+      const comparison = compareReports(earlier.value, report);
+      deps.log(describeComparison(comparison, args.lang).trimEnd());
+      if (args.outDir !== null) await deps.writeText(`${args.outDir.replace(/\/+$/, '')}/narrow-audit.compare.${args.lang}.md`, renderComparisonMarkdown(comparison, args.lang));
+    }
     if (args.outDir !== null) {
       const dir = args.outDir.replace(/\/+$/, '');
       await deps.writeText(`${dir}/narrow-audit.json`, renderJson(report));
       await deps.writeText(`${dir}/narrow-audit.${args.lang}.html`, renderHtml(report, args.lang));
       if (args.formats.includes('sarif')) await deps.writeText(`${dir}/narrow-audit.sarif`, renderSarif(report));
       if (args.formats.includes('junit')) await deps.writeText(`${dir}/narrow-audit.junit.xml`, renderJunit(report, args.lang));
+      if (args.formats.includes('markdown')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.md`, renderMarkdown(report, args.lang));
+      if (args.formats.includes('csv')) await deps.writeText(`${dir}/narrow-audit.csv`, renderCsv(report));
+      if (args.formats.includes('digest')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.txt`, describeDigest(makeDigest(report), args.lang));
     }
     if (args.writeBaselineFile !== null) await deps.writeText(args.writeBaselineFile, JSON.stringify(makeBaseline(report), null, 2) + '\n');
     if (args.baselineFile !== null) {

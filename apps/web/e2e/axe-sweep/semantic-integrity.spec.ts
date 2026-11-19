@@ -2,7 +2,7 @@ import { assertNoForbiddenOrg, endorsedByForbiddenOrgSample } from "../../../../
 import { expect, test } from "@playwright/test";
 import {
   assertUniqueMatrix, focusNodeIssues, hashIssues, idIssues, languageIssues,
-  localePart, referenceIssues, reportIssues, routeInventoryIssues, snapshotIssues,
+  localePart, referenceIssues, reportIssues, routeInventoryIssues, snapshotIssues, unmarkedEnglishUi,
   type FocusNode, type RouteSnapshot,
 } from "./semantic-integrity";
 
@@ -113,6 +113,41 @@ test.describe("semantic integrity contracts", () => {
     ], "/").map((entry) => entry.rule)).toEqual([
       "fragment-language-empty", "fragment-language-invalid",
     ]);
+  });
+
+  test("unmarked English copy under French is a language violation", () => {
+    const fragments = [
+      { language: "fr", parentLanguage: "fr", text: "Please choose a place", visible: true, explicit: false, tag: "p" },
+      { language: "fr", parentLanguage: "fr", text: "No results found", visible: true, explicit: false, tag: "p" },
+      { language: "fr", parentLanguage: "fr", text: "Logement disponible", visible: true, explicit: false, tag: "p" },
+    ];
+    expect(languageIssues("fr", "fr", fragments, "/places").map((entry) => entry.rule))
+      .toEqual(["unmarked-english", "unmarked-english"]);
+    expect(languageIssues("en", "en", fragments, "/places").every((entry) => entry.rule !== "unmarked-english"))
+      .toBe(true);
+  });
+
+  test("marked English and hidden text are not diagnosed as unmarked", () => {
+    const fragments = [
+      { language: "en", parentLanguage: "fr", text: "Please choose a place", visible: true },
+      { language: "fr", parentLanguage: "fr", text: "No results found", visible: false, explicit: false },
+      { language: "fr", parentLanguage: "fr", text: "English", visible: true, explicit: false },
+    ];
+    expect(languageIssues("fr", "fr", fragments, "/places")).toEqual([]);
+  });
+
+  test("French embedded page headings cannot silently remain English", () => {
+    for (const [route, text] of [
+      ["/more/housing", "Housing finder"],
+      ["/more/diary", "Coverage diary"],
+      ["/more/auditors", "Auditor capture"],
+    ] as const) {
+      expect(unmarkedEnglishUi(text, "h1", route)).toBe(true);
+      expect(languageIssues("fr", "fr", [
+        { language: "fr", parentLanguage: "fr", text, visible: true, explicit: false, tag: "h1" },
+      ], route).map((entry) => entry.rule)).toContain("unmarked-english");
+    }
+    expect(unmarkedEnglishUi("Logement", "h1", "/more/housing")).toBe(false);
   });
 
   test("a disabled, invisible or disconnected keyboard stop is rejected", () => {

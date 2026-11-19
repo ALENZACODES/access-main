@@ -98,6 +98,7 @@ describe("parsePackPlace", () => {
       name: "Hall",
       tag: "yes",
       tagUnknownReason: null,
+      tier: 0,
       category: "attraction",
       address: "1 Main Street",
       note: "Ramp at the side door.",
@@ -184,5 +185,18 @@ describe("the Toronto pack shipped with the app", () => {
   it("turns every reported tag UNKNOWN when its provenance is removed", () => {
     const stripped = parsePackPlaces(content.places.map((p) => ({ ...p, provenance: undefined })));
     expect(stripped.places.every((p) => p.tag === "unknown")).toBe(true);
+  });
+});
+
+describe("tier on a pack record", () => {
+  it("reads the tier the record states", () => {
+    expect(parsePackPlace(raw({ provenance: prov({ tier: "E" }) }))?.tier).toBe("E");
+    expect(parsePackPlace(raw({ provenance: prov({ tier: 1 }) }))?.tier).toBe(1);
+  });
+  it("keeps a missing or unrecognised tier null and never defaults it", () => {
+    for (const tier of [undefined, "UNKNOWN", 9, "tier-0", null]) {
+      expect(parsePackPlace(raw({ provenance: prov({ tier }) }))?.tier, String(tier)).toBeNull();
+    }
+    expect(parsePackPlace(raw({ provenance: null }))?.tier).toBeNull();
   });
 });
