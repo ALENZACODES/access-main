@@ -39,6 +39,11 @@ import { auditLists } from './lists.js';
 import { auditSectioning } from './sectioning.js';
 import { auditStates } from './states.js';
 import { auditSymbols } from './symbols.js';
+import { auditDocument } from './docmeta.js';
+import { auditIdentifiers } from './identifiers.js';
+import { auditLabels } from './labels.js';
+import { auditNameWords } from './namewords.js';
+import { auditTableMarkup } from './tablemarkup.js';
 import { auditRegions } from './regions.js';
 import { auditHandlers } from './handlers.js';
 import { auditHeadings } from './headings.js';
@@ -335,6 +340,11 @@ export function sampleEntries(): Entry[] {
     ...auditSectioning(SAMPLE_SECTIONING_HTML).entries,
     ...auditConstraints(SAMPLE_CONSTRAINTS_HTML).entries,
     ...auditSymbols(SAMPLE_SYMBOLS_HTML).entries,
+    ...auditDocument(SAMPLE_DOCUMENT_HTML).entries,
+    ...auditTableMarkup(SAMPLE_TABLE_MARKUP_HTML).entries,
+    ...auditLabels(SAMPLE_LABELS_HTML).entries,
+    ...auditIdentifiers(SAMPLE_IDENTIFIERS_HTML).entries,
+    ...auditNameWords(SAMPLE_NAME_WORDS_HTML).entries,
     ...auditRegions({ landmarks: 1, checked: 6, outside: ['p[2]'], outsideCount: 2, truncated: false }).entries,
     ...SAMPLE_HEADINGS.flatMap((f) => auditHeadings(f).entries),
     ...auditTextZoom({ checked: 2, newlyClipped: [{ id: 'div[2]', scrollWidth: 100, clientWidth: 100, scrollHeight: 60, clientHeight: 20 }] }).entries,
@@ -480,3 +490,26 @@ export const SAMPLE_CONSTRAINTS_HTML =
 /** Symbols: one finding of each rule of the symbols check. */
 export const SAMPLE_SYMBOLS_HTML =
   '<button type="button">\u00D7</button><p>Menu \uE900</p><i class="material-icons">menu</i><p>Open today \u{1F389}\u{1F389}\u{1F389}</p>';
+
+/** Document settings: one finding of each rule of the document check. */
+export const SAMPLE_DOCUMENT_HTML =
+  '<html lang="en" xml:lang="fr"><head><base target="_blank"><title>Help</title></head><body><div id="root" dir="left"></div><script src="/app.js"></script></body></html>';
+
+/** Table attributes: one finding of each rule of the table-markup check. */
+export const SAMPLE_TABLE_MARKUP_HTML =
+  '<table summary="Opening hours by day"><tr><th scope="column">Day</th><th colspan="two">Hours</th></tr><tr><td scope="row">Monday</td><td>9 to 5</td></tr><caption>Hours</caption></table>';
+
+/** Label structure: one finding of each rule of the labels check. */
+export const SAMPLE_LABELS_HTML =
+  '<label>Dates <input name="from"><input name="to"></label><label>Outer <label>Inner <input name="n"></label></label>' +
+  '<label for="other">City <input id="city" name="city"></label><input id="other" name="other"><label>Agree to the <a href="/terms">terms</a> <input type="checkbox" name="ok"></label>' +
+  '<label for="p1">Phone</label><input id="p1" name="p1"><label for="p2">Phone</label><input id="p2" name="p2"><label for="x">Label</label><input id="x" name="x">';
+
+/** Ids: one finding of each rule of the identifiers check. */
+export const SAMPLE_IDENTIFIERS_HTML =
+  '<p id="main text">Hours</p><label for="#q">Search</label><input id="q" name="q"><img usemap="plan" alt="Floor plan" src="p.png"><p id="">Note</p><p id="Hours">A</p><p id="hours">B</p>';
+
+/** Words in names: one finding of each rule of the name-words check. */
+export const SAMPLE_NAME_WORDS_HTML =
+  '<div alt="Ramp">Ramp</div><button aria-label="Close button">x</button><a href="/map" aria-label="Open the map of step-free entrances, lifts, ramps and accessible washrooms for every public building in the city centre">Map</a>' +
+  '<button aria-label="Save">Save</button><input name="q" aria-label=""><input name="note" aria-label="Note" placeholder="Tell us in a few words what you were trying to do when the problem happened">';

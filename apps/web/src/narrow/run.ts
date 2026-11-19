@@ -24,6 +24,11 @@ import { auditLists } from './lists.js';
 import { auditSectioning } from './sectioning.js';
 import { auditStates } from './states.js';
 import { auditSymbols } from './symbols.js';
+import { auditDocument } from './docmeta.js';
+import { auditIdentifiers } from './identifiers.js';
+import { auditLabels } from './labels.js';
+import { auditNameWords } from './namewords.js';
+import { auditTableMarkup } from './tablemarkup.js';
 import { auditRegions, regionsInPage, type RegionFacts } from './regions.js';
 import { auditGenerated, generatedInPage, type GeneratedFacts } from './generated.js';
 import { auditHandlers } from './handlers.js';
@@ -172,7 +177,7 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
   return buildRouteAudit(route, viewportWidth, results, snapshot.unmeasured, snapshot.truncated);
 }
 
-/** The checks that read roles, references, link destinations, page styles, old markup, states, lists, page parts, form limits and symbols from the text of the markup. */
+/** The checks that read the text of the markup: roles, references, link destinations, page styles, old markup, states, lists, page parts, form limits, symbols, document settings, table attributes, labels, ids and the words in names. */
 export function markupResults(html: string): Parameters<typeof buildRouteAudit>[2] {
   return {
     aria: auditAria(html),
@@ -185,6 +190,11 @@ export function markupResults(html: string): Parameters<typeof buildRouteAudit>[
     sectioning: auditSectioning(html),
     constraints: auditConstraints(html),
     symbols: auditSymbols(html),
+    document: auditDocument(html),
+    'table-markup': auditTableMarkup(html),
+    labels: auditLabels(html),
+    identifiers: auditIdentifiers(html),
+    'name-words': auditNameWords(html),
   };
 }
 
