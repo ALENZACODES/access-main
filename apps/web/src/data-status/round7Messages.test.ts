@@ -21,6 +21,8 @@ import { RECORD_FACT_MESSAGES } from './recordFacts';
 import { FACTS_CSV_MESSAGES } from './factsCsv';
 import { GLOSSARY_MESSAGES } from './glossary';
 import { TEXT_SUMMARY_MESSAGES } from './textSummary';
+import { QUICK_FILTER_MESSAGES } from './quickFilters';
+import { STATUS_BY_TIER_MESSAGES } from './statusByTier';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -42,6 +44,8 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['factsCsv', FACTS_CSV_MESSAGES],
   ['glossary', GLOSSARY_MESSAGES],
   ['textSummary', TEXT_SUMMARY_MESSAGES],
+  ['quickFilters', QUICK_FILTER_MESSAGES],
+  ['statusByTier', STATUS_BY_TIER_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {
