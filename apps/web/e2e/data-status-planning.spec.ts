@@ -309,7 +309,7 @@ test("Data status: a count in the tier or dataset table can list its sources", a
   await expect(panel.getByRole("button", { name: "List these sources. Tier: E" })).toBeFocused();
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Desk place");
-  await panel.getByRole("button", { name: "List these sources. Dataset: Journeys" }).click();
+  await panel.getByRole("button", { name: "List these sources. Dataset: Journeys" }).first().click();
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("any");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("No tier journey");
@@ -341,12 +341,12 @@ test("Data status: the list can be narrowed by age of the retrieved date and by 
   const list = panel.locator('[data-region="sources"]');
 
   await panel.getByRole("button", { name: "Review due within 30 days (1)" }).click();
-  await expect(panel.getByLabel("Review date")).toHaveValue("d30");
+  await expect(panel.getByLabel("Review date", { exact: true })).toHaveValue("d30");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Soon place");
 
   await panel.getByRole("button", { name: "List these sources. Age of retrieved date: More than 365 days" }).click();
-  await expect(panel.getByLabel("Review date")).toHaveValue("any");
+  await expect(panel.getByLabel("Review date", { exact: true })).toHaveValue("any");
   await expect(panel.getByLabel("Age of retrieved date")).toHaveValue("d366_plus");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Old place");
@@ -399,3 +399,43 @@ test("Data status: the list can be grouped, show details under each source, and 
   await expect(fr.locator('[data-region="announce"]')).toHaveText("Regroupement par niveau, en 3 groupes.");
 });
 
+
+test("Data status: search words can become filters, and the dataset cards and review months read the saved records", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+
+  await expect(panel.getByRole("heading", { level: 2, name: "Dataset cards" })).toBeVisible();
+  const calendar = panel.getByRole("region", { name: "Review dates by month" });
+  await expect(calendar).toContainText("1 source is already past its review date.");
+  await expect(calendar).toContainText("1 source is not scheduled, because its retrieved date is unknown.");
+  await expect(calendar.getByRole("table").getByRole("row")).toHaveCount(13);
+
+  const search = panel.getByLabel("Search by name");
+  await search.fill("place tier:E");
+  await expect(list).toContainText("Some search words can be used as filters: Tier: E.");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("any");
+  await list.getByRole("button", { name: "Use them as filters" }).click();
+  await expect(said).toHaveText("1 search word is now a filter.");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(panel.getByLabel("Search by name")).toHaveValue("place");
+  await expect(panel.getByLabel("Search by name")).toBeFocused();
+  await expect(list.getByRole("button", { name: "Use them as filters" })).toHaveCount(0);
+  await expect(list).toContainText("Old place");
+  await expect(list).not.toContainText("Zero place");
+
+  await panel.getByLabel("Search by name").fill("tier:9");
+  await expect(list).toContainText("Not understood as a filter: tier:9. Examples that work: tier:E, licence:open, status:stale, unknown:date, age:0-30, due:30.");
+  await expect(list.getByRole("button", { name: "Use them as filters" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("region", { name: "Dates de révision par mois" })).toBeVisible();
+});

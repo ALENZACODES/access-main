@@ -38,10 +38,19 @@ import {
   buildRecordFacts,
   addView,
   buildListedSummary,
+  buildDatasetCards,
   buildDueSummary,
+  renderDatasetCardsHtml,
   buildNoMatchHints,
   renderDueSummaryHtml,
   clampLimit,
+  applyQueryTokens,
+  buildReviewCalendar,
+  describeTokensApplied,
+  parseQueryTokens,
+  renderQueryTokensHtml,
+  renderReviewCalendarHtml,
+  TOKENS_APPLY_ACTION,
   buildChecklist,
   buildChecklistFile,
   buildRowDetail,
@@ -55,7 +64,9 @@ import {
   drawGroups,
   groupCaption,
   groupHeading,
+  groupPageText,
   groupPartialText,
+  groupsOnPage,
   groupSources,
   isGroupKey,
   listedSummaryText,
@@ -154,7 +165,7 @@ export interface PanelState {
    * Server-rendered mode: filters become a GET form and downloads become links,
    * so the page works without scripts. Hrefs are paths without a query string.
    */
-  staticView?: { action: string; csvHref: string; creditsHref: string; summaryHref: string; icsHref?: string; catalogueHref?: string };
+  staticView?: StaticView;
   /** Sort and page of the sources table; used in server-rendered mode, where headings and pager are links. */
   table?: TableView | undefined;
   /**
@@ -166,6 +177,25 @@ export interface PanelState {
   live?: LiveList | undefined;
   /** Saved views to offer (query texts). Leave undefined to leave the section out; it is never shown in the static view. */
   savedViews?: { views: readonly SavedView[]; durable: boolean; draftName?: string } | undefined;
+}
+
+/** Where the server-rendered page sends its form and finds its downloads. Hrefs are paths without a query string. */
+export interface StaticView {
+  action: string;
+  csvHref: string;
+  creditsHref: string;
+  summaryHref: string;
+  icsHref?: string;
+  catalogueHref?: string;
+  /** Review checklist for the listed sources, as Markdown and as CSV. */
+  checklistMdHref?: string;
+  checklistCsvHref?: string;
+  /** Source, licence, date and tier for each record (CSV). */
+  factsHref?: string;
+  /** The planning tables (CSV). */
+  tablesHref?: string;
+  /** The short plain-text summary. */
+  textSummaryHref?: string;
 }
 
 const esc = escapeHtml;
@@ -224,7 +254,7 @@ function sortHeading(locale: Locale, key: SortKey, label: MessageKey, nav: Regio
   }
   const current = nav.table.sort;
   const next = nextSort(current, key);
-  const href = nav.action + buildQuery({ filters, thresholds: nav.thresholds }, { sort: next, paging: { ...nav.table.paging, page: 1 } });
+  const href = nav.action + buildQuery({ filters, thresholds: nav.thresholds }, { ...nav.table, sort: next, paging: { ...nav.table.paging, page: 1 } });
   const dir = ariaSort(current, key);
   const arrow = dir === null ? '' : `<span aria-hidden="true">${dir === 'ascending' ? ' \u25B2' : ' \u25BC'}</span>`;
   return `<th scope="col"${dir === null ? '' : ` aria-sort="${dir}"`}><a href="${esc(href)}" style="${LINK_STYLE}">${text}${arrow}</a></th>`;
@@ -267,7 +297,7 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
   const slice = nav ? paginate(sorted, nav.table.paging) : null;
   const liveCount = !nav && live ? clampLimit(live.limit, sorted.length) : sorted.length;
   const shown = slice ? slice.items : sorted.slice(0, liveCount);
-  const withDetails = !nav && live?.details === true;
+  const withDetails = nav ? nav.table.details === true : live?.details === true;
   const row = (s: AuditedSource): string => {
     const label = esc(`${s.datasetName} / ${s.name ?? t(locale, 'unknownName')}`);
     const name =
@@ -296,20 +326,25 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
     scrollable(caption, `<table><caption>${esc(caption)}</caption><thead><tr>${heads}</tr></thead><tbody>${sources.map(row).join('')}</tbody></table>`);
   const help = nav ? `<p>${esc(t(locale, 'sort.help'))}</p>` : '';
   const more = !nav && live ? renderShowMoreHtml(liveCount, sorted.length, locale, buttonInlineStyle()) : '';
-  const groupKey: GroupKey = !nav && live?.group !== undefined ? live.group : 'none';
+  const groupKey: GroupKey = nav ? (nav.table.group ?? 'none') : (live?.group ?? 'none');
   if (groupKey !== 'none') {
     // Groups are made from every listed source, so the counts in the headings do not depend on how many rows are drawn.
-    const body = drawGroups(groupSources(sorted, groupKey, locale), liveCount)
+    const groups = groupSources(sorted, groupKey, locale);
+    // Live list: the first rows, group by group. Paged list: the rows of this page, under their groups.
+    const body = (slice ? groupsOnPage(groups, slice.items) : drawGroups(groups, liveCount))
       .map(({ group, drawn }, i) => {
         const id = `ds-group-${i + 1}`;
-        const partial = drawn.length < group.sources.length ? `<p>${esc(groupPartialText(drawn.length, group.sources.length, locale))}</p>` : '';
+        const partial =
+          drawn.length < group.sources.length
+            ? `<p>${esc(slice ? groupPageText(drawn.length, group.sources.length, locale) : groupPartialText(drawn.length, group.sources.length, locale))}</p>`
+            : '';
         return (
           `<section aria-labelledby="${id}" data-group="${esc(group.id)}"><h3 id="${id}">${esc(groupHeading(group, locale))}</h3>` +
           `<p>${esc(listedSummaryText(buildListedSummary(group.sources), locale) ?? '')}</p>${partial}${tableOf(groupCaption(group, locale), drawn)}</section>`
         );
       })
       .join('');
-    return count + body + more;
+    return count + help + body + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '') + more;
   }
   return count + help + tableOf(t(locale, 'tbl.sources'), shown) + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '') + more;
 }
@@ -374,7 +409,13 @@ export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: F
     ? renderNoMatchHintsHtml(buildNoMatchHints(audit.sources, filters, locale, names), locale, { buttonStyle: buttonInlineStyle(), activeCount: activeList.length, ...links })
     : '';
   // The summary describes every source the filters list, not only the page of rows on screen.
-  return active + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + hints;
+  // Search words that are really filters: offered here, applied only when asked.
+  const parsed = parseQueryTokens(filters.query);
+  const tokens = renderQueryTokensHtml(parsed, locale, {
+    buttonStyle: buttonInlineStyle(),
+    ...(hrefWithout && parsed.recognised.length > 0 ? { href: hrefWithout(applyQueryTokens(filters, parsed)) } : {}),
+  });
+  return active + tokens + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + hints;
 }
 
 export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null, liveLayout?: { group: GroupKey; details: boolean }): string {
@@ -428,7 +469,10 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
       .join('') +
     (sort ? `<input type="hidden" name="sort" value="${esc(sort.key)}">` + (sort.dir === 'desc' ? '<input type="hidden" name="dir" value="desc">' : '') : '');
   const sizeField = form.table
-    ? field('ds-f-size', 'pg.size', `<select id="ds-f-size" name="size" style="${FIELD_STYLE}">${PAGE_SIZES.map((n) => option(String(n), String(n), n === size)).join('')}</select>`)
+    ? field('ds-f-size', 'pg.size', `<select id="ds-f-size" name="size" style="${FIELD_STYLE}">${PAGE_SIZES.map((n) => option(String(n), String(n), n === size)).join('')}</select>`) +
+      // Grouping and row details are part of the form, so they work without scripts and survive every submit.
+      renderGroupControl(form.table.group ?? 'none', locale) +
+      renderDetailsToggle(form.table.details === true, locale)
     : '';
   return (
     `<form method="get" action="${esc(form.action)}">${controls}${sizeField}${hidden}` +
@@ -471,6 +515,14 @@ function snapshotLine(state: PanelState): string {
   return '';
 }
 
+/** A query string with the order of the list added to it. */
+export function withSort(query: string, sort: SortSpec | null): string {
+  if (sort === null) return query;
+  const p = new URLSearchParams(query.replace(/^\?/, ''));
+  for (const [k, v] of sortParams(sort)) p.set(k, v);
+  return `?${p.toString()}`;
+}
+
 function downloadLink(href: string, label: string): string {
   return `<a href="${esc(href)}" style="display:inline-flex;align-items:center;min-width:44px;min-height:44px">${esc(label)}</a>`;
 }
@@ -486,10 +538,17 @@ export function renderDataStatusPanel(state: PanelState): string {
   const sv = state.staticView;
   const query = serializeViewState({ filters, thresholds });
   const thrQuery = serializeViewState({ filters: NO_FILTERS, thresholds });
+  const listQuery = withSort(query, state.table?.sort ?? null);
   const actions = sv
     ? `<div>${downloadLink(sv.csvHref + query, t(locale, 'act.exportCsv'))} ${downloadLink(sv.creditsHref, t(locale, 'dl.credits'))} ${downloadLink(sv.summaryHref + thrQuery, t(locale, 'dl.summary'))}` +
       (sv.icsHref ? ` ${downloadLink(sv.icsHref + thrQuery, t(locale, 'dl.ics'))}` : '') +
       (sv.catalogueHref ? ` ${downloadLink(sv.catalogueHref + thrQuery, t(locale, 'dl.catalogue'))}` : '') +
+      (sv.factsHref ? ` ${downloadLink(sv.factsHref + thrQuery, extraLabel('facts', locale))}` : '') +
+      (sv.tablesHref ? ` ${downloadLink(sv.tablesHref + thrQuery, extraLabel('tables', locale))}` : '') +
+      (sv.textSummaryHref ? ` ${downloadLink(sv.textSummaryHref + thrQuery, extraLabel('summary', locale))}` : '') +
+      // The checklist follows the filters and the order of the list, so its links carry both.
+      (sv.checklistMdHref ? ` ${downloadLink(sv.checklistMdHref + listQuery, checklistLabel('md', locale))}` : '') +
+      (sv.checklistCsvHref ? ` ${downloadLink(sv.checklistCsvHref + listQuery, checklistLabel('csv', locale))}` : '') +
       `</div>`
     : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')}</div>`;
   const drillNames = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
@@ -507,12 +566,14 @@ export function renderDataStatusPanel(state: PanelState): string {
     (state.changes ? renderChangesHtml(state.changes, locale) : '') +
     (state.history ? renderHistoryHtml(state.history, locale) : '') +
     datasetTable(audit, locale, drill) +
+    renderDatasetCardsHtml(buildDatasetCards(audit), locale, { foot: (c) => (isDatasetFilter(c.id) ? drill({ kind: 'dataset', value: c.id }) : '') }) +
     renderReviewHtml(buildReviewQueue(audit, state.now), locale) +
     renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
     renderDueSummaryHtml(buildDueSummary(audit), locale, {
       heading: drillColumnHeading(locale),
       cell: (id) => drill(id === 'past' ? { kind: 'state', value: 'stale' } : id === 'unscheduled' ? { kind: 'state', value: 'unknown' } : { kind: 'due', value: id }),
     }) +
+    renderReviewCalendarHtml(buildReviewCalendar(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
     `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
@@ -753,6 +814,9 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       viewName = value.slice(0, MAX_VIEW_NAME_LENGTH);
       return;
     }
+    // Leaving the search box fires a change event with the text already listed. Redrawing the results then
+    // would replace a control in them between the press and the release of a click, and the click would be lost.
+    if (key === 'query' && value.slice(0, MAX_QUERY_LENGTH) === filters.query) return;
     // Any change to what is listed, or its order, starts again from the first rows.
     limit = LIVE_STEP;
     if (key === 'group' || key === 'details') {
@@ -872,6 +936,15 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         focusFirst([byAction(action ?? ''), FORM_START]);
         opts.onFiltersChange?.(view());
       }
+    } else if (action === TOKENS_APPLY_ACTION) {
+      const parsed = parseQueryTokens(filters.query);
+      if (parsed.recognised.length === 0) return;
+      filters = applyQueryTokens(filters, parsed);
+      limit = LIVE_STEP;
+      refresh();
+      announcer.say(describeTokensApplied(parsed, opts.getLocale()));
+      focusFirst(['#ds-f-q', FORM_START]);
+      opts.onFiltersChange?.(view());
     } else if (parseDrillAction(action) !== null) {
       const target = parseDrillAction(action);
       if (target === null) return;

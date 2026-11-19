@@ -33,6 +33,9 @@ import { DUE_SUMMARY_MESSAGES } from './dueSummary';
 import { GROUPED_LIST_MESSAGES } from './groupedList';
 import { ROW_DETAIL_MESSAGES } from './rowDetail';
 import { CHECKLIST_MESSAGES } from './reviewChecklist';
+import { DATASET_CARD_MESSAGES } from './datasetCards';
+import { QUERY_TOKEN_MESSAGES } from './queryTokens';
+import { REVIEW_CALENDAR_MESSAGES } from './reviewCalendar';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -66,6 +69,9 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['groupedList', GROUPED_LIST_MESSAGES],
   ['rowDetail', ROW_DETAIL_MESSAGES],
   ['reviewChecklist', CHECKLIST_MESSAGES],
+  ['datasetCards', DATASET_CARD_MESSAGES],
+  ['queryTokens', QUERY_TOKEN_MESSAGES],
+  ['reviewCalendar', REVIEW_CALENDAR_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {

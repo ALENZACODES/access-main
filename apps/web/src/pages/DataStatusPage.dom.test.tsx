@@ -590,4 +590,31 @@ describe("planning sections and extra downloads on the live panel", () => {
     const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
+
+  it("offers search words as filters, and shows the dataset cards and the review months", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "No tier stop", source: "Other source", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    expect(within(panel).getByRole("heading", { level: 2, name: "Dataset cards" })).toBeTruthy();
+    const calendar = within(panel).getByRole("region", { name: "Review dates by month" });
+    hasText(calendar, "1 source is not scheduled, because its retrieved date is unknown.");
+    expect(within(calendar).getAllByRole("row")).toHaveLength(13);
+
+    const search = within(panel).getByLabelText("Search by name") as HTMLInputElement;
+    search.value = "stop tier:E";
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+    hasText(panel, "Some search words can be used as filters: Tier: E.");
+    user.click(within(panel).getByRole("button", { name: "Use them as filters" }));
+    hasText(panel, "1 search word is now a filter.");
+    expect((within(panel).getByLabelText("Tier", { exact: true }) as HTMLSelectElement).value).toBe("E");
+    expect((within(panel).getByLabelText("Search by name") as HTMLInputElement).value).toBe("stop");
+    expect(within(panel).queryByRole("button", { name: "Use them as filters" })).toBeNull();
+    const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
 });

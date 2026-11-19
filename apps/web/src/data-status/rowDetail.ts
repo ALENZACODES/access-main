@@ -152,7 +152,7 @@ export function describeDetails(on: boolean, locale: Locale): string {
 export function renderDetailsToggle(on: boolean, locale: Locale): string {
   return (
     `<div><label style="display:inline-flex;align-items:center;gap:8px;min-height:44px">` +
-    `<input type="checkbox" id="ds-f-details" data-filter="details" style="width:24px;height:24px"${on ? ' checked' : ''}>` +
+    `<input type="checkbox" id="ds-f-details" name="details" value="1" data-filter="details" style="width:24px;height:24px"${on ? ' checked' : ''}>` +
     `${escapeHtml(tx(locale, 'rd.toggle'))}</label></div>`
   );
 }

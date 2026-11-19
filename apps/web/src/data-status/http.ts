@@ -10,7 +10,12 @@
  *   GET /{en|fr}/data-status/summary.json -> language-neutral summary (unknown stays null)
  *   GET /{en|fr}/data-status/review.ics   -> calendar file of review dates (Unknown dates get no event)
  *   GET /{en|fr}/data-status/catalogue.json -> DCAT JSON-LD catalogue of datasets and sources
- *   Page query: state, kind, q, issues, stale_<type>, sort, dir, page, size
+ *   GET /{en|fr}/data-status/review-checklist.md  -> review checklist for the sources the filters show (Markdown)
+ *   GET /{en|fr}/data-status/review-checklist.csv -> the same checklist, one row for each step (CSV)
+ *   GET /{en|fr}/data-status/record-facts.csv     -> source, licence, date and tier for each record
+ *   GET /{en|fr}/data-status/planning-tables.csv  -> the planning tables
+ *   GET /{en|fr}/data-status/summary.txt          -> short plain-text summary
+ *   Page query: state, kind, q, issues, tier, lic, ds, gap, age, due, stale_<type>, sort, dir, page, size, group, details
  */
 import { buildCompleteness, completenessToJson } from './completeness';
 import { checkConsistency, consistencyToJson } from './consistency';
@@ -32,6 +37,11 @@ import { escapeHtml } from './sourceList';
 import { buildSummary, summaryToJson } from './summary';
 import { parseViewState } from './thresholds';
 import { PAGE_CSS } from './page';
+import { buildFactsCsv } from './factsCsv';
+import { buildChecklist, buildChecklistFile } from './reviewChecklist';
+import { parseSort } from './sorting';
+import { buildTablesCsv } from './tablesCsv';
+import { buildTextSummary } from './textSummary';
 
 export interface DsRequest {
   method: string;
@@ -65,7 +75,7 @@ const BASE_HEADERS = {
   'cross-origin-opener-policy': 'same-origin',
 } as const;
 
-type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue' | 'completeness' | 'consistency';
+type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue' | 'completeness' | 'consistency' | 'checklistMd' | 'checklistCsv' | 'facts' | 'tables' | 'textSummary';
 const SUFFIX: Readonly<Record<string, Kind>> = {
   '': 'html',
   '/sources.csv': 'csv',
@@ -75,6 +85,11 @@ const SUFFIX: Readonly<Record<string, Kind>> = {
   '/catalogue.json': 'catalogue',
   '/completeness.json': 'completeness',
   '/consistency.json': 'consistency',
+  '/review-checklist.md': 'checklistMd',
+  '/review-checklist.csv': 'checklistCsv',
+  '/record-facts.csv': 'facts',
+  '/planning-tables.csv': 'tables',
+  '/summary.txt': 'textSummary',
 };
 
 function header(req: DsRequest, name: string): string | undefined {
@@ -104,7 +119,7 @@ export function matchRoute(url: string, basePath: string = DEFAULT_BASE_PATH): R
   }
   let path = parsed.pathname;
   if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json|\/completeness\.json|\/consistency\.json)?$/.exec(path);
+  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json|\/completeness\.json|\/consistency\.json|\/review-checklist\.md|\/review-checklist\.csv|\/record-facts\.csv|\/planning-tables\.csv|\/summary\.txt)?$/.exec(path);
   if (!m || (m[2] ?? '') !== basePath) return null;
   return { locale: (m[1] as Locale | undefined) ?? null, kind: SUFFIX[m[3] ?? ''] as Kind, pathname: path, search: parsed.search };
 }
@@ -200,6 +215,30 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
       const result = checkConsistency(records, now, { thresholds: view.thresholds });
       return respond(req, 200, { ...common, 'content-type': 'application/json; charset=utf-8' }, consistencyToJson(result, now));
     }
+    case 'checklistMd':
+    case 'checklistCsv': {
+      const format = route.kind === 'checklistMd' ? 'md' : 'csv';
+      const checklist = buildChecklist(audit, view.filters, locale, parseSort(route.search));
+      const names = new Map(audit.datasets.map((d) => [d.id, d.name] as const));
+      const file = buildChecklistFile(checklist, format, view.filters, now, locale, { datasetNames: names });
+      return respond(req, 200, { ...common, 'content-type': file.mime.replace(';charset=', '; charset='), 'content-disposition': `attachment; filename="${file.filename}"` }, file.text);
+    }
+    case 'facts':
+      return respond(
+        req,
+        200,
+        { ...common, 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="record-facts.csv"' },
+        buildFactsCsv(records, audit, locale),
+      );
+    case 'tables':
+      return respond(
+        req,
+        200,
+        { ...common, 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="planning-tables.csv"' },
+        buildTablesCsv(audit, now, locale),
+      );
+    case 'textSummary':
+      return respond(req, 200, { ...common, 'content-type': 'text/plain; charset=utf-8' }, buildTextSummary(records, audit, now, locale));
     case 'summary':
       return respond(req, 200, { ...common, 'content-type': 'application/json; charset=utf-8' }, summaryToJson(buildSummary(audit, now)));
     default:
@@ -216,7 +255,14 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
           thresholds: view.thresholds,
           table: parseTableView(route.search),
           loadIssues: ctx.loadIssues,
-          staticView: { action: prefix, csvHref: `${prefix}/sources.csv`, creditsHref: `${prefix}/credits.txt`, summaryHref: `${prefix}/summary.json`, icsHref: `${prefix}/review.ics`, catalogueHref: `${prefix}/catalogue.json` },
+          staticView: { action: prefix, csvHref: `${prefix}/sources.csv`, creditsHref: `${prefix}/credits.txt`, summaryHref: `${prefix}/summary.json`, icsHref: `${prefix}/review.ics`,
+            catalogueHref: `${prefix}/catalogue.json`,
+            checklistMdHref: `${prefix}/review-checklist.md`,
+            checklistCsvHref: `${prefix}/review-checklist.csv`,
+            factsHref: `${prefix}/record-facts.csv`,
+            tablesHref: `${prefix}/planning-tables.csv`,
+            textSummaryHref: `${prefix}/summary.txt`,
+          },
         }),
       );
   }

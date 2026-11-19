@@ -103,6 +103,7 @@ type Key =
   | 'gr.heading.other'
   | 'gr.caption'
   | 'gr.partial'
+  | 'gr.pagePart'
   | 'gr.said'
   | 'gr.saidOff'
   | 'gr.count.one'
@@ -124,6 +125,7 @@ const MESSAGES: Messages<Key> = {
     'gr.heading.other': '{label} ({n} sources)',
     'gr.caption': 'Sources: {label}',
     'gr.partial': 'Showing the first {shown} of {total} in this group.',
+    'gr.pagePart': '{shown} of the {total} in this group are on this page.',
     'gr.said': 'Grouped by {by}, in {groups}.',
     'gr.saidOff': 'Grouping removed.',
     'gr.count.one': '{n} group',
@@ -144,6 +146,7 @@ const MESSAGES: Messages<Key> = {
     'gr.heading.other': '{label} ({n} sources)',
     'gr.caption': 'Sources\u00A0: {label}',
     'gr.partial': 'Affichage des {shown} premières sur {total} dans ce groupe.',
+    'gr.pagePart': '{shown} des {total} sources de ce groupe figurent sur cette page.',
     'gr.said': 'Regroupement par {by}, en {groups}.',
     'gr.saidOff': 'Regroupement retiré.',
     'gr.count.one': '{n} groupe',
@@ -170,6 +173,22 @@ export function groupPartialText(shown: number, total: number, locale: Locale): 
   return tx(locale, 'gr.partial', { shown, total });
 }
 
+/** For a paged list: how many of a group's sources are on the page being shown. */
+export function groupPageText(shown: number, total: number, locale: Locale): string {
+  return tx(locale, 'gr.pagePart', { shown, total });
+}
+
+/** The groups cut down to the sources on one page, in order; groups with nothing on the page are left out. */
+export function groupsOnPage(groups: readonly SourceGroup[], page: readonly AuditedSource[]): DrawnGroup[] {
+  const onPage = new Set(page);
+  const out: DrawnGroup[] = [];
+  for (const group of groups) {
+    const drawn = group.sources.filter((s) => onPage.has(s));
+    if (drawn.length > 0) out.push({ group, drawn });
+  }
+  return out;
+}
+
 /** What to say when the grouping changes. */
 export function describeGrouping(key: GroupKey, groups: number, locale: Locale): string {
   if (key === 'none') return tx(locale, 'gr.saidOff');
@@ -183,7 +202,7 @@ export function renderGroupControl(current: GroupKey, locale: Locale): string {
   const options = GROUP_KEYS.map((k) => `<option value="${k}"${k === current ? ' selected' : ''}>${escapeHtml(groupKeyLabel(k, locale))}</option>`).join('');
   return (
     `<div><label for="ds-f-group">${escapeHtml(tx(locale, 'gr.label'))}</label> ` +
-    `<select id="ds-f-group" data-filter="group" aria-describedby="ds-f-group-help" style="${FIELD_STYLE}">${options}</select> ` +
+    `<select id="ds-f-group" name="group" data-filter="group" aria-describedby="ds-f-group-help" style="${FIELD_STYLE}">${options}</select> ` +
     `<span id="ds-f-group-help">${escapeHtml(tx(locale, 'gr.help'))}</span></div>`
   );
 }
