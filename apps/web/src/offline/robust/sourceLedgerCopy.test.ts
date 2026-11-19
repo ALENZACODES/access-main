@@ -10,6 +10,14 @@ describe("bilingual offline source ledger copy", () => {
     expect(stateLabel("UNKNOWN", "fr")).toBe("UNKNOWN");
     expect(tierLabel("UNKNOWN", "fr")).toBe("UNKNOWN");
   });
+  it("keeps the same UNKNOWN token without an English plural in French", () => {
+    const french = sourceLedgerCopy("fr");
+    const english = sourceLedgerCopy("en");
+    expect(french.unknown).toBe("UNKNOWN");
+    expect(english.unknown).toBe("UNKNOWN");
+    expect(french.countTier).toContain("UNKNOWN");
+    expect(french.countTier).not.toContain("UNKNOWNS");
+  });
   it("has a distinct label for every evidence tier", () => {
     for (const language of ["en", "fr"] as const) {
       const values = ["submitted", "documented", "reviewed-source", "UNKNOWN"] as const;

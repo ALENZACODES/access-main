@@ -77,7 +77,7 @@ export const SOURCE_LEDGER_COPY = {
     byDate: "Date de source la plus récente",
     countSaved: "Copies enregistrées",
     countUnknown: "Copies à état UNKNOWN",
-    countTier: "Niveaux de source UNKNOWNS",
+    countTier: "Niveaux de source UNKNOWN",
     countListed: "Cellules dans ce registre",
     size: "Octets répertoriés",
     source: "Source",

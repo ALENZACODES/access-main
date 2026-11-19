@@ -16,13 +16,6 @@ const panels = [
   { module: "offlineDiagnosticsPanel", mount: "mountOfflineDiagnostics", cleanup: "unmountDiagnostics" },
 ] as const;
 
-/** Each catalogue has exactly one token per locale. */
-function expectBilingualUnknownToken(fileName: string): void {
-  const file = source(fileName);
-  expect(file.match(/unknown:\s*"UNKNOWN"/gu)).toHaveLength(2);
-  expect(file).not.toContain("INCONNU");
-}
-
 describe("offline dashboard subpanel wiring", () => {
   it("exports all five installed panels from the public barrel", () => {
     const barrel = source("index.ts");
@@ -53,11 +46,15 @@ describe("offline dashboard subpanel wiring", () => {
   });
 
   it("uses the same UNKNOWN token in English and French source copy", () => {
-    expectBilingualUnknownToken("sourceLedgerCopy.ts");
+    const file = source("sourceLedgerCopy.ts");
+    expect(file.match(/unknown: "UNKNOWN"/g)).toHaveLength(2);
+    expect(file).not.toContain("INCONNU");
   });
 
   it("uses the same UNKNOWN token in English and French checklist copy", () => {
-    expectBilingualUnknownToken("transferChecklistCopy.ts");
+    const file = source("transferChecklistCopy.ts");
+    expect(file.match(/unknown: "UNKNOWN"/g)).toHaveLength(2);
+    expect(file).not.toContain("INCONNU");
   });
 
   it("keeps the existing 44px labelled-action helper for each panel", () => {
