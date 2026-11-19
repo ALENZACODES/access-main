@@ -7,7 +7,7 @@ import {
   diagnostic, sortDiagnostics, findSourceIssues, findCacheIssues,
   findRecordIssues, auditCollection, summarizeIssues,
 } from "./contract.mjs";
-import { AT, cache, clone, findCodes, french, hasCode, pair, record, source } from "./fixtures.node.mjs";
+import { AT, cache, clone, findCodes, french, pair, record, source } from "./fixtures.node.mjs";
 
 const codes = (items) => findCodes(items);
 const sourceIssues = (change) => findSourceIssues(source(change), "source", AT);
