@@ -40,6 +40,5 @@ export * from "./sessionComparisonCopy";
 export * from "./sessionComparisonExport";
 export * from "./sessionComparisonPanel";
 
-export * from "./transferChecklist";
-export * from "./transferChecklistCopy";
-export * from "./transferChecklistPanel";
+export * from "./storageDurability";
+export * from "./storageDurabilityPanel";

@@ -17,7 +17,7 @@ import { mountOfflineTriage } from "./offlineTriagePanel";
 import { mountOfflineCleanup } from "./cleanupPanel";
 import { mountOfflineUpdateReview } from "./updateReviewPanel";
 import { mountOfflineSessionComparison } from "./sessionComparisonPanel";
-import { mountOfflineTransferChecklist } from "./transferChecklistPanel";
+import { mountStorageDurability } from "./storageDurabilityPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -230,9 +230,11 @@ export function mountOfflineDashboard(
   const comparisonHost = element("div");
   section.append(comparisonHost);
   const unmountComparison = mountOfflineSessionComparison(comparisonHost, manifest, model, language);
-  const transferHost = element("div");
-  section.append(transferHost);
-  const unmountTransfer = mountOfflineTransferChecklist(transferHost, manifest, model, language);
+  const durabilityHost = element("div");
+  section.append(durabilityHost);
+  const unmountDurability = mountStorageDurability(
+    durabilityHost, manifest, model, language, globalThis.navigator?.storage,
+  );
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -345,7 +347,7 @@ export function mountOfflineDashboard(
     unmountCleanup();
     unmountReview();
     unmountComparison();
-    unmountTransfer();
+    unmountDurability();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
