@@ -23,3 +23,8 @@ Tests: `sourceLedger.test.ts`, `sourceLedgerCopy.test.ts`.
 Existing modules reused from current main:
 `regionDownload.ts`, `regionInventory.ts`, `manifestAudit.ts`,
 `accessibilityGuard.ts`, and `offlineDashboard.ts`.
+
+The source ledger and transfer checklist are mounted side by side from the
+current-main dashboard component. Both are exported through `robust/index.ts`.
+The status token `UNKNOWN` remains identical in English and French; surrounding
+French explanations are translated. Neither panel starts a download itself.

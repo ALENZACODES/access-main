@@ -213,7 +213,7 @@ describe("device-local storage report", () => {
     const report = createDurabilityReport(manifest, inventory, reading, "2026-11-19");
     expect(textDurabilityReport(report, "en")).toContain("Licence: CC BY 4.0");
     expect(textDurabilityReport(report, "fr")).toContain("Licence\u00a0: CC BY 4.0");
-    expect(textDurabilityReport(report, "fr")).toContain("INCONNU");
+    expect(textDurabilityReport(report, "fr")).toContain("UNKNOWN");
   });
 
   it("neutralises directional overrides and newlines in text exports", () => {

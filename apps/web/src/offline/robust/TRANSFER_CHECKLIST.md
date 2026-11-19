@@ -23,3 +23,9 @@ English and French copy are provided. Controls are keyboard operable, have a
 
 Test files: `transferChecklist.test.ts`, `transferChecklistCopy.test.ts`.
 The existing dashboard and index are the only modified integration files.
+
+The source ledger remains mounted alongside this checklist, and both panels
+are exported from the same public barrel. Imported checklists require a
+licence on the approved open-licence list, and only the local inventory can
+establish whether data is stored on this device. The status token is `UNKNOWN`
+in both English and French; the rest of the French interface is translated.

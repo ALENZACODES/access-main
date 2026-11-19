@@ -40,5 +40,18 @@ export * from "./sessionComparisonCopy";
 export * from "./sessionComparisonExport";
 export * from "./sessionComparisonPanel";
 
+// Both device-local views are mounted on the existing offline dashboard.
+export * from "./sourceLedger";
+export * from "./sourceLedgerCopy";
+export * from "./sourceLedgerPanel";
+export * from "./transferChecklist";
+export * from "./transferChecklistCopy";
+export * from "./transferChecklistPanel";
 export * from "./storageDurability";
 export * from "./storageDurabilityPanel";
+export * from "./readinessReview";
+export * from "./readinessCopy";
+export * from "./readinessPanel";
+export * from "./offlineDiagnostics";
+export * from "./offlineDiagnosticsCopy";
+export * from "./offlineDiagnosticsPanel";

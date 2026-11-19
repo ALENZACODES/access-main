@@ -1,5 +1,6 @@
 import { type Provenance, type RegionManifest } from "./regionDownload";
 import { type RegionInventory } from "./regionInventory";
+import { OPEN_LICENCES } from "./manifestAudit";
 
 /** A device-local metadata checklist. It never carries cell payloads. */
 export type ChecklistStatus = "saved" | "UNKNOWN";
@@ -54,7 +55,8 @@ function safeText(input: string, length: number): boolean {
 function validEntry(entry: ChecklistEntry): boolean {
   return ID_PATTERN.test(entry.id) && Number.isSafeInteger(entry.expectedBytes) &&
     entry.expectedBytes >= 0 && safeText(entry.source, 500) &&
-    safeText(entry.licence, 100) && calendarDate(entry.date) &&
+    safeText(entry.licence, 100) &&
+    OPEN_LICENCES.some((licence) => licence === entry.licence) && calendarDate(entry.date) &&
     ["UNKNOWN", "community", "documented"].includes(entry.tier) &&
     (entry.previousStatus === "saved" || entry.previousStatus === "UNKNOWN");
 }

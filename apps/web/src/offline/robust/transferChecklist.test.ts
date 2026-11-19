@@ -108,6 +108,15 @@ describe("device-local transfer checklist", () => {
     const source = fixture();
     expect(parseTransferChecklist(encodeTransferChecklist(source))).toEqual(source);
   });
+  it("rejects sources without an accepted open licence", () => {
+    const unsafe = { ...manifest, cells: [{ ...manifest.cells[0]!,
+      provenance: { ...original, licence: "Restricted-use licence" } }] };
+    expect(() => buildTransferChecklist(unsafe, null, day)).toThrow();
+    const originalList = fixture();
+    const altered = { ...originalList, entries: [{ ...originalList.entries[0]!,
+      licence: "Restricted-use licence" }] };
+    expect(() => parseTransferChecklist(JSON.stringify(altered))).toThrow();
+  });
   it("rejects malformed JSON", () => {
     expect(() => parseTransferChecklist("not json")).toThrow();
   });

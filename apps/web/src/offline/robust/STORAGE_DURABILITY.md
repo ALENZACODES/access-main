@@ -33,3 +33,7 @@ npm run lint
 npm run typecheck
 npm test
 ```
+
+This panel is mounted beside the source ledger and transfer checklist in the
+existing offline dashboard. Its browser retention request is always a separate
+user action, never an automatic side effect of mounting the dashboard.

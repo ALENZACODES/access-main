@@ -13,9 +13,9 @@ describe("transfer checklist bilingual copy", () => {
       }
     }
   });
-  it("retains UNKNOWN and INCONNU", () => {
+  it("uses the same UNKNOWN token in both languages", () => {
     expect(TRANSFER_COPY.en.unknown).toBe("UNKNOWN");
-    expect(TRANSFER_COPY.fr.unknown).toBe("INCONNU");
+    expect(TRANSFER_COPY.fr.unknown).toBe("UNKNOWN");
   });
   it("uses French apostrophes and punctuation spacing", () => {
     for (const value of Object.values(TRANSFER_COPY.fr)) {

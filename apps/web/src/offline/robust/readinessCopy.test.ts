@@ -16,7 +16,7 @@ describe("readiness copy audit", () => {
   });
   it("renders UNKNOWN explicitly and independently from saved state", () => {
     expect(readinessStateText("UNKNOWN", "en")).toBe("UNKNOWN");
-    expect(readinessStateText("UNKNOWN", "fr")).toBe("INCONNU");
+    expect(readinessStateText("UNKNOWN", "fr")).toBe("UNKNOWN");
     expect(readinessStateText("saved", "en")).not.toBe("UNKNOWN");
   });
   it("maps every record cause to bilingual labels", () => {

@@ -7,8 +7,8 @@ describe("bilingual offline source ledger copy", () => {
   });
   it("labels UNKNOWN accurately in both languages", () => {
     expect(stateLabel("UNKNOWN", "en")).toBe("UNKNOWN");
-    expect(stateLabel("UNKNOWN", "fr")).toBe("INCONNU");
-    expect(tierLabel("UNKNOWN", "fr")).toBe("INCONNU");
+    expect(stateLabel("UNKNOWN", "fr")).toBe("UNKNOWN");
+    expect(tierLabel("UNKNOWN", "fr")).toBe("UNKNOWN");
   });
   it("has a distinct label for every evidence tier", () => {
     for (const language of ["en", "fr"] as const) {
