@@ -140,9 +140,9 @@ test("Data status: records are counted by tier, gaps are listed, and the facts f
   const panel = page.getByRole("region", { name: "Data status panel" });
   await expect(panel.getByRole("heading", { name: "Tier of each record" })).toBeVisible();
   const tiers = panel.getByRole("table", { name: "Records by tier", exact: true });
-  await expect(tiers.getByRole("row", { name: /^Tier 0 .* 1$/ })).toBeVisible();
-  await expect(tiers.getByRole("row", { name: /^Tier E .* 1$/ })).toBeVisible();
-  await expect(tiers.getByRole("row", { name: /^Unknown .* 1$/ })).toBeVisible();
+  await expect(tiers.getByRole("row", { name: /^Tier 0 .* 1 List these sources/ })).toBeVisible();
+  await expect(tiers.getByRole("row", { name: /^Tier E .* 1 List these sources/ })).toBeVisible();
+  await expect(tiers.getByRole("row", { name: /^Unknown .* 1 List these sources/ })).toBeVisible();
   await expect(panel).toContainText("Records that state a tier: 2 of 3.");
   await expect(panel).toContainText("Records that carry all four: 2 of 3.");
   const gaps = panel.getByRole("table", { name: "Records with a missing source, licence, date or tier" });
@@ -161,7 +161,7 @@ test("Data status: records are counted by tier, gaps are listed, and the facts f
   await page.getByRole("button", { name: "Français" }).click();
   const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
   await expect(fr.getByRole("heading", { name: "Niveau de chaque enregistrement", exact: true })).toBeVisible();
-  await expect(fr.getByRole("table", { name: "Enregistrements selon le niveau", exact: true }).getByRole("row", { name: /^Niveau E .* 1$/ })).toBeVisible();
+  await expect(fr.getByRole("table", { name: "Enregistrements selon le niveau", exact: true }).getByRole("row", { name: /^Niveau E .* 1 Afficher ces sources/ })).toBeVisible();
   await expect(fr).toContainText("Enregistrements qui indiquent un niveau\u00a0: 2 sur 3.");
 });
 
@@ -283,5 +283,31 @@ test("Data status: a long list is drawn in steps and can be sorted without reloa
   await expect(list.getByRole("row")).toHaveCount(61);
   await expect(list.getByRole("button", { name: /^Show \d+ more/ })).toHaveCount(0);
   await expect(panel.locator('[data-region="announce"]')).toHaveText("All 60 listed sources are shown.");
+});
+
+test("Data status: a count in the tier or dataset table can list its sources", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-desk", kind: "place", title: "Desk place", retrieved_at: daysAgo(4), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: daysAgo(5), tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  await panel.getByRole("button", { name: "List these sources. Tier: E" }).click();
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(list.getByRole("row")).toHaveCount(2);
+  await expect(list).toContainText("Desk place");
+  await panel.getByRole("button", { name: "List these sources. Dataset: Journeys" }).click();
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("any");
+  await expect(list.getByRole("row")).toHaveCount(2);
+  await expect(list).toContainText("No tier journey");
+  await panel.getByRole("button", { name: "List these sources. Licence type: Open licence" }).click();
+  await expect(list.getByRole("row")).toHaveCount(4);
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("button", { name: "Afficher ces sources. Niveau\u00a0: E" })).toBeVisible();
 });
 
