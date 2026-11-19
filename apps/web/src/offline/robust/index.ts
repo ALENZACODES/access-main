@@ -65,3 +65,8 @@ export * from "./storageScenario";
 export * from "./storageScenarioCopy";
 export * from "./storageScenarioExport";
 export * from "./storageScenarioPanel";
+
+export * from "./recoveryJournal";
+export * from "./recoveryJournalCopy";
+export * from "./recoveryJournalExport";
+export * from "./recoveryJournalPanel";
