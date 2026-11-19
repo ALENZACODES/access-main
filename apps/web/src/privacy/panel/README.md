@@ -173,4 +173,7 @@ createPrivacyController({
 - `claims.ts`: words that suggest a service the App does not have (account, server, sync, cloud, upload, telemetry; FR equivalents) are allowed only in the exact approved sentences.
 - `policy.ts`: `checkPolicy` / `assertPolicy` compare the declared no-server policy with the data list, the purposes and the network guard. Nothing calls `assertPolicy` yet; a shell would have to call it at start-up.
 
-Not built in this round: retention checks on the data list, consent-gated storage keys, and their panel wording.
+## Consent-gated storage (P10I)
+
+- `consentGate.ts`: `gateStorage` wraps a storage so a key that belongs to a purpose is saved only while the person has agreed to that purpose under its current wording. Reading, listing and removing are never blocked. Refused writes are kept as key names and a reason (`no-choice` or `declined`), never values. `validateRules` catches an unknown purpose, an empty key, a duplicate or two purposes claiming one key. `removeForPurpose` deletes what a purpose saved when the person withdraws.
+- Nothing in the App wraps its storage with the gate yet, and the panel does not yet list refused writes. A shell would build the gate once and pass it to the features that save things.
