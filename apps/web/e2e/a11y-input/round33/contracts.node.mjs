@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { object, hasControl, text, identifier, dayOrdinal, sourceUrl, offlinePath,
+import { object, text, identifier, dayOrdinal, sourceUrl, offlinePath,
   finding, sorted, copyIssues, evidenceIssues, controlIssues, journeyIssues,
   eligibleControls, focusSequence, uniqueIssueCodes, issueSummary,
   LOCALES, STATES, TIERS, ACTIONS } from './contracts.mjs';
