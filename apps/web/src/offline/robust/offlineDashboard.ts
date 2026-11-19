@@ -22,6 +22,7 @@ import { mountOfflineTransferChecklist } from "./transferChecklistPanel";
 import { mountStorageDurability } from "./storageDurabilityPanel";
 import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
+import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -251,6 +252,9 @@ export function mountOfflineDashboard(
   const diagnosticsHost = element("div");
   section.append(diagnosticsHost);
   const unmountDiagnostics = mountOfflineDiagnostics(diagnosticsHost, manifest, model, language);
+  const recoveryHost = element("div");
+  section.append(recoveryHost);
+  const unmountRecovery = mountOfflineRecoveryBatches(recoveryHost, manifest, model, language, dependencies.estimateStorage);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -368,6 +372,7 @@ export function mountOfflineDashboard(
     unmountDurability();
     unmountReadiness();
     unmountDiagnostics();
+    unmountRecovery();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);

@@ -91,10 +91,46 @@ describe("data credits on the places page", () => {
     await waitFor(() => expect(getPack).toHaveBeenCalled());
     expect(screen.queryByRole("heading", { name: "Sources of the records saved on this device" })).toBeNull();
   });
+  it("shows how old the places are and the report for a pack whose places name no source", async () => {
+    getPack.mockResolvedValue({ id: "x", content: { places: [{ id: "a", name: "Alpha", wheelchair: "yes", lat: 43.65, lon: -79.38 }] } });
+    await page("places");
+    expect(await screen.findByRole("heading", { level: 2, name: "How old the saved places are" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "About the saved places" })).toBeTruthy();
+    expect(screen.getAllByText(/no usable source|no date/i, { selector: "p" }).length).toBeGreaterThan(0);
+  });
+  it("shows the report beside the credits for the shipped pack, with files to save", async () => {
+    getPack.mockResolvedValue({ id: "toronto", content });
+    await page("places");
+    expect(await screen.findByRole("heading", { level: 2, name: "About the saved places" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save the places (CSV)" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save this report (text)" })).toBeTruthy();
+  });
+  it("shows the report in French", async () => {
+    getPack.mockResolvedValue({ id: "toronto", content });
+    await page("places", "fr");
+    expect(await screen.findByRole("heading", { level: 2, name: "À propos des lieux enregistrés" })).toBeTruthy();
+  });
+  it("reports the problems of a pack with no readable place, and offers no places file", async () => {
+    getPack.mockResolvedValue({ id: "x", content: { places: [null, 5, { id: "" }] } });
+    await page("places");
+    expect(await screen.findByRole("heading", { level: 2, name: "About the saved places" })).toBeTruthy();
+    expect(screen.getByText(/3 problems and 0 gaps found in 3 entries\./)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Save the places (CSV)" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Save the problems (CSV)" })).toBeTruthy();
+  });
+  it("shows no report when no pack is stored", async () => {
+    getPack.mockResolvedValue(null);
+    await page("places");
+    await waitFor(() => expect(getPack).toHaveBeenCalled());
+    expect(screen.queryByRole("heading", { name: "About the saved places" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "How old the saved places are" })).toBeNull();
+  });
   it("is not shown on the other module pages", async () => {
     getPack.mockResolvedValue({ id: "toronto", content });
     await page("finders");
     await screen.findByRole("heading", { level: 1 });
     expect(screen.queryByRole("heading", { name: "Sources of the records saved on this device" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "About the saved places" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "How old the saved places are" })).toBeNull();
   });
 });

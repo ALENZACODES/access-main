@@ -17,7 +17,8 @@ import { buildSupportSummary } from "./supportSummary";
 import { applyImport, prepareImport, type ImportPlan } from "./importData";
 import { loadBlocked } from "./egressLog";
 import type { EgressPolicy } from "./egress";
-import { eraseLocalData, exportLocalData, listKeys, type ExportFile } from "./localData";
+import { assertScope, scopeKeysPresent, type DataScope } from "./dataScope";
+import { eraseLocalData, exportLocalData, type ExportFile } from "./localData";
 import { renderPrivacyPanelHtml } from "./panel";
 import { detectLocale, loadPrefs, savePrefs, type PrivacyPrefs } from "./preferences";
 import type { Status } from "./strings";
@@ -39,6 +40,11 @@ export interface ControllerDeps {
    * Omit to keep the data and only stop new saves.
    */
   withdrawRules?: readonly GateRule[];
+  /**
+   * Exact names outside `prefix` that Download, Erase and Restore also cover (for example
+   * `app.preferences.v1`). They must not start with `prefix`. Omit to cover the prefix only.
+   */
+  extraKeys?: readonly string[];
   /** What the App keeps outside this panel's prefix. Shown as a plain list so the person knows Erase does not reach it. Omit to hide it. */
   outside?: readonly OutsideItem[];
   now: () => Date;
@@ -181,6 +187,8 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     importPending: false,
     confirmingClearDevice: false,
   });
+  const scope: DataScope = { prefix: deps.prefix, keys: deps.extraKeys ?? [] };
+  assertScope(scope);
   const stored = (): ReturnType<typeof reconcile> => reconcile(deps.storage, deps.prefix, inventory);
   const blockedNow = (): ReturnType<typeof loadBlocked> =>
     deps.egress === undefined ? { hosts: [] } : loadBlocked(deps.storage, deps.prefix, deps.now());
@@ -223,7 +231,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           state = unavailable();
           break;
         }
-        const file = exportLocalData(storage, deps.prefix, deps.now(), state.prefs.locale);
+        const file = exportLocalData(storage, scope, deps.now(), state.prefs.locale);
         if (file.count > 0) log({ kind: "export", count: file.count });
         state =
           file.count === 0
@@ -298,7 +306,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           state = unavailable();
           break;
         }
-        const r = prepareImport(action.text, storage, deps.prefix);
+        const r = prepareImport(action.text, storage, scope);
         if (!r.ok) {
           state = { ...state, confirmingErase: false, importPending: false, lastExport: null, status: { kind: "import-problem", code: r.code } };
           break;
@@ -386,7 +394,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       case "erase-ask": {
         if (storage === null) {
           state = unavailable();
-        } else if (listKeys(storage, deps.prefix).length === 0) {
+        } else if (scopeKeysPresent(storage, scope).length === 0) {
           state = { ...state, confirmingErase: false, status: { kind: "nothing" }, lastExport: null };
         } else {
           state = { ...state, confirmingErase: true, status: null, lastExport: null };
@@ -402,7 +410,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           break;
         }
         plan = null;
-        const r = eraseLocalData(storage, deps.prefix);
+        const r = eraseLocalData(storage, scope);
         const status: Status =
           r.failed.length > 0
             ? { kind: "erase-partial", failed: r.failed.length }
@@ -455,7 +463,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const problem = passphraseProblem(action.passphrase);
         if (problem !== null) return bad(problem);
         if (action.passphrase !== action.confirm) return bad("mismatch");
-        const file = exportLocalData(deps.storage, deps.prefix, deps.now(), state.prefs.locale);
+        const file = exportLocalData(deps.storage, scope, deps.now(), state.prefs.locale);
         if (file.count === 0) return dispatch({ type: "report", status: { kind: "nothing" } });
         const r = await protect(file.text, action.passphrase, deps.prefix, deps.crypto, deps.protectedIterations === undefined ? {} : { iterations: deps.protectedIterations });
         if (!r.ok) return bad(r.code);

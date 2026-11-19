@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { RegisterRow } from "../panel/storageRegister";
-import { checkRegister, compareToRegister, formatComparison, isScannedSource, panelCoverage, scanStorageKeys } from "./storageKeys";
+import { checkReach, checkRegister, compareToRegister, formatComparison, isScannedSource, panelCoverage, scanStorageKeys } from "./storageKeys";
 import type { SourceFile } from "./repoAudit";
 
 const f = (path: string, text: string): SourceFile => ({ path, text });
-const row = (key: string, path = "apps/web/src/a.ts"): RegisterRow => ({ key, path, holds: { en: "x", fr: "x" }, gated: false, source: "s", recordedOn: "2026-11-19" });
+const row = (key: string, path = "apps/web/src/a.ts"): RegisterRow => ({ key, path, holds: { en: "x", fr: "x" }, gated: false, reach: "panel", source: "s", recordedOn: "2026-11-19" });
 
 describe("which files are scanned", () => {
   it("skips tests, test helpers, type shims, the audit folder, narrow samples and e2e", () => {
@@ -101,10 +101,21 @@ describe("checkRegister", () => {
   });
 });
 
-describe("panelCoverage", () => {
-  it("separates keys the panel reaches from those outside its prefix", () => {
-    const c = panelCoverage([row("access.a"), row("app.b"), row("access.c"), row("data-status:d")], "access.");
-    expect(c.covered.map((r) => r.key)).toEqual(["access.a", "access.c"]);
-    expect(c.outside.map((r) => r.key)).toEqual(["app.b", "data-status:d"]);
+describe("panelCoverage and checkReach", () => {
+  const rows: RegisterRow[] = [
+    row("access.a"),
+    { ...row("app.b"), reach: "panel" },
+    { ...row("data-status:d"), reach: "elsewhere" },
+  ];
+  it("splits the register by its reach mark", () => {
+    const c = panelCoverage(rows);
+    expect(c.covered.map((r) => r.key)).toEqual(["access.a", "app.b"]);
+    expect(c.outside.map((r) => r.key)).toEqual(["data-status:d"]);
+  });
+  it("accepts a register where prefix keys are covered", () => {
+    expect(checkReach(rows, "access.")).toEqual([]);
+  });
+  it("reports a prefix key marked elsewhere", () => {
+    expect(checkReach([{ ...row("access.x"), reach: "elsewhere" }], "access.")).toEqual(["access.x: starts with the panel prefix but is marked elsewhere"]);
   });
 });

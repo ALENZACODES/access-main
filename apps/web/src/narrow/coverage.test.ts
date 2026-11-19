@@ -25,11 +25,14 @@ describe('coverage', () => {
   it('adds the checks that also look at a criterion', () => {
     expect(rowOf('2.1.2').checks).toEqual(['keyboard']);
     expect(rowOf('2.4.3').checks).toEqual(['order']);
+    expect(rowOf('3.2.6').checks).toEqual(['consistency']);
+    expect(rowOf('2.4.5').checks).toEqual(['site-links']);
+    expect(rowOf('3.2.4').checks).toEqual(['site-links']);
     expect(rowOf('2.4.2').checks).toEqual(expect.arrayContaining(['static-html', 'headings', 'consistency']));
   });
 
   it('says by hand for a criterion no check relates to', () => {
-    for (const sc of ['1.2.1', '1.2.5', '1.4.5', '2.3.1', '2.5.1', '3.2.6', '3.3.7']) {
+    for (const sc of ['1.2.1', '1.2.5', '1.4.5', '2.3.1', '2.5.1', '3.3.7']) {
       expect(rowOf(sc), sc).toMatchObject({ kind: 'by-hand', checks: [] });
     }
   });
@@ -196,7 +199,9 @@ describe('renderCoverageMarkdown', () => {
     expect(md.split('\n').filter((l) => /^\| \d/.test(l))).toHaveLength(55);
     expect(md).toContain('| Criterion | Level | Related checks |');
     expect(md).toContain('| 2.5.8 Target Size (Minimum) | AA | `target-size`, `target-spacing` |');
-    expect(md).toContain('| 3.2.6 Consistent Help | A | none, look by hand |');
+    expect(md).toContain('| 3.3.7 Redundant Entry | A | none, look by hand |');
+    expect(md).toContain('| 3.2.6 Consistent Help | A | `consistency` |');
+    expect(md).toContain('| 3.2.4 Consistent Identification | AA | `site-links` |');
   });
 
   it('adds a column for a report', () => {
