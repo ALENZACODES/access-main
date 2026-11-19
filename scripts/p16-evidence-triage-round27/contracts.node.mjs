@@ -42,7 +42,7 @@ test("UTC day ordinal independent of offset", () => assert.equal(dayOrdinal(TODA
 for (const number of [0, 1, 9, 10, 31, 127, 128, 159]) {
   test(`ASCII control scanning rejects code ${number}`, () => assert.equal(hasControl(`X${String.fromCharCode(number)}Y`), true));
 }
-test("Ordinary punctuation is not an ASCII control", () => assert.equal(hasControl("Français — accueil !"), false));
+test("Ordinary punctuation is not an ASCII control", () => assert.equal(hasControl("Français — accueil\u202F!"), false));
 test("Non-text values do not masquerade as controls", () => assert.equal(hasControl(null), false));
 test("Text normalization gate rejects decomposed form", () => assert.equal(cleanText("e\u0301"), false));
 test("Text gate accepts composed French", () => assert.equal(cleanText("Entrée"), true));
@@ -64,16 +64,16 @@ test("Findings sort by path and code", () => assert.deepEqual(sortFindings([find
 test("French straight apostrophe is flagged", () => assert.ok(checkFrenchTypography("l'entrée").includes("fr.apostrophe")));
 test("French curly apostrophe is accepted", () => assert.deepEqual(checkFrenchTypography("l’entrée"), []));
 test("French colon without no-break space is flagged", () => assert.ok(checkFrenchTypography("Note: texte").includes("fr.colon-space")));
-test("French colon with no-break space passes", () => assert.deepEqual(checkFrenchTypography("Note : texte"), []));
+test("French colon with no-break space passes", () => assert.deepEqual(checkFrenchTypography("Note\u00A0: texte"), []));
 for (const punctuation of [";", "!", "?"]) {
   test(`French narrow space required before ${punctuation}`, () => {
     assert.ok(checkFrenchTypography(`Mot ${punctuation}`).includes("fr.narrow-space"));
-    assert.deepEqual(checkFrenchTypography(`Mot ${punctuation}`), []);
+    assert.deepEqual(checkFrenchTypography(`Mot\u202F${punctuation}`), []);
   });
 }
-test("Guillemets require narrow spaces inside", () => assert.deepEqual(checkFrenchTypography("« Bienvenue »"), []));
-test("Guillemet open without space is flagged", () => assert.ok(checkFrenchTypography("«Bonjour »").includes("fr.guillemet-open")));
-test("Guillemet close without space is flagged", () => assert.ok(checkFrenchTypography("« Bonjour»").includes("fr.guillemet-close")));
+test("Guillemets require narrow spaces inside", () => assert.deepEqual(checkFrenchTypography("«\u202FBienvenue\u202F»"), []));
+test("Guillemet open without space is flagged", () => assert.ok(checkFrenchTypography("«Bonjour\u202F»").includes("fr.guillemet-open")));
+test("Guillemet close without space is flagged", () => assert.ok(checkFrenchTypography("«\u202FBonjour»").includes("fr.guillemet-close")));
 test("Repeated French issues have one code each", () => assert.equal(checkFrenchTypography("a: b: c:").filter((item) => item === "fr.colon-space").length, 1));
 test("Empty text object is not allowed", () => assert.ok(codes(textIssues(null, "title")).includes("text.object")));
 test("Missing translation is detected", () => assert.ok(codes(textIssues({ en: "Title" }, "title")).includes("text.missing-or-invalid")));
