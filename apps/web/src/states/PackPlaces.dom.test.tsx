@@ -132,8 +132,8 @@ describe("PackPlaces accessibility", () => {
     for (const control of container.querySelectorAll("input")) {
       expect(control.labels?.length ?? 0, control.outerHTML).toBeGreaterThan(0);
     }
-    // 6 wheelchair-tag choices plus the choices of the four filters (source, licence, tier, retrieved).
-    expect(within(container).getAllByRole("radiogroup")).toHaveLength(5);
+    // The wheelchair tag, the four filters (source, licence, tier, retrieved) and the two choices of the kinds table (order, minimum).
+    expect(within(container).getAllByRole("radiogroup")).toHaveLength(7);
     expect(within(container).getAllByRole("radio").length).toBeGreaterThan(6);
   });
   it("never uses colour alone: the tag is written out on every card", () => {

@@ -11,6 +11,7 @@ import { message, type MessageId } from "./messages";
 import { type PackPlaceRecord, type WheelchairTag, WHEELCHAIR_TAGS, countByTag } from "./packPlaces";
 import { type Point, type PointInput, distanceMetres, formatPackDistance } from "./packGeo";
 import { tierLine } from "./recordTier";
+import { filterByKind } from "./packCategories";
 import { type FacetGroup, type FacetSelection, EMPTY_FACETS, applyFacets, facetGroups, facetSummary } from "./packFacets";
 import { attributionLine, ageLabel, isStale } from "./provenance";
 import { type RouteStateView, getRouteEmpty } from "./routeStates";
@@ -24,6 +25,8 @@ export interface PackQuery {
   readonly near: PointInput;
   /** Source, licence, tier and age filters. Left out means no facet filter. */
   readonly facets?: FacetSelection;
+  /** A kind key from packCategories (see kindKey). Left out or null means every kind. */
+  readonly kind?: string | null;
 }
 
 export const EMPTY_PACK_QUERY: PackQuery = { text: "", tag: "any", near: { status: "none" } };
@@ -69,6 +72,8 @@ export interface PackListView {
   readonly tagOptions: readonly TagOption[];
   readonly facetGroups: readonly FacetGroup[];
   readonly facetSummary: string | null;
+  /** Places that pass the text, tag and facet filters, before the kind filter. The kinds table counts these. */
+  readonly beforeKind: readonly PackPlaceRecord[];
   readonly minTargetPx: number;
 }
 
@@ -138,7 +143,8 @@ export function packPlacesView(places: readonly PackPlaceRecord[], dropped: numb
   const facets = query.facets ?? EMPTY_FACETS;
   const byText = places.filter((p) => matchesText(p, words));
   const byTag = byText.filter((p) => query.tag === "any" || p.tag === query.tag);
-  const shown = applyFacets(byTag, facets, ctx.today);
+  const beforeKind = applyFacets(byTag, facets, ctx.today);
+  const shown = filterByKind(beforeKind, query.kind ?? null);
   const hiddenUnknown = query.tag !== "any" && query.tag !== "unknown" ? byText.filter((p) => p.tag === "unknown").length : 0;
 
   const ordered = [...shown].sort((a, b) => {
@@ -159,6 +165,7 @@ export function packPlacesView(places: readonly PackPlaceRecord[], dropped: numb
     tagOptions: tagOptions(places, locale),
     facetGroups: facetGroups(byTag, facets, locale, ctx.today),
     facetSummary: facetSummary(facets, locale),
+    beforeKind,
     minTargetPx: MIN_TOUCH_TARGET_PX,
   };
 

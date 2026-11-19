@@ -412,21 +412,31 @@ export type { RecoveryRepairAttemptsProps } from "./RecoveryRepairAttempts";
 export { ATTEMPT_COPY, addRecoveryAttempt, emptyAttemptDocument, exportRecoveryAttempts, isAttemptProvenance, mergeRecoveryAttempts, parseRecoveryAttempts, previewAttemptMerge, replaceRecoveryAttempt, summarizeRecoveryAttempts, validateAttempt, validateAttemptDocument } from "./recoveryRepairReceipt";
 export type { AttemptDocument, AttemptIssue, AttemptKind, AttemptMergePreview, AttemptOutcome, AttemptProvenance, AttemptResult, AttemptSummary, RecoveryAttempt } from "./recoveryRepairReceipt";
 
-// Manual failure checklist and local source reconciliation.
-export { RecoveryFailureChecklist } from "./RecoveryFailureChecklist";
-export type { RecoveryFailureChecklistProps } from "./RecoveryFailureChecklist";
-export { CHECKLIST_STEPS, FAILURE_CHECKLIST_COPY, changeChecklistStep, checklistCounts, defaultChecklist, exportChecklist, importChecklist, previewChecklistReplacement, validChecklistProvenance, validateChecklist } from "./recoveryFailureChecklist";
-export type { ChecklistState, ChecklistItem, ChecklistProvenance, FailureChecklist, FailureCause, FailureKind } from "./recoveryFailureChecklist";
-export { RecoveryProvenanceLedger } from "./RecoveryProvenanceLedger";
-export type { RecoveryProvenanceLedgerProps } from "./RecoveryProvenanceLedger";
-export { provenanceCopy } from "./recoveryProvenanceCopy";
-export { LEDGER_LIMITS, LEDGER_LICENCES, LEDGER_PHASES, LEDGER_TIERS, LEDGER_VALUES, appendLedgerStatement, fieldOverviews, filterLedger, ledgerConflicts, ledgerIds, ledgerSummary, loadLedger, mergeLedgerDocuments, newLedgerDocument, nextLedgerId, previewLedgerMerge, reviewLedgerStatement, saveLedger } from "./recoveryProvenanceLedger";
-export type { LedgerDocument, LedgerFilter, LedgerPhase, LedgerStatement, LedgerTier, LedgerValue } from "./recoveryProvenanceLedger";
-
-// Local, manual recovery handoff.
-export { RecoveryHandoffPanel } from "./RecoveryHandoffPanel";
-export type { RecoveryHandoffPanelProps } from "./RecoveryHandoffPanel";
-export { handoffCopy } from "./recoveryHandoffCopy";
-export type { HandoffCopy } from "./recoveryHandoffCopy";
-export { HANDOFF_LIMITS, HANDOFF_LICENCES, HANDOFF_OPERATIONS, HANDOFF_CONDITIONS, HANDOFF_DECISIONS, HANDOFF_TIERS, appendHandoffCase, appendHandoffEvent, currentHandoffDecision, exportHandoffDocument, filterHandoffCases, handoffForPack, handoffSummary, handoffUpdatedAt, mergeHandoffDocuments, newHandoffDocument, nextEventId, nextHandoffId, parseHandoffDocument, previewHandoffMerge, validHandoffSource, validateHandoffCase, validateHandoffDocument, validateHandoffEvent } from "./recoveryHandoff";
-export type { HandoffOperation, HandoffCondition, HandoffDecision, HandoffTier, HandoffIssue, HandoffSource, HandoffEvent, HandoffCase, HandoffDocument, HandoffResult, HandoffMergePreview, HandoffFilter, HandoffSummary, HandoffPackCoverage } from "./recoveryHandoff";
+// Manual, offline-only preflight and append-only review timeline.
+export { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
+export type { RecoveryTransferPreflightProps } from "./RecoveryTransferPreflight";
+export {
+  EVIDENCE_TIERS, PREFLIGHT_LIMITS, TRANSFER_CONDITIONS, TRANSFER_KINDS, TRANSFER_STAGES,
+  TRANSFER_LICENCES, appendTransferCandidate, assessTransferCandidate, assessTransferDocument,
+  decodeTransferDocument, encodeTransferDocument, filterTransferCandidates, mergeTransferDocuments,
+  newTransferDocument, summarizeTransferDocument, transferPackSummaries, transferPreviewMerge,
+  transitionTransferCandidate, validTransferProvenance, validateTransferCandidate, validateTransferDocument,
+} from "./recoveryTransferPreflight";
+export type {
+  EvidenceTier, TransferCondition, TransferKind, TransferStage, TransferIssue, TransferDecision,
+  TransferReadiness, TransferProvenance, TransferCandidate, TransferDocument, TransferResult,
+  PreflightFinding, PreflightOverview, PreflightFilter, PreflightMergePreview,
+} from "./recoveryTransferPreflight";
+export { recoveryTransferCopy } from "./recoveryTransferCopy";
+export type { PreflightCopy } from "./recoveryTransferCopy";
+export {
+  HISTORY_LIMIT, HISTORY_BYTE_LIMIT, emptyHistory, validateHistoryEvent, validateHistory,
+  appendHistoryEvent, amendHistoryEvent, historyForCandidate, countHistoryActions,
+  validateTransferBundle, prepareTransferBundle, serializeTransferBundle, parseTransferBundle,
+  previewTransferBundleMerge, mergeTransferBundles, reconcileTransferHistory, candidateLatestCondition,
+  transferBundleHasCandidate,
+} from "./recoveryTransferHistory";
+export type {
+  TransferHistoryAction, TransferHistoryEvent, TransferHistory, HistoryIssue, HistoryResult,
+  TransferBundle, TransferBundleMerge,
+} from "./recoveryTransferHistory";

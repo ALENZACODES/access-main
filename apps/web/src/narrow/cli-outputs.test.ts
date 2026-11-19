@@ -30,7 +30,7 @@ function deps(files: Record<string, string>): { deps: CliDeps; files: Map<string
 
 describe('--format', () => {
   it('knows the three text formats next to SARIF and JUnit', () => {
-    expect(OUTPUT_FORMATS).toEqual(['sarif', 'junit', 'markdown', 'csv', 'digest', 'detail']);
+    expect(OUTPUT_FORMATS).toEqual(['sarif', 'junit', 'markdown', 'csv', 'digest', 'detail', 'coverage', 'worksheet']);
   });
   it('accepts them in any order and drops repeats', () => {
     expect(parseArgs(['--html', 'a.html', '--out', 'o', '--format', 'csv,markdown,digest,csv'])).toMatchObject({ ok: true, args: { formats: ['csv', 'markdown', 'digest'] } });
@@ -47,7 +47,7 @@ describe('--format', () => {
     expect(parseArgs(['--html', 'a.html', '--format', 'markdown']).ok).toBe(false);
   });
   it('is listed in the help, in both languages', () => {
-    expect(HELP_TEXT.match(/--format sarif,junit,markdown,csv,digest,detail/g)).toHaveLength(2);
+    expect(HELP_TEXT.match(/--format sarif,junit,markdown,csv,digest,detail,coverage,worksheet/g)).toHaveLength(2);
   });
 });
 

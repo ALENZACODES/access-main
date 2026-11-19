@@ -9,6 +9,8 @@ import { assertValidInventory, type InventoryEntry } from "./inventory";
 import { inventoryAsCsv, inventoryAsText } from "./inventoryExport";
 import { ownEntries } from "./ownEntries";
 import { reconcile } from "./reconcile";
+import { describeDevice, type DeviceRow } from "./deviceRegister";
+import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
 import { clearDevice, removable, scanDevice, type ClearOptions, type DeviceHost, type DeviceScan } from "./deviceStorage";
 import { protect, unprotect, passphraseProblem, type CryptoLike } from "./protectedBackup";
 import { readSignals, type SignalHost, type Signals } from "./signals";
@@ -47,6 +49,10 @@ export interface ControllerDeps {
   extraKeys?: readonly string[];
   /** What the App keeps outside this panel's prefix. Shown as a plain list so the person knows Erase does not reach it. Omit to hide it. */
   outside?: readonly OutsideItem[];
+  /** The App's own list of caches and databases. With `device`, the panel says what each name found on the device is. */
+  deviceRegister?: readonly DeviceRow[];
+  /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
+  kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
   reviewedOn?: string;
   /** Keep a visible, local list of the person's privacy actions. Default off. */
@@ -98,6 +104,8 @@ export type PrivacyAction =
   | { type: "consent"; purposeId: string; value: "granted" | "declined" }
   | { type: "export-list-csv" }
   | { type: "export-list-text" }
+  | { type: "export-kept-csv" }
+  | { type: "export-kept-text" }
   | { type: "mark-seen" }
   | { type: "import-load"; text: string }
   | { type: "import-confirm" }
@@ -253,6 +261,18 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           lastExport: file,
           status: { kind: "list-exported", format: csv ? "csv" : "text" },
         };
+        break;
+      }
+      case "export-kept-csv":
+      case "export-kept-text": {
+        const kept = deps.kept;
+        if (kept === undefined) break;
+        const csv = action.type === "export-kept-csv";
+        const loc = state.prefs.locale;
+        const src = { ...kept, ...(deps.device !== undefined ? { clear: deps.device } : {}), ...(deps.deviceRegister !== undefined ? { device: deps.deviceRegister } : {}) };
+        const file = csv ? keptAsCsv(loc, src, deps.now(), loc === "fr" ? ";" : ",") : keptAsText(loc, src, deps.now());
+        log({ kind: "kept-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "kept-exported", format: csv ? "csv" : "text" } };
         break;
       }
       case "mark-seen": {
@@ -515,6 +535,10 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
               },
             }
           : {}),
+        ...(deps.device !== undefined && deps.deviceRegister !== undefined
+          ? { deviceNames: state.scan === null ? null : describeDevice(state.scan, deps.deviceRegister, deps.device) }
+          : {}),
+        ...(deps.kept !== undefined ? { keptList: true } : {}),
         ...(deps.crypto !== undefined ? { protectedCopy: true } : {}),
         ...(deps.logActivity === true ? { activity: loadActivity(deps.storage, deps.prefix, deps.now()) } : {}),
         ...(state.changes !== null ? { changes: state.changes } : {}),

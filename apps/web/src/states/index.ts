@@ -26,6 +26,9 @@ export * from "./packIssueText.ts";
 export * from "./packDuplicates.ts";
 export * from "./packReport.ts";
 export * from "./downloadFile.ts";
+export * from "./packCategories.ts";
+export * from "./packCategoryExport.ts";
+export { PackCategories } from "./PackCategories.tsx";
 export { PackReport } from "./PackReport.tsx";
 export { PackFreshness } from "./PackFreshness.tsx";
 

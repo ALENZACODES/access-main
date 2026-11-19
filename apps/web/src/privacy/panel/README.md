@@ -187,3 +187,26 @@ createPrivacyController({
 - `registerExport.ts`: the register as CSV or plain text in EN and FR (item, whether saving needs the person's choice, whether Erase reaches it, source, date). Key names are not written. Nothing offers it as a button yet.
 
 
+
+## Caches and databases (P10Q)
+
+`storageRegister.ts` lists the localStorage keys the App's code uses. `deviceRegister.ts` does the same for the
+other two places a page can keep things: Cache Storage and IndexedDB. Each row is a name (one exact name, or a
+prefix that ends in a hyphen because the code adds a version after it), the file that names it, what it holds in
+both languages, a source and a date.
+
+- `../audit/deviceStorageScan.ts` reads the source for cache and database names (constants called `…CACHE`,
+  `cachePrefix: "…"`, a `PREFIX` constant beside a `cacheName` function, `caches.open("…")`, `databaseName = "…"`,
+  `…DB` constants and `indexedDB.open("…")`). `device.repo.audit.test.ts` fails when the source names one that has
+  no row, when a row is no longer backed by the source, and when a row points at the wrong file. Names built at
+  run time cannot be read from the source and are not found; `packages/` is not scanned.
+- `deviceKnown.ts` is the panel section shown after "Check this device". It pairs each name the browser reports
+  with its row. A name with no row is shown as unknown and nothing is guessed. It also says whether the clear
+  button, with the prefixes it was given, would remove that name. It appears only when the controller is given
+  `device` and `deviceRegister`; `liveControllerDeps()` supplies the register.
+- `keptExport.ts` writes "everything the App keeps on this device" as CSV or text: every localStorage item, every
+  cache and database the App's code names, and storage whose name could not be read. Each line says where it is
+  kept, whether saving it needs the person's choice, whether Erase reaches it and whether the offline storage
+  button does. A cache or database line never claims a consent check: it says "Not confirmed". The controller
+  offers the two download buttons when it is given `kept`; `liveControllerDeps()` supplies it.
+- Not covered: cookies and the browser's own storage are still only listed by name; Playwright e2e was not run.
