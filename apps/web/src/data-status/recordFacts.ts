@@ -182,7 +182,14 @@ function recordName(s: AuditedSource): string {
   return `${s.datasetName} / ${s.name ?? s.sourceId}`;
 }
 
-export function renderRecordFactsHtml(f: RecordFacts, locale: Locale): string {
+/** An extra last column on the per-fact counts: a heading and one cell of ready-made HTML for each fact. */
+export interface FactRowExtra {
+  heading: string;
+  cell: (field: FactField) => string;
+}
+
+/** With `extra`, a fact that is unknown on no record gets an empty cell. */
+export function renderRecordFactsHtml(f: RecordFacts, locale: Locale, extra?: FactRowExtra): string {
   const heading = `<h2 id="ds-facts-title">${escapeHtml(tx(locale, 'rf.title'))}</h2>`;
   const open = `<section aria-labelledby="ds-facts-title">${heading}`;
   if (f.total === 0) return `${open}<p>${escapeHtml(tx(locale, 'rf.none'))}</p></section>`;
@@ -192,7 +199,7 @@ export function renderRecordFactsHtml(f: RecordFacts, locale: Locale): string {
   const rows = f.rows
     .map((row) => `<tr><th scope="row">${escapeHtml(recordName(row.source))}</th>${FACT_FIELDS.map((field) => cell(row, field)).join('')}</tr>`)
     .join('');
-  const counts = FACT_FIELDS.map((field) => `<tr><th scope="row">${escapeHtml(factLabel(field, locale))}</th><td>${f.missingBy[field]}</td></tr>`).join('');
+  const counts = FACT_FIELDS.map((field) => `<tr><th scope="row">${escapeHtml(factLabel(field, locale))}</th><td>${f.missingBy[field]}</td>${extra ? `<td>${f.missingBy[field] > 0 ? extra.cell(field) : ''}</td>` : ''}</tr>`).join('');
   const datasets = f.datasets
     .map(
       (d) =>
@@ -202,7 +209,7 @@ export function renderRecordFactsHtml(f: RecordFacts, locale: Locale): string {
   return (
     `${open}<p>${escapeHtml(tx(locale, 'rf.intro'))}</p>${summary}` +
     `<table><caption>${escapeHtml(tx(locale, 'rf.countsCaption'))}</caption><thead><tr><th scope="col">${escapeHtml(tx(locale, 'rf.colFact'))}</th>` +
-    `<th scope="col">${escapeHtml(tx(locale, 'rf.colMissing'))}</th></tr></thead><tbody>${counts}</tbody></table>` +
+    `<th scope="col">${escapeHtml(tx(locale, 'rf.colMissing'))}</th>${extra ? `<th scope="col">${escapeHtml(extra.heading)}</th>` : ''}</tr></thead><tbody>${counts}</tbody></table>` +
     `<table><caption>${escapeHtml(tx(locale, 'rf.dsCaption'))}</caption><thead><tr><th scope="col">${escapeHtml(tx(locale, 'rf.colDataset'))}</th>` +
     `<th scope="col">${escapeHtml(tx(locale, 'rf.colRecords'))}</th><th scope="col">${escapeHtml(tx(locale, 'rf.colComplete'))}</th>` +
     FACT_FIELDS.map((field) => `<th scope="col">${escapeHtml(factLabel(field, locale))}</th>`).join('') +
