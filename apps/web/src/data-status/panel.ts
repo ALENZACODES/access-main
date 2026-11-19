@@ -13,7 +13,7 @@ import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
-import { applyFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
+import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
 import { isDatasetKind } from './freshnessPolicy';
@@ -25,7 +25,7 @@ import { createSnapshot, type Snapshot, type SnapshotStore } from './snapshot';
 import { escapeHtml } from './sourceList';
 import { renderThresholdsHtml, serializeViewState, type Thresholds } from './thresholds';
 import { buildReviewQueue, renderReviewHtml } from './reviewDue';
-import { ariaSort, applySort, nextSort, type SortKey } from './sorting';
+import { ariaSort, applySort, nextSort, sortParams, type SortKey, type SortSpec } from './sorting';
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, paginate } from './paging';
 import { buildQuery, type TableView } from './tableView';
 import {
@@ -36,12 +36,27 @@ import {
   buildFactsFile,
   buildMarkdownFile,
   buildRecordFacts,
+  addView,
+  buildListedSummary,
   buildNoMatchHints,
+  clampLimit,
+  LIVE_STEP,
+  parseSortValue,
+  renderShowMoreHtml,
+  renderSortControl,
+  SHOW_MORE_ACTION,
+  showingText,
   buildQuickFilters,
   clearKeyFromAction,
   kindLabel,
   listActiveFilters,
+  describeSaveOutcome,
+  describeViewDeleted,
+  parseViewAction,
+  removeViewAt,
   renderActiveFiltersHtml,
+  renderListedSummaryHtml,
+  renderSavedViewsHtml,
   renderNoMatchHintsHtml,
   withoutFilter,
   buildStatusByTier,
@@ -69,6 +84,7 @@ import {
   renderTocHtml,
   renderWorkloadHtml,
   runSelfCheck,
+  type SavedViewStore,
   quickFilterFor,
   quickFilterFromAction,
   type ListState,
@@ -108,6 +124,10 @@ export interface PanelState {
    * scrolling, so no focusable scroll container is added. Default false (scrolling regions).
    */
   plainTables?: boolean | undefined;
+  /** Live panel only: the chosen order and how many rows to draw. Ignored in the static view, which sorts and pages with links. */
+  live?: LiveList | undefined;
+  /** Saved views to offer (query texts). Leave undefined to leave the section out; it is never shown in the static view. */
+  savedViews?: { views: readonly string[]; durable: boolean } | undefined;
 }
 
 const esc = escapeHtml;
@@ -155,9 +175,13 @@ export interface RegionNav {
 
 const LINK_STYLE = 'display:inline-flex;align-items:center;min-width:44px;min-height:44px';
 
-function sortHeading(locale: Locale, key: SortKey, label: MessageKey, nav: RegionNav | undefined, filters: Filters): string {
+function sortHeading(locale: Locale, key: SortKey, label: MessageKey, nav: RegionNav | undefined, filters: Filters, liveSort: SortSpec | null = null): string {
   const text = esc(t(locale, label));
-  if (!nav) return `<th scope="col">${text}</th>`;
+  if (!nav) {
+    // Live panel: the order is chosen with the Sort by control, so the heading only states it.
+    const live = ariaSort(liveSort, key);
+    return live === null ? `<th scope="col">${text}</th>` : `<th scope="col" aria-sort="${live}">${text}<span aria-hidden="true">${live === 'ascending' ? ' \u25B2' : ' \u25BC'}</span></th>`;
+  }
   const current = nav.table.sort;
   const next = nextSort(current, key);
   const href = nav.action + buildQuery({ filters, thresholds: nav.thresholds }, { sort: next, paging: { ...nav.table.paging, page: 1 } });
@@ -180,7 +204,13 @@ function pager(locale: Locale, nav: RegionNav, filters: Filters, page: number, p
   return `<nav aria-label="${esc(t(locale, 'pg.nav'))}">${prev} <span>${esc(t(locale, 'pg.status', { page, pages }))}</span> ${next}</nav>`;
 }
 
-export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav): string {
+/** Live-panel list state: the chosen order and how many rows to draw. */
+export interface LiveList {
+  sort: SortSpec | null;
+  limit: number;
+}
+
+export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, live?: LiveList): string {
   const unknown = t(locale, 'unknown');
   const matched = applyFilters(audit.sources, filters);
   const total = audit.sources.length;
@@ -188,9 +218,11 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
   if (matched.length === 0) {
     return count + (audit.sources.length === 0 ? '' : `<p>${esc(t(locale, 'flt.noMatch'))}</p>`);
   }
-  const sorted = nav ? applySort(matched, nav.table.sort, locale) : matched;
+  const liveSort = !nav && live ? live.sort : null;
+  const sorted = nav ? applySort(matched, nav.table.sort, locale) : liveSort ? applySort(matched, liveSort, locale) : matched;
   const slice = nav ? paginate(sorted, nav.table.paging) : null;
-  const shown = slice ? slice.items : sorted;
+  const liveCount = !nav && live ? clampLimit(live.limit, sorted.length) : sorted.length;
+  const shown = slice ? slice.items : sorted.slice(0, liveCount);
   const rows = shown
     .map((s) => {
       const label = esc(`${s.datasetName} / ${s.name ?? t(locale, 'unknownName')}`);
@@ -210,15 +242,16 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
     })
     .join('');
   const heads =
-    sortHeading(locale, 'source', 'tbl.source', nav, filters) +
-    sortHeading(locale, 'licence', 'tbl.licence', nav, filters) +
-    sortHeading(locale, 'retrieved', 'tbl.retrieved', nav, filters) +
-    sortHeading(locale, 'status', 'tbl.status', nav, filters) +
-    sortHeading(locale, 'tier', 'tbl.tier', nav, filters);
+    sortHeading(locale, 'source', 'tbl.source', nav, filters, liveSort) +
+    sortHeading(locale, 'licence', 'tbl.licence', nav, filters, liveSort) +
+    sortHeading(locale, 'retrieved', 'tbl.retrieved', nav, filters, liveSort) +
+    sortHeading(locale, 'status', 'tbl.status', nav, filters, liveSort) +
+    sortHeading(locale, 'tier', 'tbl.tier', nav, filters, liveSort);
   const table =
     `<table><caption>${esc(t(locale, 'tbl.sources'))}</caption><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table>`;
   const help = nav ? `<p>${esc(t(locale, 'sort.help'))}</p>` : '';
-  return count + help + scrollable(t(locale, 'tbl.sources'), table) + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '');
+  const more = !nav && live ? renderShowMoreHtml(liveCount, sorted.length, locale, buttonInlineStyle()) : '';
+  return count + help + scrollable(t(locale, 'tbl.sources'), table) + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '') + more;
 }
 
 const FIELD_STYLE = 'min-height:44px;min-width:44px;font:inherit';
@@ -252,20 +285,37 @@ export function datasetOptions(audit: AuditResult): DatasetOption[] {
   return out;
 }
 
+/** The quick filters; this is what the quick region holds, so the pressed state can follow the filters. */
+export function renderQuickRegion(audit: AuditResult, locale: Locale, filters: Filters, hrefFor?: (f: Filters) => string): string {
+  return renderQuickFiltersHtml(buildQuickFilters(audit), locale, { active: filters, buttonStyle: buttonInlineStyle(), ...(hrefFor ? { hrefFor } : {}) });
+}
+
+/** The saved views; this is what the views region holds, so saving is offered as soon as a filter is chosen. */
+export function renderViewsRegion(audit: AuditResult, locale: Locale, filters: Filters, saved: { views: readonly string[]; durable: boolean }): string {
+  return renderSavedViewsHtml(saved.views, locale, {
+    durable: saved.durable,
+    active: filters,
+    datasetNames: new Map(datasetOptions(audit).map((d) => [d.id, d.name])),
+    buttonStyle: buttonInlineStyle(),
+  });
+}
+
 /** The source list with the filters in force above it; this is what the sources region holds. */
-export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, hrefWithout?: (f: Filters) => string): string {
+export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, hrefWithout?: (f: Filters) => string, live?: LiveList): string {
   const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
   const activeList = listActiveFilters(filters, locale, names);
   const links = hrefWithout ? { hrefFor: (key: Parameters<typeof withoutFilter>[1]) => hrefWithout(withoutFilter(filters, key)) } : {};
   const active = renderActiveFiltersHtml(activeList, locale, { buttonStyle: buttonInlineStyle(), ...links });
-  const noMatch = audit.sources.length > 0 && applyFilters(audit.sources, filters).length === 0;
+  const listed = applyFilters(audit.sources, filters);
+  const noMatch = audit.sources.length > 0 && listed.length === 0;
   const hints = noMatch
     ? renderNoMatchHintsHtml(buildNoMatchHints(audit.sources, filters, locale, names), locale, { buttonStyle: buttonInlineStyle(), activeCount: activeList.length, ...links })
     : '';
-  return active + renderSourcesRegion(audit, locale, filters, now, nav) + hints;
+  // The summary describes every source the filters list, not only the page of rows on screen.
+  return active + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + hints;
 }
 
-export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = []): string {
+export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null): string {
   const stateOpts =
     option('any', t(locale, 'flt.any'), f.state === 'any') +
     FILTER_STATES.map((s) => option(s, t(locale, `state.${s}`), f.state === s)).join('');
@@ -300,7 +350,7 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     `<input type="checkbox" id="ds-f-issues" name="issues" value="1" data-filter="onlyIssues" style="width:24px;height:24px"${f.onlyIssues ? ' checked' : ''}>` +
     `${esc(t(locale, 'flt.onlyIssues'))}</label></div>`;
   if (!form) {
-    return controls + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
+    return controls + (liveSort === undefined ? '' : renderSortControl(liveSort, locale)) + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
   }
   const sort = form.table?.sort ?? null;
   const size = form.table?.paging.size ?? DEFAULT_PAGE_SIZE;
@@ -386,14 +436,11 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
-    renderQuickFiltersHtml(buildQuickFilters(audit), locale, {
-      active: filters,
-      buttonStyle: buttonInlineStyle(),
-      ...(sv ? { hrefFor: (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` } : {}),
-    }) +
-    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit)) +
+    `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
+    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort) +
+    (sv || !state.savedViews ? '' : `<div data-region="views">${renderViewsRegion(audit, locale, filters, state.savedViews)}</div>`) +
     (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
-    `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
+    `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined, sv ? undefined : state.live)}</div>` +
     coverageSection(state) +
     renderCompletenessHtml(buildCompleteness(audit), locale) +
     renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale) +
@@ -438,12 +485,16 @@ export interface MountOptions {
   onExportFile?: ((file: { text: string; filename: string; mime: string }) => void) | undefined;
   /** Starting filters (for example parsed from the URL). */
   initialFilters?: Filters | undefined;
+  /** The order the list starts in; none means the order of the registry. */
+  initialSort?: SortSpec | null | undefined;
   /** Staleness thresholds in days per dataset type (for example parsed from the URL). */
   thresholds?: Thresholds | undefined;
   /** On-device history of totals; today's totals are recorded when live data loads. */
   history?: HistoryStore | undefined;
   /** Called with the new query string ('' or '?state=…', thresholds included) after filters change. */
   onFiltersChange?: ((search: string) => void) | undefined;
+  /** Where saved views are kept. Without it the saved-views section is not shown. */
+  savedViews?: SavedViewStore | undefined;
   /** Extra localized notices, for example files that could not be read. */
   getNotices?: ((locale: Locale) => readonly string[]) | undefined;
   /** See PanelState.plainTables. */
@@ -453,15 +504,24 @@ export interface MountOptions {
 export interface MountedPanel {
   refresh(): void;
   getFilters(): Filters;
+  getSort(): SortSpec | null;
   destroy(): void;
 }
 
 export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): MountedPanel {
   let lastRecords: readonly DatasetRecord[] = [];
   let filters: Filters = { ...(opts.initialFilters ?? NO_FILTERS) };
+  let sort: SortSpec | null = opts.initialSort ?? null;
+  let limit = LIVE_STEP;
   let baseline: Snapshot | null | undefined; // undefined until the first refresh
   const thresholds: Thresholds = { ...(opts.thresholds ?? {}) };
-  const view = (): string => serializeViewState({ filters: { ...filters, query: normaliseQuery(filters.query) }, thresholds });
+  const view = (): string => {
+    const base = serializeViewState({ filters: { ...filters, query: normaliseQuery(filters.query) }, thresholds });
+    if (sort === null) return base;
+    const p = new URLSearchParams(base.replace(/^\?/, ''));
+    for (const [k, v] of sortParams(sort)) p.set(k, v);
+    return `?${p.toString()}`;
+  };
 
   const nowFn = opts.now ?? (() => new Date());
 
@@ -482,7 +542,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     shown: applyFilters(audit.sources, filters).length,
     total: audit.sources.length,
     filters: { ...filters },
-    sort: null,
+    sort,
     page: 1,
     pages: 1,
   });
@@ -540,6 +600,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       changes,
       notices: opts.getNotices?.(locale),
       plainTables: opts.plainTables,
+      live: { sort, limit },
+      savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable } : undefined,
     });
   };
 
@@ -551,8 +613,15 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     }
     const now = nowFn();
     const audit = auditRegistry(lastRecords, now, thresholds);
-    const results = renderResultsHtml(audit, opts.getLocale(), filters, now);
+    const results = renderResultsHtml(audit, opts.getLocale(), filters, now, undefined, undefined, { sort, limit });
     region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
+    // Keep the controls that describe the filters in step with them, without touching the form fields.
+    const quick = host.querySelector?.('[data-region="quick"]') ?? null;
+    if (quick !== null) quick.innerHTML = renderQuickRegion(audit, opts.getLocale(), filters);
+    const views = host.querySelector?.('[data-region="views"]') ?? null;
+    if (views !== null && opts.savedViews) {
+      views.innerHTML = renderViewsRegion(audit, opts.getLocale(), filters, { views: opts.savedViews.load(), durable: opts.savedViews.durable });
+    }
     const next = listState(audit);
     announcer.say(describeListChange(lastList, next, opts.getLocale()));
     lastList = next;
@@ -563,7 +632,10 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     const key = el?.getAttribute?.('data-filter');
     if (!key || !el) return;
     const value = typeof el.value === 'string' ? el.value : '';
-    if (key === 'state') filters = { ...filters, state: (FILTER_STATES as readonly string[]).includes(value) ? (value as Filters['state']) : 'any' };
+    // Any change to what is listed, or its order, starts again from the first rows.
+    limit = LIVE_STEP;
+    if (key === 'sort') sort = parseSortValue(value);
+    else if (key === 'state') filters = { ...filters, state: (FILTER_STATES as readonly string[]).includes(value) ? (value as Filters['state']) : 'any' };
     else if (key === 'kind') filters = { ...filters, kind: isDatasetKind(value) ? value : 'any' };
     else if (key === 'tier') {
       filters = withOptionalFilter(filters, 'tier', isTierFilter(value) ? value : undefined);
@@ -594,7 +666,13 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   const onClick = (ev: unknown): void => {
     const target = (ev as { target?: EventTarget }).target;
     const action = target?.closest?.('[data-action]')?.getAttribute?.('data-action');
-    if (action === 'recalculate') refresh();
+    if (action === SHOW_MORE_ACTION) {
+      const total = applyFilters(auditRegistry(lastRecords, nowFn(), thresholds).sources, filters).length;
+      if (limit >= total) return;
+      limit = Math.min(total, limit + LIVE_STEP);
+      updateResults();
+      announcer.say(showingText(clampLimit(limit, total), total, opts.getLocale()));
+    } else if (action === 'recalculate') refresh();
     else if (action === 'reset-filters') {
       if (!hasActiveFilters(filters) && filters.query === '') return;
       const before = lastList;
@@ -608,6 +686,28 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     } else if (action === 'export-tables' && opts.onExportFile) {
       const { text, filename, mime } = buildTablesFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
       opts.onExportFile({ text, filename, mime });
+    } else if (opts.savedViews && parseViewAction(action) !== null) {
+      const act = parseViewAction(action);
+      if (act === null) return;
+      const locale = opts.getLocale();
+      if (act.kind === 'save') {
+        const { outcome } = addView(opts.savedViews, filters);
+        refresh();
+        announcer.say(describeSaveOutcome(outcome, locale));
+      } else if (act.kind === 'delete') {
+        const { removed } = removeViewAt(opts.savedViews, act.index);
+        if (!removed) return;
+        refresh();
+        announcer.say(describeViewDeleted(locale));
+      } else {
+        const query = opts.savedViews.load()[act.index];
+        if (query === undefined) return;
+        const before = lastList;
+        filters = parseFilters(query);
+        refresh();
+        if (lastList !== null) announcer.say(describeListChange(before, lastList, locale));
+        opts.onFiltersChange?.(view());
+      }
     } else if (clearKeyFromAction(action) !== null) {
       const key = clearKeyFromAction(action);
       if (key === null) return;
@@ -645,6 +745,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   return {
     refresh,
     getFilters: () => ({ ...filters }),
+    getSort: () => (sort === null ? null : { ...sort }),
     destroy: () => {
       host.removeEventListener('click', onClick);
       host.removeEventListener('change', onFilterEvent);

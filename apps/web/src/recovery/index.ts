@@ -384,3 +384,25 @@ export { buildRecoverySteps, filterRecoverySteps, recoveryStepCopy } from "./rec
 export { makePlanDiffExport, planDiffCopy, savePlanDiff } from "./recoveryPlanDiffExport";
 export { RecoveryPlanReview } from "./RecoveryPlanReview";
 export type { RecoveryPlanReviewProps } from "./RecoveryPlanReview";
+
+// Session-only recovery tools. Their status never changes installed pack readiness.
+export { RecoveryEvidenceNotebook } from "./RecoveryEvidenceNotebook";
+export type { RecoveryEvidenceNotebookProps } from "./RecoveryEvidenceNotebook";
+export { evidenceCopy } from "./recoveryEvidenceCopy";
+export { emptyEvidenceNotebook, parseEvidenceNotebook, validateEvidenceNotebook, addEvidenceEntry, reviewEvidenceEntry, summarizeEvidenceNotebook, previewEvidenceMerge, mergeEvidenceNotebook, exportEvidenceNotebook } from "./recoveryEvidenceNotebook";
+export type { EvidenceEntry, EvidenceNotebook, EvidenceDraft, EvidenceSummary, EvidenceMergePreview } from "./recoveryEvidenceNotebook";
+export { RecoveryDryRunPanel } from "./RecoveryDryRunPanel";
+export type { RecoveryDryRunPanelProps } from "./RecoveryDryRunPanel";
+export { calculateRecoveryDryRun, exportRecoveryDryRun } from "./recoveryDryRun";
+export type { DryRunInput, DryRunEntry, DryRunResult, DryRunEnvelope } from "./recoveryDryRun";
+export { recoveryDryRunCopy } from "./recoveryDryRunCopy";
+export { RecoveryCaseJournal } from "./RecoveryCaseJournal";
+export type { RecoveryCaseJournalProps } from "./RecoveryCaseJournal";
+export { RecoveryTaskBoard } from "./RecoveryTaskBoard";
+export type { RecoveryTaskBoardProps } from "./RecoveryTaskBoard";
+export { appendCaseEvent, caseCounts, caseViewCopy, changeCasePhase, currentPackOutcome, effectiveCaseOutcome, newCaseDocument, parseCaseDocument, serializeCaseDocument, startCase, validCalendarDay, validCaseEvidence } from "./recoveryCaseJournal";
+export type { CaseDocument, CaseEvent, CaseIssue, CaseKind, CaseOutcome, CasePhase } from "./recoveryCaseJournal";
+export { compareCaseDocuments, journalCompareCopy, mergeCaseDocuments } from "./recoveryJournalCompare";
+export { addRecoveryTask, applyTaskMerge, assessRecoveryTasks, countTaskStates, exportTaskBoard, newTaskBoard, parseTaskBoard, previewTaskMerge, updateRecoveryTask } from "./recoveryTaskBoard";
+export type { RecoveryTask, TaskBoard, TaskKind, TaskProvenance } from "./recoveryTaskBoard";
+export { taskBoardCopy } from "./recoveryTaskCopy";
