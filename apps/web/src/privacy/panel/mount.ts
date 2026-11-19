@@ -41,12 +41,14 @@ export function mountPrivacyPanel(
       case "export":
       case "export-list-csv":
       case "export-list-text":
+      case "export-kept-csv":
+      case "export-kept-text":
       case "export-support":
       case "export-printable": {
         const action = t.getAttribute("data-action");
         const before = controller.getState().lastExport;
         const type =
-          action === "export-list-csv" || action === "export-list-text" || action === "export-support" || action === "export-printable"
+          action === "export-list-csv" || action === "export-list-text" || action === "export-kept-csv" || action === "export-kept-text" || action === "export-support" || action === "export-printable"
             ? action
             : "export";
         const after = controller.dispatch({ type }).lastExport;

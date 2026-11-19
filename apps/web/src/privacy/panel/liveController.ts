@@ -5,10 +5,11 @@
 
 import type { ControllerDeps } from "./controller";
 import { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, liveRefused } from "./live";
+import { DEVICE_REGISTER } from "./deviceRegister";
 import { outsideItemsForScope } from "./outsideSection";
 import { STORAGE_REGISTER, UNSCANNED, panelExtraKeys, type RegisterRow, type UnscannedRow } from "./storageRegister";
 
-export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside">;
+export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside" | "deviceRegister" | "kept">;
 
 export interface LiveControllerOptions {
   /** For tests: other registers. Defaults to the App's own. */
@@ -26,6 +27,8 @@ export function liveControllerDeps(options: LiveControllerOptions = {}): LiveCon
     withdrawRules: LIVE_RULES,
     extraKeys,
     refused: liveRefused,
+    deviceRegister: DEVICE_REGISTER,
+    kept: { register, unscanned },
     outside: outsideItemsForScope(register, unscanned, { prefix: PRIVACY_STORAGE_PREFIX, keys: extraKeys }),
   };
 }

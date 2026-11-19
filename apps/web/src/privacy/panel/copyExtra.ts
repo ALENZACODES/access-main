@@ -30,7 +30,7 @@ export interface ExtraStrings {
     removed: string;
     markSeen: string;
   };
-  list: { csvButton: string; textButton: string; title: string; storedNames: string };
+  list: { csvButton: string; textButton: string; title: string; storedNames: string; keptCsvButton: string; keptTextButton: string };
   csvHeader: string[];
 }
 
@@ -65,6 +65,8 @@ export const EXTRA_STRINGS: Record<Locale, ExtraStrings> = {
       textButton: "Download the data list (text)",
       title: "The App: where your data is kept",
       storedNames: "Stored names",
+      keptCsvButton: "Download everything kept on this device (CSV)",
+      keptTextButton: "Download everything kept on this device (text)",
     },
     csvHeader: ["Item", "Where it is kept", "Why", "How long", "Source", "Date recorded", "Licence", "Stored names"],
   },
@@ -99,6 +101,8 @@ export const EXTRA_STRINGS: Record<Locale, ExtraStrings> = {
       textButton: "Télécharger la liste des données (texte)",
       title: `L’App${NBSP}: où vos données sont conservées`,
       storedNames: "Noms conservés",
+      keptCsvButton: "Télécharger tout ce qui est conservé sur cet appareil (CSV)",
+      keptTextButton: "Télécharger tout ce qui est conservé sur cet appareil (texte)",
     },
     csvHeader: ["Élément", "Où c’est conservé", "Pourquoi", "Durée", "Source", "Date d’enregistrement", "Licence", "Noms conservés"],
   },
@@ -145,6 +149,8 @@ export function activityText(
         return `Téléchargement de mes données${NBSP}: ${n("fr", count, "élément", "éléments")}`;
       case "list-export":
         return `Liste des données téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "kept-export":
+        return `Liste de tout ce qui est conservé téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "consent-granted":
         return `Autorisé${NBSP}: «${NNBSP}${label()}${NNBSP}»`;
       case "consent-declined":
@@ -172,6 +178,8 @@ export function activityText(
       return `Downloaded my data: ${n("en", count, "item", "items")}`;
     case "list-export":
       return `Downloaded the data list (${e.format === "csv" ? "CSV" : "text"})`;
+    case "kept-export":
+      return `Downloaded the list of everything kept (${e.format === "csv" ? "CSV" : "text"})`;
     case "consent-granted":
       return `Allowed: “${label()}”`;
     case "consent-declined":
