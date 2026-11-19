@@ -3,7 +3,7 @@ import { helpTitleHints, placeNameHints, titledItems } from "./hints";
 import type { PackPlaceRecord } from "./packPlaces";
 
 const place = (id: string, name: string | null, tag: PackPlaceRecord["tag"] = "yes"): PackPlaceRecord => ({
-  id, name, tag, tagUnknownReason: null, provenance: null, category: null, address: null, note: null, location: null,
+  id, name, tag, tagUnknownReason: null, provenance: null, tier: null, category: null, address: null, note: null, location: null,
 });
 
 describe("placeNameHints", () => {

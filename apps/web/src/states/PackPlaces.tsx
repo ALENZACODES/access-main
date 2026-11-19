@@ -31,6 +31,7 @@ function Card({ card, locale }: { card: PackPlaceCard; locale: Locale }) {
       {card.note ? <p>{card.note}</p> : null}
       {card.noSourceNotice ? <p>{card.noSourceNotice}</p> : null}
       {card.sourceLine ? <p>{card.sourceLine}</p> : null}
+      <p>{card.tierText}</p>
       {card.ageText ? <p>{card.ageText}</p> : null}
       {card.staleNotice ? <p>{card.staleNotice}</p> : null}
       {card.sourceUrl && card.sourceLinkLabel ? (

@@ -109,3 +109,4 @@ export * from "./hints.ts";
 export * from "./retryPolicy.ts";
 export * from "./useFailureStreak.ts";
 export * from "./SuggestionList.tsx";
+export * from "./recordTier";
