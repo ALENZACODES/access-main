@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * already be right so a reader and a linter see the same text: a no-break space (U+00A0) before ":",
  * a narrow one (U+202F) before ; ! ? and inside « ». Only the text of a string literal is checked.
  */
-const FILES = ["shortlistTable.ts", "shortlist.ts", "packCategories.ts", "packCategoryExport.ts", "Shortlist.tsx", "PackCategories.tsx", "PackPlaces.tsx", "useShortlist.ts"];
+const FILES = ["shortlistTable.ts", "shortlist.ts", "packCategories.ts", "packCategoryExport.ts", "Shortlist.tsx", "PackCategories.tsx", "PackPlaces.tsx", "useShortlist.ts", "visitQuestions.ts", "visitPlanText.ts", "visitChecks.ts", "VisitPlan.tsx", "visitFilter.ts", "visitMessage.ts"];
 
 /** Text parts of every string literal. For a template, the `${...}` code is dropped and its own literals are read separately. */
 function stringLiterals(source: string): string[] {
@@ -65,12 +65,17 @@ function stringLiterals(source: string): string[] {
   return out;
 }
 
+/** The text a literal holds once its \uXXXX and \xNN escapes are read, so an escaped no-break space counts as one. */
+function decodeEscapes(text: string): string {
+  return text.replace(/\\u([0-9a-fA-F]{4})|\\x([0-9a-fA-F]{2})/g, (_m, u: string | undefined, x: string | undefined) => String.fromCharCode(parseInt((u ?? x)!, 16)));
+}
+
 describe("French source text in the shortlist and kinds modules", () => {
   for (const file of FILES) {
     it(`${file}: no plain space before : ; ! ? or inside « »`, () => {
       const source = readFileSync(new URL(`./${file}`, import.meta.url), "utf8");
       // Only strings that read as French are checked: an English sentence may have a plain space before nothing in particular.
-      const french = stringLiterals(source).filter((s) => /[éèêàçôûîœ’]|\b(le|la|les|des|une|dans|pour|sur|est|sont)\b/.test(s));
+      const french = stringLiterals(source).map(decodeEscapes).filter((s) => /[éèêàçôûîœ’]|\b(le|la|les|des|une|dans|pour|sur|est|sont)\b/.test(s));
       expect(french.filter((s) => / [:;!?]/.test(s))).toEqual([]);
       expect(french.filter((s) => /«[^\u202f]|[^\u202f]»/.test(s))).toEqual([]);
     });
