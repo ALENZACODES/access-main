@@ -57,7 +57,10 @@ import {
   clearKeyFromAction,
   kindLabel,
   listActiveFilters,
+  describeRenameOutcome,
   describeSaveOutcome,
+  renameViewAt,
+  viewRenameAction,
   VIEW_SAVE_ACTION,
   viewApplyAction,
   describeViewDeleted,
@@ -468,7 +471,7 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderCompletenessHtml(buildCompleteness(audit), locale) +
     renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale, { heading: drillColumnHeading(locale), cell: (kind) => drill({ kind: 'licence', value: kind }) }) +
     renderTierBreakdownHtml(buildTierBreakdown(state.records), locale, { heading: drillColumnHeading(locale), cell: (tier) => drill({ kind: 'tier', value: tier ?? 'unknown' }) }) +
-    renderStatusByTierHtml(buildStatusByTier(audit), locale) +
+    renderStatusByTierHtml(buildStatusByTier(audit), locale, { heading: drillColumnHeading(locale), cell: (s) => drill({ kind: 'state', value: s }) }) +
     renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale, { heading: drillColumnHeading(locale), cell: (field) => drill({ kind: 'gap', value: field }) }) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
@@ -759,6 +762,14 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         refresh();
         announcer.say(describeSaveOutcome(outcome, locale));
         focusFirst(outcome === 'saved' ? [byAction(viewApplyAction(opts.savedViews.load().length - 1)), FORM_START] : [byAction(VIEW_SAVE_ACTION), FORM_START]);
+      } else if (act.kind === 'rename') {
+        const { outcome } = renameViewAt(opts.savedViews, act.index, viewName);
+        const said = describeRenameOutcome(outcome, locale);
+        if (said === null) return;
+        if (outcome === 'renamed') viewName = '';
+        refresh();
+        announcer.say(said);
+        focusFirst(outcome === 'noName' ? ['#ds-view-name', FORM_START] : [byAction(viewRenameAction(act.index)), FORM_START]);
       } else if (act.kind === 'delete') {
         const { removed } = removeViewAt(opts.savedViews, act.index);
         if (!removed) return;

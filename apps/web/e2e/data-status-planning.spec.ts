@@ -253,7 +253,16 @@ test("Data status: a view can be saved for this page, shown again and deleted, a
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
   await expect(list.getByRole("row")).toHaveCount(2);
 
-  await panel.getByRole("button", { name: "Delete view. Desk checks (Tier: E)" }).click();
+  await panel.getByRole("button", { name: "Rename with the typed name. Desk checks (Tier: E)" }).click();
+  await expect(panel.locator('[data-region="announce"]')).toHaveText("Type a name in the name field first.");
+  await expect(panel.getByLabel("Name for the view (optional)")).toBeFocused();
+  await panel.getByLabel("Name for the view (optional)").fill("E only");
+  await panel.getByRole("button", { name: "Rename with the typed name. Desk checks (Tier: E)" }).click();
+  await expect(panel.locator('[data-region="announce"]')).toHaveText("View renamed.");
+  await expect(panel.getByRole("button", { name: "Show view. E only (Tier: E)" })).toBeVisible();
+  await panel.getByRole("button", { name: "List these sources. Status: May be out of date" }).click();
+  await expect(panel.getByLabel("Status", { exact: true })).toHaveValue("stale");
+  await panel.getByRole("button", { name: "Delete view. E only (Tier: E)" }).click();
   await expect(panel).toContainText("No view is saved yet.");
   expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual(keysBefore);
 });
