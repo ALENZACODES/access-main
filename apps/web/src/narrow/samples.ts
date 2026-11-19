@@ -34,6 +34,11 @@ import { auditCss } from './cssrules.js';
 import { auditHrefs } from './hrefs.js';
 import { auditObsolete } from './obsolete.js';
 import { auditReferences } from './references.js';
+import { auditConstraints } from './constraints.js';
+import { auditLists } from './lists.js';
+import { auditSectioning } from './sectioning.js';
+import { auditStates } from './states.js';
+import { auditSymbols } from './symbols.js';
 import { auditRegions } from './regions.js';
 import { auditHandlers } from './handlers.js';
 import { auditHeadings } from './headings.js';
@@ -325,6 +330,11 @@ export function sampleEntries(): Entry[] {
     ...auditHrefs(SAMPLE_HREFS_HTML).entries,
     ...auditCss(SAMPLE_CSS_HTML).entries,
     ...auditObsolete(SAMPLE_OBSOLETE_HTML).entries,
+    ...auditStates(SAMPLE_STATES_HTML).entries,
+    ...auditLists(SAMPLE_LISTS_HTML).entries,
+    ...auditSectioning(SAMPLE_SECTIONING_HTML).entries,
+    ...auditConstraints(SAMPLE_CONSTRAINTS_HTML).entries,
+    ...auditSymbols(SAMPLE_SYMBOLS_HTML).entries,
     ...auditRegions({ landmarks: 1, checked: 6, outside: ['p[2]'], outsideCount: 2, truncated: false }).entries,
     ...SAMPLE_HEADINGS.flatMap((f) => auditHeadings(f).entries),
     ...auditTextZoom({ checked: 2, newlyClipped: [{ id: 'div[2]', scrollWidth: 100, clientWidth: 100, scrollHeight: 60, clientHeight: 20 }] }).entries,
@@ -446,3 +456,27 @@ export const SAMPLE_CSS_HTML =
 export const SAMPLE_OBSOLETE_HTML =
   '<center>Welcome</center><frameset></frameset><table width="600"><tr><td nowrap>Open</td></tr></table><u>Note</u><del>10 dollars</del>' +
   '<a href="/m"><img ismap src="m.png" alt="Map"></a>';
+
+/** States: one finding of each rule of the states check. */
+export const SAMPLE_STATES_HTML =
+  '<a href="/next" disabled>Next</a><input type="text" aria-label="Name" required aria-required="false"><a href="/prev" aria-disabled="true">Back</a>' +
+  '<input type="checkbox" aria-label="Agree" aria-checked="true"><select aria-label="Town" readonly><option>Ottawa</option></select>' +
+  '<button type="button" tabindex="-1">Close</button><div aria-expanded="true">More</div>';
+
+/** Lists: one finding of each rule of the lists check. */
+export const SAMPLE_LISTS_HTML =
+  '<ul><div>Ramp</div></ul><dl><p>Note</p><dt>Ramp</dt><dd>At the side door</dd></dl><dt>Lift</dt><dl><dt>Stairs</dt></dl><ol></ol>';
+
+/** Page parts: one finding of each rule of the sectioning check. */
+export const SAMPLE_SECTIONING_HTML =
+  '<header>Site</header><header>Again</header><section><p>Opening hours</p></section><aside><main><h1>Help</h1></main></aside>' +
+  '<div role="region"><h2>Map</h2></div><footer>One</footer><footer>Two</footer>';
+
+/** Form limits: one finding of each rule of the constraints check. */
+export const SAMPLE_CONSTRAINTS_HTML =
+  '<form><input name="plate" pattern="[A-Z]{4}"><input name="note" maxlength="20"><input type="number" name="phone">' +
+  '<select name="days" multiple><optgroup><option>Monday</option></optgroup></select><button type="reset">Clear</button></form>';
+
+/** Symbols: one finding of each rule of the symbols check. */
+export const SAMPLE_SYMBOLS_HTML =
+  '<button type="button">\u00D7</button><p>Menu \uE900</p><i class="material-icons">menu</i><p>Open today \u{1F389}\u{1F389}\u{1F389}</p>';
