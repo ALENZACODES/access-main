@@ -1,6 +1,8 @@
 import { applyWaivers, describeDiff, describeWaived, diffAgainstBaseline, makeBaseline, parseBaseline, parseWaivers, renderJunit, renderSarif } from './ci.js';
 import { applyBudget, describeBudget, parseBudget, ratchet, type Budget } from './budget.js';
 import { mergeEarlier, NO_EXTRAS, parseExtraFlag, runExtras, shownReport, storedReport, EXTRA_HELP_EN, EXTRA_HELP_FR, type ExtraArgs } from './cli-extras.js';
+import { expandInputs, INPUT_HELP_EN, INPUT_HELP_FR } from './cli-inputs.js';
+import { renderDetail } from './detail.js';
 import { runPlan } from './plan-cli.js';
 import { compareReports, describeComparison, renderComparisonMarkdown } from './compare.js';
 import { renderCsv } from './csv.js';
@@ -63,7 +65,7 @@ export interface CliArgs {
   readonly extras: ExtraArgs;
 }
 
-export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest'];
+export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest', 'detail'];
 
 export type ParsedArgs =
   | { readonly ok: true; readonly args: CliArgs }
@@ -74,12 +76,13 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FILE ...] [--data FILE]\n' +
   '                    [--allow-licence ID ...] [--require-fact KEY ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit,markdown,csv,digest]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest,detail]\n' +
   '                    [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
   '                    [--manifest FILE ...] [--sw FILE ...] [--scan FILE ...] [--allow-host PATTERN ...]\n' +
   '                    [--budget FILE] [--write-budget FILE] [--history FILE] [--history-max N]\n' +
   '                    [--max-weight-kb N] [--only CHECK,...] [--skip CHECK,...] [--compare REPORT.json]\n' +
   EXTRA_HELP_EN +
+  INPUT_HELP_EN +
   '       narrow-audit plan --help   (which routes to audit on a large site, from files)\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
@@ -88,12 +91,13 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FICHIER ...] [--data FICHIER]\n' +
   '                    [--allow-licence ID ...] [--require-fact CLÉ ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit,markdown,csv,digest]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest,detail]\n' +
   '                    [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
   '                    [--manifest FICHIER ...] [--sw FICHIER ...] [--scan FICHIER ...] [--allow-host MOTIF ...]\n' +
   '                    [--budget FICHIER] [--write-budget FICHIER] [--history FICHIER] [--history-max N]\n' +
   '                    [--max-weight-kb N] [--only CONTRÔLE,...] [--skip CONTRÔLE,...] [--compare RAPPORT.json]\n' +
   EXTRA_HELP_FR +
+  INPUT_HELP_FR +
   '       narrow-audit plan --help   (quelles routes auditer sur un grand site, à partir de fichiers)\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
@@ -324,7 +328,20 @@ export function exitCode(report: AuditReport, strictUnknown: boolean): 0 | 1 {
 
 export async function runCli(argv: readonly string[], deps: CliDeps): Promise<number> {
   if (argv[0] === 'plan') return runPlan(argv.slice(1), deps);
-  const parsed = parseArgs(argv);
+  let expandedArgv: readonly string[];
+  try {
+    const expanded = await expandInputs(argv, deps);
+    if (!expanded.ok) {
+      deps.log(`${expanded.error.en} / ${expanded.error.fr}`);
+      return 2;
+    }
+    expandedArgv = expanded.argv;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    deps.log(`Could not read an input file / Lecture d’un fichier d’entrée impossible\u00A0: ${msg}`);
+    return 2;
+  }
+  const parsed = parseArgs(expandedArgv);
   if (!parsed.ok) {
     deps.log(`${parsed.error.en} / ${parsed.error.fr}`);
     deps.log(HELP_TEXT);
@@ -469,6 +486,7 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       if (args.formats.includes('markdown')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.md`, renderMarkdown(shown, args.lang));
       if (args.formats.includes('csv')) await deps.writeText(`${dir}/narrow-audit.csv`, renderCsv(shown));
       if (args.formats.includes('digest')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.txt`, describeDigest(makeDigest(shown), args.lang));
+      if (args.formats.includes('detail')) await deps.writeText(`${dir}/narrow-audit.detail.${args.lang}.html`, renderDetail(shown, args.lang));
     }
     if (args.writeBaselineFile !== null) await deps.writeText(args.writeBaselineFile, JSON.stringify(makeBaseline(report), null, 2) + '\n');
     if (args.baselineFile !== null) {
