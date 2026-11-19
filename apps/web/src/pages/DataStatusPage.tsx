@@ -20,6 +20,7 @@ import {
   type ExportFile,
   type MountedPanel,
 } from "../data-status/index.ts";
+import { createSavedViewStore } from "../data-status/savedViews.ts";
 import { Button } from "../design/Button.tsx";
 import { ConfirmDialog } from "../design/ConfirmDialog.tsx";
 import { ErrorActions } from "../shell/ErrorActions.tsx";
@@ -52,6 +53,7 @@ export function DataStatusPage() {
   const panelRef = useRef<MountedPanel | null>(null);
   const panelKey = useRef("");
   const panelInputs = useRef({ records: buildCacheRecords([], "en"), locale: "en" as "en" | "fr" });
+  const savedViews = useRef(createSavedViewStore(null));
   useDocumentTitle(t("data.title"));
 
   useEffect(() => {
@@ -129,6 +131,8 @@ export function DataStatusPage() {
       onExport: (csv, filename) => saveTextFile(csv, filename, "text/csv;charset=utf-8"),
       onExportFile: (file) => saveTextFile(file.text, file.filename, file.mime),
       plainTables: true,
+      // Views are kept in memory only, so nothing new is written to this device's storage.
+      savedViews: savedViews.current,
     });
     panelRef.current = mounted;
     panelKey.current = JSON.stringify([panelInputs.current.locale, panelInputs.current.records]);
