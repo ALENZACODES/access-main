@@ -9,7 +9,7 @@ import {
   validDay, dateFromTimestamp, safeSource, openLicence, canonicalTier,
   normalizeState, sourceMetadata, privateFields, snapshotRecords,
   recordPayload, recordIdentity, recordClaims, validateSnapshot,
-  metadataSame, claimDiff, compareSnapshots, textFor, formatMetadata,
+  metadataSame, compareSnapshots, textFor, formatMetadata,
   formatTextReport, runCli,
 } from './offline-snapshot-diff.mjs';
 
