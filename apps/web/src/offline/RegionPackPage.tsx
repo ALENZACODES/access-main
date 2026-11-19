@@ -156,6 +156,8 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   const [failure, setFailure] = useState<{ region: string; failure: RecoveryFailure } | null>(null);
   const [packStatus, setPackStatus] = useState<"corrupt" | "unknown" | null>(null);
   const [packRegion, setPackRegion] = useState<string | null>(null);
+  // The region whose stored copy is being checked. The check reads every stored part, so it can take a while.
+  const [checking, setChecking] = useState<string | null>(null);
   const [checkedStatuses, setCheckedStatuses] = useState<Record<string, "corrupt" | "unknown">>({});
   const abortRef = useRef<AbortController | null>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
@@ -232,18 +234,26 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   }
   /** Runs a real digest and record-count check over the stored pack. */
   async function recheck(id: string) {
+    if (checking !== null) return;
+    setChecking(id);
     setPackStatus(null); setMessage(""); setFailure(null);
-    const snapshot = await source.storedRegionIntegrity(id);
-    const pack = await source.manifest();
-    const statuses = await source.regions();
-    setRegions(statuses);
-    setCells(await cellReports(pack, statuses));
-    // The row keeps the result of the last check, also after the notice is closed.
-    if (!snapshot) { setPackRegion(id); setPackStatus("unknown"); setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" })); return; }
-    const check = await checkStoredPackParts(snapshot.parts);
-    if (check.status === "complete") { setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; }); setMessage(c.downloaded); return; }
-    setPackRegion(id); setPackStatus(check.status);
-    setCheckedStatuses((previous) => ({ ...previous, [id]: check.status === "corrupt" ? "corrupt" : "unknown" }));
+    try {
+      const snapshot = await source.storedRegionIntegrity(id);
+      const pack = await source.manifest();
+      const statuses = await source.regions();
+      setRegions(statuses);
+      setCells(await cellReports(pack, statuses));
+      // The row keeps the result of the last check, also after the notice is closed.
+      if (!snapshot) { setPackRegion(id); setPackStatus("unknown"); setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" })); return; }
+      const check = await checkStoredPackParts(snapshot.parts);
+      if (check.status === "complete") { setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; }); setMessage(c.downloaded); return; }
+      setPackRegion(id); setPackStatus(check.status);
+      setCheckedStatuses((previous) => ({ ...previous, [id]: check.status === "corrupt" ? "corrupt" : "unknown" }));
+    } catch {
+      // A check that could not run says nothing about the stored copy: it stays UNKNOWN, never "fine".
+      setPackRegion(id); setPackStatus("unknown");
+      setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
+    } finally { setChecking(null); }
   }
   async function redownload(id: string) {
     setBusy(id); setError(""); setMessage(""); setProgress(null); setFailure(null);
@@ -342,7 +352,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         <div className="button-row">
           {!region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!online || !!busy} onClick={() => void download(region.id)}>{statuses.includes("stale") ? r.update : partial ? r.resume : c.download}</button>}
           {busy === region.id && <button type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => abortRef.current?.abort()}>{r.pause}</button>}
-          {region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => void recheck(region.id)}>{c.recheck}</button>}
+          {region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy || checking !== null} aria-busy={checking === region.id} onClick={() => void recheck(region.id)}>{c.recheck}</button>}
           {(region.downloaded || statuses.some((status) => status === "available" || status === "stale")) && <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => setConfirmation(region.id)}>{c.delete}</button>}
         </div>
         {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
