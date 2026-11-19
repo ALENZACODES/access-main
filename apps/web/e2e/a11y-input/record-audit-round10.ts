@@ -98,6 +98,15 @@ const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const LOCALES: readonly Locale[] = ["en", "fr"];
 const PLACEHOLDERS = /^(?:n\/a|todo|tbd|coming soon|à venir|sans objet|\.\.\.|—|-|\?)$/i;
 
+/** ASCII control characters are rejected using character codes, not a regexp. */
+function containsAsciiControl(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 31 || code === 127) return true;
+  }
+  return false;
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -120,7 +129,7 @@ function dateOrdinal(value: unknown): number | null {
 }
 
 function safeUrl(value: unknown): boolean {
-  if (typeof value !== "string" || value.trim() !== value || /[\u0000-\u001f\u007f]/.test(value)) return false;
+  if (typeof value !== "string" || value.trim() !== value || containsAsciiControl(value)) return false;
   try {
     const url = new URL(value);
     if (url.protocol !== "https:" || !url.hostname || url.username || url.password) return false;
@@ -134,7 +143,7 @@ function safeUrl(value: unknown): boolean {
 
 function safeOfflinePath(value: unknown, prefixes: readonly string[]): boolean {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return false;
-  if (value.includes("\\") || /[?#%\u0000-\u001f\u007f]/.test(value)) return false;
+  if (value.includes("\\") || (containsAsciiControl(value) || value.includes("?") || value.includes("#") || value.includes("%"))) return false;
   const segments = value.split("/").slice(1);
   if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) return false;
   return prefixes.some((prefix) => value.startsWith(prefix + "/") && value.length > prefix.length + 1);
