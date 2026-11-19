@@ -1,0 +1,12 @@
+import { describe, expect, it } from "vitest";
+import * as states from "./index";
+
+describe("the states barrel exposes the pack tools", () => {
+  it.each([
+    "auditPackPlaces", "assertPackClean", "computePackCoverage", "packCoverageLines", "PackAuditError",
+    "readExportRecords", "packPlacesToCsv", "packPlaceToText", "packExportSummary", "PACK_CSV_HEADER", "PACK_CSV_FILENAMES",
+    "computeFreshness", "freshnessLines", "freshnessSummary", "PackFreshness",
+    "DataCredits", "buildCredits", "creditRecordsFromPack",
+    "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
+  ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
+});

@@ -61,6 +61,19 @@ describe("data credits on the places page", () => {
     expect(screen.getByRole("link", { name: "ODbL 1.0" }).getAttribute("href")).toBe("https://opendatacommons.org/licenses/odbl/1-0/");
     expect(screen.getByText(/^Tier 0: \d+/)).toBeTruthy();
   });
+  it("shows how old the saved places are, above the credits", async () => {
+    getPack.mockResolvedValue({ id: "toronto", content });
+    await page("places");
+    const fresh = await screen.findByRole("heading", { level: 2, name: "How old the saved places are" });
+    const credits = screen.getByRole("heading", { level: 2, name: "Sources of the records saved on this device" });
+    expect(fresh.compareDocumentPosition(credits) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+  it("shows no freshness when no pack is stored", async () => {
+    getPack.mockResolvedValue(null);
+    await page("places");
+    await waitFor(() => expect(getPack).toHaveBeenCalled());
+    expect(screen.queryByRole("heading", { name: "How old the saved places are" })).toBeNull();
+  });
   it("is in French", async () => {
     getPack.mockResolvedValue({ id: "toronto", content });
     await page("places", "fr");
