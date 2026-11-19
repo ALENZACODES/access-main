@@ -3,6 +3,7 @@
  * same fixed English tokens in both languages so a file reads the same anywhere. Counts are
  * counts of what the pack says; a share that cannot be worked out (no places) is the token UNKNOWN.
  */
+import { OSM_CREDIT } from "./dataCredits";
 import { type CsvOptions, csvCell } from "./exportData";
 import { type KindRow, KIND_TAG_ORDER, formatKindShare, kindLabel, kindsLine, placeCount, reportedShare, summariseKinds, UNKNOWN_KIND } from "./packCategories";
 import type { Locale } from "./stateCopy";
@@ -61,15 +62,15 @@ function tagWord(tag: (typeof KIND_TAG_ORDER)[number], locale: Locale): string {
 /** One block per kind, with the tag counts spelled out. Ends with the credit line the pack requires. */
 export function kindsToText(rows: readonly KindRow[], locale: Locale, today: string): string {
   const summary = summariseKinds(rows);
-  const out: string[] = [t(locale, "Kinds of place in the saved pack", "Types de lieux du pack enregistré"), kindsLine(summary, locale), t(locale, `Date: ${today}`, `Date : ${today}`), ""];
+  const out: string[] = [t(locale, "Kinds of place in the saved pack", "Types de lieux du pack enregistré"), kindsLine(summary, locale), t(locale, `Date: ${today}`, `Date\u00a0: ${today}`), ""];
   for (const row of rows) {
     const heading = row.key === UNKNOWN_KIND ? t(locale, "No kind stated (UNKNOWN)", "Aucun type indiqué (UNKNOWN)") : kindLabel(row);
     out.push(`${heading} — ${placeCount(row.total, locale)}`);
     const tags = KIND_TAG_ORDER.map((tag) => `${tagWord(tag, locale)} ${row.byTag[tag]}`).join(", ");
     out.push(`  ${t(locale, "Wheelchair tag", "Indication pour fauteuil roulant")}${locale === "fr" ? " :" : ":"} ${tags}`);
     out.push(`  ${t(locale, "Tag reported with a source", "Indication fournie avec une source")}${locale === "fr" ? " :" : ":"} ${formatKindShare(reportedShare(row), locale)}`);
-    if (row.stale > 0) out.push(`  ${t(locale, `Source older than a year: ${row.stale}`, `Source datant de plus d’un an : ${row.stale}`)}`);
+    if (row.stale > 0) out.push(`  ${t(locale, `Source older than a year: ${row.stale}`, `Source datant de plus d’un an\u00a0: ${row.stale}`)}`);
   }
-  out.push("", "© OpenStreetMap contributors, ODbL-1.0");
+  out.push("", OSM_CREDIT);
   return out.join("\n") + "\n";
 }
