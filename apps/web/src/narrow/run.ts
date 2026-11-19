@@ -19,6 +19,11 @@ import { auditCss } from './cssrules.js';
 import { auditHrefs } from './hrefs.js';
 import { auditObsolete } from './obsolete.js';
 import { auditReferences } from './references.js';
+import { auditConstraints } from './constraints.js';
+import { auditLists } from './lists.js';
+import { auditSectioning } from './sectioning.js';
+import { auditStates } from './states.js';
+import { auditSymbols } from './symbols.js';
 import { auditRegions, regionsInPage, type RegionFacts } from './regions.js';
 import { auditGenerated, generatedInPage, type GeneratedFacts } from './generated.js';
 import { auditHandlers } from './handlers.js';
@@ -167,9 +172,20 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
   return buildRouteAudit(route, viewportWidth, results, snapshot.unmeasured, snapshot.truncated);
 }
 
-/** The checks that read roles, references, link destinations, page styles and old markup from the text of the markup. */
+/** The checks that read roles, references, link destinations, page styles, old markup, states, lists, page parts, form limits and symbols from the text of the markup. */
 export function markupResults(html: string): Parameters<typeof buildRouteAudit>[2] {
-  return { aria: auditAria(html), references: auditReferences(html), hrefs: auditHrefs(html), css: auditCss(html), obsolete: auditObsolete(html) };
+  return {
+    aria: auditAria(html),
+    references: auditReferences(html),
+    hrefs: auditHrefs(html),
+    css: auditCss(html),
+    obsolete: auditObsolete(html),
+    states: auditStates(html),
+    lists: auditLists(html),
+    sectioning: auditSectioning(html),
+    constraints: auditConstraints(html),
+    symbols: auditSymbols(html),
+  };
 }
 
 /** The checks that read how the page is laid out. */
