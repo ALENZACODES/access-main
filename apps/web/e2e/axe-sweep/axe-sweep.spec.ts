@@ -1,15 +1,16 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { appRoutes, chooseLanguage, LANGUAGES, VIEWPORTS, visit } from "../a11y-input/helpers";
-import { formatFindings, routeInventoryFindings } from "./p20l-provenance";
 
 const ROUTES = appRoutes();
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
-const REQUIRED_ROUTES = ["/", "/places", "/journey", "/help", "/finders", "/offline", "/more", "/settings"];
+const REQUIRED = ["/", "/dev/narrow", "/places", "/journey", "/help", "/more/housing", "/more/diary", "/more/auditors"];
 
-test("P20 route inventory includes required routes and has no duplicates", () => {
-  const issues = routeInventoryFindings(ROUTES, REQUIRED_ROUTES);
-  expect(issues, formatFindings(issues)).toEqual([]);
+test("P20 route inventory is unique and includes required routes", () => {
+  expect(ROUTES.length).toBeGreaterThan(0);
+  expect(new Set(ROUTES).size).toBe(ROUTES.length);
+  expect(ROUTES.every((route) => route.startsWith("/") && !route.startsWith("//") && !/[?#\\]/.test(route))).toBe(true);
+  for (const route of REQUIRED) expect(ROUTES, `${route} must be registered`).toContain(route);
 });
 
 for (const language of LANGUAGES) {

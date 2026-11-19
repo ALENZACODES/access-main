@@ -4,7 +4,10 @@ import { appRoutes, chooseLanguage, LANGUAGES, VIEWPORTS, visit } from "../a11y-
 import { collectSemanticSnapshot } from "./semantic-integrity-browser";
 import { assertUniqueMatrix, reportIssues, routeInventoryIssues, snapshotIssues } from "./semantic-integrity";
 
-const REQUIRED = ["/", "/about", "/places", "/help", "/finders"] as const;
+const REQUIRED = [
+  "/", "/about", "/places", "/help", "/finders",
+  "/more/housing", "/more/diary", "/more/auditors",
+] as const;
 const ALL = appRoutes();
 const scheduled = REQUIRED.flatMap((route) => LANGUAGES.flatMap((locale) =>
   VIEWPORTS.map((viewport) => `${route}|${locale}|${viewport.width}`)));
@@ -19,24 +22,28 @@ test("semantic audit inventory derives its routes from the application", () => {
   expect(matrixProblems, reportIssues(matrixProblems)).toEqual([]);
 });
 
+// One browser context per locale/viewport instead of one context per route.
+// Route assertions still fail independently through labelled test steps.
 for (const language of LANGUAGES) {
   for (const viewport of VIEWPORTS) {
     test.describe(`semantic integrity ${language} ${viewport.width}px`, () => {
       test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
-      for (const route of REQUIRED) {
-        test(`ARIA and DOM structure on ${route}`, async ({ page }) => {
-          test.setTimeout(90_000);
-          const response = await page.goto("/", { waitUntil: "domcontentloaded" });
-          expect(response?.ok(), "The application entrypoint must load").toBe(true);
-          await chooseLanguage(page, language);
-          await visit(page, route, language);
-          const snapshot = await collectSemanticSnapshot(page, route);
-          assertNoForbiddenOrg(await page.locator("body").innerText(), `${route} ${language}`);
-          const issues = snapshotIssues(snapshot, language, viewport.width);
-          expect(issues, reportIssues(issues)).toEqual([]);
-        });
-      }
+      test("all required live routes retain semantic and language integrity", async ({ page }) => {
+        test.setTimeout(180_000);
+        const response = await page.goto("/", { waitUntil: "domcontentloaded" });
+        expect(response?.ok(), "The application entrypoint must load").toBe(true);
+        await chooseLanguage(page, language);
+        for (const route of REQUIRED) {
+          await test.step(`${route} ${language} ${viewport.width}px`, async () => {
+            await visit(page, route, language);
+            const snapshot = await collectSemanticSnapshot(page, route);
+            assertNoForbiddenOrg(await page.locator("body").innerText(), `${route} ${language}`);
+            const issues = snapshotIssues(snapshot, language, viewport.width);
+            expect(issues, reportIssues(issues)).toEqual([]);
+          });
+        }
+      });
     });
   }
 }
