@@ -16,25 +16,11 @@ import { REGISTER_STRINGS } from "../panel/registerExport";
 import { STORAGE_REGISTER, UNSCANNED } from "../panel/storageRegister";
 import { createMemoryStorage, type StorageLike } from "../panel/storage";
 import { auditHtml, formatViolations } from "./htmlAudit";
+import { rawTexts } from "./rawTexts";
 import { checkParity } from "./parity";
 
 const NOW = new Date(2026, 10, 19, 9, 0, 0);
 const LOCALES: readonly Locale[] = ["en", "fr"];
-/**
- * Visible text and text attributes with the no-break spaces kept. extractTexts in htmlAudit folds every
- * space, including U+00A0 and U+202F, so it cannot be used to check French spacing.
- */
-function rawTexts(html: string): string[] {
-  const decode = (t: string): string => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
-  const out: string[] = [];
-  for (const m of html.matchAll(/\s(?:aria-label|title|alt)="([^"]*)"/g)) out.push(decode(m[1] ?? ""));
-  for (const chunk of html.replace(/<(script|style)[\s\S]*?<\/\1>/g, "").split(/<[^>]+>/)) {
-    const t = decode(chunk).replace(/[ \t\r\n]+/g, " ").trim();
-    if (t !== "") out.push(t);
-  }
-  return out;
-}
-
 const STORED_TEXT = "value-that-must-never-be-shown-123";
 
 interface Setup {

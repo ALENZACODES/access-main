@@ -9,6 +9,7 @@ import type { StorageLike } from "./storage";
 export type ActivityKind =
   | "export"
   | "list-export"
+  | "kept-export"
   | "consent-granted"
   | "consent-declined"
   | "language"
@@ -37,6 +38,7 @@ export const MAX_ACTIVITY_ENTRIES = 50;
 const KINDS: readonly ActivityKind[] = [
   "export",
   "list-export",
+  "kept-export",
   "consent-granted",
   "consent-declined",
   "language",

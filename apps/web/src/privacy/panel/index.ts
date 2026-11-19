@@ -88,3 +88,6 @@ export type { RegisterLine } from "./registerExport";
 export { assertScope, inScope, prefixScope, scopeKeysPresent, toScope, validateScope } from "./dataScope";
 export type { DataScope, ScopeProblem, ScopeProblemCode } from "./dataScope";
 
+export { DEVICE_REGISTER, checkDeviceRegister, describeDevice, findRow, notReached, rowMatches } from "./deviceRegister";
+export type { DescribedDevice, DescribedName, DeviceKind, DeviceRow } from "./deviceRegister";
+export { DEVICE_KNOWN_STRINGS, countListed, renderDeviceKnownHtml } from "./deviceKnown";
