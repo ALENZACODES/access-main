@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { StateNotice } from "./StateNotice.tsx";
 import { message } from "./messages.ts";
@@ -8,8 +9,12 @@ import { parsePackPlaces } from "./packPlaces.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
+import { Shortlist } from "./Shortlist.tsx";
+import { MAX_SHORTLIST, type AddResult } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
+import { useShortlist } from "./useShortlist.ts";
 import type { Locale } from "./stateCopy.ts";
+import { t } from "./typography.ts";
 
 interface Props {
   /** The `places` array of the pack stored on this device, as read. It is parsed here, not trusted. */
@@ -19,10 +24,12 @@ interface Props {
   today?: string;
 }
 
-function Card({ card, locale }: { card: PackPlaceCard; locale: Locale }) {
+function Card({ card, locale, listed, onToggle }: { card: PackPlaceCard; locale: Locale; listed: boolean; onToggle: () => void }) {
+  const titleId = useId();
+  const buttonId = useId();
   return (
     <li className="pack-place" data-tag={card.tag}>
-      <h3>{card.name}</h3>
+      <h3 id={titleId}>{card.name}</h3>
       <p>
         <strong>{card.tagLine}</strong>
       </p>
@@ -35,6 +42,11 @@ function Card({ card, locale }: { card: PackPlaceCard; locale: Locale }) {
       <p>{card.tierText}</p>
       {card.ageText ? <p>{card.ageText}</p> : null}
       {card.staleNotice ? <p>{card.staleNotice}</p> : null}
+      <p>
+        <Button id={buttonId} variant="quiet" aria-pressed={listed} aria-labelledby={`${buttonId} ${titleId}`} onPress={onToggle}>
+          {listed ? t(locale, "Remove from list", "Retirer de la liste") : t(locale, "Add to list", "Ajouter à la liste")}
+        </Button>
+      </p>
       {card.sourceUrl && card.sourceLinkLabel ? (
         <p>
           <a className="text-link" href={card.sourceUrl} rel="noreferrer noopener" lang={locale}>
@@ -47,9 +59,9 @@ function Card({ card, locale }: { card: PackPlaceCard; locale: Locale }) {
 }
 
 /**
- * Places from the offline pack stored on this device, with search and a filter
- * on the reported OpenStreetMap wheelchair tag. Reading only: nothing here
- * writes to storage or sends anything.
+ * Places from the offline pack stored on this device, with search, filters and a
+ * short list to compare places side by side. The pack is only read. The only thing
+ * written is the list of chosen place ids, kept on this device; nothing is sent.
  */
 export function PackPlaces({ places, locale, today }: Props) {
   const headingId = useId();
@@ -59,6 +71,8 @@ export function PackPlaces({ places, locale, today }: Props) {
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const day = today ?? new Date().toISOString().slice(0, 10);
+  const shortlist = useShortlist(day);
+  const [listNote, setListNote] = useState("");
 
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
@@ -84,6 +98,21 @@ export function PackPlaces({ places, locale, today }: Props) {
     );
   }
 
+  const toggleListed = (card: PackPlaceCard) => {
+    if (shortlist.list.some((e) => e.id === card.id)) {
+      shortlist.remove(card.id);
+      setListNote(t(locale, `${card.name} removed from the list.`, `${card.name} retiré de la liste.`));
+      return;
+    }
+    const result: AddResult = shortlist.add(card.id);
+    setListNote(
+      result === "added"
+        ? t(locale, `${card.name} added to the list.`, `${card.name} ajouté à la liste.`)
+        : result === "full"
+          ? t(locale, `The list is full (${MAX_SHORTLIST} places). Remove one to add another.`, `La liste est pleine (${MAX_SHORTLIST} lieux). Retirez-en un pour en ajouter un autre.`)
+          : t(locale, `${card.name} could not be added.`, `${card.name} n’a pas pu être ajouté.`),
+    );
+  };
   const clear = () => {
     setText("");
     setTag("any");
@@ -131,10 +160,21 @@ export function PackPlaces({ places, locale, today }: Props) {
       ) : (
         <ul className="record-list">
           {view.cards.map((card) => (
-            <Card key={card.id} card={card} locale={locale} />
+            <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} />
           ))}
         </ul>
       )}
+      <p aria-live="polite">{listNote}</p>
+      <Shortlist
+        list={shortlist.list}
+        places={parsed.places}
+        locale={locale}
+        today={day}
+        kept={shortlist.kept}
+        from={near.status === "ok" ? near.point : null}
+        onRemove={shortlist.remove}
+        onClear={shortlist.clear}
+      />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );

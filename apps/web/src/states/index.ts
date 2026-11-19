@@ -116,3 +116,7 @@ export * from "./retryPolicy.ts";
 export * from "./useFailureStreak.ts";
 export * from "./SuggestionList.tsx";
 export * from "./recordTier";
+export * from "./shortlist.ts";
+export * from "./shortlistTable.ts";
+export { browserStore, useShortlist, type ShortlistState } from "./useShortlist.ts";
+export { Shortlist } from "./Shortlist.tsx";

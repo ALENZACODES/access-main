@@ -7,6 +7,7 @@ describe("the states barrel exposes the pack tools", () => {
     "readExportRecords", "packPlacesToCsv", "packPlaceToText", "packExportSummary", "PACK_CSV_HEADER", "PACK_CSV_FILENAMES",
     "computeFreshness", "freshnessLines", "freshnessSummary", "PackFreshness",
     "DataCredits", "buildCredits", "creditRecordsFromPack",
+    "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
   ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
 });
