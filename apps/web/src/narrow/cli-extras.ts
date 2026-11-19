@@ -1,5 +1,7 @@
 import { renderAnnotations } from './annotations.js';
 import { describeShared } from './cluster.js';
+import { coverageForReport, describeReportCoverage } from './coverage.js';
+import { applyManualLog, describeManualLog, describeNextLooks, parseManualLog, type ManualLog } from './manual-log.js';
 import { describeFiltered, filterReport, isEmptyFilter, parseFilter, type Filter } from './filter.js';
 import { renderNextSteps } from './guidance.js';
 import { describeAges, EMPTY_LEDGER, parseLedger, updateLedger } from './ledger.js';
@@ -28,12 +30,16 @@ export interface ExtraArgs {
   readonly ledgerFile: string | null;
   readonly ownersFile: string | null;
   readonly reviewFile: string | null;
+  /** The log of by-hand looks, criterion by criterion. */
+  readonly manualLogFile: string | null;
   /** Filter text, as given. */
   readonly filterText: string | null;
   readonly redact: boolean;
   readonly annotations: boolean;
   readonly nextSteps: boolean;
   readonly shared: boolean;
+  /** Print what the report says for each Level A and AA criterion. */
+  readonly coverage: boolean;
 }
 
 export const NO_EXTRAS: ExtraArgs = {
@@ -41,11 +47,13 @@ export const NO_EXTRAS: ExtraArgs = {
   ledgerFile: null,
   ownersFile: null,
   reviewFile: null,
+  manualLogFile: null,
   filterText: null,
   redact: false,
   annotations: false,
   nextSteps: false,
   shared: false,
+  coverage: false,
 };
 
 type Text = { readonly en: string; readonly fr: string };
@@ -55,9 +63,10 @@ const VALUE_FLAGS: Readonly<Record<string, { readonly what: string; readonly quo
   '--ledger': { what: 'a file', quoi: 'un fichier' },
   '--owners': { what: 'a file', quoi: 'un fichier' },
   '--review': { what: 'a file', quoi: 'un fichier' },
+  '--manual-log': { what: 'a file', quoi: 'un fichier' },
   '--filter': { what: 'a filter such as "status:fail route:/help*"', quoi: 'un filtre tel que "status:fail route:/help*"' },
 };
-const SWITCHES: readonly string[] = ['--redact', '--annotations', '--next-steps', '--shared'];
+const SWITCHES: readonly string[] = ['--redact', '--annotations', '--next-steps', '--shared', '--coverage'];
 
 export const EXTRA_FLAGS: readonly string[] = [...Object.keys(VALUE_FLAGS), ...SWITCHES];
 
@@ -70,7 +79,7 @@ export type ExtraParse =
 export function parseExtraFlag(flag: string, value: string | undefined, extras: ExtraArgs): ExtraParse {
   if (SWITCHES.includes(flag)) {
     const next: ExtraArgs =
-      flag === '--redact' ? { ...extras, redact: true } : flag === '--annotations' ? { ...extras, annotations: true } : flag === '--next-steps' ? { ...extras, nextSteps: true } : { ...extras, shared: true };
+      flag === '--redact' ? { ...extras, redact: true } : flag === '--annotations' ? { ...extras, annotations: true } : flag === '--next-steps' ? { ...extras, nextSteps: true } : flag === '--coverage' ? { ...extras, coverage: true } : { ...extras, shared: true };
     return { kind: 'ok', extras: next, usedValue: false };
   }
   const spec = VALUE_FLAGS[flag];
@@ -88,17 +97,21 @@ export function parseExtraFlag(flag: string, value: string | undefined, extras: 
         ? { ...extras, ledgerFile: value }
         : flag === '--owners'
           ? { ...extras, ownersFile: value }
-          : { ...extras, reviewFile: value };
+          : flag === '--manual-log'
+            ? { ...extras, manualLogFile: value }
+            : { ...extras, reviewFile: value };
   return { kind: 'ok', extras: next, usedValue: true };
 }
 
 export const EXTRA_HELP_EN =
-  '                    [--merge REPORT.json ...] [--ledger FILE] [--owners FILE] [--review FILE]\n' +
-  '                    [--filter "status:fail route:/help*"] [--redact] [--shared] [--next-steps] [--annotations]\n';
+  '                    [--merge REPORT.json ...] [--ledger FILE] [--owners FILE] [--review FILE] [--manual-log FILE]\n' +
+  '                    [--filter "status:fail route:/help*"] [--redact] [--shared] [--next-steps] [--annotations]\n' +
+  '                    [--coverage]\n';
 
 export const EXTRA_HELP_FR =
-  '                    [--merge RAPPORT.json ...] [--ledger FICHIER] [--owners FICHIER] [--review FICHIER]\n' +
-  '                    [--filter "status:fail route:/help*"] [--redact] [--shared] [--next-steps] [--annotations]\n';
+  '                    [--merge RAPPORT.json ...] [--ledger FICHIER] [--owners FICHIER] [--review FICHIER] [--manual-log FICHIER]\n' +
+  '                    [--filter "status:fail route:/help*"] [--redact] [--shared] [--next-steps] [--annotations]\n' +
+  '                    [--coverage]\n';
 
 /** The part of the command line's outside world these options need. */
 export interface ExtraDeps {
@@ -106,6 +119,11 @@ export interface ExtraDeps {
   writeText(path: string, text: string): Promise<void>;
   log(line: string): void;
   now(): Date;
+}
+
+/** What the options hand back to the command line for the files it writes. */
+export interface ExtraOutcome {
+  readonly manualLog?: ManualLog;
 }
 
 export type Step<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: Text };
@@ -160,7 +178,7 @@ async function readOptional(deps: ExtraDeps, path: string): Promise<string | nul
  * full report. Gives the reason, in both languages, when a file given could
  * not be read as what it should be.
  */
-export async function runExtras(report: AuditReport, extras: ExtraArgs, deps: ExtraDeps, lang: Lang, outDir: string | null): Promise<Step<null>> {
+export async function runExtras(report: AuditReport, extras: ExtraArgs, deps: ExtraDeps, lang: Lang, outDir: string | null): Promise<Step<ExtraOutcome>> {
   const dir = outDir === null ? null : outDir.replace(/\/+$/, '');
   const filter = filterOf(extras);
   if (filter) deps.log(describeFiltered(report, filter)[lang]);
@@ -202,6 +220,8 @@ export async function runExtras(report: AuditReport, extras: ExtraArgs, deps: Ex
 
   const shown = shownReport(report, extras);
   if (extras.shared) deps.log(describeShared(shown, lang).trimEnd());
+  // Coverage is read from the full report: a filter hides findings from view, it does not change which checks ran.
+  if (extras.coverage) deps.log(describeReportCoverage(report, lang).trimEnd());
   if (extras.nextSteps) {
     const steps = renderNextSteps(shown, lang);
     if (steps !== '') deps.log(steps.trimEnd());
@@ -210,5 +230,15 @@ export async function runExtras(report: AuditReport, extras: ExtraArgs, deps: Ex
     const lines = renderAnnotations(shown, lang);
     if (lines !== '') deps.log(lines.trimEnd());
   }
-  return { ok: true, value: null };
+  let manualLog: ManualLog | undefined;
+  if (extras.manualLogFile !== null) {
+    const parsed = parseManualLog(await deps.readText(extras.manualLogFile), deps.now());
+    if (!parsed.ok) return { ok: false, error: { en: `${extras.manualLogFile}: ${parsed.error.en}`, fr: `${extras.manualLogFile}\u00A0: ${parsed.error.fr}` } };
+    manualLog = parsed.value;
+    const looks = applyManualLog(coverageForReport(report), manualLog, deps.now());
+    deps.log(describeManualLog(looks, lang).trimEnd());
+    const next = describeNextLooks(looks, lang);
+    if (next !== '') deps.log(next.trimEnd());
+  }
+  return { ok: true, value: manualLog ? { manualLog } : {} };
 }

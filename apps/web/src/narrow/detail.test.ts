@@ -256,6 +256,24 @@ describe('renderDetail content', () => {
     expect(html).toContain('(until 2026-12-15): Page retires in December.');
   });
 
+  it('tables all 55 criteria with what the report says about each', () => {
+    const html = renderDetail(smallSite(), 'en');
+    const section = html.slice(html.indexOf('id="coverage-h"'), html.indexOf('id="scope-h"'));
+    expect(section.match(/<tr><th scope="row">/g)).toHaveLength(55);
+    expect(section).toContain('<tr><th scope="row">1.4.3 Contrast (Minimum)</th><td>AA</td><td>something found: 2 to fix, 1 UNKNOWN</td></tr>');
+    expect(section).toContain('<tr><th scope="row">1.2.1 Audio-only and Video-only (Prerecorded)</th><td>A</td><td>by hand only</td></tr>');
+    expect(section).toContain('<td>checks not run</td>');
+    expect(section).toContain('looks at part of it, never at the whole');
+    expect(section).toContain('3 criteria with something found, ');
+  });
+
+  it('writes the coverage section in French with the UNKNOWN token', () => {
+    const html = renderDetail(smallSite(), 'fr');
+    expect(html).toContain('<h2 id="coverage-h">Ce que les contrôles ont regardé, critère par critère</h2>');
+    expect(html).toContain('<td>anomalies trouvées\u00A0: 2 à corriger, 1 UNKNOWN</td>');
+    expect(html).toContain('<td>à la main seulement</td>');
+  });
+
   it('repeats the scope note and names the source and the tool', () => {
     const html = renderDetail(smallSite(), 'en');
     expect(html.split('A clean result is not a conformance statement.').length - 1).toBe(2);

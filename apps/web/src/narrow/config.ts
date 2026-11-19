@@ -76,6 +76,12 @@ export const CONFIG_KEYS: readonly ConfigKey[] = [
   k('shared', '--shared', 'switch'),
   k('nextSteps', '--next-steps', 'switch'),
   k('annotations', '--annotations', 'switch'),
+  k('coverage', '--coverage', 'switch'),
+  k('manualLog', '--manual-log', 'text'),
+  k('htmlList', '--html-list', 'each'),
+  k('markupChecks', '--markup-checks', 'switch'),
+  k('siteRoot', '--site-root', 'text'),
+  k('siteComplete', '--site-complete', 'switch'),
 ];
 
 /** Keys the file may hold for the reader's own notes. They give no argument. */

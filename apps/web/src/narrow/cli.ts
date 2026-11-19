@@ -2,7 +2,11 @@ import { applyWaivers, describeDiff, describeWaived, diffAgainstBaseline, makeBa
 import { applyBudget, describeBudget, parseBudget, ratchet, type Budget } from './budget.js';
 import { mergeEarlier, NO_EXTRAS, parseExtraFlag, runExtras, shownReport, storedReport, EXTRA_HELP_EN, EXTRA_HELP_FR, type ExtraArgs } from './cli-extras.js';
 import { expandInputs, INPUT_HELP_EN, INPUT_HELP_FR } from './cli-inputs.js';
+import { coverageForReport, renderCoverageMarkdown } from './coverage.js';
+import { applyManualLog, describeLook } from './manual-log.js';
 import { renderDetail } from './detail.js';
+import { auditSitePages, siteFromFiles } from './sitefiles.js';
+import { renderWorksheet } from './worksheet.js';
 import { runPlan } from './plan-cli.js';
 import { compareReports, describeComparison, renderComparisonMarkdown } from './compare.js';
 import { renderCsv } from './csv.js';
@@ -19,7 +23,7 @@ import { PROFILES, selectProfiles, type Profile } from './profiles.js';
 import { lintManifest } from './manifestlint.js';
 import { auditProvenance } from './provenance.js';
 import { buildRouteAudit, makeReport, renderHtml, renderJson, renderText, totals, type AuditReport, type RouteAudit } from './report.js';
-import { runAudit, type FullPage } from './run.js';
+import { markupResults, runAudit, type FullPage } from './run.js';
 import { describeSkipped, parseCheckIds, selectChecks } from './select.js';
 import { lintServiceWorker } from './swlint.js';
 import type { CheckId, Lang } from './types.js';
@@ -63,9 +67,15 @@ export interface CliArgs {
   readonly skip: readonly CheckId[];
   /** Options that work on the finished report. */
   readonly extras: ExtraArgs;
+  /** Run every markup check on the --html files, not only the page markup check. */
+  readonly markupChecks: boolean;
+  /** Folder the --html files are served from. With it, the files are also compared with each other as pages of one site. */
+  readonly siteRoot: string | null;
+  /** The --html files are every page of the site, so a link to a page outside them fails. */
+  readonly siteComplete: boolean;
 }
 
-export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest', 'detail'];
+export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest', 'detail', 'coverage', 'worksheet'];
 
 export type ParsedArgs =
   | { readonly ok: true; readonly args: CliArgs }
@@ -76,13 +86,14 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FILE ...] [--data FILE]\n' +
   '                    [--allow-licence ID ...] [--require-fact KEY ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit,markdown,csv,digest,detail]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest,detail,coverage,worksheet]\n' +
   '                    [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
   '                    [--manifest FILE ...] [--sw FILE ...] [--scan FILE ...] [--allow-host PATTERN ...]\n' +
   '                    [--budget FILE] [--write-budget FILE] [--history FILE] [--history-max N]\n' +
   '                    [--max-weight-kb N] [--only CHECK,...] [--skip CHECK,...] [--compare REPORT.json]\n' +
   EXTRA_HELP_EN +
   INPUT_HELP_EN +
+  '                    [--markup-checks] [--site-root DIR] [--site-complete]\n' +
   '       narrow-audit plan --help   (which routes to audit on a large site, from files)\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
@@ -91,13 +102,14 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FICHIER ...] [--data FICHIER]\n' +
   '                    [--allow-licence ID ...] [--require-fact CLÉ ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit,markdown,csv,digest,detail]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest,detail,coverage,worksheet]\n' +
   '                    [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
   '                    [--manifest FICHIER ...] [--sw FICHIER ...] [--scan FICHIER ...] [--allow-host MOTIF ...]\n' +
   '                    [--budget FICHIER] [--write-budget FICHIER] [--history FICHIER] [--history-max N]\n' +
   '                    [--max-weight-kb N] [--only CONTRÔLE,...] [--skip CONTRÔLE,...] [--compare RAPPORT.json]\n' +
   EXTRA_HELP_FR +
   INPUT_HELP_FR +
+  '                    [--markup-checks] [--site-root DOSSIER] [--site-complete]\n' +
   '       narrow-audit plan --help   (quelles routes auditer sur un grand site, à partir de fichiers)\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
@@ -132,6 +144,9 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   const only: CheckId[] = [];
   const skip: CheckId[] = [];
   let extras: ExtraArgs = NO_EXTRAS;
+  let markupChecks = false;
+  let siteRoot: string | null = null;
+  let siteComplete = false;
   let offline = false;
   let strictUnknown = false;
   let help = false;
@@ -151,6 +166,17 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         break;
       case '--offline':
         offline = true;
+        break;
+      case '--markup-checks':
+        markupChecks = true;
+        break;
+      case '--site-complete':
+        siteComplete = true;
+        break;
+      case '--site-root':
+        got = need(a, next(), 'a folder', 'un dossier');
+        if (typeof got !== 'string') return got;
+        siteRoot = got;
         break;
       case '--strict-unknown':
         strictUnknown = true;
@@ -298,11 +324,14 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       return fail('Nothing to audit. Give --route, --html, --data, --manifest, --sw, --scan, --merge or --en and --fr.', 'Rien à auditer. Indiquez --route, --html, --data, --manifest, --sw, --scan, --merge ou --en et --fr.');
     }
     if (formats.length > 0 && outDir === null) return fail('--format needs --out.', '--format demande --out.');
+    if (markupChecks && htmlFiles.length === 0) return fail('--markup-checks needs at least one --html file.', '--markup-checks demande au moins un fichier --html.');
+    if (siteRoot !== null && htmlFiles.length < 2) return fail('--site-root compares pages, so it needs at least two --html files.', '--site-root compare des pages et demande donc au moins deux fichiers --html.');
+    if (siteComplete && siteRoot === null) return fail('--site-complete needs --site-root.', '--site-complete demande --site-root.');
     if ((enFile === null) !== (frFile === null)) return fail('Give both --en and --fr, or neither.', 'Indiquez --en et --fr ensemble, ou aucun des deux.');
   }
   return {
     ok: true,
-    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, compareFile, historyMax, maxWeightKb, only, skip, extras },
+    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, compareFile, historyMax, maxWeightKb, only, skip, extras, markupChecks, siteRoot, siteComplete },
   };
 }
 
@@ -372,15 +401,37 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       extra.push(buildRouteAudit(`sw:${file}`, null, { 'service-worker': lintServiceWorker(file, text), external: scanHosts(file, text, hostOpts) }));
     }
     for (const file of args.scanFiles) extra.push(buildRouteAudit(`scan:${file}`, null, { external: scanHosts(file, await deps.readText(file), hostOpts) }));
+    const htmlPages: { file: string; html: string }[] = [];
     for (const file of args.htmlFiles) {
       const html = await deps.readText(file);
+      htmlPages.push({ file, html });
       extra.push(
         buildRouteAudit(`html:${file}`, null, {
           'static-html': lintHtml(html),
           copy: auditCopy(htmlTextItems(html)),
           external: scanHosts(file, html, hostOpts),
+          ...(args.markupChecks ? markupResults(html) : {}),
         }),
       );
+    }
+    if (args.siteRoot !== null) {
+      const site = siteFromFiles(htmlPages, args.siteRoot);
+      if (site.left.length > 0) {
+        deps.log(
+          args.lang === 'fr'
+            ? `${site.left.length} fichier(s) hors de ${args.siteRoot}, ou en double pour une même route, ne sont pas comparés\u00A0: ${site.left.slice(0, 5).join(', ')}`
+            : `${site.left.length} file(s) outside ${args.siteRoot}, or a second file for one route, are not compared: ${site.left.slice(0, 5).join(', ')}`,
+        );
+      }
+      const siteAudit = auditSitePages(site.pages, { complete: args.siteComplete });
+      if (siteAudit) extra.push({ ...siteAudit, route: 'site:files' });
+      else {
+        deps.log(
+          args.lang === 'fr'
+            ? `Moins de deux pages sous ${args.siteRoot}\u00A0: les pages ne sont pas comparées entre elles.`
+            : `Fewer than two pages under ${args.siteRoot}: the pages are not compared with each other.`,
+        );
+      }
     }
     if (args.dataFile !== null) {
       const data: unknown = JSON.parse(await deps.readText(args.dataFile));
@@ -487,6 +538,12 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       if (args.formats.includes('csv')) await deps.writeText(`${dir}/narrow-audit.csv`, renderCsv(shown));
       if (args.formats.includes('digest')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.txt`, describeDigest(makeDigest(shown), args.lang));
       if (args.formats.includes('detail')) await deps.writeText(`${dir}/narrow-audit.detail.${args.lang}.html`, renderDetail(shown, args.lang));
+      // Coverage and the worksheet are about which checks ran, so they read the full report, not the filtered view. They hold counts and no page text.
+      const byHand = extraRun.value.manualLog
+        ? new Map(applyManualLog(coverageForReport(report), extraRun.value.manualLog, deps.now()).map((m) => [m.row.criterion.sc, describeLook(m, args.lang)]))
+        : undefined;
+      if (args.formats.includes('coverage')) await deps.writeText(`${dir}/narrow-audit.coverage.${args.lang}.md`, renderCoverageMarkdown(args.lang, report, byHand));
+      if (args.formats.includes('worksheet')) await deps.writeText(`${dir}/narrow-audit.worksheet.${args.lang}.html`, renderWorksheet(report, args.lang, extraRun.value.manualLog ? { manual: { log: extraRun.value.manualLog, now: deps.now() } } : {}));
     }
     if (args.writeBaselineFile !== null) await deps.writeText(args.writeBaselineFile, JSON.stringify(makeBaseline(report), null, 2) + '\n');
     if (args.baselineFile !== null) {
