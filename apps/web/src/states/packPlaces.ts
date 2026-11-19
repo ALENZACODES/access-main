@@ -12,6 +12,7 @@
  */
 import { type Provenance, isIsoDate, validateProvenance } from "./provenance";
 import { type Point, isPoint } from "./packGeo";
+import { type RecordTier, readTier } from "./recordTier";
 
 export const WHEELCHAIR_TAGS = ["yes", "limited", "no", "designated"] as const;
 export type ReportedTag = (typeof WHEELCHAIR_TAGS)[number];
@@ -25,6 +26,8 @@ export interface PackPlaceRecord {
   readonly tag: WheelchairTag;
   readonly tagUnknownReason: TagUnknownReason | null;
   readonly provenance: Provenance | null;
+  /** The tier the record states. null when none is stated or it is not recognised: never defaulted. */
+  readonly tier: RecordTier | null;
   readonly category: string | null;
   readonly address: string | null;
   readonly note: string | null;
@@ -95,6 +98,7 @@ export function parsePackPlace(input: unknown): PackPlaceRecord | null {
     tag,
     tagUnknownReason: reason,
     provenance,
+    tier: readTier(typeof r.provenance === "object" && r.provenance !== null ? (r.provenance as Record<string, unknown>).tier : undefined),
     category: cleanText(r.category, 100),
     address: cleanText(r.address, 200),
     note: cleanText(r.wheelchair_description),

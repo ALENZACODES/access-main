@@ -23,6 +23,7 @@ import { RecoveryCenter } from "../recovery/RecoveryCenter.tsx";
 import type { LocalPackStore } from "../recovery/packInventory.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
+import { StateNotice, getRouteEmpty, getRouteError } from "../states/index.ts";
 
 const defaultSource = createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
 const ledger = createIndexedDbLedger();
@@ -144,6 +145,8 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   const [manifest, setManifest] = useState<PackManifest | null>(null);
   const [regions, setRegions] = useState<RegionStatus[]>([]);
   const [error, setError] = useState("");
+  const [listFailed, setListFailed] = useState(false);
+  const [listAttempt, setListAttempt] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
@@ -166,10 +169,10 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     source.manifest().then(async (value) => {
       const statuses = await source.regions();
       const reports = await cellReports(value, statuses);
-      if (active) { setManifest(value); setRegions(statuses); setCells(reports); }
-    }).catch(() => { if (active) setError(c.unavailable); });
+      if (active) { setListFailed(false); setManifest(value); setRegions(statuses); setCells(reports); }
+    }).catch(() => { if (active) setListFailed(true); });
     return () => { active = false; };
-  }, [c.unavailable, source]);
+  }, [source, listAttempt]);
   async function refresh() {
     const pack = await source.manifest();
     const statuses = await source.regions();
@@ -297,6 +300,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     <h1>{c.title}</h1>
     <p>{c.intro}</p>
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
+    {listFailed ? <StateNotice lang={language} view={getRouteError("offline", "region-list-unavailable", language)} onAction={{ retry: () => { setListFailed(false); setListAttempt((n) => n + 1); } }} /> : null}
     {error && <p role="alert">{error}</p>}
     {packStatus ? (
       <CorruptPackNotice
@@ -314,6 +318,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         <ul>{manifest.sources.filter((entry) => entry.inWebPack).map((entry) => <li key={entry.sourceId}>{entry.name} — {entry.licence} — {c.retrieved}: {entry.retrieved}</li>)}</ul>
         {manifest.sources.some((entry) => entry.sourceId.includes("osm") && entry.inWebPack) && <p>{c.credit}</p>}
       </section>
+      {regions.length === 0 ? <StateNotice lang={language} view={getRouteEmpty("offline", language)!} /> : null}
       <ul className="record-list">{regions.map((region) => {
         const report = cells[region.id] ?? [];
         const statuses = report.map((cell) => cell.lookup.status);

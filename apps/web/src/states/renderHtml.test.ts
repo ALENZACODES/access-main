@@ -121,7 +121,7 @@ describe("rendering behaviour", () => {
     expect(renderStateView(getEmptyState("search-no-results", "en"), opts)).toContain('role="status"');
   });
   it("covers every route id with a renderer-compatible view", () => {
-    expect(ROUTE_IDS).toEqual(["search", "place", "journey", "finders", "map", "saved"]);
+    expect(ROUTE_IDS).toEqual(["search", "place", "journey", "finders", "map", "saved", "help", "navigator", "games", "offline", "page"]);
     for (const id of ROUTE_IDS) {
       for (const locale of locales) {
         const empty = getRouteEmpty(id, locale);
