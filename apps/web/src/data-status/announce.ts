@@ -11,6 +11,7 @@ import { createTranslator, type Messages } from './localText';
 import { t } from './i18n';
 import type { SortSpec } from './sorting';
 import { kindLabel } from './licenceBreakdown';
+import { factLabel } from './recordFacts';
 
 export interface ListState {
   shown: number;
@@ -32,6 +33,7 @@ type Key =
   | 'an.filterTierUnknown'
   | 'an.filterLicence'
   | 'an.filterDataset'
+  | 'an.filterGap'
   | 'an.col.tier'
   | 'an.filterQuery'
   | 'an.filterIssues'
@@ -60,6 +62,7 @@ const MESSAGES: Messages<Key> = {
     'an.filterTierUnknown': 'tier unknown',
     'an.filterLicence': 'licence type {value}',
     'an.filterDataset': 'dataset {value}',
+    'an.filterGap': 'no {value}',
     'an.col.tier': 'tier',
     'an.filterQuery': 'name contains “{value}”',
     'an.filterIssues': 'only items to review',
@@ -87,6 +90,7 @@ const MESSAGES: Messages<Key> = {
     'an.filterTierUnknown': 'niveau inconnu',
     'an.filterLicence': 'type de licence {value}',
     'an.filterDataset': 'jeu de données {value}',
+    'an.filterGap': 'sans {value}',
     'an.col.tier': 'niveau',
     'an.filterQuery': 'le nom contient « {value} »',
     'an.filterIssues': 'seulement les éléments à examiner',
@@ -118,6 +122,7 @@ export function filterParts(f: Filters, locale: Locale): string[] {
   if (f.tier !== undefined) parts.push(f.tier === 'unknown' ? tx(locale, 'an.filterTierUnknown') : tx(locale, 'an.filterTier', { value: f.tier }));
   if (f.licence !== undefined) parts.push(tx(locale, 'an.filterLicence', { value: kindLabel(f.licence, locale).toLowerCase() }));
   if (f.dataset !== undefined) parts.push(tx(locale, 'an.filterDataset', { value: f.dataset }));
+  if (f.gap !== undefined) parts.push(tx(locale, 'an.filterGap', { value: factLabel(f.gap, locale).toLowerCase() }));
   return parts;
 }
 
