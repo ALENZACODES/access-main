@@ -30,11 +30,11 @@ describe("tier wording", () => {
     expect(tierLabel(0, "en")).toBe("Tier 0");
     expect(tierLabel("E", "fr")).toBe("Niveau E");
     expect(tierLabel(null, "en")).toBe("Tier UNKNOWN");
-    expect(tierLabel(null, "fr")).toBe("Niveau INCONNU");
+    expect(tierLabel(null, "fr")).toBe("Niveau UNKNOWN");
   });
   it("keeps an unknown tier unknown", () => {
     expect(tierMeaning(null, "en")).toBe("The record does not state a tier.");
-    expect(tierLine(null, "fr")).toBe("Niveau INCONNU. L’enregistrement n’indique pas de niveau.");
+    expect(tierLine(null, "fr")).toBe("Niveau UNKNOWN. L’enregistrement n’indique pas de niveau.");
   });
   it("says a tier is not measured by the App where that is the case", () => {
     expect(tierMeaning(0, "en")).toContain("Not measured by the App");
@@ -52,6 +52,12 @@ describe("tier wording", () => {
   it("passes the copy linter, in both languages, for every tier and for unknown", () => {
     for (const locale of ["en", "fr"] as const) {
       for (const tier of [...RECORD_TIERS, null]) expect(lintCopy(tierLine(tier, locale), locale), `${locale} ${String(tier)}`).toEqual([]);
+    }
+  });
+  it("uses the token UNKNOWN in both languages and never INCONNU for a tier", () => {
+    for (const locale of ["en", "fr"] as const) {
+      expect(tierLabel(null, locale)).toMatch(/UNKNOWN$/);
+      expect(tierLine(null, locale)).not.toMatch(/INCONNU/);
     }
   });
 });

@@ -30,7 +30,7 @@ export function isExpectedInPack(tier: RecordTier | null): boolean {
   return tier !== null && PACK_EXPECTED_TIERS.includes(tier);
 }
 
-/** "Tier 0" / "Niveau 0", or "Tier UNKNOWN" / "Niveau INCONNU". */
+/** "Tier 0" / "Niveau 0", or "Tier UNKNOWN" / "Niveau UNKNOWN". */
 export function tierLabel(tier: RecordTier | null, locale: Locale): string {
   return tier === null ? message("tier.labelUnknown", locale) : message("tier.label", locale, { tier: String(tier) });
 }

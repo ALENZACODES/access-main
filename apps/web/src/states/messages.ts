@@ -286,7 +286,7 @@ const DEFS = {
   "pack.distance": { en: "{d} away", fr: "à {d}" },
   "pack.openSource": { en: "Open the source page for {name}", fr: "Ouvrir la page source de {name}" },
   "tier.label": { en: "Tier {tier}", fr: "Niveau {tier}" },
-  "tier.labelUnknown": { en: "Tier UNKNOWN", fr: "Niveau INCONNU" },
+  "tier.labelUnknown": { en: "Tier UNKNOWN", fr: "Niveau UNKNOWN" },
   "tier.line": { en: "{label}. {meaning}", fr: "{label}. {meaning}" },
   "tier.meaningUnknown": { en: "The record does not state a tier.", fr: "L’enregistrement n’indique pas de niveau." },
   "tier.meaning.0": { en: "Open data or another import. Not measured by the App.", fr: "Données ouvertes ou autre importation. Non mesuré par l’App." },
