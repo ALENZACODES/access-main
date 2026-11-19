@@ -44,7 +44,10 @@ export function requiredAuditRoutes(): readonly string[] {
 
 export function normalizedRoute(route: string): string | null {
   if (!route.startsWith("/") || route.startsWith("//")) return null;
-  if (/[?#\\\u0000-\u001f]/.test(route)) return null;
+  if (/[?#\\]/.test(route)) return null;
+  for (const character of route) {
+    if (character.charCodeAt(0) < 32) return null;
+  }
   if (route.includes(":") || route.includes("*")) return null;
   if (route.split("/").some((part) => part === "." || part === "..")) return null;
   if (route.length > 1 && route.endsWith("/")) return route.slice(0, -1);

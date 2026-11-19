@@ -3,7 +3,7 @@ import {
   aggregateTimeline, announcedDifference, announcementFingerprint, formatFindings,
   isAnnounced, issueCodes, liveNodeFindings, nodeUrgency, timelineFindings,
   transitionFindings, validateFrame, visibleAnnouncements,
-  type AnnouncementEvent, type AnnouncementFrame, type LiveNode, type Stage,
+  type AnnouncementEvent, type AnnouncementFrame, type LiveNode,
 } from "./p20x-announcements";
 
 const node = (change: Partial<LiveNode> = {}): LiveNode => ({
