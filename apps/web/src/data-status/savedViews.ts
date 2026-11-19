@@ -134,9 +134,24 @@ export function removeViewAt(store: SavedViewStore, index: number): { removed: b
   return store.save(next) ? { removed: true, views: next } : { removed: false, views };
 }
 
+export type RenameOutcome = 'renamed' | 'noName' | 'same' | 'missing' | 'failed';
+
+/** Gives the view at a position a new name. Nothing is written unless the outcome is 'renamed'. */
+export function renameViewAt(store: SavedViewStore, index: number, name: unknown): { outcome: RenameOutcome; views: SavedView[] } {
+  const views = store.load();
+  const current = Number.isInteger(index) && index >= 0 ? views[index] : undefined;
+  if (current === undefined) return { outcome: 'missing', views };
+  const clean = cleanViewName(name);
+  if (clean === null) return { outcome: 'noName', views };
+  if (clean === current.name) return { outcome: 'same', views };
+  const next = views.map((v, i) => (i === index ? { ...v, name: clean } : v));
+  return store.save(next) ? { outcome: 'renamed', views: next } : { outcome: 'failed', views };
+}
+
 export const VIEW_SAVE_ACTION = 'view-save';
 const APPLY_PREFIX = 'view-apply:';
 const DELETE_PREFIX = 'view-delete:';
+const RENAME_PREFIX = 'view-rename:';
 
 export function viewApplyAction(index: number): string {
   return `${APPLY_PREFIX}${index}`;
@@ -146,13 +161,17 @@ export function viewDeleteAction(index: number): string {
   return `${DELETE_PREFIX}${index}`;
 }
 
-export type ViewAction = { kind: 'save' } | { kind: 'apply'; index: number } | { kind: 'delete'; index: number };
+export function viewRenameAction(index: number): string {
+  return `${RENAME_PREFIX}${index}`;
+}
+
+export type ViewAction = { kind: 'save' } | { kind: 'apply'; index: number } | { kind: 'delete'; index: number } | { kind: 'rename'; index: number };
 
 /** Reads a `data-action` value; null when it is not a saved-view action. */
 export function parseViewAction(action: string | null | undefined): ViewAction | null {
   if (typeof action !== 'string') return null;
   if (action === VIEW_SAVE_ACTION) return { kind: 'save' };
-  for (const [prefix, kind] of [[APPLY_PREFIX, 'apply'], [DELETE_PREFIX, 'delete']] as const) {
+  for (const [prefix, kind] of [[APPLY_PREFIX, 'apply'], [DELETE_PREFIX, 'delete'], [RENAME_PREFIX, 'rename']] as const) {
     if (!action.startsWith(prefix)) continue;
     const rest = action.slice(prefix.length);
     if (!/^(0|[1-9]\d?)$/.test(rest)) return null;
@@ -181,7 +200,12 @@ type Key =
   | 'vw.said.empty'
   | 'vw.said.full'
   | 'vw.said.failed'
-  | 'vw.said.deleted';
+  | 'vw.said.deleted'
+  | 'vw.rename'
+  | 'vw.said.renamed'
+  | 'vw.said.noName'
+  | 'vw.said.same'
+  | 'vw.said.renameFailed';
 
 const MESSAGES: Messages<Key> = {
   en: {
@@ -205,6 +229,11 @@ const MESSAGES: Messages<Key> = {
     'vw.said.full': 'The list of saved views is full. Delete one to save another.',
     'vw.said.failed': 'The view could not be saved on this device.',
     'vw.said.deleted': 'View deleted.',
+    'vw.rename': 'Rename with the typed name. {label}',
+    'vw.said.renamed': 'View renamed.',
+    'vw.said.noName': 'Type a name in the name field first.',
+    'vw.said.same': 'The view already has this name.',
+    'vw.said.renameFailed': 'The new name could not be saved on this device.',
   },
   fr: {
     'vw.title': 'Vues enregistrées',
@@ -227,6 +256,11 @@ const MESSAGES: Messages<Key> = {
     'vw.said.full': 'La liste des vues enregistrées est pleine. Supprimez-en une pour en enregistrer une autre.',
     'vw.said.failed': 'La vue n’a pas pu être enregistrée sur cet appareil.',
     'vw.said.deleted': 'Vue supprimée.',
+    'vw.rename': 'Renommer avec le nom saisi. {label}',
+    'vw.said.renamed': 'Vue renommée.',
+    'vw.said.noName': 'Saisissez d’abord un nom dans le champ prévu.',
+    'vw.said.same': 'La vue porte déjà ce nom.',
+    'vw.said.renameFailed': 'Le nouveau nom n’a pas pu être enregistré sur cet appareil.',
   },
 };
 
@@ -248,6 +282,12 @@ export function savedViewLabel(v: SavedView, locale: Locale, datasetNames?: Read
 
 export function describeSaveOutcome(outcome: SaveOutcome, locale: Locale): string {
   return tx(locale, `vw.said.${outcome}`);
+}
+
+/** What to say after a rename attempt; null when the view was not there and nothing happened. */
+export function describeRenameOutcome(outcome: RenameOutcome, locale: Locale): string | null {
+  if (outcome === 'missing') return null;
+  return tx(locale, outcome === 'failed' ? 'vw.said.renameFailed' : `vw.said.${outcome}`);
 }
 
 export function describeViewDeleted(locale: Locale): string {
@@ -278,8 +318,10 @@ export function renderSavedViewsHtml(views: readonly SavedView[], locale: Locale
     `<div><label for="ds-view-name">${escapeHtml(tx(locale, 'vw.nameLabel'))}</label> ` +
     `<input id="ds-view-name" type="text" data-filter="viewName" maxlength="${MAX_VIEW_NAME_LENGTH}" autocomplete="off" aria-describedby="ds-view-name-help" value="${escapeHtml(opts.draftName ?? '')}" style="${FIELD_STYLE}"> ` +
     `<span id="ds-view-name-help">${escapeHtml(tx(locale, 'vw.nameHelp', { max: MAX_VIEW_NAME_LENGTH }))}</span></div>`;
+  // The name field serves both saving and renaming, so it is shown whenever either is possible.
+  const showName = canSave || views.length > 0;
   const save = canSave
-    ? `${nameField}<p><button type="button" data-action="${VIEW_SAVE_ACTION}" style="${style}">${escapeHtml(tx(locale, 'vw.save'))}</button></p>`
+    ? `<p><button type="button" data-action="${VIEW_SAVE_ACTION}" style="${style}">${escapeHtml(tx(locale, 'vw.save'))}</button></p>`
     : current === ''
       ? `<p>${escapeHtml(tx(locale, 'vw.saveHint'))}</p>`
       : saved
@@ -296,12 +338,13 @@ export function renderSavedViewsHtml(views: readonly SavedView[], locale: Locale
             return (
               `<li style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px">` +
               `<button type="button" data-action="${viewApplyAction(i)}" aria-pressed="${q === current ? 'true' : 'false'}" style="${style}">${escapeHtml(tx(locale, 'vw.apply', { label }))}</button>` +
-              `<button type="button" data-action="${viewDeleteAction(i)}" style="${style}">${escapeHtml(tx(locale, 'vw.delete', { label }))}</button>${count}</li>`
+              `<button type="button" data-action="${viewDeleteAction(i)}" style="${style}">${escapeHtml(tx(locale, 'vw.delete', { label }))}</button>` +
+              `<button type="button" data-action="${viewRenameAction(i)}" style="${style}">${escapeHtml(tx(locale, 'vw.rename', { label }))}</button>${count}</li>`
             );
           })
           .join('')}</ul>`;
   return (
     `<section aria-labelledby="ds-views-title"><h2 id="ds-views-title">${escapeHtml(tx(locale, 'vw.title'))}</h2>` +
-    `<p>${escapeHtml(tx(locale, opts.durable ? 'vw.durable' : 'vw.session'))}</p>${save}${list}</section>`
+    `<p>${escapeHtml(tx(locale, opts.durable ? 'vw.durable' : 'vw.session'))}</p>${showName ? nameField : ''}${save}${list}</section>`
   );
 }

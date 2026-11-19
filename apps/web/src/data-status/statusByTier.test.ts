@@ -82,3 +82,27 @@ describe('renderStatusByTierHtml', () => {
     expect(html.indexOf('id="ds-statustier-title"')).toBeLessThan(html.indexOf('id="ds-facts-title"'));
   });
 });
+
+describe('the extra row under the totals', () => {
+  it('is absent unless asked for', () => {
+    expect((renderStatusByTierHtml(build(RECORDS), 'en').match(/<tfoot>[\s\S]*<\/tfoot>/)?.[0].match(/<tr>/g) ?? []).length).toBe(1);
+  });
+  it('adds one cell for each status column and an empty one under the total, so the row keeps the table width', () => {
+    const html = renderStatusByTierHtml(build(RECORDS), 'en', { heading: 'Extra', cell: (s) => `[${s}]` });
+    expect(html).toContain('<tr><th scope="row">Extra</th><td>[fresh]</td><td>[stale]</td><td>[unknown]</td><td></td></tr></tfoot>');
+  });
+  it('leaves the cell empty for a status no record has', () => {
+    const records: DatasetRecord[] = [{ id: 'd', name: 'Set', kind: 'places', sources: [{ id: 'a', tier: 0 }] }];
+    const html = renderStatusByTierHtml(build(records), 'en', { heading: 'Extra', cell: (s) => `[${s}]` });
+    expect(html).toContain('<td></td><td></td><td>[unknown]</td><td></td></tr></tfoot>');
+  });
+  it('on the panel, holds a control that lists the sources with each status, and the count matches', () => {
+    const html = renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW });
+    for (const s of ['fresh', 'stale', 'unknown']) expect(html).toContain(`data-action="show:state:${s}"`);
+    expect(html).toContain('List these sources. Status: May be out of date');
+    expect(describeProblems(auditHtml(html))).toEqual([]);
+    const fr = renderDataStatusPanel({ records: RECORDS, locale: 'fr', now: NOW });
+    expect(lintFrench(visibleText(fr))).toEqual([]);
+    expect(scanHtml(fr)).toEqual([]);
+  });
+});
