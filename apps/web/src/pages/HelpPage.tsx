@@ -9,6 +9,7 @@ import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
+import { StateNotice, SuggestionList, escalateView, helpTitleHints, moduleStateFor, moduleStateView, titledItems, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
 
 export function HelpPage() {
   const { t, i18n } = useTranslation();
@@ -17,19 +18,61 @@ export function HelpPage() {
   const [text, setText] = useState("");
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const locale = i18n.language.startsWith("fr") ? ("fr" as const) : ("en" as const);
   useDocumentTitle(t("modules.helpTitle"));
 
   useEffect(() => {
+    let active = true;
     void modules.help
       .list({
-        locale: i18n.language.startsWith("fr") ? "fr" : "en",
+        locale,
         offline: !online,
         profile,
         nowIso: new Date().toISOString(),
         query,
       })
-      .then((value: ModuleResult<unknown>) => setResult(value));
-  }, [i18n.language, online, profile, query]);
+      .then(
+        (value: ModuleResult<unknown>) => { if (active) setResult(value); },
+        // A help list that fails to load is an error state with a retry, not a blank.
+        () => { if (active) setResult({ moduleId: "help", availability: "error", items: [], messageKey: "modules.error", asOf: null, liveStatus: "unavailable" }); },
+      );
+    return () => { active = false; };
+  }, [locale, online, profile, query, attempt]);
+
+  const choice = moduleStateFor({
+    module: "help",
+    availability: result ? (result.availability as ModuleAvailability) : "loading",
+    itemCount: result?.items.length ?? 0,
+    asked: query.trim() !== "",
+    online,
+    packStored: null,
+  });
+  const clearSearch = () => {
+    setText("");
+    setQuery("");
+  };
+  const failures = useFailureStreak(result, result?.availability === "error");
+
+  // Titles of every article, read once the search finds nothing, so close titles can be offered.
+  const [allTitles, setAllTitles] = useState<ReturnType<typeof titledItems>>([]);
+  const noMatches = choice?.type === "empty" && query.trim() !== "";
+  useEffect(() => {
+    if (!noMatches) return;
+    let active = true;
+    void modules.help
+      .list({ locale, offline: !online, profile, nowIso: new Date().toISOString(), query: "" })
+      .then(
+        (value: ModuleResult<unknown>) => { if (active) setAllTitles(titledItems(value.items, locale)); },
+        () => { if (active) setAllTitles([]); },
+      );
+    return () => { active = false; };
+  }, [noMatches, locale, online, profile]);
+  const hints = noMatches ? helpTitleHints(query, allTitles) : [];
+  const pick = (label: string) => {
+    setText(label);
+    setQuery(label);
+  };
 
   return (
     <div className="stack">
@@ -71,6 +114,14 @@ export function HelpPage() {
           <p>{t(statusKey(result))}</p>
         ) : null}
         <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
+        {choice ? (
+          <StateNotice
+            lang={locale}
+            view={escalateView(moduleStateView(choice, locale), { failures, online, packStored: null }, locale)}
+            onAction={{ retry: () => setAttempt((count) => count + 1), "clear-search": clearSearch }}
+          />
+        ) : null}
+        <SuggestionList hints={hints} locale={locale} onPick={pick} />
         {result ? <ResultItems id="help" items={result.items} /> : null}
       </section>
     </div>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import contentText from "../../public/packs/toronto/content.json?raw";
+import { toCard } from "./packPlacesView";
 import {
   CATALOG,
   EMPTY_PACK_QUERY,
@@ -24,6 +25,7 @@ const place = (over: Partial<PackPlaceRecord> & { id: string }): PackPlaceRecord
   tag: "yes",
   tagUnknownReason: null,
   provenance: prov,
+  tier: 0,
   category: "attraction",
   address: "1 Main Street",
   note: null,
@@ -241,5 +243,19 @@ describe("every pack string is clean", () => {
   });
   it("has an entry in the catalogue for every pack message", () => {
     expect(Object.keys(CATALOG).filter((k) => k.startsWith("pack.")).length).toBeGreaterThanOrEqual(30);
+  });
+});
+
+describe("tier line on a card", () => {
+  const card = (p: PackPlaceRecord, locale: "en" | "fr") => toCard(p, { locale, today: TODAY }, null);
+  it("shows the stated tier in both languages", () => {
+    expect(card(place({ id: "t0", tier: 0 }), "en").tierText).toBe("Tier 0. Open data or another import. Not measured by the App.");
+    expect(card(place({ id: "t1", tier: 1 }), "fr").tierText).toContain("Niveau 1.");
+  });
+  it("says UNKNOWN when no tier is stated", () => {
+    expect(card(place({ id: "tn", tier: null }), "en").tierText).toBe("Tier UNKNOWN. The record does not state a tier.");
+  });
+  it("flags a tier a prototype pack should not hold", () => {
+    expect(card(place({ id: "t3", tier: 3 }), "en").tierText).toContain("does not normally hold");
   });
 });

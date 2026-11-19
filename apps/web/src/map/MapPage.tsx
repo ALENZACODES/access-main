@@ -322,13 +322,13 @@ export function MapPage() {
           {libraryError && <p id="map-library-error" role="alert">{t("map.libraryUnavailable")} {t("map.controlsUnavailable")}</p>}
           {/* Offline, the map's data cannot load: say so with the offline state. Online, a load
               failure is not a pack download, so the map's own message is kept. */}
-          {error && !online ? (
+          {error ? (
             <StateNotice
               lang={locale}
-              view={getRouteError("map", "offline-no-pack", locale)}
-              onAction={{ retry: refresh }}
+              view={getRouteError("map", online ? "module-load-failed" : "offline-no-pack", locale)}
+              onAction={{ retry: () => { setError(false); refresh(); } }}
             />
-          ) : error ? <p role="alert">{t("map.unavailable")}</p> : null}
+          ) : null}
           {visible.length ? <FeatureList features={listFeatures as React.ComponentProps<typeof FeatureList>["features"]} locale={locale} selectedId={selectedId} onSelect={select} listId={listId} />
             : !loading && !error ? (
               <div id={listId} tabIndex={-1}>

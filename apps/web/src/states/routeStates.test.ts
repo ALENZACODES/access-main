@@ -47,9 +47,14 @@ describe("route states (via package index)", () => {
   it("aria labels include the route name and have no straight apostrophes in FR", () => {
     expect(getRouteEmpty("search", "en")?.ariaLabel).toBe("Search – No places match this search");
     for (const r of ROUTE_IDS) {
-      const label = getRouteEmpty(r, "fr")?.ariaLabel ?? "";
-      expect(label).toContain(ROUTE_STATES[r].label.fr);
-      expect(label).not.toContain("'");
+      const empty = getRouteEmpty(r, "fr");
+      // A route with no empty state (the generic page route) has nothing to label.
+      if (!empty) {
+        expect(ROUTE_STATES[r].empty).toBeNull();
+        continue;
+      }
+      expect(empty.ariaLabel).toContain(ROUTE_STATES[r].label.fr);
+      expect(empty.ariaLabel).not.toContain("'");
     }
   });
 
