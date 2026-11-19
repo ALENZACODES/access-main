@@ -25,7 +25,7 @@ for (const value of ["=1+1", "+SUM(A1)", "-2+2", "@cmd", " =1", "   -10", " +A1"
     assert.equal(cell.trimStart().startsWith("'"), true);
   });
 }
-for (const value of ["ABC", "Entrée accessible", "CC BY 4.0", "2026-11-19", "https://example.org/info", "101", "Document public", "Espace !", "« Exemple »"]) {
+for (const value of ["ABC", "Entrée accessible", "CC BY 4.0", "2026-11-19", "https://example.org/info", "101", "Document public", "Espace\u202F!", "«\u202FExemple\u202F»"]) {
   test(`Ordinary spreadsheet value stays unchanged ${value}`, () => assert.equal(csvSafeCell(value), value));
 }
 test("Null CSV cell is empty", () => assert.equal(csvSafeCell(null), ""));
@@ -39,8 +39,8 @@ test("CSV row escapes formula before quoting", () => assert.equal(csvRow(["=1+1"
 test("Control stripping removes nul", () => assert.equal(stripControls(`ab${String.fromCharCode(0)}cd`), "abcd"));
 test("Control stripping removes DEL", () => assert.equal(stripControls(`ab${String.fromCharCode(127)}cd`), "abcd"));
 test("Control stripping removes C1 controls", () => assert.equal(stripControls(`ab${String.fromCharCode(143)}cd`), "abcd"));
-test("Control stripping retains French no-break space", () => assert.equal(stripControls("Note : texte"), "Note : texte"));
-test("Control stripping retains narrow no-break space", () => assert.equal(stripControls("Bonjour !"), "Bonjour !"));
+test("Control stripping retains French no-break space", () => assert.equal(stripControls("Note\u00A0: texte"), "Note\u00A0: texte"));
+test("Control stripping retains narrow no-break space", () => assert.equal(stripControls("Bonjour\u202F!"), "Bonjour\u202F!"));
 test("Control stripping preserves ordinary Unicode", () => assert.equal(stripControls("Entrée — accès"), "Entrée — accès"));
 test("Control stripping removes embedded newline", () => assert.equal(stripControls("first\nsecond"), "firstsecond"));
 test("Control stripping removes embedded tab", () => assert.equal(stripControls("first\tsecond"), "firstsecond"));
