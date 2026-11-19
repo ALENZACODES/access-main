@@ -483,4 +483,21 @@ describe("planning sections and extra downloads on the live panel", () => {
       cleanup();
     }
   });
+
+  it("shows the tier in the source list and offers a tier filter", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "No tier stop", source: "Other source", retrieved: daysAgo(7), tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    const list = within(panel).getByRole("table", { name: "Sources" });
+    const rows = within(list).getAllByRole("row").map((r) => cells(r));
+    expect(rows[0]?.at(-1)).toMatch(/^Tier/);
+    expect(rows.slice(1).map((r) => r.at(-1)).sort()).toEqual(["0", "E", "Unknown"]);
+    const select = within(panel).getByLabelText("Tier") as HTMLSelectElement;
+    expect([...select.options].map((o) => o.value)).toEqual(["any", "0", "1", "2", "3", "4", "E", "unknown"]);
+  });
 });

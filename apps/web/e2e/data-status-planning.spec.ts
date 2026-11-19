@@ -164,3 +164,32 @@ test("Data status: records are counted by tier, gaps are listed, and the facts f
   await expect(fr.getByRole("table", { name: "Enregistrements selon le niveau", exact: true }).getByRole("row", { name: /^Niveau E .* 1$/ })).toBeVisible();
   await expect(fr).toContainText("Enregistrements qui indiquent un niveau\u00a0: 2 sur 3.");
 });
+
+test("Data status: the source list shows each tier and can be filtered by tier", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-desk", kind: "place", title: "Desk place", retrieved_at: daysAgo(4), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const status = panel.locator('[data-region="announce"]');
+  const tier = panel.getByLabel("Tier", { exact: true });
+  await tier.selectOption("E");
+  await expect(status).toHaveText("1 source shown. Filters: tier E.");
+  await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(2);
+  await expect(panel.locator('[data-region="sources"]').getByRole("row").nth(1)).toContainText("Desk place");
+  await tier.selectOption("unknown");
+  await expect(status).toHaveText("1 source shown. Filters: tier unknown.");
+  await expect(panel.locator('[data-region="sources"]').getByRole("row").nth(1)).toContainText("No tier journey");
+  await tier.selectOption("any");
+  await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(4);
+
+  await panel.getByRole("button", { name: "Tier unknown (1)" }).click();
+  await expect(panel.getByRole("button", { name: "Tier unknown (1)" })).toHaveAttribute("aria-pressed", "true");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("unknown");
+  await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(2);
+  await expect(panel.getByRole("table", { name: "Records by tier and status" }).getByRole("row", { name: /^All tiers/ })).toContainText("3");
+});
+
