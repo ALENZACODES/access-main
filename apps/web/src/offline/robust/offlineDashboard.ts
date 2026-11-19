@@ -17,6 +17,11 @@ import { mountOfflineTriage } from "./offlineTriagePanel";
 import { mountOfflineCleanup } from "./cleanupPanel";
 import { mountOfflineUpdateReview } from "./updateReviewPanel";
 import { mountOfflineSessionComparison } from "./sessionComparisonPanel";
+import { mountOfflineSourceLedger } from "./sourceLedgerPanel";
+import { mountOfflineTransferChecklist } from "./transferChecklistPanel";
+import { mountStorageDurability } from "./storageDurabilityPanel";
+import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
+import { mountOfflineReadiness } from "./readinessPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -206,7 +211,7 @@ export function mountOfflineDashboard(
   auditStatus.textContent = audit.ready ?
     (language === "fr" ? "Licence et source indiquées pour chaque cellule." :
       "Licence and source recorded for each cell.") :
-    (language === "fr" ? "Données non admissibles au téléchargement. État hors ligne INCONNU." :
+    (language === "fr" ? "Données non admissibles au téléchargement. État hors ligne UNKNOWN." :
       "Data cannot be downloaded. Offline status UNKNOWN.");
   const detailsId = `offline-cells-${safeId(manifest.regionId)}`;
   const details = element("div");
@@ -229,6 +234,23 @@ export function mountOfflineDashboard(
   const comparisonHost = element("div");
   section.append(comparisonHost);
   const unmountComparison = mountOfflineSessionComparison(comparisonHost, manifest, model, language);
+  const ledgerHost = element("div");
+  section.append(ledgerHost);
+  const unmountLedger = mountOfflineSourceLedger(ledgerHost, manifest, model, language);
+  const checklistHost = element("div");
+  section.append(checklistHost);
+  const unmountChecklist = mountOfflineTransferChecklist(checklistHost, manifest, model, language);
+  const durabilityHost = element("div");
+  section.append(durabilityHost);
+  const unmountDurability = mountStorageDurability(durabilityHost, manifest, model, language,
+    typeof navigator === "undefined" ? undefined : navigator.storage);
+
+  const readinessHost = element("div");
+  section.append(readinessHost);
+  const unmountReadiness = mountOfflineReadiness(readinessHost, manifest, model, language, dependencies.estimateStorage);
+  const diagnosticsHost = element("div");
+  section.append(diagnosticsHost);
+  const unmountDiagnostics = mountOfflineDiagnostics(diagnosticsHost, manifest, model, language);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -301,7 +323,7 @@ export function mountOfflineDashboard(
         definition(copy.missing, String(state.inventory.unknownCount)),
         definition(copy.remaining, formatBinaryBytes(plan.remainingBytes, language)),
         definition(copy.free, plan.freeBytes === null ?
-          (language === "fr" ? "INCONNU" : "UNKNOWN") : formatBinaryBytes(plan.freeBytes, language)),
+          "UNKNOWN" : formatBinaryBytes(plan.freeBytes, language)),
         definition(copy.reserve, formatBinaryBytes(plan.reserveBytes, language)),
       );
     }
@@ -341,6 +363,11 @@ export function mountOfflineDashboard(
     unmountCleanup();
     unmountReview();
     unmountComparison();
+    unmountLedger();
+    unmountChecklist();
+    unmountDurability();
+    unmountReadiness();
+    unmountDiagnostics();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
