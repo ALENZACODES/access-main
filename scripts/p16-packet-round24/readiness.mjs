@@ -4,7 +4,6 @@ import { auditRecordTypography, statusCopy } from "./locale.mjs";
 /** Interpret observations conservatively; READY means cache publication only. */
 /** @param {unknown} record @param {unknown} [options] */
 export function assessPacketRecord(record, options = {}) {
-  const rules = policy(options);
   /** @type {import('./core.mjs').Finding[]} */
   const findings = [];
   if (!object(record)) {
