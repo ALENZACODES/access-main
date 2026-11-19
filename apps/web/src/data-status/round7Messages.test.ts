@@ -27,6 +27,7 @@ import { ACTIVE_FILTER_MESSAGES } from './activeFilters';
 import { NO_MATCH_MESSAGES } from './noMatchHints';
 import { SAVED_VIEW_MESSAGES } from './savedViews';
 import { LISTED_SUMMARY_MESSAGES } from './listedSummary';
+import { LIVE_LIST_MESSAGES } from './liveList';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -54,6 +55,7 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['noMatchHints', NO_MATCH_MESSAGES],
   ['savedViews', SAVED_VIEW_MESSAGES],
   ['listedSummary', LISTED_SUMMARY_MESSAGES],
+  ['liveList', LIVE_LIST_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {

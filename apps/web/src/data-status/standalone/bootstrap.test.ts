@@ -210,3 +210,19 @@ describe('bootstrap: saved views', () => {
   });
 });
 
+describe('bootstrap: order of the list', () => {
+  it('starts in the order named in the address, and writes a new order back to it', async () => {
+    const searches: string[] = [];
+    const d = deps({ search: '?sort=licence&dir=desc', onSearchChange: (s) => searches.push(s) });
+    const out = await bootstrap(d);
+    expect(out.panel.getSort()).toEqual({ key: 'licence', dir: 'desc' });
+    expect(d.host.innerHTML).toContain('<option value="licence:desc" selected>');
+    d.host.filter('change', 'sort', 'source:asc');
+    expect(searches.at(-1)).toBe('?sort=source');
+  });
+  it('ignores an order it cannot read', async () => {
+    const out = await bootstrap(deps({ search: '?sort=bogus' }));
+    expect(out.panel.getSort()).toBeNull();
+  });
+});
+
