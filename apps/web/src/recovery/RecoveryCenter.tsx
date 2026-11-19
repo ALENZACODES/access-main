@@ -28,6 +28,7 @@ import { RecoveryDryRunPanel } from "./RecoveryDryRunPanel";
 import { RecoveryCaseJournal } from "./RecoveryCaseJournal";
 import { RecoveryTaskBoard } from "./RecoveryTaskBoard";
 import { RecoveryRepairAttempts } from "./RecoveryRepairAttempts";
+import { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
 import { planPackRepairs } from "./recoveryPolicy";
 
 /** This is a complete local shell widget; routes can mount it without a service. */
@@ -200,6 +201,8 @@ export function RecoveryCenter({
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       <RecoveryTaskBoard locale={locale} records={inventory} saveFile={saveFile} />
       <RecoveryRepairAttempts locale={locale} records={inventory}
+        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      <RecoveryTransferPreflight locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>

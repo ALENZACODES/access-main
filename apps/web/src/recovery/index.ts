@@ -411,3 +411,32 @@ export { RecoveryRepairAttempts } from "./RecoveryRepairAttempts";
 export type { RecoveryRepairAttemptsProps } from "./RecoveryRepairAttempts";
 export { ATTEMPT_COPY, addRecoveryAttempt, emptyAttemptDocument, exportRecoveryAttempts, isAttemptProvenance, mergeRecoveryAttempts, parseRecoveryAttempts, previewAttemptMerge, replaceRecoveryAttempt, summarizeRecoveryAttempts, validateAttempt, validateAttemptDocument } from "./recoveryRepairReceipt";
 export type { AttemptDocument, AttemptIssue, AttemptKind, AttemptMergePreview, AttemptOutcome, AttemptProvenance, AttemptResult, AttemptSummary, RecoveryAttempt } from "./recoveryRepairReceipt";
+
+// Manual, offline-only preflight and append-only review timeline.
+export { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
+export type { RecoveryTransferPreflightProps } from "./RecoveryTransferPreflight";
+export {
+  EVIDENCE_TIERS, PREFLIGHT_LIMITS, TRANSFER_CONDITIONS, TRANSFER_KINDS, TRANSFER_STAGES,
+  TRANSFER_LICENCES, appendTransferCandidate, assessTransferCandidate, assessTransferDocument,
+  decodeTransferDocument, encodeTransferDocument, filterTransferCandidates, mergeTransferDocuments,
+  newTransferDocument, summarizeTransferDocument, transferPackSummaries, transferPreviewMerge,
+  transitionTransferCandidate, validTransferProvenance, validateTransferCandidate, validateTransferDocument,
+} from "./recoveryTransferPreflight";
+export type {
+  EvidenceTier, TransferCondition, TransferKind, TransferStage, TransferIssue, TransferDecision,
+  TransferReadiness, TransferProvenance, TransferCandidate, TransferDocument, TransferResult,
+  PreflightFinding, PreflightOverview, PreflightFilter, PreflightMergePreview,
+} from "./recoveryTransferPreflight";
+export { recoveryTransferCopy } from "./recoveryTransferCopy";
+export type { PreflightCopy } from "./recoveryTransferCopy";
+export {
+  HISTORY_LIMIT, HISTORY_BYTE_LIMIT, emptyHistory, validateHistoryEvent, validateHistory,
+  appendHistoryEvent, amendHistoryEvent, historyForCandidate, countHistoryActions,
+  validateTransferBundle, prepareTransferBundle, serializeTransferBundle, parseTransferBundle,
+  previewTransferBundleMerge, mergeTransferBundles, reconcileTransferHistory, candidateLatestCondition,
+  transferBundleHasCandidate,
+} from "./recoveryTransferHistory";
+export type {
+  TransferHistoryAction, TransferHistoryEvent, TransferHistory, HistoryIssue, HistoryResult,
+  TransferBundle, TransferBundleMerge,
+} from "./recoveryTransferHistory";
