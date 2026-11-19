@@ -98,10 +98,24 @@ describe.skipIf(!mapsReady)("linked registry over two real ODbL records (maps)",
     expectProvenance(result);
   });
 
-  it("journey: ready, with provenance on any item", async () => {
+  it("journey: ready and waiting for two places, with no invented trip", async () => {
+    // The planner is mounted (lane-adapters.ts): with no place asked for it plans nothing.
     const result = await registry().journey.plan({ originLabel: null, destinationLabel: null, routingPreference: null, offline: false }, ctx);
-    expect(result.availability).toBe("ready");
-    expectProvenance(result);
+    expect(result).toMatchObject({ availability: "ready", items: [], messageKey: "journey.awaiting" });
+  });
+
+  it("places stays unavailable when the pack cannot be read", async () => {
+    const source = createFixtureSource(records, sources);
+    const modules = createLinkedModules({
+      ...source,
+      manifest: async () => {
+        throw new Error("manifest response");
+      },
+    });
+    const search = await modules.places.search({ text: firstName }, ctx);
+    expect(search).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
+    const detail = await modules.places.get(records[0]!.id, ctx);
+    expect(detail).toMatchObject({ availability: "stub", items: [], messageKey: "modules.unavailable" });
   });
 
   it("places.get returns the record with its sources, and nothing for an unknown id", async () => {
@@ -139,18 +153,37 @@ describe.skipIf(!toolsReady)("linked registry over two real ODbL records (tools)
 
 });
 
-describe("linked registry: games and navigator", () => {
-  it("stay unavailable until a sourced catalog or directory lands", async () => {
-    const modules = registry();
-    const noQuery = { ...ctx, query: undefined };
-    const nav = await modules.navigator.list(noQuery);
-    const games = await modules.games.list(noQuery);
-    expect(nav.availability).toBe("stub");
-    expect(games.availability).toBe("stub");
-    expect(nav.messageKey).toBe("modules.unavailable");
-    expect(games.messageKey).toBe("modules.unavailable");
-    expect(nav.items).toEqual([]);
-    expect(games.items).toEqual([]);
+describe.skipIf(!toolsReady)("linked registry: games and navigator (tools)", () => {
+  const noQuery = { ...ctx, query: undefined };
+
+  it("games: the 25 games of the pinned package, none with a clinical claim or a flash", async () => {
+    const games = await registry().games.list(noQuery);
+    expect(games).toMatchObject({ moduleId: "games", availability: "ready", liveStatus: "unavailable", asOf: null });
+    expect(games.items).toHaveLength(25);
+    expect(new Set(games.items.map((item) => item.id)).size).toBe(25);
+    for (const item of games.items) {
+      expect(item.title.trim()).not.toBe("");
+      expect(item).toMatchObject({ clinicalClaim: false, seizureRiskFlash: false, keyboardOperable: true });
+    }
+  });
+
+  it("navigator: every directory record carries its source, licence note, read date and tier, and gives no eligibility answer", async () => {
+    const nav = await registry().navigator.list(noQuery);
+    expect(nav).toMatchObject({ moduleId: "navigator", availability: "ready", liveStatus: "unavailable" });
+    expect(nav.asOf).toMatch(/^\d{4}-\d{2}-\d{2}/);
+    expect(nav.items.length).toBeGreaterThan(0);
+    for (const item of nav.items as unknown as Array<Record<string, unknown>>) {
+      expect(String(item.sourceName ?? "").trim(), String(item.id)).not.toBe("");
+      expect(String(item.licenceNote ?? "").trim(), String(item.id)).not.toBe("");
+      expect(String(item.retrievedOn ?? ""), String(item.id)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(item.verificationTier, String(item.id)).toBe("administrator_page");
+      expect(item.notEligibilityAdvice, String(item.id)).toBe(true);
+    }
+  });
+
+  it("navigator: a search that matches nothing returns an empty list, not an invented record", async () => {
+    const nav = await registry().navigator.list({ ...ctx, query: "zzzz-no-such-programme-zzzz" });
+    expect(nav).toMatchObject({ availability: "ready", items: [] });
   });
 });
 

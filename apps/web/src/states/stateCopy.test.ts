@@ -84,7 +84,7 @@ describe("state copy", () => {
 
   it("covers the six Day 22 states, each with a next action", () => {
     expect(DAY22_STATES).toHaveLength(6);
-    expect(new Set([...ERROR_KINDS, ...EMPTY_KINDS])).toEqual(new Set([...DAY22_STATES, "accessibility-unknown", "map-no-places", "no-saved-places", "not-found", "load-failed", "offline"]));
+    expect(new Set([...ERROR_KINDS, ...EMPTY_KINDS])).toEqual(new Set([...DAY22_STATES, "accessibility-unknown", "map-no-places", "no-saved-places", "not-found", "load-failed", "data-load-failed", "offline", "pack-unreadable"]));
   });
 
   it("uses local-app wording: no server, service or blame", () => {

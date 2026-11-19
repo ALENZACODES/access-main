@@ -13,7 +13,7 @@
  */
 export type Locale = "en" | "fr";
 
-export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed" | "not-found" | "load-failed" | "offline";
+export type ErrorKind = "offline-no-pack" | "pack-download-failed" | "game-load-failed" | "not-found" | "load-failed" | "data-load-failed" | "offline" | "pack-unreadable";
 export type EmptyKind = "search-no-results" | "journey-no-route" | "finder-no-results" | "accessibility-unknown" | "map-no-places" | "no-saved-places";
 export type ActionId = "retry" | "go-home" | "go-back" | "download-pack" | "clear-search" | "change-trip" | "help";
 
@@ -70,6 +70,14 @@ interface Entry {
 }
 
 const ERRORS: Record<ErrorKind, Entry> = {
+  "pack-unreadable": {
+    title: { en: "The saved places could not be read", fr: "Les lieux enregistrés n’ont pas pu être lus" },
+    description: {
+      en: "The offline pack on this device could not be opened. Download it again, then come back to this list.",
+      fr: "Le pack hors ligne de cet appareil n’a pas pu être ouvert. Téléchargez-le de nouveau, puis revenez à cette liste.",
+    },
+    actions: ["download-pack"],
+  },
   "offline-no-pack": {
     title: { en: "No connection and no offline pack", fr: "Pas de connexion ni de pack hors ligne" },
     description: {
@@ -109,6 +117,14 @@ const ERRORS: Record<ErrorKind, Entry> = {
       fr: "La fiche n’a pas pu être ouverte sur cet appareil. Réessayez, ou revenez à la liste des lieux.",
     },
     actions: ["retry", "go-back"],
+  },
+  "data-load-failed": {
+    title: { en: "The places could not be loaded", fr: "Les lieux n’ont pas pu être chargés" },
+    description: {
+      en: "The saved places could not be opened on this device. Try again.",
+      fr: "Les lieux enregistrés n’ont pas pu être ouverts sur cet appareil. Réessayez.",
+    },
+    actions: ["retry", "go-home"],
   },
   offline: {
     title: { en: "You are offline", fr: "Vous êtes hors ligne" },

@@ -127,6 +127,7 @@ export function DataStatusPage() {
       getRecords: () => panelInputs.current.records,
       getLocale: () => panelInputs.current.locale,
       onExport: (csv, filename) => saveTextFile(csv, filename, "text/csv;charset=utf-8"),
+      onExportFile: (file) => saveTextFile(file.text, file.filename, file.mime),
       plainTables: true,
     });
     panelRef.current = mounted;
@@ -277,8 +278,8 @@ export function DataStatusPage() {
         {loaded ? <div ref={panelHostRef} /> : null}
       </section>
       <section className="stack" aria-labelledby="export-title">
-        <h2 id="export-title">{locale === "fr" ? "Télécharger" : "Downloads"}</h2>
-        <p>{locale === "fr" ? "Les fichiers sont créés sur cet appareil à partir des données enregistrées ci-dessus." : "Files are made on this device from the saved records above."}</p>
+        <h2 id="export-title">{dsT(locale, "dl.title")}</h2>
+        <p>{dsT(locale, "dl.intro")}</p>
         <div className="button-row">
           {exportFiles.filter((file) => file.id !== "csv").map((file) => (
             <Button

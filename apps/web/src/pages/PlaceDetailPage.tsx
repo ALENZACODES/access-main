@@ -87,6 +87,16 @@ export function PlaceDetailPage() {
           <PackPlaceView record={detail.record} sources={detail.sources} locale={locale} />
         </Suspense>
       ) : null}
+      {detail ? (
+        <p>
+          <Link
+            to={`/more/route-reports?place=${encodeURIComponent(detail.id)}`}
+            style={{ display: "inline-flex", minHeight: 44, alignItems: "center" }}
+          >
+            {t("placeDetail.reportRoute")}
+          </Link>
+        </p>
+      ) : null}
       {odbl.length > 0 ? (
         <section aria-labelledby="place-attribution">
           <h2 id="place-attribution">{t("placeDetail.attribution")}</h2>

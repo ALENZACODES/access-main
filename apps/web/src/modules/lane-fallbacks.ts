@@ -1,4 +1,4 @@
-import { emptyModuleResult, type FindersModule, type GamesModule, type HelpModule, type JourneyModule, type ModuleId, type ModuleResult, type NavigatorModule, type PlacesModule } from "@access/shared";
+import { emptyModuleResult, type FindersModule, type GamesModule, type HelpModule, type ModuleId, type ModuleResult, type NavigatorModule, type PlacesModule } from "@access/shared";
 import type { ReactElement } from "react";
 
 function unlinked<T>(id: ModuleId): Promise<ModuleResult<T>> {
@@ -9,9 +9,12 @@ function unlinked<T>(id: ModuleId): Promise<ModuleResult<T>> {
 export function createPlacesModule(): Omit<PlacesModule, "get"> {
   return { id: "places", search: () => unlinked("places") };
 }
-export function createJourneyModule(): JourneyModule {
-  return { id: "journey", plan: () => unlinked("journey") };
+/** Stand-in for @access-maps/journey-data. `unlinked` tells the shell adapter to report the route unavailable. */
+export function createJourneyModule(): { id: "journey"; unlinked: true; plan: () => Promise<never> } {
+  return { id: "journey", unlinked: true, plan: () => Promise.reject(new Error("journey-data is not pinned in this build")) };
 }
+const journeyText = { roll: "", far: "", noRoute: "", barrier: "", unverified: "" };
+export const messages = { en: journeyText, fr: journeyText };
 export function createFindersModule(): FindersModule {
   return { id: "finders", search: () => unlinked("finders") };
 }

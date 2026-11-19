@@ -149,6 +149,7 @@ async function registerTests() {
   test("a branch can stand in for an unpinned package", () => {
     const { outDir, result } = run("branch", lockText(fixtureEntry("alpha", { commit: UNPINNED })), { allowUnpinned: "main" });
     assert.equal(result().files, 2);
+    assert.ok(existsSync(path.join(outDir, "fixture-repo", "tsconfig.base.json")));
     assert.ok(existsSync(path.join(outDir, "fixture-repo", "packages", "alpha", "src", "index.ts")));
   });
 

@@ -79,6 +79,7 @@ export {
   type HelpArticle,
   type HelpModule,
   type JourneyModule,
+  type JourneyEndpoint,
   type JourneyPlan,
   type JourneyRequest,
   type ModuleContext,

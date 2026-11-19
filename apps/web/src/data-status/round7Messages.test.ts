@@ -8,6 +8,14 @@ import { checkParity, createTranslator, fill, isSeparatorKey, placeholders, type
 import { MANIFEST_MESSAGES } from './manifest';
 import { MARKDOWN_MESSAGES } from './markdownReport';
 import { WORKLOAD_MESSAGES } from './workload';
+import { EXPORT_EXTRAS_MESSAGES } from './exportExtras';
+import { GLANCE_MESSAGES } from './glance';
+import { LICENCE_BREAKDOWN_MESSAGES } from './licenceBreakdown';
+import { REMEDY_MESSAGES } from './remedies';
+import { SELF_CHECK_MESSAGES } from './selfCheck';
+import { TOC_MESSAGES } from './toc';
+import { SOURCE_DETAIL_MESSAGES } from './sourceDetail';
+import { TABLES_CSV_MESSAGES } from './tablesCsv';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -16,6 +24,14 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['manifest', MANIFEST_MESSAGES],
   ['announce', ANNOUNCE_MESSAGES],
   ['markdownReport', MARKDOWN_MESSAGES],
+  ['exportExtras', EXPORT_EXTRAS_MESSAGES],
+  ['glance', GLANCE_MESSAGES],
+  ['licenceBreakdown', LICENCE_BREAKDOWN_MESSAGES],
+  ['remedies', REMEDY_MESSAGES],
+  ['selfCheck', SELF_CHECK_MESSAGES],
+  ['toc', TOC_MESSAGES],
+  ['sourceDetail', SOURCE_DETAIL_MESSAGES],
+  ['tablesCsv', TABLES_CSV_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {
@@ -151,6 +167,14 @@ describe('extras barrel', () => {
       'createAnnouncer',
       'buildMarkdownReport',
       'escapeMarkdown',
+      'buildActions',
+      'renderActionsHtml',
+      'glanceSentences',
+      'renderGlanceHtml',
+      'buildLicenceBreakdown',
+      'renderLicenceBreakdownHtml',
+      'buildChecksumFile',
+      'buildMarkdownFile',
     ]) {
       expect(typeof (extras as Record<string, unknown>)[name], name).toBe('function');
     }

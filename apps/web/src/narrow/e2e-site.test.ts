@@ -25,6 +25,8 @@ interface PageOpts {
   readonly help?: 'footer' | 'header' | 'none';
   readonly extra?: string;
   readonly inline?: string;
+  /** Markup placed after the footer, outside every landmark. */
+  readonly after?: string;
 }
 
 function page(o: PageOpts): string {
@@ -36,7 +38,7 @@ function page(o: PageOpts): string {
     `<header>${help === 'header' ? '<a href="/help">Help</a>' : ''}<nav aria-label="Main">${nav}</nav></header>` +
     `<main><h1>${o.title}</h1>${o.inline ?? '<p>Read the <a href="/hours" style="text-decoration:underline">opening hours</a> today.</p>'}` +
     `<label for="q">Search</label> <input id="q" name="q" type="text">${o.extra ?? ''}</main>` +
-    `<footer>${help === 'footer' ? '<a href="/help">Help</a>' : ''}</footer></body></html>`
+    `<footer>${help === 'footer' ? '<a href="/help">Help</a>' : ''}</footer>${o.after ?? ''}</body></html>`
   );
 }
 
@@ -81,6 +83,12 @@ const SITE: Record<string, string> = {
   '/bad-sensory': page({ title: 'Bad sensory', extra: '<p>Press the green button when you have finished the form today.</p>' }),
   '/bad-zoom': page({ title: 'Bad zoom', extra: '<p id="zoom" style="font-size:1rem;line-height:24px;height:24px;overflow:hidden">Opening hours today 9 to 5</p>' }),
   '/bad-heads': page({ title: 'Bad heads', extra: '<h2>Untitled</h2><h2>Hours</h2><h2>Hours</h2>' }),
+  '/bad-handlers': page({ title: 'Bad handlers', extra: '<div id="go" onclick="void 0" style="min-height:44px">Go</div>' }),
+  '/bad-type': page({ title: 'Bad type', extra: '<p id="t" style="font-size:10px;line-height:1;text-align:justify">The ramp is on the left side of the main door of the building and the lift is at the back of the hall next to the stairs.</p>' }),
+  '/bad-order': page({ title: 'Bad order', extra: '<div id="row" style="display:flex;flex-direction:row-reverse"><a href="/a" style="text-decoration:underline">First link</a><a href="/b" style="text-decoration:underline">Second link</a></div>' }),
+  '/bad-generated': page({ title: 'Bad generated', extra: '<style>#req::before{content:"Required "}</style><p id="req">Your name</p>' }),
+  '/bad-lookalike': page({ title: 'Bad lookalike', extra: '<p><strong>Getting here</strong></p><p>Take the ramp on the left side of the door.</p>' }),
+  '/bad-regions': page({ title: 'Bad regions', after: '<p id="loose">The ramp is on the left side of the main door of the building.</p>' }),
   '/good-lang': page({ title: 'Good lang', extra: '<p lang="fr">Les heures d’ouverture sont affichées pour vous et pour votre visite cette semaine.</p>' }),
   '/good-form': page({
     title: 'Good form',
@@ -301,12 +309,18 @@ describe.skipIf(!enabled)('real browser gates over a served site', () => {
     expect(await got('/bad-locale', 'locale')).toEqual(['us-date-in-fr:unknown', 'twelve-hour-in-fr:unknown']);
     expect(await got('/bad-sensory', 'sensory')).toEqual(['colour:unknown']);
     expect(await got('/bad-zoom', 'text-zoom')).toEqual(['clipped-at-200:fail']);
+    expect(await got('/bad-handlers', 'handlers')).toEqual(['click-not-focusable:unknown']);
+    expect(await got('/bad-type', 'typography')).toEqual(['small-text:unknown', 'justified:unknown', 'tight-leading:unknown']);
+    expect(await got('/bad-order', 'order')).toEqual(['reverse-direction:unknown']);
+    expect(await got('/bad-generated', 'generated')).toEqual(['css-text:unknown']);
+    expect(await got('/bad-lookalike', 'lookalike')).toEqual(['fake-heading:unknown']);
+    expect(await got('/bad-regions', 'regions')).toEqual(['outside-landmark:unknown']);
     expect(await got('/bad-heads', 'headings')).toEqual(['heading-generic:unknown', 'heading-duplicate:unknown']);
   }, 90_000);
 
-  it('the good site has no finding from the five text checks', async () => {
+  it('the good site has no finding from the eleven text, layout and structure checks', async () => {
     const report = await run(['/a', '/b', '/c', '/good-lang']);
-    const mine = new Set(['plain', 'locale', 'sensory', 'text-zoom', 'headings']);
+    const mine = new Set(['plain', 'locale', 'sensory', 'text-zoom', 'headings', 'handlers', 'typography', 'order', 'generated', 'lookalike', 'regions']);
     expect(report.routes.flatMap((r) => r.entries.filter((x) => mine.has(x.check)))).toEqual([]);
     expect(report.routes[0]?.checks.map((c) => c.check)).toEqual(expect.arrayContaining([...mine]));
   }, 90_000);

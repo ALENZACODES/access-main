@@ -2,7 +2,7 @@ import { applyWaivers, parseWaivers } from './ci.js';
 import { auditBudget } from './budget.js';
 import { auditConsistency } from './consistency.js';
 import { auditContrast } from './contrast.js';
-import { forbiddenOrgNeedles } from '../../../../packages/shared/test/forbiddenOrg.ts';
+import { endorsedByForbiddenOrgSample } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import { auditCopy, COPY_RULES } from './copylint.js';
 import { auditFocusObscured } from './focus.js';
 import { lintHtml } from './htmllint.js';
@@ -27,11 +27,17 @@ import { auditBypass } from './bypass.js';
 import { auditFrames } from './frames.js';
 import { auditImages } from './images.js';
 import { auditLinks } from './links.js';
+import { auditGenerated } from './generated.js';
+import { auditLookalike } from './lookalike.js';
+import { auditRegions } from './regions.js';
+import { auditHandlers } from './handlers.js';
 import { auditHeadings } from './headings.js';
 import { auditLocale } from './locale.js';
+import { auditOrder } from './order.js';
 import { auditPlain } from './plain.js';
 import { auditSensory } from './sensory.js';
 import { auditTextZoom } from './textzoom.js';
+import { auditTypography } from './typography.js';
 import type { ProseFacts } from './prose.js';
 import { auditPurpose } from './purpose.js';
 import { auditTables } from './tables.js';
@@ -52,7 +58,7 @@ export function sampleEntries(): Entry[] {
   const rect: Rect = { left: 0, top: 0, right: 1, bottom: 1 };
   const el = (id: string, name: string, text: string) => ({ id, tag: 'a', role: null, rect, name, text });
   const badHtml =
-    '<html><head><link rel="alternate" hreflang="english" href="/e"></head><body><h1>a</h1><h3>b</h3><img src="a.png"><button></button><input type="email">' +
+    '<html><head><link rel="alternate" hreflang="english" href="/e"></head><body onkeydown="k(event)"><h1>a</h1><h3>b</h3><img src="a.png"><button></button><input type="email">' +
     '<p id="d"></p><p id="d"></p><div tabindex="2"></div><div aria-hidden="true"><button>x</button></div>' +
     '<button aria-labelledby="zz">x</button><a href="/x">click here</a><iframe></iframe><video autoplay></video>' +
     '<button style="width:20px">go</button><main></main><main></main>' +
@@ -61,7 +67,7 @@ export function sampleEntries(): Entry[] {
     '<svg role="img"></svg><svg></svg><video src="v.mp4"></video><meta http-equiv="refresh" content="5">' +
     '<input autocomplete="e-mail"><li>x</li><p lang="english">x</p><nav></nav><nav></nav>' +
     '<button accesskey="a">a</button><button accesskey="a">b</button>' +
-    '<input aria-invalid="true"><input autofocus><details></details><dialog></dialog></body></html>';
+    '<select aria-label="s" onchange="go(this)"></select><input aria-invalid="true"><input autofocus><details></details><dialog></dialog></body></html>';
   const facts = (over: Partial<PageFacts>): PageFacts => ({
     title: 'T', lang: 'en', links: [], controls: [], draggables: [], nav: ['A', 'B'], help: { text: 'Help', region: 'footer', afterMain: true }, truncated: false, ...over,
   });
@@ -288,6 +294,28 @@ export function sampleEntries(): Entry[] {
     ...auditLocale(SAMPLE_PROSE_FR).entries,
     ...auditSensory(SAMPLE_PROSE_EN).entries,
     ...auditSensory(SAMPLE_PROSE_FR).entries,
+    ...auditHandlers(SAMPLE_HANDLER_HTML).entries,
+    ...auditTypography({
+      blocks: [{ id: 'p[0]', words: 60, chars: 480, fontSize: 10, leading: 1, lines: 4, textAlign: 'justify', italic: true }],
+      truncated: false,
+    }).entries,
+    ...auditOrder({
+      reordered: [
+        { id: 'div[0]', kind: 'reverse', children: 3, focusable: 2 },
+        { id: 'ul[0]', kind: 'order', children: 4, focusable: 0 },
+      ],
+      truncated: false,
+    }).entries,
+    ...auditGenerated({
+      items: [
+        { id: 'label[0]::before', pseudo: '::before', text: 'Required' },
+        { id: 'i[0]::after', pseudo: '::after', text: '\uE900' },
+      ],
+      checked: 2,
+      truncated: false,
+    }).entries,
+    ...auditLookalike(SAMPLE_LOOKALIKE_HTML).entries,
+    ...auditRegions({ landmarks: 1, checked: 6, outside: ['p[2]'], outsideCount: 2, truncated: false }).entries,
     ...SAMPLE_HEADINGS.flatMap((f) => auditHeadings(f).entries),
     ...auditTextZoom({ checked: 2, newlyClipped: [{ id: 'div[2]', scrollWidth: 100, clientWidth: 100, scrollHeight: 60, clientHeight: 20 }] }).entries,
     ...auditBudget(waiverReport, { version: 1, checks: { contrast: { fail: 0, unknown: 0 } } }).entries,
@@ -357,6 +385,11 @@ export const SAMPLE_HEADINGS: readonly ProseFacts[] = [
   proseBlocks('fr', [], { title: 'Heures de la clinique', headings: heads([[1, 'Stationnement']]) }),
 ];
 
+/** Markup that breaks every inline handler rule. */
+export const SAMPLE_HANDLER_HTML =
+  '<div onclick="go()">a</div><div tabindex="0" onclick="go()">b</div><button onmousedown="go()">c</button>' +
+  '<div onmouseover="go()">d</div><div tabindex="0" ondblclick="go()">e</div><span title="Opens the booking form in a new window">f</span>';
+
 /** One text that breaks each wording rule, keyed by rule id. */
 export const SAMPLE_TEXT: Readonly<Record<string, string>> = {
   'claim-checked': 'Verified by our team',
@@ -366,8 +399,12 @@ export const SAMPLE_TEXT: Readonly<Record<string, string>> = {
   'claim-conformance': 'Fully accessible',
   'mention-tech': 'Powered by AI',
   'mention-tech-terms': 'Uses machine learning',
-  'mention-org': `Endorsed by ${forbiddenOrgNeedles()[0] ?? ''}`,
+  'mention-org': endorsedByForbiddenOrgSample('en'),
   'advice-eligibility': 'You qualify for support',
   'advice-medical': 'Consult your doctor',
   'claim-complete': 'Always up to date',
 };
+
+/** Markup for the look-alike structure sample: one finding of each rule. */
+export const SAMPLE_LOOKALIKE_HTML =
+  '<main><p><strong>Getting here</strong></p><p>• Ramp</p><p>• Lift</p><p>• Stairs</p><p></p></main>';

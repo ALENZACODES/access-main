@@ -75,6 +75,10 @@ function placeLaneAlias() {
 const slimLaneAliases = [
   slimLaneAlias(/^@access-tools\/finders\/shell$/, "access-tools", "packages/finders", "src/shell.ts", path.join(root, "src/modules/finders-shell-fallback.ts")),
   slimLaneAlias(/^@access\/help\/shell$/, "access-help", "packages/help", "src/shell.ts", path.join(root, "src/modules/help-shell-fallback.ts")),
+  // The games and navigator module routes load only the list adapters, not the package screens.
+  slimLaneAlias(/^@access-tools\/games\/shell$/, "access-tools", "packages/games", "src/shell.ts", path.join(root, "src/modules/games-shell-fallback.ts")),
+  slimLaneAlias(/^@access-tools\/games\/library$/, "access-tools", "packages/games", "src/library.ts", path.join(root, "src/modules/games-shell-fallback.ts")),
+  slimLaneAlias(/^@access-tools\/navigator\/shell$/, "access-tools", "packages/navigator", "src/shell.ts", path.join(root, "src/modules/navigator-shell-fallback.ts")),
   placeLaneAlias(),
 ];
 
@@ -96,12 +100,24 @@ const hubAliases = (
     ["@access-tools/handoff", "access-tools", "handoff"],
     ["@hub/handoff-fixtures", "access-tools", "handoff", "src/fixtures.ts"],
     ["@access/peers", "access-help", "peers"],
+    ["@hub/peers-ui", "access-help", "peers", "src/ui/index.ts"],
     ["@access/event-access", "access-help", "event-access"],
+    ["@hub/event-access-ui", "access-help", "event-access", "src/ui/index.ts"],
+    ["@access/outings", "access-help", "outings"],
+    ["@access-maps/conditions", "access-maps", "conditions"],
+    ["@hub/wav-dataset", "access-maps", "conditions", "datasets/wav-services.json"],
+    ["@hub/games", "access-tools", "games"],
   ] as Array<[string, string, string] | [string, string, string, string]>
-).map(([find, repo, pkg, entry = "src/index.ts"]) => ({
-  find,
-  replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
-}));
+)
+  .map(([find, repo, pkg, entry = "src/index.ts"]) => ({
+    find,
+    replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
+  }))
+  .concat([
+    // This repository's own advocacy package: the report tables screen and its labelled demonstration set.
+    { find: "@hub/advocacy-reports", replacement: path.join(repoRoot, "packages/advocacy/src/ui/ReportsPanel.tsx") },
+    { find: "@hub/advocacy-demo", replacement: path.join(repoRoot, "packages/advocacy/src/reports/demo.ts") },
+  ]);
 
 /** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
 function buildManifest(): Plugin {

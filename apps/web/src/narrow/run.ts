@@ -13,12 +13,18 @@ import { auditImages } from './images.js';
 import { auditLinks } from './links.js';
 import { auditPurpose } from './purpose.js';
 import { structureInPage, type StructureFacts } from './structure.js';
+import { auditLookalike } from './lookalike.js';
+import { auditRegions, regionsInPage, type RegionFacts } from './regions.js';
+import { auditGenerated, generatedInPage, type GeneratedFacts } from './generated.js';
+import { auditHandlers } from './handlers.js';
 import { auditHeadings } from './headings.js';
 import { auditLocale } from './locale.js';
+import { auditOrder, orderInPage, type OrderFacts } from './order.js';
 import { auditPlain } from './plain.js';
 import { proseInPage, MAX_BLOCK_CHARS, type ProseFacts } from './prose.js';
 import { auditSensory } from './sensory.js';
 import { auditTextZoom, TEXT_ZOOM_CSS } from './textzoom.js';
+import { auditTypography, typographyInPage, type TypographyFacts } from './typography.js';
 import { auditTables } from './tables.js';
 import { auditTiming } from './timing.js';
 import { auditContrast } from './contrast.js';
@@ -54,6 +60,24 @@ import { auditTextSpacing } from './textspacing.js';
 /** Limits for the running-text collector. */
 const PROSE_ARGS = { maxElements: MAX_ELEMENTS, maxBlocks: 300, maxChars: MAX_BLOCK_CHARS } as const;
 
+/** What the layout checks read from the page. */
+export interface LayoutFacts {
+  readonly typography: TypographyFacts;
+  readonly order: OrderFacts;
+  readonly generated: GeneratedFacts;
+  readonly regions: RegionFacts;
+}
+
+/** Collects the layout facts in the page that is running the code. Reads only. Not for page.evaluate: use the three functions it calls. */
+export function layoutInPage(): LayoutFacts {
+  return {
+    typography: typographyInPage({ maxElements: MAX_ELEMENTS, maxBlocks: 300 }),
+    order: orderInPage({ maxElements: MAX_ELEMENTS, selector: INTERACTIVE_SELECTOR }),
+    generated: generatedInPage({ maxElements: MAX_ELEMENTS, maxItems: 200 }),
+    regions: regionsInPage({ maxElements: MAX_ELEMENTS, selector: INTERACTIVE_SELECTOR }),
+  };
+}
+
 export interface RouteInputs {
   readonly snapshot: Snapshot;
   /** Left out when focus was not probed (for example in the in-app panel). */
@@ -76,6 +100,8 @@ export interface RouteInputs {
   readonly structure?: StructureFacts;
   /** Running text, for plain language, date and number formats and instructions that need sight or hearing. */
   readonly prose?: ProseFacts;
+  /** Text layout, visual order and CSS generated text. */
+  readonly layout?: LayoutFacts;
   /** Boxes that cut text off when the base text size is doubled. */
   readonly textZoom?: TextSpacingResult;
   /** Host patterns the team allowed. */
@@ -121,6 +147,8 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
     ...(input.langBlocks ? { 'lang-parts': auditLangParts(input.langBlocks) } : {}),
     ...(input.structure ? structureResults(input.structure) : {}),
     ...(input.prose ? proseResults(input.prose) : {}),
+    ...(input.layout ? layoutResults(input.layout) : {}),
+    ...(input.html !== undefined ? { handlers: auditHandlers(input.html), lookalike: auditLookalike(input.html) } : {}),
     ...(input.textZoom ? { 'text-zoom': auditTextZoom(input.textZoom) } : {}),
     ...(input.resources ? { external: auditResources(input.resources, input.allowHosts ? { allow: input.allowHosts } : {}) } : {}),
     ...(kb ? { keyboard: kb.keyboard, 'focus-visible': kb.focusVisible } : {}),
@@ -132,6 +160,11 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
       : {}),
   };
   return buildRouteAudit(route, viewportWidth, results, snapshot.unmeasured, snapshot.truncated);
+}
+
+/** The checks that read how the page is laid out. */
+export function layoutResults(f: LayoutFacts): Parameters<typeof buildRouteAudit>[2] {
+  return { typography: auditTypography(f.typography), order: auditOrder(f.order), generated: auditGenerated(f.generated), regions: auditRegions(f.regions) };
 }
 
 /** The checks that read the running text of a page. */
@@ -229,6 +262,13 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
   const structure = await page.evaluate(structureInPage, { maxElements: MAX_ELEMENTS });
   const prose = await page.evaluate(proseInPage, PROSE_ARGS);
   const textZoom = await page.evaluate(textSpacingProbeInPage, { css: TEXT_ZOOM_CSS, maxElements: MAX_ELEMENTS });
+  // Each in-page function is sent to the browser on its own, so they cannot call one another.
+  const layout: LayoutFacts = {
+    typography: await page.evaluate(typographyInPage, { maxElements: MAX_ELEMENTS, maxBlocks: 300 }),
+    order: await page.evaluate(orderInPage, { maxElements: MAX_ELEMENTS, selector: INTERACTIVE_SELECTOR }),
+    generated: await page.evaluate(generatedInPage, { maxElements: MAX_ELEMENTS, maxItems: 200 }),
+    regions: await page.evaluate(regionsInPage, { maxElements: MAX_ELEMENTS, selector: INTERACTIVE_SELECTOR }),
+  };
   const audit = auditSnapshot(label, width, {
     snapshot,
     facts,
@@ -238,6 +278,7 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
     langBlocks,
     structure,
     prose,
+    layout,
     textZoom,
     ...(opts.allowHosts ? { allowHosts: opts.allowHosts } : {}),
     focus,
@@ -332,5 +373,5 @@ export function selfAudit(now: Date): AuditReport {
   const facts = probesInPage({ maxElements: MAX_ELEMENTS, helpPattern: HELP_WORDS.source });
   const resources = resourcesInPage({ max: 400 });
   const weight = { facts: weightInPage({ max: 400 }), options: {} };
-  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts, resources, weight, semantics: semanticsInPage({ maxElements: MAX_ELEMENTS }), langBlocks: langBlocksInPage({ maxElements: MAX_ELEMENTS, maxBlocks: 300 }), structure: structureInPage({ maxElements: MAX_ELEMENTS }), prose: proseInPage(PROSE_ARGS) })], now);
+  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts, resources, weight, semantics: semanticsInPage({ maxElements: MAX_ELEMENTS }), langBlocks: langBlocksInPage({ maxElements: MAX_ELEMENTS, maxBlocks: 300 }), structure: structureInPage({ maxElements: MAX_ELEMENTS }), prose: proseInPage(PROSE_ARGS), layout: layoutInPage() })], now);
 }
