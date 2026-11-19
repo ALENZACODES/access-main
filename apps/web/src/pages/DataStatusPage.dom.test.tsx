@@ -102,8 +102,8 @@ describe("a shared source never looks better than its worst record", () => {
     await view("en");
     const table = await sourceTable();
     const row = within(table).getAllByRole("row")[1]!;
-    hasText(row, "Unknown");
-    hasText(row, "Retrieval date unknown");
+    hasText(row, "UNKNOWN");
+    hasText(row, "Retrieval date UNKNOWN");
     noText(row, /Retrieved \d+ days? ago/);
     hasText(screen.getByTestId("source-basis"), "Records without a usable retrieved date: 1 of 2.");
   });
@@ -134,7 +134,7 @@ describe("a shared source never looks better than its worst record", () => {
     await view("fr");
     await sourceTable();
     const note = screen.getByTestId("source-basis");
-    hasText(note, "Open data : Date affichée comme inconnue.");
+    hasText(note, "Open data : Date affichée comme UNKNOWN.");
     hasText(note, "Fiches sans date de récupération utilisable : 1 sur 2.");
   });
 
@@ -145,7 +145,7 @@ describe("a shared source never looks better than its worst record", () => {
     ];
     await view("en");
     await sourceTable();
-    hasText(screen.getByTestId("source-basis"), "Unknown name");
+    hasText(screen.getByTestId("source-basis"), "Name UNKNOWN");
     noText(screen.getByTestId("source-basis"), "N/A");
   });
 });
@@ -164,8 +164,8 @@ describe("each record states why it has its status", () => {
     const basis = (title: string) => within(screen.getByText(title).closest("li") as HTMLElement).getByTestId("status-basis");
     hasText(basis("Fresh stop"), /Retrieved .*, 3 days ago\. Within the 180 days limit\./);
     hasText(basis("Stale stop"), /Retrieved .*, 200 days ago\. Past the 180 days limit\./);
-    hasText(basis("Undated stop"), "No retrieved date is recorded, so the status is unknown.");
-    hasText(basis("Future stop"), /is after today, so the status is unknown\./);
+    hasText(basis("Undated stop"), "No retrieved date is recorded, so the status is UNKNOWN.");
+    hasText(basis("Future stop"), /is after today, so the status is UNKNOWN\./);
     hasText(basis("Bad stop"), "could not be read as a real calendar date");
   });
 
@@ -188,7 +188,7 @@ describe("UNKNOWN rates for what is cached", () => {
   it("is not shown for an empty cache", async () => {
     await view("en");
     expect(screen.queryByText("Completeness by field")).toBeNull();
-    hasText(screen.getByTestId("unknown-date-rate"), "Unknown");
+    hasText(screen.getByTestId("unknown-date-rate"), "UNKNOWN");
   });
 
   it("counts unknown dates, licences, publishers and links", async () => {
@@ -307,12 +307,12 @@ describe("planning sections and extra downloads on the live panel", () => {
     const planning = screen.getByRole("region", { name: /Data status panel|Panneau de l’état des données/ });
     hasText(planning, "Review workload");
     hasText(planning, "1 source is past its review date.");
-    hasText(planning, "1 source is not scheduled because its retrieved date is unknown.");
+    hasText(planning, "1 source is not scheduled because its retrieved date is UNKNOWN.");
     const ages = within(planning).getByRole("table", { name: "Sources by age of retrieved date" });
     const rows = within(ages).getAllByRole("row").map((r) => cells(r));
     expect(rows.find((r) => r[0] === "0 to 30 days")?.[1]).toBe("1");
     expect(rows.find((r) => r[0] === "More than 365 days")?.[1]).toBe("1");
-    expect(rows.find((r) => r[0] === "Unknown date")?.[1]).toBe("1");
+    expect(rows.find((r) => r[0] === "Date UNKNOWN")?.[1]).toBe("1");
   });
 
   it("shows the summary, the next steps and the licences in use", async () => {
@@ -434,13 +434,13 @@ describe("planning sections and extra downloads on the live panel", () => {
     const rows = within(tiers).getAllByRole("row").map((r) => cells(r));
     expect(rows.find((r) => r[0] === "Tier 0")?.[2]).toBe("1");
     expect(rows.find((r) => r[0] === "Tier E")?.[2]).toBe("1");
-    expect(rows.find((r) => r[0] === "Unknown")?.[2]).toBe("1");
+    expect(rows.find((r) => r[0] === "UNKNOWN")?.[2]).toBe("1");
     hasText(panel, "Records that state a tier: 2 of 3.");
     hasText(panel, "Records that carry all four: 2 of 3.");
     const gaps = within(panel).getByRole("table", { name: "Records with a missing source, licence, date or tier" });
     const gapRows = within(gaps).getAllByRole("row").map((r) => cells(r));
     expect(gapRows).toHaveLength(2);
-    expect(gapRows[1]?.slice(1)).toEqual(["Recorded", "Recorded", "Recorded", "Unknown"]);
+    expect(gapRows[1]?.slice(1)).toEqual(["Recorded", "Recorded", "Recorded", "UNKNOWN"]);
   });
 
   it("shows the tier sections in French", async () => {
@@ -465,9 +465,9 @@ describe("planning sections and extra downloads on the live panel", () => {
     expect(saved[0]!.type).toBe("text/csv;charset=utf-8");
     const lines = (await readBlob(saved[0]!)).replace(/^\uFEFF/, "").trim().split("\r\n");
     expect(lines).toHaveLength(3);
-    expect(lines[0]).toBe("Dataset,Record ID,Record,Source,Source page,Licence,Retrieved (YYYY-MM-DD),Status,Tier,Facts that are unknown");
+    expect(lines[0]).toBe("Dataset,Record ID,Record,Source,Source page,Licence,Retrieved (YYYY-MM-DD),Status,Tier,Facts that are UNKNOWN");
     expect(lines[1]?.split(",").slice(-2)).toEqual(["0", "0"]);
-    expect(lines[2]?.split(",").slice(-2)).toEqual(["Unknown", "2"]);
+    expect(lines[2]?.split(",").slice(-2)).toEqual(["UNKNOWN", "2"]);
   });
 
   it("has no axe violations with the tier sections, in both languages", async () => {
@@ -496,7 +496,7 @@ describe("planning sections and extra downloads on the live panel", () => {
     const list = within(panel).getByRole("table", { name: "Sources" });
     const rows = within(list).getAllByRole("row").map((r) => cells(r));
     expect(rows[0]?.at(-1)).toMatch(/^Tier/);
-    expect(rows.slice(1).map((r) => r.at(-1)).sort()).toEqual(["0", "E", "Unknown"]);
+    expect(rows.slice(1).map((r) => r.at(-1)).sort()).toEqual(["0", "E", "UNKNOWN"]);
     const select = within(panel).getByLabelText("Tier") as HTMLSelectElement;
     expect([...select.options].map((o) => o.value)).toEqual(["any", "0", "1", "2", "3", "4", "E", "unknown"]);
   });
@@ -545,12 +545,12 @@ describe("planning sections and extra downloads on the live panel", () => {
     const after = within(panel).getByRole("button", { name: "List these sources. Tier: E" });
     expect(after).not.toBe(drill);
     expect(document.activeElement).toBe(after);
-    user.click(within(panel).getByRole("button", { name: "List these sources. Unknown: Retrieved date" }));
-    expect((within(panel).getByLabelText("Unknown fact") as HTMLSelectElement).value).toBe("date");
+    user.click(within(panel).getByRole("button", { name: "List these sources. UNKNOWN: Retrieved date" }));
+    expect((within(panel).getByLabelText("Fact that is UNKNOWN") as HTMLSelectElement).value).toBe("date");
     hasText(panel, "1 filter in force");
     const list = within(panel).getByRole("table", { name: "Sources" });
     expect(within(list).getAllByRole("row")).toHaveLength(2);
-    user.click(within(panel).getByRole("button", { name: "Remove filter. Unknown: Retrieved date" }));
+    user.click(within(panel).getByRole("button", { name: "Remove filter. UNKNOWN: Retrieved date" }));
     expect(document.activeElement).toBe(within(panel).getByRole("button", { name: /Clear filters/ }));
     expect(panel.querySelectorAll("[tabindex]")).toHaveLength(0);
   });
@@ -688,6 +688,46 @@ describe("planning sections and extra downloads on the live panel", () => {
     expect(within(sources()).getAllByRole("columnheader")).toHaveLength(5);
     expect(within(panel).getByRole("heading", { level: 2, name: "Pages recorded for more than one source" })).toBeTruthy();
     const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+
+  it("counts the list two ways, splits the review into sessions, lists the files, and shows no localized word for a gap", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "No tier stop", source: "Other source", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = () => screen.getByRole("region", { name: "Data status panel" });
+    expect(panel().textContent ?? "").not.toMatch(/\bUnknown\b/);
+    expect(panel().textContent ?? "").toContain("UNKNOWN");
+
+    const rows = within(panel()).getByLabelText("Count the list by") as HTMLSelectElement;
+    rows.value = "tier";
+    rows.dispatchEvent(new Event("change", { bubbles: true }));
+    hasText(panel(), "Count table by tier.");
+    const table = within(panel()).getByRole("table", { name: "Listed sources by tier" });
+    expect(within(table).getAllByRole("row")).toHaveLength(5);
+    user.click(within(table).getByRole("button", { name: "1 source. Tier E. List it" }));
+    hasText(panel(), "List narrowed to 1 source. Tier E.");
+    expect((within(panel()).getByLabelText("Tier", { exact: true }) as HTMLSelectElement).value).toBe("E");
+    user.click(within(panel()).getByRole("button", { name: "Clear filters" }));
+
+    const batch = within(panel()).getByLabelText("Split the review into sessions of") as HTMLSelectElement;
+    batch.value = "5";
+    batch.dispatchEvent(new Event("change", { bubbles: true }));
+    hasText(panel(), /Review split into 1 session of up to 5 sources\./);
+    user.click(within(panel()).getByRole("button", { name: "Download the review sessions (Markdown)" }));
+    expect(saved).toHaveLength(1);
+    const text = await readBlob(saved[0]!);
+    expect(text.startsWith("# Review sessions\n")).toBe(true);
+    expect(text).toContain("## Session 1 of 1");
+
+    const guide = within(panel()).getByRole("region", { name: "Files you can save" });
+    hasText(guide, "review-sessions.md");
+    hasText(guide, "written UNKNOWN");
+    const results = await axe.run(panel(), { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });

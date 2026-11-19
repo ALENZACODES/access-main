@@ -16,7 +16,7 @@ describe('glanceSentences', () => {
   it('gives the scope, then what needs review', () => {
     expect(glanceSentences(auditRegistry(RECORDS, NOW), 'en')).toEqual([
       '3 sources saved on this device, in 2 datasets.',
-      'To review: 1 possibly out of date, 1 with an unknown update date, 1 licence to review and 3 missing details.',
+      'To review: 1 possibly out of date, 1 with an UNKNOWN update date, 1 licence to review and 3 missing details.',
     ]);
   });
   it('says nothing needs review when everything is complete', () => {
@@ -28,7 +28,7 @@ describe('glanceSentences', () => {
   });
   it('joins the French list with “et”', () => {
     const fr = glanceSentences(auditRegistry(RECORDS, NOW), 'fr');
-    expect(fr[1]).toBe('À examiner : 1 possiblement périmée, 1 à date de mise à jour inconnue, 1 licence à examiner et 3 informations manquantes.');
+    expect(fr[1]).toBe('À examiner : 1 possiblement périmée, 1 à date de mise à jour UNKNOWN, 1 licence à examiner et 3 informations manquantes.');
   });
   it('counts a dataset with no sources', () => {
     const s = glanceSentences(auditRegistry([{ id: 'e', name: 'E', kind: 'places', sources: [] }], NOW), 'en');

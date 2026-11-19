@@ -92,7 +92,7 @@ describe('buildRowDetail', () => {
     expect(pair('bare', 'gaps')).toBe('Source, Licence, Retrieved date, Tier');
     expect(pair('bare', 'todo')).toBe('Source name missing, Licence missing, Retrieved date missing');
     expect(pair('bare', 'tier')).toBe('The record does not state a tier.');
-    expect(pair('bare', 'licenceType')).toBe('Unknown');
+    expect(pair('bare', 'licenceType')).toBe('UNKNOWN');
     expect(pair('old', 'todo')).toBe('Licence not on the reference list, Possibly out of date');
     expect(pair('old', 'licenceType')).toBe('Not on the reference list');
   });

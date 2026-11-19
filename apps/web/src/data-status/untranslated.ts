@@ -11,7 +11,10 @@ import { visibleText } from './copyLint';
 import { UNKNOWN_WORD } from './unknownWord';
 
 /** Messages that are legitimately the same in both languages (words that are spelled alike). */
-export const SAME_IN_BOTH: readonly MessageKey[] = ['qa.counts.sources', 'tbl.sources', 'tbl.sourceCount', 'tbl.source', 'tbl.licence', 'csv.source', 'csv.licence', 'hist.date', 'due.source', 'comp.f.licence'];
+export const SAME_IN_BOTH: readonly MessageKey[] = ['qa.counts.sources', 'tbl.sources', 'tbl.sourceCount', 'tbl.source', 'tbl.licence', 'csv.source', 'csv.licence', 'hist.date', 'due.source', 'comp.f.licence',
+  // The token UNKNOWN is the same in both languages on purpose.
+  'unknown', 'cov.unknown', 'comp.unknown',
+];
 
 /**
  * English words that are not French words. Words spelled the same in both languages (source, licence, page, date)

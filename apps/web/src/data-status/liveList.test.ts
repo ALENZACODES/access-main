@@ -242,7 +242,7 @@ describe('sorting and Show more on the mounted panel', () => {
 
 describe('the Unknown word in the tier quick filter', () => {
   it('is the panel’s own Unknown word in both languages', () => {
-    expect(quickFilterLabel({ id: 'noTier', count: 2 }, 'en')).toBe('Tier: Unknown (2)');
-    expect(quickFilterLabel({ id: 'noTier', count: 2 }, 'fr')).toBe('Niveau : Inconnu (2)');
+    expect(quickFilterLabel({ id: 'noTier', count: 2 }, 'en')).toBe('Tier: UNKNOWN (2)');
+    expect(quickFilterLabel({ id: 'noTier', count: 2 }, 'fr')).toBe('Niveau : UNKNOWN (2)');
   });
 });

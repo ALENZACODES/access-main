@@ -44,6 +44,36 @@ import {
   buildNoMatchHints,
   renderDueSummaryHtml,
   clampLimit,
+  TOC_GO_ACTION,
+  renderFileGuideHtml,
+  BATCH_EXPORT_ACTION,
+  BATCH_FILENAME,
+  batchExportLabel,
+  batchParams,
+  buildBatchFile,
+  buildReviewBatches,
+  describeBatches,
+  describeBatchesSaved,
+  isBatchSize,
+  renderBatchControl,
+  renderReviewBatchesHtml,
+  type BatchSize,
+  buildPivot,
+  describePivot,
+  describePivotPicked,
+  isPivotDim,
+  parsePivotAction,
+  PIVOT_ACTION_PREFIX,
+  PIVOT_EXPORT_ACTION,
+  PIVOT_FILENAME,
+  pivotCellFilters,
+  pivotExportLabel,
+  pivotParams,
+  pivotToCsv,
+  renderPivotControl,
+  renderPivotHtml,
+  type PivotCell,
+  type PivotSpec,
   buildSharedPages,
   renderSharedPagesHtml,
   buildListedTable,
@@ -323,6 +353,10 @@ export interface LiveList {
   details?: boolean | undefined;
   /** Extra columns after the five fixed ones. */
   columns?: readonly ColumnId[] | undefined;
+  /** The count table under the list; null or left out for none. */
+  pivot?: PivotSpec | null | undefined;
+  /** The review split into sessions of this many sources; null or left out for no split. */
+  batch?: BatchSize | null | undefined;
 }
 
 export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, live?: LiveList): string {
@@ -470,10 +504,42 @@ export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: F
     buttonStyle: buttonInlineStyle(),
     ...(hrefWithout ? { hrefFor: (target: FacetTarget) => hrefWithout(narrowFilters(filters, target)) } : {}),
   });
-  return active + tokens + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + facets + suggestions + hints;
+  // The count table follows the list as filtered, so it lives with the results.
+  const pivotSpec = nav ? (nav.table.pivot ?? null) : (live?.pivot ?? null);
+  let pivot = '';
+  if (pivotSpec !== null) {
+    const table = buildPivot(listed, pivotSpec);
+    const csv = nav
+      ? `<p><a href="${esc(`${nav.action}/${PIVOT_FILENAME}${buildQuery({ filters, thresholds: nav.thresholds }, nav.table, { withPage: false })}`)}" style="${LINK_STYLE}">${esc(pivotExportLabel(locale))}</a></p>`
+      : `<p><button type="button" data-action="${PIVOT_EXPORT_ACTION}" style="${buttonInlineStyle()}">${esc(pivotExportLabel(locale))}</button></p>`;
+    pivot =
+      renderPivotHtml(table, locale, {
+        datasetNames: names,
+        buttonStyle: buttonInlineStyle(),
+        ...(hrefWithout
+          ? {
+              hrefFor: (cell: PivotCell) => {
+                const f = pivotCellFilters(filters, cell);
+                return f === null ? null : hrefWithout(f);
+              },
+            }
+          : {}),
+      }) + (table.total > 0 ? csv : '');
+  }
+  // Review sessions are cut from the list as filtered and ordered, so they live with the results too.
+  const batchSize = nav ? (nav.table.batch ?? null) : (live?.batch ?? null);
+  let sessions = '';
+  if (batchSize !== null) {
+    const d = buildReviewBatches(audit, filters, locale, batchSize, nav ? nav.table.sort : (live?.sort ?? null));
+    const file = nav
+      ? `<p><a href="${esc(`${nav.action}/${BATCH_FILENAME}${buildQuery({ filters, thresholds: nav.thresholds }, nav.table, { withPage: false })}`)}" style="${LINK_STYLE}">${esc(batchExportLabel(locale))}</a></p>`
+      : `<p><button type="button" data-action="${BATCH_EXPORT_ACTION}" style="${buttonInlineStyle()}">${esc(batchExportLabel(locale))}</button></p>`;
+    sessions = renderReviewBatchesHtml(d, locale) + (d.batches.length > 0 ? file : '');
+  }
+  return active + tokens + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + facets + pivot + sessions + suggestions + hints;
 }
 
-export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null, liveLayout?: { group: GroupKey; details: boolean; columns?: readonly ColumnId[] }): string {
+export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null, liveLayout?: { group: GroupKey; details: boolean; columns?: readonly ColumnId[]; pivot?: PivotSpec | null; batch?: BatchSize | null }): string {
   const stateOpts =
     option('any', t(locale, 'flt.any'), f.state === 'any') +
     FILTER_STATES.map((s) => option(s, t(locale, `state.${s}`), f.state === s)).join('');
@@ -514,7 +580,7 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     `<input type="checkbox" id="ds-f-issues" name="issues" value="1" data-filter="onlyIssues" style="width:24px;height:24px"${f.onlyIssues ? ' checked' : ''}>` +
     `${esc(t(locale, 'flt.onlyIssues'))}</label></div>`;
   if (!form) {
-    return controls + (liveSort === undefined ? '' : renderSortControl(liveSort, locale)) + (liveLayout === undefined ? '' : renderGroupControl(liveLayout.group, locale) + renderDetailsToggle(liveLayout.details, locale) + renderColumnChooser(liveLayout.columns ?? [], locale)) + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
+    return controls + (liveSort === undefined ? '' : renderSortControl(liveSort, locale)) + (liveLayout === undefined ? '' : renderGroupControl(liveLayout.group, locale) + renderDetailsToggle(liveLayout.details, locale) + renderColumnChooser(liveLayout.columns ?? [], locale) + renderPivotControl(liveLayout.pivot ?? null, locale, true) + renderBatchControl(liveLayout.batch ?? null, locale)) + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
   }
   const sort = form.table?.sort ?? null;
   const size = form.table?.paging.size ?? DEFAULT_PAGE_SIZE;
@@ -528,7 +594,9 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
       // Grouping and row details are part of the form, so they work without scripts and survive every submit.
       renderGroupControl(form.table.group ?? 'none', locale) +
       renderDetailsToggle(form.table.details === true, locale) +
-      renderColumnChooser(form.table.columns ?? [], locale)
+      renderColumnChooser(form.table.columns ?? [], locale) +
+      renderPivotControl(form.table.pivot ?? null, locale) +
+      renderBatchControl(form.table.batch ?? null, locale)
     : '';
   return (
     `<form method="get" action="${esc(form.action)}">${controls}${sizeField}${hidden}` +
@@ -648,7 +716,7 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
     `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
-    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort, sv || !state.live ? undefined : { group: state.live.group ?? 'none', details: state.live.details === true, columns: state.live.columns ?? [] }) +
+    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort, sv || !state.live ? undefined : { group: state.live.group ?? 'none', details: state.live.details === true, columns: state.live.columns ?? [], pivot: state.live.pivot ?? null, batch: state.live.batch ?? null }) +
     (sv || !state.savedViews ? '' : `<div data-region="views">${renderViewsRegion(audit, locale, filters, state.savedViews)}</div>`) +
     (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
     `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined, sv ? undefined : state.live)}</div>` +
@@ -660,9 +728,11 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale, { heading: drillColumnHeading(locale), cell: (field) => drill({ kind: 'gap', value: field }) }) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale, { heading: drillColumnHeading(locale), cell: (id) => drill({ kind: 'age', value: id }) }) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
+    renderFileGuideHtml(sv ? 'static' : 'live', locale) +
     renderGlossaryHtml(locale) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale));
-  const html = head + renderTocHtml(buildToc(body), locale) + body;
+  // The live panel gets a jump menu (two stops for the Tab key); a page without scripts gets one link per section.
+  const html = head + renderTocHtml(buildToc(body), locale, sv ? 'links' : 'jump') + body;
   return state.plainTables === true ? plainTables(html) : html;
 }
 
@@ -702,6 +772,10 @@ export interface MountOptions {
   initialGroup?: GroupKey | undefined;
   /** Extra columns to start with, e.g. from the address. */
   initialColumns?: readonly ColumnId[] | undefined;
+  /** The count table to start with, e.g. from the address. */
+  initialPivot?: PivotSpec | null | undefined;
+  /** The session size to start with, e.g. from the address. */
+  initialBatch?: BatchSize | null | undefined;
   /** Staleness thresholds in days per dataset type (for example parsed from the URL). */
   thresholds?: Thresholds | undefined;
   /** On-device history of totals; today's totals are recorded when live data loads. */
@@ -722,6 +796,8 @@ export interface MountedPanel {
   getSort(): SortSpec | null;
   getGroup(): GroupKey;
   getColumns(): ColumnId[];
+  getPivot(): PivotSpec | null;
+  getBatch(): BatchSize | null;
   destroy(): void;
 }
 
@@ -732,6 +808,9 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   let limit = LIVE_STEP;
   let group: GroupKey = opts.initialGroup ?? 'none';
   let columns: ColumnId[] = normaliseColumns(opts.initialColumns ?? []);
+  let pivot: PivotSpec | null = opts.initialPivot ?? null;
+  let batch: BatchSize | null = opts.initialBatch ?? null;
+  let tocTarget: string | null = null;
   let details = false;
   // What has been typed as a name for the next saved view. Kept here so redraws do not lose it.
   let viewName = '';
@@ -739,11 +818,13 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   const thresholds: Thresholds = { ...(opts.thresholds ?? {}) };
   const view = (): string => {
     const base = serializeViewState({ filters: { ...filters, query: normaliseQuery(filters.query) }, thresholds });
-    if (sort === null && group === 'none' && columns.length === 0) return base;
+    if (sort === null && group === 'none' && columns.length === 0 && pivot === null && batch === null) return base;
     const p = new URLSearchParams(base.replace(/^\?/, ''));
     for (const [k, v] of sortParams(sort)) p.set(k, v);
     if (group !== 'none') p.set('group', group);
     for (const [k, v] of columnParams(columns)) p.set(k, v);
+    for (const [k, v] of pivotParams(pivot)) p.set(k, v);
+    for (const [k, v] of batchParams(batch)) p.set(k, v);
     return `?${p.toString()}`;
   };
 
@@ -824,7 +905,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       changes,
       notices: opts.getNotices?.(locale),
       plainTables: opts.plainTables,
-      live: { sort, limit, group, details, columns },
+      live: { sort, limit, group, details, columns, pivot, batch },
       savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable, draftName: viewName } : undefined,
     });
   };
@@ -866,7 +947,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     }
     const now = nowFn();
     const audit = auditRegistry(lastRecords, now, thresholds);
-    const results = renderResultsHtml(audit, opts.getLocale(), filters, now, undefined, undefined, { sort, limit, group, details, columns });
+    const results = renderResultsHtml(audit, opts.getLocale(), filters, now, undefined, undefined, { sort, limit, group, details, columns, pivot, batch });
     region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
     // Keep the controls that describe the filters in step with them, without touching the form fields.
     const quick = host.querySelector?.('[data-region="quick"]') ?? null;
@@ -895,6 +976,32 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     if (key === 'query' && value.slice(0, MAX_QUERY_LENGTH) === filters.query) return;
     // Any change to what is listed, or its order, starts again from the first rows.
     limit = LIVE_STEP;
+    if (key === 'tocTarget') {
+      // Choosing a section changes nothing by itself: the button next to the list goes there.
+      tocTarget = value;
+      return;
+    }
+    if (key === 'pivotRows' || key === 'pivotCols') {
+      // The count table changed, not which sources are listed. The two selects depend on each other,
+      // so the whole panel is drawn again and focus goes back to the one that was used.
+      if (key === 'pivotRows') pivot = isPivotDim(value) ? { rows: value, cols: pivot !== null && pivot.cols !== value ? pivot.cols : null } : null;
+      else if (pivot !== null) pivot = { rows: pivot.rows, cols: isPivotDim(value) && value !== pivot.rows ? value : null };
+      refresh();
+      announcer.say(describePivot(pivot, opts.getLocale()));
+      focusFirst([key === 'pivotRows' ? '#ds-pv-rows' : '#ds-pv-cols', FORM_START]);
+      opts.onFiltersChange?.(view());
+      return;
+    }
+    if (key === 'batch') {
+      // How the review work is cut up changed, not which sources are listed.
+      const n = Number(value);
+      batch = isBatchSize(n) ? n : null;
+      updateResults();
+      const locale = opts.getLocale();
+      announcer.say(describeBatches(batch === null ? null : buildReviewBatches(auditRegistry(lastRecords, nowFn(), thresholds), filters, locale, batch, sort), locale));
+      opts.onFiltersChange?.(view());
+      return;
+    }
     if (key === 'col') {
       // Which facts are shown beside each source changed, not which sources are listed.
       if (!isColumnId(value)) return;
@@ -1021,6 +1128,47 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         focusFirst([byAction(action ?? ''), FORM_START]);
         opts.onFiltersChange?.(view());
       }
+    } else if (action === TOC_GO_ACTION) {
+      // Go to the section chosen in the list, or to the first one when nothing was chosen. Only an id
+      // that is a section of this panel is accepted.
+      const ids = buildToc(host.innerHTML).map((e) => e.id);
+      const id = tocTarget !== null && ids.includes(tocTarget) ? tocTarget : ids[0];
+      if (id === undefined) return;
+      const heading = (host.querySelector?.(`#${id}`) ?? null) as { setAttribute?: (n: string, v: string) => void; scrollIntoView?: () => void; focus?: () => void } | null;
+      if (heading === null) return;
+      try {
+        // A heading takes focus only when it is told it may: -1 keeps it out of the Tab order.
+        heading.setAttribute?.('tabindex', '-1');
+        heading.scrollIntoView?.();
+        heading.focus?.();
+      } catch {
+        // Nothing to do: the list and the button are still there.
+      }
+    } else if (action === BATCH_EXPORT_ACTION && opts.onExportFile) {
+      if (batch === null) return;
+      const locale = opts.getLocale();
+      const d = buildReviewBatches(auditRegistry(lastRecords, nowFn(), thresholds), filters, locale, batch, sort);
+      opts.onExportFile(buildBatchFile(d, nowFn(), locale));
+      announcer.say(describeBatchesSaved(d, locale));
+    } else if (action === PIVOT_EXPORT_ACTION && opts.onExportFile) {
+      if (pivot === null) return;
+      const locale = opts.getLocale();
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
+      const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
+      opts.onExportFile({ text: pivotToCsv(buildPivot(applyFilters(audit.sources, filters), pivot), locale, names), filename: PIVOT_FILENAME, mime: 'text/csv;charset=utf-8' });
+    } else if (parsePivotAction(action) !== null) {
+      const cell = parsePivotAction(action);
+      const next = cell === null ? null : pivotCellFilters(filters, cell);
+      if (cell === null || next === null) return;
+      filters = next;
+      limit = LIVE_STEP;
+      refresh();
+      const locale = opts.getLocale();
+      const names = new Map(datasetOptions(auditRegistry(lastRecords, nowFn(), thresholds)).map((d) => [d.id, d.name]));
+      announcer.say(describePivotPicked(cell, lastList?.shown ?? 0, locale, names));
+      // The cell that was used may be gone now: go to another cell, or to the select that draws the table.
+      focusFirst([`[data-action^="${PIVOT_ACTION_PREFIX}"]`, '#ds-pv-rows', FORM_START]);
+      opts.onFiltersChange?.(view());
     } else if (listedTableFormatFromAction(action) !== null && opts.onExportFile) {
       const format = listedTableFormatFromAction(action);
       if (format === null) return;
@@ -1118,6 +1266,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     getSort: () => (sort === null ? null : { ...sort }),
     getGroup: () => group,
     getColumns: () => [...columns],
+    getPivot: () => (pivot === null ? null : { ...pivot }),
+    getBatch: () => batch,
     destroy: () => {
       host.removeEventListener('click', onClick);
       host.removeEventListener('change', onFilterEvent);

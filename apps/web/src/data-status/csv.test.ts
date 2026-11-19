@@ -41,7 +41,7 @@ describe('auditedSourcesToCsv', () => {
     const lines = auditedSourcesToCsv(audit.sources, 'en', false).trim().split('\r\n');
     expect(lines[0]).toBe('Dataset,Source,Link,Licence,Open licence,Retrieved,Status');
     expect(lines[1]).toBe('"Places, central",Alpha,https://example.org/a,OGL-Ontario,Yes,2026-11-01,Within its review period');
-    expect(lines[2]).toBe('"Places, central",Unknown,,Unknown,Unknown,Unknown,Update date unknown');
+    expect(lines[2]).toBe('"Places, central",UNKNOWN,,UNKNOWN,UNKNOWN,UNKNOWN,Update date UNKNOWN');
   });
 
   it('writes FR headers and values with a BOM by default', () => {
@@ -49,6 +49,6 @@ describe('auditedSourcesToCsv', () => {
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv).toContain('Date de récupération');
     expect(csv).toContain('Dans sa période de révision');
-    expect(csv).toContain('Inconnu');
+    expect(csv).toContain('UNKNOWN');
   });
 });

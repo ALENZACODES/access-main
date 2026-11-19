@@ -66,7 +66,7 @@ describe('buildMarkdownReport in English', () => {
   it('lists one source per row with licence, date and status', () => {
     expect(md).toContain('| Alpha | Places \\<A\\> | OGL-Ontario | 2026-11-01 | Within its review period (14\u00A0d) |');
     expect(md).toContain('| Beta | Places \\<A\\> | Proprietary | 2024-01-01 | May be out of date (1049\u00A0d) |');
-    expect(md).toContain('| c | Routes | Unknown | Unknown | Update date unknown |');
+    expect(md).toContain('| c | Routes | UNKNOWN | UNKNOWN | Update date UNKNOWN |');
   });
   it('puts findings that need action before the ones that are notices', () => {
     const items = lines.filter((l) => l.startsWith('- '));
@@ -76,7 +76,7 @@ describe('buildMarkdownReport in English', () => {
     expect(items.length).toBeGreaterThan(0);
   });
   it('ends with the note, in italics, and a final newline', () => {
-    expect(md.endsWith('_This is a record of what is stored on this device. Unknown means the value is missing or unreadable._\n')).toBe(true);
+    expect(md.endsWith('_This is a record of what is stored on this device. UNKNOWN means the value is missing or unreadable._\n')).toBe(true);
   });
   it('has the same number of columns on every table row', () => {
     const rows = lines.filter((l) => l.startsWith('|'));
@@ -94,7 +94,7 @@ describe('buildMarkdownReport in French', () => {
     expect(md).toContain('En date du 15 novembre 2026.');
     expect(md).toContain('## Éléments à examiner');
     expect(md).toContain('Dans sa période de révision (14 j)');
-    expect(md).toContain('| c | Routes | Inconnu | Inconnu | Date de mise à jour inconnue |');
+    expect(md).toContain('| c | Routes | UNKNOWN | UNKNOWN | Date de mise à jour UNKNOWN |');
   });
   it('puts a no-break space before the colon in each finding', () => {
     const items = md.split('\n').filter((l) => l.startsWith('- '));
@@ -110,7 +110,7 @@ describe('buildMarkdownReport in French', () => {
 describe('what the report never does', () => {
   it('shows Unknown instead of a date or licence it does not have', () => {
     const md = report([{ id: 'd', name: 'D', kind: 'places', sources: [{ id: 's', retrievedAt: 'soon' }] }]);
-    expect(md).toContain('| s | D | Unknown | Unknown | Update date unknown |');
+    expect(md).toContain('| s | D | UNKNOWN | UNKNOWN | Update date UNKNOWN |');
   });
   it('says there is nothing to review or list for an empty registry', () => {
     const md = report([]);
@@ -179,18 +179,18 @@ describe('tiers in the Markdown report', () => {
     const md = report(RECORDS);
     const rows = md.split('\n').filter((l) => l.startsWith('| ') && columnBreaks(l) === 7);
     expect(rows[0]?.endsWith('| Tier |')).toBe(true);
-    expect(rows.slice(2).map((r) => r.split(' | ').at(-1))).toEqual(['0 |', 'E |', 'Unknown |']);
+    expect(rows.slice(2).map((r) => r.split(' | ').at(-1))).toEqual(['0 |', 'E |', 'UNKNOWN |']);
   });
   it('counts records by tier, in the fixed order, with Unknown last', () => {
     const md = report(RECORDS);
     const at = md.indexOf('## Records by tier');
-    expect(md.slice(at)).toContain('| Tier | Records |\n| --- | --- |\n| Tier 0 | 1 |\n| Tier E | 1 |\n| Unknown | 1 |');
+    expect(md.slice(at)).toContain('| Tier | Records |\n| --- | --- |\n| Tier 0 | 1 |\n| Tier E | 1 |\n| UNKNOWN | 1 |');
   });
   it('is in French in the French report', () => {
     const md = report(RECORDS, 'fr');
     expect(md).toContain('## Enregistrements selon le niveau');
     expect(md).toContain('| Niveau E | 1 |');
-    expect(md).toContain('| Inconnu | 1 |');
+    expect(md).toContain('| UNKNOWN | 1 |');
   });
   it('leaves the tier section out when there are no sources', () => {
     expect(report([])).not.toContain('## Records by tier');

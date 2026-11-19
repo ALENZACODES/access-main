@@ -131,10 +131,10 @@ describe('completenessProblems', () => {
 describe('rendering', () => {
   const c = buildCompleteness(auditRegistry(records(full, empty, future), NOW));
 
-  it('shows a labelled table with Unknown share in English', () => {
+  it('shows a labelled table with UNKNOWN share in English', () => {
     const html = renderCompletenessHtml(c, 'en');
     expect(html).toContain('Completeness by field');
-    expect(html).toContain('<th scope="col">Unknown share</th>');
+    expect(html).toContain('<th scope="col">UNKNOWN share</th>');
     expect(html).toContain('66.7%');
     expect(visibleText(html)).toContain('never treated as “No”');
   });
@@ -185,7 +185,7 @@ describe('rendering', () => {
 
   it('formats an unmeasurable rate as Unknown', () => {
     const rows = completenessRows(buildCompleteness(auditRegistry([], NOW)).fields, 'en');
-    expect(rows.every((r) => !r.share.known && r.share.text === 'Unknown')).toBe(true);
+    expect(rows.every((r) => !r.share.known && r.share.text === 'UNKNOWN')).toBe(true);
   });
 });
 

@@ -37,8 +37,8 @@ export interface SourceRow {
 
 const T = {
   en: {
-    unknown: 'Unknown',
-    unknownSource: 'Unknown source',
+    unknown: 'UNKNOWN',
+    unknownSource: 'Source UNKNOWN',
     caption: 'Data sources',
     colSource: 'Source',
     colLicence: 'Licence',
@@ -49,8 +49,8 @@ const T = {
     sep: ' · ',
   },
   fr: {
-    unknown: 'Inconnue',
-    unknownSource: 'Source inconnue',
+    unknown: 'UNKNOWN',
+    unknownSource: 'Source UNKNOWN',
     caption: 'Sources de données',
     colSource: 'Source',
     colLicence: 'Licence',

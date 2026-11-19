@@ -36,10 +36,13 @@ import { CHECKLIST_MESSAGES } from './reviewChecklist';
 import { DATASET_CARD_MESSAGES } from './datasetCards';
 import { COLUMN_MESSAGES } from './columns';
 import { FACET_MESSAGES } from './facets';
+import { FILE_GUIDE_MESSAGES } from './fileGuide';
 import { LISTED_TABLE_MESSAGES } from './listedTable';
 import { LISTED_JSON_MESSAGES } from './listedJson';
 import { NAME_SUGGESTION_MESSAGES } from './nameSuggestions';
+import { PIVOT_MESSAGES } from './pivot';
 import { QUERY_TOKEN_MESSAGES } from './queryTokens';
+import { REVIEW_BATCH_MESSAGES } from './reviewBatches';
 import { SHARED_PAGE_MESSAGES } from './sharedPages';
 import { REVIEW_CALENDAR_MESSAGES } from './reviewCalendar';
 import * as extras from './extras';
@@ -79,6 +82,9 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['queryTokens', QUERY_TOKEN_MESSAGES],
   ['facets', FACET_MESSAGES],
   ['columns', COLUMN_MESSAGES],
+  ['pivot', PIVOT_MESSAGES],
+  ['fileGuide', FILE_GUIDE_MESSAGES],
+  ['reviewBatches', REVIEW_BATCH_MESSAGES],
   ['sharedPages', SHARED_PAGE_MESSAGES],
   ['listedTable', LISTED_TABLE_MESSAGES],
   ['listedJson', LISTED_JSON_MESSAGES],

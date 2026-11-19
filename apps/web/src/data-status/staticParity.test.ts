@@ -154,7 +154,7 @@ describe('server routes for the new downloads', () => {
     const filters = parseFilters('?tier=unknown');
     const names = new Map(audit.datasets.map((d) => [d.id, d.name] as const));
     expect(res.body).toBe(checklistToMarkdown(buildChecklist(audit, filters, 'en', { key: 'source', dir: 'desc' }), filters, NOW, 'en', { datasetNames: names }));
-    expect(res.body).toContain('Filters: Tier: Unknown.');
+    expect(res.body).toContain('Filters: Tier: UNKNOWN.');
   });
   it('serves the CSV checklist, in French when asked', async () => {
     const res = await ok('/fr/data-status/review-checklist.csv');

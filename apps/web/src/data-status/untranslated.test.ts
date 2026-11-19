@@ -35,7 +35,8 @@ describe('catalogue', () => {
 
   it('the marker list has no duplicate-sensitive French words', () => {
     // None of the markers may be a word the French catalogue uses on purpose.
-    const frWords = new Set(Object.values(FR).flatMap((v) => v.replace(/\{\w+\}/g, ' ').toLowerCase().split(/[^a-zà-öø-ÿ]+/)));
+    // The token UNKNOWN is taken out first: it is written the same in both languages on purpose.
+    const frWords = new Set(Object.values(FR).flatMap((v) => v.replace(/\{\w+\}/g, ' ').replace(/\bUNKNOWN\b/g, ' ').toLowerCase().split(/[^a-zà-öø-ÿ]+/)));
     for (const m of ENGLISH_MARKERS) expect(frWords.has(m), `marker "${m}" appears in French copy`).toBe(false);
   });
 

@@ -19,7 +19,7 @@ describe('filterParts', () => {
   });
   it('lists them in a fixed order', () => {
     expect(filterParts(f({ onlyIssues: true, query: 'x', kind: 'routes', state: 'unknown' }), 'en')).toEqual([
-      'status update date unknown',
+      'status update date UNKNOWN',
       'dataset type routes',
       'name contains “x”',
       'only items to review',

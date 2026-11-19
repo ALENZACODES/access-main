@@ -121,7 +121,7 @@ describe('Markdown', () => {
     expect(lines[5]).toBe('1 listed source has nothing to do and is left out.');
   });
   it('names the filters in force', () => {
-    expect(md({ ...NO_FILTERS, tier: 'unknown', licence: 'open' })).toContain('Filters: Tier: Unknown; Licence type: Open licence.');
+    expect(md({ ...NO_FILTERS, tier: 'unknown', licence: 'open' })).toContain('Filters: Tier: UNKNOWN; Licence type: Open licence.');
   });
   it('has a heading, the status, the review date and a tick-box line for each step', () => {
     const text = md();
@@ -237,7 +237,7 @@ describe('checklist on the panel', () => {
     host.click(checklistAction('md'));
     expect(files).toHaveLength(1);
     expect(files[0]?.filename).toBe('review-checklist.md');
-    expect(files[0]?.text).toContain('Filters: Tier: Unknown.');
+    expect(files[0]?.text).toContain('Filters: Tier: UNKNOWN.');
     expect(files[0]?.text.match(/^## /gm)).toHaveLength(2);
     expect(host.announce.innerHTML).toBe('Checklist saved with 5 steps.');
   });

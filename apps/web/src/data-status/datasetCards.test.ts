@@ -119,9 +119,9 @@ describe('buildDatasetCards', () => {
 
 describe('card wording', () => {
   it('lists only the counts that are not zero', () => {
-    expect(cardStatusText(card('p'), 'en')).toBe('Within its review period: 2; May be out of date: 1; Update date unknown: 1');
+    expect(cardStatusText(card('p'), 'en')).toBe('Within its review period: 2; May be out of date: 1; Update date UNKNOWN: 1');
     expect(cardTierText(card('p'), 'en')).toBe('Tier 0: 2; Tier E: 1; UNKNOWN: 1');
-    expect(cardLicenceText(card('p'), 'en')).toBe('Open licence: 2; Not on the reference list: 1; Unknown: 1');
+    expect(cardLicenceText(card('p'), 'en')).toBe('Open licence: 2; Not on the reference list: 1; UNKNOWN: 1');
     expect(cardTierText(card('r'), 'en')).toBe('Tier 0: 1');
   });
   it('gives the date range, a single date, or says there is none', () => {
@@ -190,7 +190,7 @@ describe('dataset cards on the panel', () => {
   it('are there once, after the datasets table, in the contents list, with a control on each card', () => {
     const html = renderDataStatusPanel({ records: MIXED, locale: 'en', now: NOW });
     expect(html.match(/id="ds-cards-title"/g)).toHaveLength(1);
-    expect(html).toContain('href="#ds-cards-title"');
+    expect(html).toContain('<option value="ds-cards-title">');
     const cards = /<section aria-labelledby="ds-cards-title">[\s\S]*?<\/section><\/section>/.exec(html)?.[0] ?? '';
     expect(cards.match(/data-action="show:dataset:[a-z]+"/g)).toEqual(['data-action="show:dataset:p"', 'data-action="show:dataset:r"', 'data-action="show:dataset:u"']);
     expect(structureProblems(html)).toEqual([]);
