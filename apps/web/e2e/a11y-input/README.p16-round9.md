@@ -1,21 +1,24 @@
 # P16 Round 9: keyboard composite and DOM-ID regression gates
 
-This standalone package is authored against `ALENZACODES/access-main` `main`
-(`4d15a82281a381c077b348676dede770d002a049`). It is not a stack on
-P16 PR #121 or another unmerged branch. All imports are provided by the
-existing `@playwright/test` package or by this package's own source file.
+This standalone package was originally authored against an earlier `main`.
+Its keyboard contract tests were merged through PR #149 and are already on
+`main`. At the time of this documentation correction, the current `main`
+commit is `f7dac4d62d21ed81cded8ddafaf23de85e92b1ca`.
 
-## Files
+No unmerged branch or PR is a prerequisite for the Round 9 tests. This
+README correction updates the historical base reference; it does not modify,
+re-land, or change either of the merged Round 9 TypeScript files.
 
-- `keyboard-contract-round9.ts` — read-only in-browser audit and deterministic
-  diagnostic output for ID, IDREF, ARIA and keyboard composite structures.
-- `keyboard-contract-round9.spec.ts` — independently created DOM fixtures for
-  correct and deliberately invalid semantics, including a dynamic duplicate-ID
-  regression and open-shadow-root ID-scoping regression.
+## Existing files on main
 
-## Verify
+- `keyboard-contract-round9.ts` — read-only browser-side audit and stable
+  diagnostic output for DOM IDs, ARIA references, and keyboard composites.
+- `keyboard-contract-round9.spec.ts` — isolated DOM fixtures for valid and
+  intentionally invalid semantics, including duplicate IDs and open shadow roots.
 
-Run from repository root, with the repository's dependencies installed:
+## Local checks
+
+Run from the repository root with its dependencies installed:
 
 ```sh
 npm run lint
@@ -25,37 +28,28 @@ npx playwright test --config apps/web/playwright.config.ts \
   apps/web/e2e/a11y-input/keyboard-contract-round9.spec.ts --project=chromium
 ```
 
-Do not pass this test file through Vitest: it is a Playwright test and should
-be discovered only by the existing Playwright configuration. The browser
-fixtures use `page.setContent` and do not navigate to application routes,
-open external resources, write storage, or alter application source.
+Do not pass this Playwright file to the Vitest runner. The fixtures use
+`page.setContent` and do not navigate to app routes, access outside resources,
+write storage, or change production source.
 
-## Scope and supported contracts
+## Scope
 
-The audit checks for per-tree duplicate and whitespace-only IDs, missing or
-ambiguous ID references, invalid active descendants, roving tab stops,
-valid tab/panel associations, orphan role items, invalid ARIA state values,
-positive tabindex, inert/aria-hidden focusable controls, and nested interactive
-content. The contract recognises both roving-tabindex and active-descendant
-styles. Shadow roots are inspected independently; closed shadow roots are not
-observable. Every diagnostic records a stable element path and the affected
-attribute. No fixture text assumes a particular interface language.
+The audit examines duplicate and blank IDs, dangling or ambiguous ID
+references, active descendants, roving tab stops, tab/panel associations,
+orphan role items, malformed ARIA state values, positive tabindex, inert
+or hidden focusable controls, and nested interactive content. It supports
+roving tabindex and active-descendant models. Open shadow roots are inspected
+independently. Closed shadow roots are not observable using this test method.
 
-These checks are regression signals rather than a WCAG conformance claim.
-They do not verify keyboard event handlers, timing and announcements with a
-screen reader, switch device operation, or all authoring-practice variations.
-Do not automatically apply every possible diagnostic as a fail gate to a
-production route without first reviewing legitimate UI patterns.
+The audit is a regression signal, not a full accessibility conformance
+assessment. Browser DOM checks cannot establish screen-reader speech,
+switch timing, or every permissible composite implementation. New diagnostic
+rules require review against real application patterns before they become
+hard gates on all routes.
 
-## Integration notes
+## Integration
 
-PR #121 is merged into `main`, and its previous DOM-ID regression tests
-remain unchanged. Its two reported GitHub `test` checks succeeded. This round
-has its own independent duplicate-ID fixture so that the regression remains
-covered if the new tests are run alone. No unmerged branch or PR dependency is required.
-
-The standalone strict TypeScript check was run with a minimal local
-Playwright declaration because the working container could not fetch npm
-packages. That check is not equivalent to the repository's full lint, build,
-typecheck, Playwright run or GitHub CI. Those must still be executed in the
-proper dependency-installed environment before the patch can be called green.
+PR #121 and its DOM-ID regression files also remain on `main`. The tests from
+both rounds are separate. This documentation update is the sole Round 9 file
+included in the next P16 archive; the two merged TypeScript files are omitted
+on purpose to prevent stale content from replacing current code.

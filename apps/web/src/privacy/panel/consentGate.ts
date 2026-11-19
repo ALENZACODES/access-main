@@ -50,10 +50,16 @@ export function validateRules(rules: readonly GateRule[], purposes: readonly Pur
   });
   rules.forEach((a, i) => {
     rules.forEach((b, j) => {
-      if (i < j && a.purposeId !== b.purposeId && matches(a, b.key)) out.push({ code: "overlap", where: `rules[${i}]/rules[${j}]` });
+      if (i < j && a.purposeId !== b.purposeId && (claims(a, b) || claims(b, a))) out.push({ code: "overlap", where: `rules[${i}]/rules[${j}]` });
     });
   });
   return out;
+}
+
+/** True when rule `a` covers at least one key that rule `b` also covers. Call it both ways. */
+function claims(a: GateRule, b: GateRule): boolean {
+  if (a.prefix === true) return b.key.startsWith(a.key);
+  return b.prefix !== true && a.key === b.key;
 }
 
 function matches(rule: GateRule, key: string): boolean {

@@ -1,5 +1,6 @@
 import { loadActivity, recordActivity, type ActivityEntry } from "./activityLog";
 import { diffInventory, loadSeen, saveSeen, snapshot, type ChangesView } from "./changes";
+import type { RefusedWrite } from "./consentGate";
 import { assertValidPurposes, loadConsent, saveConsent, setConsent, type ConsentState, type Purpose } from "./consent";
 import type { Locale } from "./copyLint";
 import { purgeExpired } from "./expiry";
@@ -29,6 +30,8 @@ export interface ControllerDeps {
   inventory: readonly InventoryEntry[];
   /** Optional features the person can allow. Empty or omitted hides the section. */
   purposes?: readonly Purpose[];
+  /** Where to read the writes the consent gate stopped (for example `() => gate.refused()`). Omit to hide that section. */
+  refused?: () => readonly RefusedWrite[];
   now: () => Date;
   reviewedOn?: string;
   /** Keep a visible, local list of the person's privacy actions. Default off. */
@@ -494,6 +497,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         ...(state.changes !== null ? { changes: state.changes } : {}),
         purposes,
         consent: state.consent,
+        ...(deps.refused !== undefined ? { refused: deps.refused() } : {}),
         ...(deps.reviewedOn !== undefined ? { reviewedOn: deps.reviewedOn } : {}),
         confirmingErase: state.confirmingErase,
         status: state.status,
