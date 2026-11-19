@@ -7,7 +7,7 @@ import {
   localCachePath, plainObject, secureSourceUrl, sortDiagnostics,
 } from "./contract.mjs";
 import { pairedReadiness, policyOptions, readinessSummary } from "./readiness.mjs";
-import { actionCounts, compareSnapshots } from "./changes.mjs";
+import { compareSnapshots } from "./changes.mjs";
 
 export const HEADERS = Object.freeze([
   "record_id", "translation_key", "language", "kind", "state", "revision",
@@ -29,7 +29,7 @@ export function spreadsheetCell(value) {
   if (value === null || value === undefined) return "";
   const clean = stripControl(value).trim();
   if (clean === "") return "";
-  if (/^[=+@\-]/.test(clean) || /^[\t\r\n]/.test(String(value))) return `'${clean}`;
+  if (/^[=+@-]/.test(clean) || /^[\t\r\n]/.test(String(value))) return `'${clean}`;
   return clean;
 }
 
