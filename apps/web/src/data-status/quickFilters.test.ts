@@ -64,7 +64,7 @@ describe('renderQuickFiltersHtml', () => {
     const html = renderQuickFiltersHtml(buildQuickFilters(audit), 'en', { active: NO_FILTERS });
     expect(html).toContain('data-action="quick:review" aria-pressed="false"');
     expect(html).toContain('>Needs review (2)</button>');
-    expect(html).toContain('>Tier unknown (1)</button>');
+    expect(html).toContain('>Tier: Unknown (1)</button>');
     expect(html).toContain('>Licence not on the reference list (1)</button>');
     expect(html.match(/<button/g)).toHaveLength(5);
   });
@@ -92,7 +92,7 @@ describe('renderQuickFiltersHtml', () => {
   });
   it('labels in French', () => {
     expect(quickFilterLabel({ id: 'review', count: 3 }, 'fr')).toBe('À examiner (3)');
-    expect(quickFilterLabel({ id: 'noTier', count: 1 }, 'fr')).toBe('Niveau inconnu (1)');
+    expect(quickFilterLabel({ id: 'noTier', count: 1 }, 'fr')).toBe('Niveau\u00A0: Inconnu (1)');
   });
   it('passes the markup, target and wording audits in both languages, as buttons and as links', () => {
     for (const locale of ['en', 'fr'] as const) {
