@@ -26,6 +26,11 @@ export * from "./packIssueText.ts";
 export * from "./packDuplicates.ts";
 export * from "./packReport.ts";
 export * from "./downloadFile.ts";
+export * from "./csvParse.ts";
+export * from "./packEarlier.ts";
+export * from "./packDiff.ts";
+export * from "./packDiffText.ts";
+export { PackCompare } from "./PackCompare.tsx";
 export { PackReport } from "./PackReport.tsx";
 export { PackFreshness } from "./PackFreshness.tsx";
 

@@ -7,6 +7,7 @@ describe("the states barrel exposes the pack tools", () => {
     "readExportRecords", "packPlacesToCsv", "packPlaceToText", "packExportSummary", "PACK_CSV_HEADER", "PACK_CSV_FILENAMES",
     "computeFreshness", "freshnessLines", "freshnessSummary", "PackFreshness",
     "PackReport", "buildPackReport", "packReportToText", "issuesToCsv", "groupIssues", "issueMessage", "findPossibleDuplicates", "saveTextFile", "safeFileName",
+    "PackCompare", "readEarlierFile", "diffPacks", "changesFor", "diffToCsv", "diffToText", "diffSummaryLine", "parseCsv", "undoFormulaGuard",
     "DataCredits", "buildCredits", "creditRecordsFromPack",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
   ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
