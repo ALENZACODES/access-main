@@ -54,9 +54,9 @@ describe('buildMarkdownReport in English', () => {
     expect(lines[0]).toBe('# Data status');
     expect(lines[2]).toBe('As of November 15, 2026.');
   });
-  it('has the three sections in order', () => {
+  it('has its four sections in order', () => {
     const headings = lines.filter((l) => l.startsWith('## '));
-    expect(headings).toEqual(['## Totals', '## Items to review', '## Sources']);
+    expect(headings).toEqual(['## Totals', '## Items to review', '## Sources', '## Records by tier']);
   });
   it('lists the totals from the audit', () => {
     expect(md).toContain('| Sources | 3 |');
@@ -80,7 +80,7 @@ describe('buildMarkdownReport in English', () => {
   });
   it('has the same number of columns on every table row', () => {
     const rows = lines.filter((l) => l.startsWith('|'));
-    const sources = rows.filter((l) => columnBreaks(l) === 6);
+    const sources = rows.filter((l) => columnBreaks(l) === 7);
     const totals = rows.filter((l) => columnBreaks(l) === 3);
     expect(sources.length + totals.length).toBe(rows.length);
     expect(sources).toHaveLength(1 + 1 + 3);
@@ -130,7 +130,7 @@ describe('what the report never does', () => {
     const md = report(records);
     const row = md.split('\n').find((l) => l.startsWith('| \\[click'));
     expect(row).toBeDefined();
-    expect(columnBreaks(row ?? '')).toBe(6);
+    expect(columnBreaks(row ?? '')).toBe(7);
     expect(md).not.toMatch(/^# Heading/m);
     expect(md).not.toMatch(/\]\(javascript/);
   });
@@ -165,11 +165,34 @@ describe('over random registries', () => {
       const md = report(randomRegistry(seed, NOW), seed % 2 === 0 ? 'en' : 'fr');
       for (const line of md.split('\n')) {
         if (!line.startsWith('|')) continue;
-        expect([3, 6], `seed ${seed}: ${line}`).toContain(columnBreaks(line));
+        expect([3, 7], `seed ${seed}: ${line}`).toContain(columnBreaks(line));
       }
       expect(md, `seed ${seed}`).not.toMatch(/(?<!\\)<(b|script|img)/);
       expect(md, `seed ${seed}`).not.toMatch(/^# (?!Data status|État des données)/m);
       expect(md.endsWith('\n')).toBe(true);
     }
+  });
+});
+
+describe('tiers in the Markdown report', () => {
+  it('adds the tier to each source row, with Unknown where none is recorded', () => {
+    const md = report(RECORDS);
+    const rows = md.split('\n').filter((l) => l.startsWith('| ') && columnBreaks(l) === 7);
+    expect(rows[0]?.endsWith('| Tier |')).toBe(true);
+    expect(rows.slice(2).map((r) => r.split(' | ').at(-1))).toEqual(['0 |', 'E |', 'Unknown |']);
+  });
+  it('counts records by tier, in the fixed order, with Unknown last', () => {
+    const md = report(RECORDS);
+    const at = md.indexOf('## Records by tier');
+    expect(md.slice(at)).toContain('| Tier | Records |\n| --- | --- |\n| Tier 0 | 1 |\n| Tier E | 1 |\n| Unknown | 1 |');
+  });
+  it('is in French in the French report', () => {
+    const md = report(RECORDS, 'fr');
+    expect(md).toContain('## Enregistrements selon le niveau');
+    expect(md).toContain('| Niveau E | 1 |');
+    expect(md).toContain('| Inconnu | 1 |');
+  });
+  it('leaves the tier section out when there are no sources', () => {
+    expect(report([])).not.toContain('## Records by tier');
   });
 });

@@ -27,6 +27,9 @@ type Key =
   | 'an.filters'
   | 'an.filterState'
   | 'an.filterKind'
+  | 'an.filterTier'
+  | 'an.filterTierUnknown'
+  | 'an.col.tier'
   | 'an.filterQuery'
   | 'an.filterIssues'
   | 'an.filtersCleared'
@@ -50,6 +53,9 @@ const MESSAGES: Messages<Key> = {
     'an.filters': 'Filters: {list}.',
     'an.filterState': 'status {value}',
     'an.filterKind': 'dataset type {value}',
+    'an.filterTier': 'tier {value}',
+    'an.filterTierUnknown': 'tier unknown',
+    'an.col.tier': 'tier',
     'an.filterQuery': 'name contains “{value}”',
     'an.filterIssues': 'only items to review',
     'an.filtersCleared': 'Filters cleared.',
@@ -72,6 +78,9 @@ const MESSAGES: Messages<Key> = {
     'an.filters': 'Filtres : {list}.',
     'an.filterState': 'état {value}',
     'an.filterKind': 'type de jeu de données {value}',
+    'an.filterTier': 'niveau {value}',
+    'an.filterTierUnknown': 'niveau inconnu',
+    'an.col.tier': 'niveau',
     'an.filterQuery': 'le nom contient « {value} »',
     'an.filterIssues': 'seulement les éléments à examiner',
     'an.filtersCleared': 'Filtres effacés.',
@@ -99,6 +108,7 @@ export function filterParts(f: Filters, locale: Locale): string[] {
   const q = f.query.trim();
   if (q !== '') parts.push(tx(locale, 'an.filterQuery', { value: q }));
   if (f.onlyIssues) parts.push(tx(locale, 'an.filterIssues'));
+  if (f.tier !== undefined) parts.push(f.tier === 'unknown' ? tx(locale, 'an.filterTierUnknown') : tx(locale, 'an.filterTier', { value: f.tier }));
   return parts;
 }
 

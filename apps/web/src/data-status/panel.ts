@@ -13,7 +13,7 @@ import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
-import { applyFilters, FILTER_KINDS, FILTER_STATES, hasActiveFilters, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
+import { applyFilters, FILTER_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isTierFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
 import { isDatasetKind } from './freshnessPolicy';
@@ -36,6 +36,8 @@ import {
   buildFactsFile,
   buildMarkdownFile,
   buildRecordFacts,
+  buildQuickFilters,
+  buildStatusByTier,
   buildSummaryFile,
   buildSourceDetails,
   buildTablesFile,
@@ -51,6 +53,8 @@ import {
   renderGlanceHtml,
   renderGlossaryHtml,
   renderLicenceBreakdownHtml,
+  renderQuickFiltersHtml,
+  renderStatusByTierHtml,
   renderRecordFactsHtml,
   renderSelfCheckHtml,
   renderSourceDetailsHtml,
@@ -58,6 +62,8 @@ import {
   renderTocHtml,
   renderWorkloadHtml,
   runSelfCheck,
+  quickFilterFor,
+  quickFilterFromAction,
   type ListState,
 } from './extras';
 import { buildExportFiles } from './exportFiles';
@@ -192,7 +198,7 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
             (now ? ` (${esc(ageLabel(s.retrievedIso, now, locale))})` : '');
       return (
         `<tr><th scope="row">${name}</th><td>${esc(s.licence ?? unknown)}</td><td>${date}</td>` +
-        `<td>${statusBadge(s.state, locale)}</td></tr>`
+        `<td>${statusBadge(s.state, locale)}</td><td>${esc(s.tier ?? unknown)}</td></tr>`
       );
     })
     .join('');
@@ -200,7 +206,8 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
     sortHeading(locale, 'source', 'tbl.source', nav, filters) +
     sortHeading(locale, 'licence', 'tbl.licence', nav, filters) +
     sortHeading(locale, 'retrieved', 'tbl.retrieved', nav, filters) +
-    sortHeading(locale, 'status', 'tbl.status', nav, filters);
+    sortHeading(locale, 'status', 'tbl.status', nav, filters) +
+    sortHeading(locale, 'tier', 'tbl.tier', nav, filters);
   const table =
     `<table><caption>${esc(t(locale, 'tbl.sources'))}</caption><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table>`;
   const help = nav ? `<p>${esc(t(locale, 'sort.help'))}</p>` : '';
@@ -227,12 +234,16 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
   const kindOpts =
     option('any', t(locale, 'flt.any'), f.kind === 'any') +
     FILTER_KINDS.map((k) => option(k, t(locale, `kind.${k}`), f.kind === k)).join('');
+  const tierOpts =
+    option('any', t(locale, 'flt.any'), f.tier === undefined) +
+    FILTER_TIERS.map((v) => option(v, v === 'unknown' ? t(locale, 'unknown') : v, f.tier === v)).join('');
   const field = (id: string, key: MessageKey, control: string) =>
     `<div><label for="${id}">${esc(t(locale, key))}</label> ${control}</div>`;
   const controls =
     `<fieldset><legend>${esc(t(locale, 'flt.legend'))}</legend>` +
     field('ds-f-state', 'flt.state', `<select id="ds-f-state" name="state" data-filter="state" style="${FIELD_STYLE}">${stateOpts}</select>`) +
     field('ds-f-kind', 'flt.kind', `<select id="ds-f-kind" name="kind" data-filter="kind" style="${FIELD_STYLE}">${kindOpts}</select>`) +
+    field('ds-f-tier', 'flt.tier', `<select id="ds-f-tier" name="tier" data-filter="tier" style="${FIELD_STYLE}">${tierOpts}</select>`) +
     field(
       'ds-f-q',
       'flt.query',
@@ -328,6 +339,11 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
+    renderQuickFiltersHtml(buildQuickFilters(audit), locale, {
+      active: filters,
+      buttonStyle: buttonInlineStyle(),
+      ...(sv ? { hrefFor: (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` } : {}),
+    }) +
     renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined) +
     (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
     `<div data-region="sources">${renderSourcesRegion(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined)}</div>` +
@@ -335,6 +351,7 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderCompletenessHtml(buildCompleteness(audit), locale) +
     renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale) +
     renderTierBreakdownHtml(buildTierBreakdown(state.records), locale) +
+    renderStatusByTierHtml(buildStatusByTier(audit), locale) +
     renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
@@ -501,6 +518,10 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     const value = typeof el.value === 'string' ? el.value : '';
     if (key === 'state') filters = { ...filters, state: (FILTER_STATES as readonly string[]).includes(value) ? (value as Filters['state']) : 'any' };
     else if (key === 'kind') filters = { ...filters, kind: isDatasetKind(value) ? value : 'any' };
+    else if (key === 'tier') {
+      const rest: Filters = { state: filters.state, kind: filters.kind, query: filters.query, onlyIssues: filters.onlyIssues };
+      filters = isTierFilter(value) ? { ...rest, tier: value } : rest;
+    }
     else if (key === 'query') filters = { ...filters, query: value.slice(0, MAX_QUERY_LENGTH) };
     else if (key === 'onlyIssues') filters = { ...filters, onlyIssues: el.checked === true };
     else return;
@@ -537,6 +558,14 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     } else if (action === 'export-tables' && opts.onExportFile) {
       const { text, filename, mime } = buildTablesFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
       opts.onExportFile({ text, filename, mime });
+    } else if (quickFilterFromAction(action) !== null) {
+      const id = quickFilterFromAction(action);
+      if (id === null) return;
+      const before = lastList;
+      filters = quickFilterFor(id);
+      refresh();
+      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
+      opts.onFiltersChange?.(view());
     } else if (action === 'export-facts' && opts.onExportFile) {
       const { text, filename, mime } = buildFactsFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
       opts.onExportFile({ text, filename, mime });
