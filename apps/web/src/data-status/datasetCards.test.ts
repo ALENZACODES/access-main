@@ -120,7 +120,7 @@ describe('buildDatasetCards', () => {
 describe('card wording', () => {
   it('lists only the counts that are not zero', () => {
     expect(cardStatusText(card('p'), 'en')).toBe('Within its review period: 2; May be out of date: 1; Update date unknown: 1');
-    expect(cardTierText(card('p'), 'en')).toBe('Tier 0: 2; Tier E: 1; Unknown: 1');
+    expect(cardTierText(card('p'), 'en')).toBe('Tier 0: 2; Tier E: 1; UNKNOWN: 1');
     expect(cardLicenceText(card('p'), 'en')).toBe('Open licence: 2; Not on the reference list: 1; Unknown: 1');
     expect(cardTierText(card('r'), 'en')).toBe('Tier 0: 1');
   });
@@ -144,7 +144,7 @@ describe('card wording', () => {
         expect(lintFrench(text), text).toEqual([]);
       }
     }
-    expect(cardTierText(card('p'), 'fr')).toBe('Niveau 0 : 2 ; Niveau E : 1 ; Inconnu : 1');
+    expect(cardTierText(card('p'), 'fr')).toBe('Niveau 0 : 2 ; Niveau E : 1 ; UNKNOWN : 1');
   });
 });
 

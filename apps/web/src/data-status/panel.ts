@@ -44,6 +44,22 @@ import {
   buildNoMatchHints,
   renderDueSummaryHtml,
   clampLimit,
+  buildFacets,
+  buildListedJsonFile,
+  buildNameSuggestions,
+  describeListedJsonSaved,
+  describeNarrowed,
+  describeSuggestionApplied,
+  FACET_ACTION_PREFIX,
+  LISTED_JSON_ACTION,
+  listedJsonLabel,
+  narrowFilters,
+  parseFacetAction,
+  parseSuggestAction,
+  renderFacetsHtml,
+  renderNameSuggestionsHtml,
+  type FacetTarget,
+  type NameSuggestion,
   applyQueryTokens,
   buildReviewCalendar,
   describeTokensApplied,
@@ -196,6 +212,8 @@ export interface StaticView {
   tablesHref?: string;
   /** The short plain-text summary. */
   textSummaryHref?: string;
+  /** The listed sources, in the order of the list (JSON). */
+  listedJsonHref?: string;
 }
 
 const esc = escapeHtml;
@@ -415,7 +433,18 @@ export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: F
     buttonStyle: buttonInlineStyle(),
     ...(hrefWithout && parsed.recognised.length > 0 ? { href: hrefWithout(applyQueryTokens(filters, parsed)) } : {}),
   });
-  return active + tokens + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + hints;
+  // A slip in the search text: offer the close spelling, but only one that lists something.
+  const suggestions = noMatch
+    ? renderNameSuggestionsHtml(buildNameSuggestions(audit.sources, filters), locale, {
+        buttonStyle: buttonInlineStyle(),
+        ...(hrefWithout ? { hrefFor: (s: NameSuggestion) => hrefWithout({ ...filters, query: s.query }) } : {}),
+      })
+    : '';
+  const facets = renderFacetsHtml(buildFacets(listed, filters), locale, {
+    buttonStyle: buttonInlineStyle(),
+    ...(hrefWithout ? { hrefFor: (target: FacetTarget) => hrefWithout(narrowFilters(filters, target)) } : {}),
+  });
+  return active + tokens + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + facets + suggestions + hints;
 }
 
 export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null, liveLayout?: { group: GroupKey; details: boolean }): string {
@@ -549,8 +578,9 @@ export function renderDataStatusPanel(state: PanelState): string {
       // The checklist follows the filters and the order of the list, so its links carry both.
       (sv.checklistMdHref ? ` ${downloadLink(sv.checklistMdHref + listQuery, checklistLabel('md', locale))}` : '') +
       (sv.checklistCsvHref ? ` ${downloadLink(sv.checklistCsvHref + listQuery, checklistLabel('csv', locale))}` : '') +
+      (sv.listedJsonHref ? ` ${downloadLink(sv.listedJsonHref + listQuery, listedJsonLabel(locale))}` : '') +
       `</div>`
-    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')}</div>`;
+    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')} ${btn(LISTED_JSON_ACTION, listedJsonLabel(locale))}</div>`;
   const drillNames = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
   const drill = (target: DrillTarget): string =>
     renderDrillControl(target, locale, {
@@ -936,6 +966,31 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         focusFirst([byAction(action ?? ''), FORM_START]);
         opts.onFiltersChange?.(view());
       }
+    } else if (action === LISTED_JSON_ACTION && opts.onExportFile) {
+      const locale = opts.getLocale();
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
+      opts.onExportFile(buildListedJsonFile(audit, filters, nowFn(), locale, sort));
+      announcer.say(describeListedJsonSaved(applyFilters(audit.sources, filters).length, locale));
+    } else if (parseFacetAction(action) !== null) {
+      const target = parseFacetAction(action);
+      if (target === null) return;
+      filters = narrowFilters(filters, target);
+      limit = LIVE_STEP;
+      refresh();
+      announcer.say(describeNarrowed(target, lastList?.shown ?? 0, opts.getLocale()));
+      // The control that was used is gone, since its filter is now set: go to the next way to narrow, or the form.
+      focusFirst([`[data-action^="${FACET_ACTION_PREFIX}"]`, FORM_START]);
+      opts.onFiltersChange?.(view());
+    } else if (parseSuggestAction(action) !== null) {
+      const index = parseSuggestAction(action);
+      const pick = index === null ? undefined : buildNameSuggestions(auditRegistry(lastRecords, nowFn(), thresholds).sources, filters)[index];
+      if (pick === undefined) return;
+      filters = { ...filters, query: pick.query };
+      limit = LIVE_STEP;
+      refresh();
+      announcer.say(describeSuggestionApplied(pick, opts.getLocale()));
+      focusFirst(['#ds-f-q', FORM_START]);
+      opts.onFiltersChange?.(view());
     } else if (action === TOKENS_APPLY_ACTION) {
       const parsed = parseQueryTokens(filters.query);
       if (parsed.recognised.length === 0) return;

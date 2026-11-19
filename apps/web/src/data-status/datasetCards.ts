@@ -16,6 +16,7 @@ import { reviewDateIso } from './rowDetail';
 import { escapeHtml } from './sourceList';
 import { emptyTierCounts, tierLabel, type TierCounts } from './tiers';
 import { TIER_IDS } from './tierValue';
+import { UNKNOWN_WORD } from './unknownWord';
 
 export const MAX_DATASET_CARDS = 20;
 
@@ -198,7 +199,7 @@ export function cardStatusText(c: DatasetCard, locale: Locale): string {
 }
 
 export function cardTierText(c: DatasetCard, locale: Locale): string {
-  return pairs([...TIER_IDS.map((id) => ({ label: tierLabel(id, locale), n: c.tiers[id] })), { label: t(locale, 'unknown'), n: c.tierUnknown }], locale);
+  return pairs([...TIER_IDS.map((id) => ({ label: tierLabel(id, locale), n: c.tiers[id] })), { label: UNKNOWN_WORD, n: c.tierUnknown }], locale);
 }
 
 export function cardLicenceText(c: DatasetCard, locale: Locale): string {

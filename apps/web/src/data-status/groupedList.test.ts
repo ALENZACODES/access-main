@@ -67,11 +67,11 @@ describe('groupSources', () => {
   });
   it('groups by tier in the fixed tier order, with no usable tier last', () => {
     expect(shape('tier')).toEqual([['0', 'ad'], ['3', 'e'], ['E', 'bf'], ['unknown', 'c']]);
-    expect(grouping('tier').map((g) => g.label)).toEqual(['Tier 0', 'Tier 3', 'Tier E', 'Tier: Unknown']);
+    expect(grouping('tier').map((g) => g.label)).toEqual(['Tier 0', 'Tier 3', 'Tier E', 'Tier: UNKNOWN']);
   });
   it('groups by licence type, with no licence last', () => {
     expect(shape('licence')).toEqual([['open', 'acef'], ['unrecognised', 'b'], ['unknown', 'd']]);
-    expect(grouping('licence').at(-1)?.label).toBe('Licence: Unknown');
+    expect(grouping('licence').at(-1)?.label).toBe('Licence: UNKNOWN');
   });
   it('groups by age band, with no usable date last', () => {
     expect(shape('age')).toEqual([['d0_30', 'abe'], ['d31_90', 'f'], ['d366_plus', 'c'], ['unknown', 'd']]);
@@ -115,7 +115,7 @@ describe('groupSources', () => {
   });
   it('labels groups in French with the right spacing', () => {
     const labels = GROUPED.flatMap((k) => groupSources(audit.sources, k, 'fr').map((g) => g.label));
-    expect(labels).toContain('Niveau : Inconnu');
+    expect(labels).toContain('Niveau : UNKNOWN');
     for (const l of labels) expect(lintFrench(l)).toEqual([]);
   });
 });

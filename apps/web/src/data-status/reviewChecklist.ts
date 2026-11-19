@@ -16,6 +16,7 @@ import { escapeMarkdown } from './markdownReport';
 import { remedyStep, remedyTitle } from './remedies';
 import { findingCodesFor, reviewDateIso, reviewText } from './rowDetail';
 import { applySort, type SortSpec } from './sorting';
+import { UNKNOWN_WORD } from './unknownWord';
 
 /** A review date this close counts as something to do, even when nothing else is. */
 export const CHECKLIST_SOON_DAYS = DUE_WINDOW_DAYS.d30;
@@ -92,7 +93,7 @@ const MESSAGES: Messages<Key> = {
     'cl.review': 'Review date: {value}',
     'cl.task': '{title}. {step}',
     'cl.tier.title': 'Tier not recorded',
-    'cl.tier.step': 'Record the tier written by the publisher or by the person who collected the data. If it is not known, leave it Unknown.',
+    'cl.tier.step': 'Record the tier written by the publisher or by the person who collected the data. If it is not known, leave it UNKNOWN.',
     'cl.soon.title': 'Review date within {days} days',
     'cl.soon.step': 'Fetch the data again from the source before the review date, and record the new retrieved date.',
     'cl.note': 'This checklist restates the audit. It does not change any record.',
@@ -123,7 +124,7 @@ const MESSAGES: Messages<Key> = {
     'cl.review': 'Date de révision\u00A0: {value}',
     'cl.task': '{title}. {step}',
     'cl.tier.title': 'Niveau non inscrit',
-    'cl.tier.step': 'Inscrivez le niveau indiqué par le diffuseur ou par la personne qui a recueilli les données. S’il n’est pas connu, laissez-le inconnu.',
+    'cl.tier.step': 'Inscrivez le niveau indiqué par le diffuseur ou par la personne qui a recueilli les données. S’il n’est pas connu, laissez-le UNKNOWN.',
     'cl.soon.title': 'Date de révision d’ici {days} jours',
     'cl.soon.step': 'Récupérez de nouveau les données auprès de la source avant la date de révision, puis inscrivez la nouvelle date de récupération.',
     'cl.note': 'Cette liste de contrôle reprend l’audit. Elle ne modifie aucun enregistrement.',
@@ -221,7 +222,7 @@ export function checklistRows(c: Checklist, locale: Locale): string[][] {
   for (const e of c.entries) {
     const s = e.source;
     for (const task of e.tasks) {
-      rows.push([s.datasetName.trim() === '' ? s.datasetId : s.datasetName, recordName(s, locale), task.title, task.step, t(locale, `state.${s.state}`), reviewDateIso(s) ?? t(locale, 'unknown')]);
+      rows.push([s.datasetName.trim() === '' ? s.datasetId : s.datasetName, recordName(s, locale), task.title, task.step, t(locale, `state.${s.state}`), reviewDateIso(s) ?? UNKNOWN_WORD]);
     }
   }
   return rows;

@@ -11,6 +11,7 @@ import { t } from './i18n';
 import { kindLabel } from './licenceBreakdown';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
+import { UNKNOWN_WORD } from './unknownWord';
 import { tierLabel } from './tiers';
 import { TIER_IDS, type TierId } from './tierValue';
 
@@ -75,12 +76,12 @@ export function groupSources(sources: readonly AuditedSource[], key: GroupKey, l
   if (key === 'tier') {
     const m = bucket(sources, (s) => s.tier ?? 'unknown');
     for (const id of TIER_IDS) push(id, tierLabel(id as TierId, locale), m.get(id), { tier: id });
-    push('unknown', tx(locale, 'gr.tierUnknown', { unknown: t(locale, 'unknown') }), m.get('unknown'), { tier: 'unknown' });
+    push('unknown', tx(locale, 'gr.tierUnknown', { unknown: UNKNOWN_WORD }), m.get('unknown'), { tier: 'unknown' });
     return out;
   }
   if (key === 'licence') {
     const m = bucket(sources, (s) => licenceKind(s.licence));
-    for (const k of FILTER_LICENCE_KINDS) push(k, k === 'unknown' ? tx(locale, 'gr.licenceUnknown', { unknown: t(locale, 'unknown') }) : kindLabel(k, locale), m.get(k), { licence: k });
+    for (const k of FILTER_LICENCE_KINDS) push(k, k === 'unknown' ? tx(locale, 'gr.licenceUnknown', { unknown: UNKNOWN_WORD }) : kindLabel(k, locale), m.get(k), { licence: k });
     return out;
   }
   const m = bucket(sources, ageFilterOf);
@@ -112,7 +113,7 @@ type Key =
 const MESSAGES: Messages<Key> = {
   en: {
     'gr.label': 'Group by',
-    'gr.help': 'Each group has its own heading and table. Unknown always comes last.',
+    'gr.help': 'Each group has its own heading and table. UNKNOWN always comes last.',
     'gr.none': 'No grouping',
     'gr.dataset': 'Dataset',
     'gr.status': 'Status',
@@ -133,7 +134,7 @@ const MESSAGES: Messages<Key> = {
   },
   fr: {
     'gr.label': 'Regrouper par',
-    'gr.help': 'Chaque groupe a son propre titre et son propre tableau. Les valeurs inconnues viennent toujours en dernier.',
+    'gr.help': 'Chaque groupe a son propre titre et son propre tableau. UNKNOWN vient toujours en dernier.',
     'gr.none': 'Aucun regroupement',
     'gr.dataset': 'Jeu de données',
     'gr.status': 'État',

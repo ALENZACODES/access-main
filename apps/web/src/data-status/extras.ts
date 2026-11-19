@@ -36,3 +36,7 @@ export * from './reviewChecklist';
 export * from './datasetCards';
 export * from './queryTokens';
 export * from './reviewCalendar';
+export * from './unknownWord';
+export * from './facets';
+export * from './nameSuggestions';
+export * from './listedJson';

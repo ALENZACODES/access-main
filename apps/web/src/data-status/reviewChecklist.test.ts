@@ -179,7 +179,7 @@ describe('CSV', () => {
   it('writes the review date as a day, or Unknown when nothing is scheduled', () => {
     const rows = checklistRows(c, 'en');
     expect(rows.find((r) => r[1] === 'Name soon')?.[5]).toBe(isoDayOffset(NOW, 10));
-    expect(rows.find((r) => r[1] === 'Name bare')?.[5]).toBe('Unknown');
+    expect(rows.find((r) => r[1] === 'Name bare')?.[5]).toBe('UNKNOWN');
     for (const r of rows) for (const cell of r) expect(cell).not.toBe('');
   });
   it('uses French headings in French, and starts with a byte-order mark by default', () => {

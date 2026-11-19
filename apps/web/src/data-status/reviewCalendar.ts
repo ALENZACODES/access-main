@@ -109,8 +109,8 @@ const MESSAGES: Messages<Key> = {
     'rc.past.other': '{n} sources are already past their review date.',
     'rc.later.one': '{n} source has a review date after the months shown.',
     'rc.later.other': '{n} sources have a review date after the months shown.',
-    'rc.unscheduled.one': '{n} source is not scheduled, because its retrieved date is unknown.',
-    'rc.unscheduled.other': '{n} sources are not scheduled, because their retrieved date is unknown.',
+    'rc.unscheduled.one': '{n} source is not scheduled, because its retrieved date is UNKNOWN.',
+    'rc.unscheduled.other': '{n} sources are not scheduled, because their retrieved date is UNKNOWN.',
     'rc.quiet': 'No review date falls in the months shown.',
   },
   fr: {
@@ -129,8 +129,8 @@ const MESSAGES: Messages<Key> = {
     'rc.past.other': '{n} sources ont déjà dépassé leur date de révision.',
     'rc.later.one': '{n} source a une date de révision postérieure aux mois affichés.',
     'rc.later.other': '{n} sources ont une date de révision postérieure aux mois affichés.',
-    'rc.unscheduled.one': '{n} source n’est pas planifiée, car sa date de récupération est inconnue.',
-    'rc.unscheduled.other': '{n} sources ne sont pas planifiées, car leur date de récupération est inconnue.',
+    'rc.unscheduled.one': '{n} source n’est pas planifiée, car sa date de récupération est UNKNOWN.',
+    'rc.unscheduled.other': '{n} sources ne sont pas planifiées, car leur date de récupération est UNKNOWN.',
     'rc.quiet': 'Aucune date de révision ne tombe dans les mois affichés.',
   },
 };

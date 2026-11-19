@@ -569,15 +569,15 @@ describe("planning sections and extra downloads on the live panel", () => {
     group.dispatchEvent(new Event("change", { bubbles: true }));
     hasText(panel, "Grouped by tier, in 3 groups.");
     expect(within(panel).getByRole("heading", { level: 3, name: "Tier E (1 source)" })).toBeTruthy();
-    expect(within(panel).getByRole("table", { name: "Sources: Tier: Unknown" })).toBeTruthy();
+    expect(within(panel).getByRole("table", { name: "Sources: Tier: UNKNOWN" })).toBeTruthy();
     expect(within(panel).queryByRole("table", { name: "Sources" })).toBeNull();
 
     const details = within(panel).getByLabelText("Show details under each source") as HTMLInputElement;
     details.click();
     hasText(panel, "Details are shown under each source.");
-    const unknownTier = within(panel).getByRole("table", { name: "Sources: Tier: Unknown" });
-    hasText(unknownTier, "Not scheduled, because the retrieved date is unknown.");
-    hasText(unknownTier, "Unknown facts");
+    const unknownTier = within(panel).getByRole("table", { name: "Sources: Tier: UNKNOWN" });
+    hasText(unknownTier, "Not scheduled, because the retrieved date is UNKNOWN.");
+    hasText(unknownTier, "Facts that are UNKNOWN");
 
     user.click(within(panel).getByRole("button", { name: "Download a review checklist for the listed sources (Markdown)" }));
     expect(saved).toHaveLength(1);
@@ -602,7 +602,7 @@ describe("planning sections and extra downloads on the live panel", () => {
     const panel = screen.getByRole("region", { name: "Data status panel" });
     expect(within(panel).getByRole("heading", { level: 2, name: "Dataset cards" })).toBeTruthy();
     const calendar = within(panel).getByRole("region", { name: "Review dates by month" });
-    hasText(calendar, "1 source is not scheduled, because its retrieved date is unknown.");
+    hasText(calendar, "1 source is not scheduled, because its retrieved date is UNKNOWN.");
     expect(within(calendar).getAllByRole("row")).toHaveLength(13);
 
     const search = within(panel).getByLabelText("Search by name") as HTMLInputElement;
@@ -614,6 +614,43 @@ describe("planning sections and extra downloads on the live panel", () => {
     expect((within(panel).getByLabelText("Tier", { exact: true }) as HTMLSelectElement).value).toBe("E");
     expect((within(panel).getByLabelText("Search by name") as HTMLInputElement).value).toBe("stop");
     expect(within(panel).queryByRole("button", { name: "Use them as filters" })).toBeNull();
+    const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+
+  it("narrows the list from its own counts, offers a close spelling for a slip, and saves the listed sources as JSON", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "No tier stop", source: "Other source", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    const narrow = within(panel).getByRole("region", { name: "Narrow this list" });
+    expect(within(narrow).getByRole("button", { name: "Tier: UNKNOWN (1)" })).toBeTruthy();
+    user.click(within(narrow).getByRole("button", { name: "Tier: E (1)" }));
+    hasText(panel, "Filter added. Tier: E. 1 source listed.");
+    expect((within(panel).getByLabelText("Tier", { exact: true }) as HTMLSelectElement).value).toBe("E");
+
+    user.click(within(panel).getByRole("button", { name: "Download the listed sources (JSON)" }));
+    expect(saved).toHaveLength(1);
+    expect(saved[0]!.type).toBe("application/json;charset=utf-8");
+    const doc = JSON.parse(await readBlob(saved[0]!)) as { listed: number; total: number; unknownToken: string; sources: { tier: string }[] };
+    expect(doc.listed).toBe(1);
+    expect(doc.total).toBe(3);
+    expect(doc.unknownToken).toBe("UNKNOWN");
+    expect(doc.sources.map((s) => s.tier)).toEqual(["E"]);
+    hasText(panel, "File saved with 1 source.");
+
+    user.click(within(panel).getByRole("button", { name: "Clear filters" }));
+    const search = within(panel).getByLabelText("Search by name") as HTMLInputElement;
+    search.value = "dessk";
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+    hasText(panel, "No name contains the search text as typed. A close spelling does appear.");
+    user.click(within(panel).getByRole("button", { name: /^Search for “desk” instead \(1 source\)$/ }));
+    hasText(panel, "Now searching for “desk”. 1 source listed.");
+    expect((within(panel).getByLabelText("Search by name") as HTMLInputElement).value).toBe("desk");
     const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });

@@ -64,6 +64,13 @@ describe('detectors', () => {
     expect(englishWordsIn('Les sources sont possiblement périmées et la licence à examiner.')).toEqual([]);
   });
 
+  it('does not count the token UNKNOWN in capitals, and still counts the word in any other case', () => {
+    expect(englishWordsIn('La date de récupération est UNKNOWN.')).toEqual([]);
+    expect(englishWordsIn('Niveau\u00A0: UNKNOWN (3)')).toEqual([]);
+    expect(englishWordsIn('est Unknown, ou unknown')).toEqual(['unknown']);
+    expect(englishWordsIn('UNKNOWNS')).toEqual([]);
+  });
+
   it('flags a French sentence with one English word left in', () => {
     expect(englishWordsIn('La date de mise à jour est unknown.')).toEqual(['unknown']);
   });

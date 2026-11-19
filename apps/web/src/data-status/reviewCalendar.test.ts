@@ -124,9 +124,9 @@ describe('the words', () => {
     expect(calendarNotes({ ...base, past: 1, later: 1, unscheduled: 1 }, 'en')).toEqual([
       '1 source is already past its review date.',
       '1 source has a review date after the months shown.',
-      '1 source is not scheduled, because its retrieved date is unknown.',
+      '1 source is not scheduled, because its retrieved date is UNKNOWN.',
     ]);
-    expect(calendarNotes({ ...base, past: 2, later: 0, unscheduled: 3 }, 'en')).toEqual(['2 sources are already past their review date.', '3 sources are not scheduled, because their retrieved date is unknown.']);
+    expect(calendarNotes({ ...base, past: 2, later: 0, unscheduled: 3 }, 'en')).toEqual(['2 sources are already past their review date.', '3 sources are not scheduled, because their retrieved date is UNKNOWN.']);
     for (const note of calendarNotes({ ...base, past: 2, later: 1, unscheduled: 3 }, 'fr')) expect(lintFrench(note)).toEqual([]);
   });
 });

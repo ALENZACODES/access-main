@@ -54,7 +54,7 @@ describe('review date for one source', () => {
     expect(reviewText(byId('ok'), 'en')).toMatch(/ \(in 177 days\)$/);
     expect(reviewText(byId('past'), 'en')).toMatch(/ \(1 day ago\)$/);
     expect(reviewText(byId('old'), 'en')).toMatch(/ \(220 days ago\)$/);
-    expect(reviewText(byId('bare'), 'en')).toBe('Not scheduled, because the retrieved date is unknown.');
+    expect(reviewText(byId('bare'), 'en')).toBe('Not scheduled, because the retrieved date is UNKNOWN.');
     expect(reviewText(byId('past'), 'fr')).toMatch(/ \(il y a 1 jour\)$/);
     expect(reviewText(byId('ok'), 'fr')).toMatch(/ \(dans 177 jours\)$/);
   });

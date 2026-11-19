@@ -186,8 +186,8 @@ test("Data status: the source list shows each tier and can be filtered by tier",
   await tier.selectOption("any");
   await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(4);
 
-  await panel.getByRole("button", { name: "Tier: Unknown (1)" }).click();
-  await expect(panel.getByRole("button", { name: "Tier: Unknown (1)" })).toHaveAttribute("aria-pressed", "true");
+  await panel.getByRole("button", { name: "Tier: Unknown (1)", exact: true }).click();
+  await expect(panel.getByRole("button", { name: "Tier: Unknown (1)", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("unknown");
   await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(2);
   await expect(panel.getByRole("table", { name: "Records by tier and status" }).getByRole("row", { name: /^All tiers/ })).toContainText("3");
@@ -370,7 +370,7 @@ test("Data status: the list can be grouped, show details under each source, and 
 
   await panel.getByLabel("Group by").selectOption("status");
   await expect(said).toHaveText("Grouped by status, in 3 groups.");
-  await expect(list.getByRole("heading", { level: 3 })).toHaveText(["May be out of date (1 source)", "Within its review period (1 source)", "Update date unknown (1 source)"]);
+  await expect(list.getByRole("heading", { level: 3 })).toHaveText(["May be out of date (1 source)", "Within its review period (1 source)", "Update date unknown (1 source)", "Narrow this list"]);
   await expect(list.getByRole("table", { name: "Sources: May be out of date" }).getByRole("row")).toHaveCount(2);
 
   await panel.getByLabel("Tier", { exact: true }).selectOption("E");
@@ -379,7 +379,7 @@ test("Data status: the list can be grouped, show details under each source, and 
 
   await panel.getByLabel("Show details under each source").check();
   await expect(said).toHaveText("Details are shown under each source.");
-  await expect(list.getByRole("table", { name: "Sources: Update date unknown" })).toContainText("Not scheduled, because the retrieved date is unknown.");
+  await expect(list.getByRole("table", { name: "Sources: Update date unknown" })).toContainText("Not scheduled, because the retrieved date is UNKNOWN.");
   await expect(list.getByRole("table", { name: "Sources: May be out of date" })).toContainText("days ago)");
 
   const [download] = await Promise.all([
@@ -415,7 +415,7 @@ test("Data status: search words can become filters, and the dataset cards and re
   await expect(panel.getByRole("heading", { level: 2, name: "Dataset cards" })).toBeVisible();
   const calendar = panel.getByRole("region", { name: "Review dates by month" });
   await expect(calendar).toContainText("1 source is already past its review date.");
-  await expect(calendar).toContainText("1 source is not scheduled, because its retrieved date is unknown.");
+  await expect(calendar).toContainText("1 source is not scheduled, because its retrieved date is UNKNOWN.");
   await expect(calendar.getByRole("table").getByRole("row")).toHaveCount(13);
 
   const search = panel.getByLabel("Search by name");
@@ -438,4 +438,46 @@ test("Data status: search words can become filters, and the dataset cards and re
   await page.getByRole("button", { name: "Français" }).click();
   const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
   await expect(fr.getByRole("region", { name: "Dates de révision par mois" })).toBeVisible();
+});
+
+test("Data status: the list can be narrowed from its own counts, a slip in the search is offered a close spelling, and the listed sources save as JSON", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+
+  const narrow = list.getByRole("region", { name: "Narrow this list" });
+  await expect(narrow.getByRole("list", { name: "By tier" }).getByRole("button")).toHaveText(["Tier: 0 (1)", "Tier: E (1)", "Tier: UNKNOWN (1)"]);
+  await narrow.getByRole("button", { name: "Tier: E (1)" }).click();
+  await expect(said).toHaveText("Filter added. Tier: E. 1 source listed.");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(list.getByRole("region", { name: "Narrow this list" })).toHaveCount(0);
+  await expect(panel.getByLabel("Status", { exact: true })).toBeFocused();
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    panel.getByRole("button", { name: "Download the listed sources (JSON)" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("listed-sources.json");
+  await expect(said).toHaveText("File saved with 1 source.");
+
+  await panel.getByRole("button", { name: "Clear filters" }).click();
+  await panel.getByLabel("Search by name").fill("jurney");
+  await expect(list).toContainText("No name contains the search text as typed. A close spelling does appear.");
+  await list.getByRole("button", { name: "Search for “journey” instead (1 source)" }).click();
+  await expect(said).toHaveText("Now searching for “journey”. 1 source listed.");
+  await expect(panel.getByLabel("Search by name")).toHaveValue("journey");
+  await expect(panel.getByLabel("Search by name")).toBeFocused();
+  await expect(list).toContainText("No tier journey");
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await fr.getByRole("button", { name: "Effacer les filtres" }).click();
+  await expect(fr.locator('[data-region="sources"]').getByRole("button", { name: "Niveau : UNKNOWN (1)" })).toBeVisible();
 });
