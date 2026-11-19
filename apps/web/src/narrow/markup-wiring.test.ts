@@ -8,6 +8,11 @@ import { SYMBOL_RULES } from './symbols.js';
 import { renderJunit, renderSarif } from './ci.js';
 import { scanCopy } from './copylint.js';
 import { CSS_RULE_IDS } from './cssrules.js';
+import { DOCUMENT_RULES } from './docmeta.js';
+import { IDENTIFIER_RULES } from './identifiers.js';
+import { LABEL_RULES } from './labels.js';
+import { NAME_WORD_RULES } from './namewords.js';
+import { TABLE_MARKUP_RULES } from './tablemarkup.js';
 import { noFrIssues } from './expect-fr.js';
 import { HREF_RULES } from './hrefs.js';
 import { snapshotInPage } from './inpage.js';
@@ -20,20 +25,28 @@ import {
   SAMPLE_ARIA_HTML,
   SAMPLE_CONSTRAINTS_HTML,
   SAMPLE_CSS_HTML,
+  SAMPLE_DOCUMENT_HTML,
   SAMPLE_HREFS_HTML,
+  SAMPLE_IDENTIFIERS_HTML,
+  SAMPLE_LABELS_HTML,
   SAMPLE_LISTS_HTML,
+  SAMPLE_NAME_WORDS_HTML,
   SAMPLE_OBSOLETE_HTML,
   SAMPLE_REFERENCES_HTML,
   SAMPLE_SECTIONING_HTML,
   SAMPLE_STATES_HTML,
   SAMPLE_SYMBOLS_HTML,
+  SAMPLE_TABLE_MARKUP_HTML,
   sampleEntries,
 } from './samples.js';
 import { selectChecks } from './select.js';
 import { installDom, type Installed } from './testkit.js';
 import { CHECK_LABELS, CHECK_ORDER, CHECK_SC, type CheckId } from './types.js';
 
-const MINE: readonly CheckId[] = ['aria', 'references', 'hrefs', 'css', 'obsolete', 'states', 'lists', 'sectioning', 'constraints', 'symbols'];
+const MINE: readonly CheckId[] = [
+  'aria', 'references', 'hrefs', 'css', 'obsolete', 'states', 'lists', 'sectioning', 'constraints', 'symbols',
+  'document', 'table-markup', 'labels', 'identifiers', 'name-words',
+];
 
 const GOOD = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Hours</title>
 <style>
@@ -60,7 +73,7 @@ afterEach(() => {
 });
 
 describe('check tables', () => {
-  it('list the ten markup checks once each, with labels in both languages and a criterion', () => {
+  it('list the fifteen markup checks once each, with labels in both languages and a criterion', () => {
     for (const id of MINE) {
       expect(CHECK_ORDER.filter((c) => c === id)).toHaveLength(1);
       expect(CHECK_LABELS[id].en.trim()).not.toBe('');
@@ -78,6 +91,11 @@ describe('check tables', () => {
     expect(CHECK_SC.sectioning).toBe('1.3.1');
     expect(CHECK_SC.constraints).toBe('3.3.2');
     expect(CHECK_SC.symbols).toBe('1.1.1');
+    expect(CHECK_SC.document).toBe('3.1.1');
+    expect(CHECK_SC['table-markup']).toBe('1.3.1');
+    expect(CHECK_SC.labels).toBe('3.3.2');
+    expect(CHECK_SC.identifiers).toBe('4.1.2');
+    expect(CHECK_SC['name-words']).toBe('4.1.2');
   });
   it('has no check id twice and a label for every id in the order', () => {
     expect(new Set(CHECK_ORDER).size).toBe(CHECK_ORDER.length);
@@ -86,7 +104,7 @@ describe('check tables', () => {
 });
 
 describe('markupResults', () => {
-  it('runs the ten checks and nothing else', () => {
+  it('runs the fifteen checks and nothing else', () => {
     expect(Object.keys(markupResults('<p>x</p>')).sort()).toEqual([...MINE].sort());
   });
   it('finds nothing on a good page and says how much it read', () => {
@@ -102,9 +120,14 @@ describe('markupResults', () => {
     expect(r['sectioning']?.checked).toBe(3);
     expect(r['constraints']?.checked).toBe(2);
     expect(r['symbols']?.checked).toBeGreaterThan(15);
+    expect(r['document']?.checked).toBe(2);
+    expect(r['table-markup']?.checked).toBe(1);
+    expect(r['labels']?.checked).toBe(1);
+    expect(r['identifiers']?.checked).toBeGreaterThan(5);
+    expect(r['name-words']?.checked).toBeGreaterThan(5);
   });
   it('tags every entry with its own check', () => {
-    const all = SAMPLE_REFERENCES_HTML + SAMPLE_HREFS_HTML + SAMPLE_CSS_HTML + SAMPLE_OBSOLETE_HTML + SAMPLE_STATES_HTML + SAMPLE_LISTS_HTML + SAMPLE_SECTIONING_HTML + SAMPLE_CONSTRAINTS_HTML + SAMPLE_SYMBOLS_HTML + SAMPLE_ARIA_HTML;
+    const all = SAMPLE_TABLE_MARKUP_HTML + SAMPLE_LABELS_HTML + SAMPLE_IDENTIFIERS_HTML + SAMPLE_NAME_WORDS_HTML + SAMPLE_REFERENCES_HTML + SAMPLE_HREFS_HTML + SAMPLE_CSS_HTML + SAMPLE_OBSOLETE_HTML + SAMPLE_STATES_HTML + SAMPLE_LISTS_HTML + SAMPLE_SECTIONING_HTML + SAMPLE_CONSTRAINTS_HTML + SAMPLE_SYMBOLS_HTML + SAMPLE_ARIA_HTML;
     let seen = 0;
     for (const [id, result] of Object.entries(markupResults(all))) {
       for (const e of result?.entries ?? []) {
@@ -112,7 +135,7 @@ describe('markupResults', () => {
         seen++;
       }
     }
-    expect(seen).toBeGreaterThan(40);
+    expect(seen).toBeGreaterThan(60);
   });
 });
 
@@ -163,15 +186,22 @@ describe('selfAudit', () => {
     const before = dom.world.styleElements;
     const route = selfAudit(new Date('2026-11-19T12:00:00Z')).routes[0];
     expect(route?.checks.map((c) => c.check)).toEqual(expect.arrayContaining([...MINE]));
-    expect(route?.entries.filter((e) => MINE.includes(e.check))).toEqual([]);
+    // The test document has no head, so the one true finding is the character set it does not declare.
+    expect(route?.entries.filter((e) => MINE.includes(e.check)).map((e) => `${e.check}/${e.rule}:${e.status}`)).toEqual(['document/charset-missing:unknown']);
     expect(dom.world.styleElements).toBe(before);
+  });
+});
+
+describe('a whole document sample', () => {
+  it('reports the document rules from one page', () => {
+    expect(markupResults(SAMPLE_DOCUMENT_HTML)['document']?.entries.map((e) => e.rule).sort()).toEqual([...DOCUMENT_RULES].sort());
   });
 });
 
 describe('the sample set', () => {
   const all = sampleEntries();
   const rulesOf = (check: CheckId): Set<string | undefined> => new Set(all.filter((e) => e.check === check).map((e) => e.rule));
-  it('has an entry for each rule of the ten checks', () => {
+  it('has an entry for each rule of the fifteen checks', () => {
     for (const r of ARIA_RULES) expect(rulesOf('aria').has(r), `aria ${r}`).toBe(true);
     for (const r of REFERENCE_RULES) expect(rulesOf('references').has(r), `references ${r}`).toBe(true);
     for (const r of HREF_RULES) expect(rulesOf('hrefs').has(r), `hrefs ${r}`).toBe(true);
@@ -182,6 +212,11 @@ describe('the sample set', () => {
     for (const r of SECTIONING_RULES) expect(rulesOf('sectioning').has(r), `sectioning ${r}`).toBe(true);
     for (const r of CONSTRAINT_RULES) expect(rulesOf('constraints').has(r), `constraints ${r}`).toBe(true);
     for (const r of SYMBOL_RULES) expect(rulesOf('symbols').has(r), `symbols ${r}`).toBe(true);
+    for (const r of DOCUMENT_RULES) expect(rulesOf('document').has(r), `document ${r}`).toBe(true);
+    for (const r of TABLE_MARKUP_RULES) expect(rulesOf('table-markup').has(r), `table-markup ${r}`).toBe(true);
+    for (const r of LABEL_RULES) expect(rulesOf('labels').has(r), `labels ${r}`).toBe(true);
+    for (const r of IDENTIFIER_RULES) expect(rulesOf('identifiers').has(r), `identifiers ${r}`).toBe(true);
+    for (const r of NAME_WORD_RULES) expect(rulesOf('name-words').has(r), `name-words ${r}`).toBe(true);
   });
   it('has clean French, and both languages differ', () => {
     noFrIssues(all.filter((e) => MINE.includes(e.check)));
