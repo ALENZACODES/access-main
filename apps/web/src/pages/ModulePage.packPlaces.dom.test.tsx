@@ -57,7 +57,7 @@ describe("places page with a stored pack", () => {
       flags.online = online;
       getPack.mockResolvedValue({ pack_id: "toronto", content });
       await page("places");
-      await waitFor(() => expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(content.places.length));
+      await waitFor(() => expect(document.querySelectorAll(".pack-place h3")).toHaveLength(content.places.length));
       expect(screen.getByRole("heading", { level: 2, name: "Places saved on this device" })).toBeTruthy();
       cleanup();
     }
