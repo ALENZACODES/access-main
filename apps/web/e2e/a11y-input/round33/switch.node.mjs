@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MODES, PHASES, scanOptions, scanTargets, initialScan, stepScan, dwellScan, replayScan, expectedFocusTargets,
   auditFocusWalk, auditReverseWalk, auditSwitchSelection, switchReport, actionAudit } from './switch.mjs';
 import { finding } from './contracts.mjs';
-import { clone, control, controls, focusWalk, journey, observation } from './fixtures.node.mjs';
+import { clone, control, focusWalk, journey, observation } from './fixtures.node.mjs';
 const codes = (issues) => issues.map((issue) => issue.code);
 const has = (issues, code) => assert.ok(codes(issues).includes(code), `Missing ${code}`);
 test('scan modes are finite', () => assert.deepEqual(MODES, ['LINEAR', 'GROUP', 'DIRECT']));
