@@ -2,6 +2,7 @@
 // This never touches anything held on a server.
 
 import type { Locale } from "./copyLint";
+import { scopeKeysPresent, toScope, type DataScope } from "./dataScope";
 import type { StorageLike } from "./storage";
 
 export interface ExportFile {
@@ -34,12 +35,14 @@ const FILE_STEM: Record<Locale, string> = { en: "the-app-data", fr: "l-app-donne
 
 export function exportLocalData(
   storage: StorageLike,
-  prefix: string,
+  prefixOrScope: string | DataScope,
   now: Date,
   locale: Locale,
 ): ExportFile {
+  const scope = toScope(prefixOrScope);
+  const prefix = scope.prefix;
   const items: Record<string, string> = {};
-  for (const k of listKeys(storage, prefix)) {
+  for (const k of scopeKeysPresent(storage, scope)) {
     const v = storage.getItem(k);
     if (v !== null) items[k] = v;
   }
@@ -58,8 +61,8 @@ export function exportLocalData(
   };
 }
 
-export function eraseLocalData(storage: StorageLike, prefix: string): EraseResult {
-  const keys = listKeys(storage, prefix);
+export function eraseLocalData(storage: StorageLike, prefixOrScope: string | DataScope): EraseResult {
+  const keys = scopeKeysPresent(storage, toScope(prefixOrScope));
   const failed: string[] = [];
   for (const k of keys) {
     try {

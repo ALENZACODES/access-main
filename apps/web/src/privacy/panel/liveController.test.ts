@@ -9,6 +9,12 @@ import { createMemoryStorage } from "./storage";
 const NOW = new Date(2026, 10, 19, 9, 0, 0);
 
 describe("liveControllerDeps", () => {
+  it("lists the exact extra names the panel covers, never one under the prefix or the map tile list", () => {
+    const d = liveControllerDeps();
+    expect(d.extraKeys).toEqual(["app.corrections.v1", "app.preferences.v1", "data-status:history:v1", "data-status:saved-views:v1", "data-status:snapshot:v1"]);
+    expect(d.extraKeys?.some((k) => k.startsWith("access."))).toBe(false);
+    expect(d.extraKeys).not.toContain("__map_tile_list");
+  });
   it("bundles the prefix, purposes, rules, refused list and outside list", () => {
     const d = liveControllerDeps();
     expect(d.prefix).toBe("access.");
@@ -45,7 +51,8 @@ describe("a controller built from the live settings", () => {
     const html = make().c.html();
     expect(html).toContain("Keep my route reports");
     expect(html).toContain("data-privacy-outside");
-    expect(html).toContain("Your display preferences");
+    expect(html).toContain("The list of map tiles kept for offline use");
+    expect(html).not.toContain("Your display preferences");
   });
   it("removes saved route reports when the person declines, and says how many", () => {
     const { storage, c } = make();
@@ -61,5 +68,12 @@ describe("a controller built from the live settings", () => {
     const html = c.html();
     expect(html).toContain("data-privacy-refused");
     expect(html).not.toContain("secret-looking-value");
+  });
+  it("erases the preferences and the corrections queue with the rest, and leaves the map tile list", () => {
+    const storage = createMemoryStorage({ "access.language": "fr", "app.preferences.v1": "{}", "app.corrections.v1": "{}", "__map_tile_list": "[]" });
+    const c = createPrivacyController({ storage, inventory: FIXTURE, now: () => NOW, ...liveControllerDeps() });
+    c.dispatch({ type: "erase-ask" });
+    expect(c.dispatch({ type: "erase-confirm" }).status).toEqual({ kind: "erased", count: 3 });
+    expect(storage.getItem("__map_tile_list")).toBe("[]");
   });
 });
