@@ -8,7 +8,7 @@ import { expect, test, type Page } from "@playwright/test";
 const DAY = 86_400_000;
 const daysAgo = (days: number) => new Date(Date.now() - days * DAY).toISOString();
 
-async function seed(page: Page, rows: Array<{ id: string; kind: string; title: string; retrieved_at: string | null }>) {
+async function seed(page: Page, rows: Array<{ id: string; kind: string; title: string; retrieved_at: string | null; tier?: number | string | null }>) {
   await page.evaluate(async (records) => {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open("access-app");
@@ -21,7 +21,7 @@ async function seed(page: Page, rows: Array<{ id: string; kind: string; title: s
         for (const row of records) {
           tx.objectStore("cacheEntries").put({
             id: row.id, kind: row.kind, title: row.title, stored_at: new Date().toISOString(),
-            provenance: { source_name: `Source of ${row.title}`, source_url: null, licence: "OGL-Ontario", licence_url: null, source_date: "2026-01-01", retrieved_at: row.retrieved_at, tier: 0, prototype_label: "SEEDED-OPEN-DATA", freshness: "unknown" },
+            provenance: { source_name: `Source of ${row.title}`, source_url: null, licence: "OGL-Ontario", licence_url: null, source_date: "2026-01-01", retrieved_at: row.retrieved_at, tier: row.tier === undefined ? 0 : row.tier, prototype_label: "SEEDED-OPEN-DATA", freshness: "unknown" },
             contains_live_status: false, payload: {},
           });
         }
@@ -127,4 +127,40 @@ test("Data status: the summary, next steps and licence table read the saved reco
   const text = (await fr.evaluate((el) => el.textContent)) ?? "";
   expect(text).toContain("Par exemple : ");
   expect(text).not.toMatch(/[A-Za-zÀ-ÿ]:(?!\/\/)/);
+});
+
+test("Data status: records are counted by tier, gaps are listed, and the facts file can be saved, in both languages", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-desk", kind: "place", title: "Desk place", retrieved_at: daysAgo(4), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  await expect(panel.getByRole("heading", { name: "Tier of each record" })).toBeVisible();
+  const tiers = panel.getByRole("table", { name: "Records by tier", exact: true });
+  await expect(tiers.getByRole("row", { name: /^Tier 0 .* 1$/ })).toBeVisible();
+  await expect(tiers.getByRole("row", { name: /^Tier E .* 1$/ })).toBeVisible();
+  await expect(tiers.getByRole("row", { name: /^Unknown .* 1$/ })).toBeVisible();
+  await expect(panel).toContainText("Records that state a tier: 2 of 3.");
+  await expect(panel).toContainText("Records that carry all four: 2 of 3.");
+  const gaps = panel.getByRole("table", { name: "Records with a missing source, licence, date or tier" });
+  await expect(gaps.getByRole("row")).toHaveCount(2);
+  await expect(gaps.getByRole("row").nth(1)).toContainText("Recorded");
+  await expect(panel.getByRole("navigation", { name: "On this panel" }).getByRole("link", { name: "Tier of each record" })).toBeVisible();
+  await expect(panel.getByRole("heading", { name: "Words used on this panel" })).toBeVisible();
+
+  const download = page.waitForEvent("download");
+  await panel.getByRole("button", { name: "Download source, licence, date and tier for each record (CSV)" }).click();
+  expect((await download).suggestedFilename()).toBe("record-facts.csv");
+  const summary = page.waitForEvent("download");
+  await panel.getByRole("button", { name: "Download a short summary (text)" }).click();
+  expect((await summary).suggestedFilename()).toBe("data-status-summary.txt");
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("heading", { name: "Niveau de chaque enregistrement", exact: true })).toBeVisible();
+  await expect(fr.getByRole("table", { name: "Enregistrements selon le niveau", exact: true }).getByRole("row", { name: /^Niveau E .* 1$/ })).toBeVisible();
+  await expect(fr).toContainText("Enregistrements qui indiquent un niveau\u00a0: 2 sur 3.");
 });

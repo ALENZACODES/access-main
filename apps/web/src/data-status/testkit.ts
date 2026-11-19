@@ -51,8 +51,8 @@ export const RECORDS: DatasetRecord[] = [
     name: 'Places <A>',
     kind: 'places',
     sources: [
-      { id: 'a', name: 'Alpha', source: 'Publisher A', licence: 'OGL-Ontario', retrievedAt: '2026-11-01', url: 'https://example.org/a' },
-      { id: 'b', name: 'Beta', source: 'Publisher B', licence: 'Proprietary', retrievedAt: '2024-01-01' },
+      { id: 'a', name: 'Alpha', source: 'Publisher A', licence: 'OGL-Ontario', retrievedAt: '2026-11-01', url: 'https://example.org/a', tier: 0 },
+      { id: 'b', name: 'Beta', source: 'Publisher B', licence: 'Proprietary', retrievedAt: '2024-01-01', tier: 'E' },
     ],
   },
   { id: 'r', name: 'Routes', kind: 'routes', sources: [{ id: 'c' }] },

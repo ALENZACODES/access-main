@@ -16,6 +16,11 @@ import { SELF_CHECK_MESSAGES } from './selfCheck';
 import { TOC_MESSAGES } from './toc';
 import { SOURCE_DETAIL_MESSAGES } from './sourceDetail';
 import { TABLES_CSV_MESSAGES } from './tablesCsv';
+import { TIER_MESSAGES } from './tiers';
+import { RECORD_FACT_MESSAGES } from './recordFacts';
+import { FACTS_CSV_MESSAGES } from './factsCsv';
+import { GLOSSARY_MESSAGES } from './glossary';
+import { TEXT_SUMMARY_MESSAGES } from './textSummary';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -32,6 +37,11 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['toc', TOC_MESSAGES],
   ['sourceDetail', SOURCE_DETAIL_MESSAGES],
   ['tablesCsv', TABLES_CSV_MESSAGES],
+  ['tiers', TIER_MESSAGES],
+  ['recordFacts', RECORD_FACT_MESSAGES],
+  ['factsCsv', FACTS_CSV_MESSAGES],
+  ['glossary', GLOSSARY_MESSAGES],
+  ['textSummary', TEXT_SUMMARY_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {

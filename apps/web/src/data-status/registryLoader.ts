@@ -68,6 +68,9 @@ function readSource(raw: unknown, path: string, issues: LoadIssue[], opts: LoadO
     }
     out[f] = v;
   }
+  const tier = raw['tier'];
+  if (typeof tier === 'string' || (typeof tier === 'number' && Number.isFinite(tier))) out.tier = tier;
+  else if (tier !== undefined && tier !== null) issues.push({ severity: 'error', code: 'bad-field', path: `${path}.tier` });
   if (opts.normaliseLicences !== false && typeof out.licence === 'string') {
     const m = normaliseLicence(out.licence);
     if (m.id !== null && m.changed) {

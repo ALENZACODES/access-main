@@ -11,13 +11,15 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('labels', () => {
   it('names both files in both languages', () => {
-    expect(EXTRA_EXPORT_IDS).toEqual(['markdown', 'checksums', 'tables']);
+    expect(EXTRA_EXPORT_IDS).toEqual(['markdown', 'checksums', 'tables', 'facts', 'summary']);
     expect(extraLabel('markdown', 'en')).toBe('Download the audit report (Markdown)');
     expect(extraLabel('checksums', 'en')).toBe('Download the checksum list (text)');
     expect(extraLabel('markdown', 'fr')).toBe('Télécharger le rapport d’audit (Markdown)');
     expect(extraLabel('checksums', 'fr')).toBe('Télécharger la liste des sommes de contrôle (texte)');
     expect(extraLabel('tables', 'en')).toBe('Download the planning tables (CSV)');
     expect(extraLabel('tables', 'fr')).toBe('Télécharger les tableaux de planification (CSV)');
+    expect(extraLabel('facts', 'en')).toBe('Download source, licence, date and tier for each record (CSV)');
+    expect(extraLabel('facts', 'fr')).toBe('Télécharger la source, la licence, la date et le niveau de chaque enregistrement (CSV)');
   });
   it('passes the French typography check', () => {
     for (const id of EXTRA_EXPORT_IDS) expect(lintFrench(extraLabel(id, 'fr'))).toEqual([]);

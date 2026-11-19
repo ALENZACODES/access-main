@@ -11,8 +11,10 @@ import { buildManifest, manifestToText } from './manifest';
 import { buildMarkdownReport } from './markdownReport';
 import type { Thresholds } from './thresholds';
 import { buildTablesCsv } from './tablesCsv';
+import { buildFactsCsv } from './factsCsv';
+import { buildTextSummary } from './textSummary';
 
-export type ExtraExportId = 'markdown' | 'checksums' | 'tables';
+export type ExtraExportId = 'markdown' | 'checksums' | 'tables' | 'facts' | 'summary';
 
 export interface ExtraExportFile {
   id: ExtraExportId;
@@ -22,20 +24,20 @@ export interface ExtraExportFile {
   text: string;
 }
 
-export const EXTRA_EXPORT_IDS: readonly ExtraExportId[] = ['markdown', 'checksums', 'tables'];
+export const EXTRA_EXPORT_IDS: readonly ExtraExportId[] = ['markdown', 'checksums', 'tables', 'facts', 'summary'];
 
-type Key = 'ex.markdown' | 'ex.checksums' | 'ex.tables';
+type Key = 'ex.markdown' | 'ex.checksums' | 'ex.tables' | 'ex.facts' | 'ex.summary';
 
 const MESSAGES: Messages<Key> = {
-  en: { 'ex.markdown': 'Download the audit report (Markdown)', 'ex.checksums': 'Download the checksum list (text)', 'ex.tables': 'Download the planning tables (CSV)' },
-  fr: { 'ex.markdown': 'Télécharger le rapport d’audit (Markdown)', 'ex.checksums': 'Télécharger la liste des sommes de contrôle (texte)', 'ex.tables': 'Télécharger les tableaux de planification (CSV)' },
+  en: { 'ex.markdown': 'Download the audit report (Markdown)', 'ex.checksums': 'Download the checksum list (text)', 'ex.tables': 'Download the planning tables (CSV)', 'ex.facts': 'Download source, licence, date and tier for each record (CSV)', 'ex.summary': 'Download a short summary (text)' },
+  fr: { 'ex.markdown': 'Télécharger le rapport d’audit (Markdown)', 'ex.checksums': 'Télécharger la liste des sommes de contrôle (texte)', 'ex.tables': 'Télécharger les tableaux de planification (CSV)', 'ex.facts': 'Télécharger la source, la licence, la date et le niveau de chaque enregistrement (CSV)', 'ex.summary': 'Télécharger un court résumé (texte)' },
 };
 
 export const EXPORT_EXTRAS_MESSAGES = MESSAGES;
 const tx = createTranslator(MESSAGES);
 
 export function extraLabel(id: ExtraExportId, locale: Locale): string {
-  return tx(locale, id === 'markdown' ? 'ex.markdown' : id === 'checksums' ? 'ex.checksums' : 'ex.tables');
+  return tx(locale, `ex.${id}`);
 }
 
 export function buildMarkdownFile(records: readonly DatasetRecord[], locale: Locale, now: Date, thresholds: Thresholds = {}): ExtraExportFile {
@@ -55,6 +57,26 @@ export function buildTablesFile(records: readonly DatasetRecord[], locale: Local
     mime: 'text/csv;charset=utf-8',
     label: extraLabel('tables', locale),
     text: buildTablesCsv(auditRegistry(records, now, thresholds), now, locale),
+  };
+}
+
+export function buildFactsFile(records: readonly DatasetRecord[], locale: Locale, now: Date, thresholds: Thresholds = {}): ExtraExportFile {
+  return {
+    id: 'facts',
+    filename: 'record-facts.csv',
+    mime: 'text/csv;charset=utf-8',
+    label: extraLabel('facts', locale),
+    text: buildFactsCsv(records, auditRegistry(records, now, thresholds), locale),
+  };
+}
+
+export function buildSummaryFile(records: readonly DatasetRecord[], locale: Locale, now: Date, thresholds: Thresholds = {}): ExtraExportFile {
+  return {
+    id: 'summary',
+    filename: 'data-status-summary.txt',
+    mime: 'text/plain;charset=utf-8',
+    label: extraLabel('summary', locale),
+    text: buildTextSummary(records, auditRegistry(records, now, thresholds), now, locale),
   };
 }
 
