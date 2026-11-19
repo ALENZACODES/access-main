@@ -146,12 +146,13 @@ export function addRecoveryAttempt(
 }
 
 /** Editing existing attempts is intentionally unsupported. Add a later note instead. */
-export function replaceRecoveryAttempt(
-  _document: AttemptDocument,
-  _attempt: RecoveryAttempt,
-): AttemptResult<AttemptDocument> {
-  return { ok: false, issue: "invalid-transition" };
-}
+export const replaceRecoveryAttempt: (
+  document: AttemptDocument,
+  attempt: RecoveryAttempt,
+) => AttemptResult<AttemptDocument> = () => ({
+  ok: false,
+  issue: "invalid-transition",
+});
 
 export function parseRecoveryAttempts(raw: string): AttemptResult<AttemptDocument> {
   if (new TextEncoder().encode(raw).byteLength > MAX_ATTEMPT_BYTES) {
