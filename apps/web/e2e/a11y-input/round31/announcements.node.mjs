@@ -170,4 +170,4 @@ for (const [name, input, code] of offlineDefects) {
 }
 test("unknown offline status is not falsely marked as ready", () => assert.deepEqual(auditOfflineAnnouncement(offline({ cache: "UNKNOWN", claim: "UNKNOWN", sourceTier: "UNKNOWN" })), []));
 test("announcement summary counts categories", () => assert.deepEqual(announcementSummary([{ code: "a", severity: "error" }, { code: "b", severity: "review" }]), { error: 1, review: 1, codes: [["a", 1], ["b", 1]] }));
-test("event audit does not mutate observations", () => { const events = [event()]; const original = structuredClone(events); auditAnnouncementEvents(events); assert.deepEqual(events, original); });
+test("event audit does not mutate observations", () => { const events = [event()]; const original = JSON.parse(JSON.stringify(events)); auditAnnouncementEvents(events); assert.deepEqual(events, original); });
