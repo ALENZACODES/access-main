@@ -37,6 +37,8 @@ const STATUSES: readonly Status[] = [
   { kind: "list-exported", format: "text" },
   { kind: "kept-exported", format: "csv" },
   { kind: "kept-exported", format: "text" },
+  { kind: "features-exported", format: "csv" },
+  { kind: "features-exported", format: "text" },
   { kind: "seen-saved" },
   { kind: "import-ready", additions: 2, overwrites: 1, unchanged: 3 },
   { kind: "import-done", count: 4 },
@@ -55,6 +57,7 @@ export const PROTECTED_PROBLEMS: readonly ProtectedProblem[] = [
 
 const DEVICE_STATUSES: readonly DeviceStatus[] = [
   { kind: "scan-done" },
+  { kind: "features-checked" },
   { kind: "device-cleared", caches: 2, databases: 1 },
   { kind: "device-clear-partial", failed: 2 },
   { kind: "device-nothing" },
