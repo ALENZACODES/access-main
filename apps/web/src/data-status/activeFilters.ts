@@ -6,10 +6,11 @@ import type { Locale } from './dataStatus';
 import { NO_FILTERS, normaliseQuery, withOptionalFilter, type Filters } from './filters';
 import { t } from './i18n';
 import { kindLabel } from './licenceBreakdown';
+import { factLabel } from './recordFacts';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 
-export const ACTIVE_FILTER_KEYS = ['state', 'kind', 'query', 'issues', 'tier', 'licence', 'dataset'] as const;
+export const ACTIVE_FILTER_KEYS = ['state', 'kind', 'query', 'issues', 'tier', 'licence', 'dataset', 'gap'] as const;
 export type ActiveFilterKey = (typeof ACTIVE_FILTER_KEYS)[number];
 
 export interface ActiveFilter {
@@ -28,6 +29,7 @@ type Key =
   | 'af.tier'
   | 'af.licence'
   | 'af.dataset'
+  | 'af.gap'
   | 'af.remove';
 
 const MESSAGES: Messages<Key> = {
@@ -41,18 +43,20 @@ const MESSAGES: Messages<Key> = {
     'af.tier': 'Tier: {value}',
     'af.licence': 'Licence type: {value}',
     'af.dataset': 'Dataset: {value}',
+    'af.gap': 'Unknown: {value}',
     'af.remove': 'Remove filter. {label}',
   },
   fr: {
     'af.title.one': '{n} filtre appliqué',
     'af.title.other': '{n} filtres appliqués',
-    'af.state': 'État : {value}',
-    'af.kind': 'Type de jeu de données : {value}',
-    'af.query': 'Le nom contient « {value} »',
+    'af.state': 'État\u00A0: {value}',
+    'af.kind': 'Type de jeu de données\u00A0: {value}',
+    'af.query': 'Le nom contient «\u00A0{value}\u00A0»',
     'af.issues': 'À examiner seulement',
-    'af.tier': 'Niveau : {value}',
-    'af.licence': 'Type de licence : {value}',
-    'af.dataset': 'Jeu de données : {value}',
+    'af.tier': 'Niveau\u00A0: {value}',
+    'af.licence': 'Type de licence\u00A0: {value}',
+    'af.dataset': 'Jeu de données\u00A0: {value}',
+    'af.gap': 'Inconnu\u00A0: {value}',
     'af.remove': 'Retirer le filtre. {label}',
   },
 };
@@ -71,6 +75,7 @@ export function listActiveFilters(f: Filters, locale: Locale, datasetNames?: Rea
   if (f.tier !== undefined) out.push({ key: 'tier', label: tx(locale, 'af.tier', { value: f.tier === 'unknown' ? t(locale, 'unknown') : f.tier }) });
   if (f.licence !== undefined) out.push({ key: 'licence', label: tx(locale, 'af.licence', { value: kindLabel(f.licence, locale) }) });
   if (f.dataset !== undefined) out.push({ key: 'dataset', label: tx(locale, 'af.dataset', { value: datasetNames?.get(f.dataset) ?? f.dataset }) });
+  if (f.gap !== undefined) out.push({ key: 'gap', label: tx(locale, 'af.gap', { value: factLabel(f.gap, locale) }) });
   return out;
 }
 
@@ -88,6 +93,7 @@ export function withoutFilter(f: Filters, key: ActiveFilterKey): Filters {
     case 'tier':
     case 'licence':
     case 'dataset':
+    case 'gap':
       return withOptionalFilter(f, key, undefined);
   }
 }

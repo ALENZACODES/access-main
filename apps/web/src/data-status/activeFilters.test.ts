@@ -13,7 +13,7 @@ import { hasActiveFilters, NO_FILTERS, serializeFilters, type Filters } from './
 import { auditHtml, describeProblems, lintFrench, mountDataStatusPanel, renderDataStatusPanel, renderResultsHtml, scanHtml, visibleText } from './index';
 import { FakeHost, NOW, RECORDS, structureProblems, targetsBelow44 } from './testkit';
 
-const ALL: Filters = { state: 'stale', kind: 'places', query: 'Alpha', onlyIssues: true, tier: 'unknown', licence: 'open', dataset: 'p' };
+const ALL: Filters = { state: 'stale', kind: 'places', query: 'Alpha', onlyIssues: true, tier: 'unknown', licence: 'open', dataset: 'p', gap: 'source' };
 const audit = auditRegistry(RECORDS, NOW, {});
 const sv = { action: '/en/data-status', csvHref: '/c', creditsHref: '/k', summaryHref: '/s' };
 
@@ -31,6 +31,7 @@ describe('listActiveFilters', () => {
       { key: 'tier', label: 'Tier: Unknown' },
       { key: 'licence', label: 'Licence type: Open licence' },
       { key: 'dataset', label: 'Dataset: Places' },
+      { key: 'gap', label: 'Unknown: Source' },
     ]);
   });
   it('falls back to the dataset id when no name is known', () => {
@@ -83,8 +84,8 @@ describe('renderActiveFiltersHtml', () => {
   });
   it('renders a button for each filter, with the count in words', () => {
     const html = renderActiveFiltersHtml(listActiveFilters(ALL, 'en'), 'en');
-    expect(html).toContain('<p>7 filters in force</p>');
-    expect(html.match(/<button type="button" data-action="clear:/g)).toHaveLength(7);
+    expect(html).toContain('<p>8 filters in force</p>');
+    expect(html.match(/<button type="button" data-action="clear:/g)).toHaveLength(8);
     expect(html).toContain('data-action="clear:tier"');
     expect(renderActiveFiltersHtml(listActiveFilters({ ...NO_FILTERS, tier: 'E' }, 'en'), 'en')).toContain('<p>1 filter in force</p>');
   });

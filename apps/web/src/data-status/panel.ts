@@ -13,7 +13,7 @@ import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
-import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
+import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, GAP_FIELDS, hasActiveFilters, isGapField, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
 import { isDatasetKind } from './freshnessPolicy';
@@ -42,6 +42,7 @@ import {
   clampLimit,
   drillColumnHeading,
   drillFilters,
+  factLabel,
   parseDrillAction,
   renderDrillControl,
   type DrillTarget,
@@ -57,6 +58,8 @@ import {
   kindLabel,
   listActiveFilters,
   describeSaveOutcome,
+  VIEW_SAVE_ACTION,
+  viewApplyAction,
   describeViewDeleted,
   parseViewAction,
   removeViewAt,
@@ -341,6 +344,7 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     FILTER_LICENCE_KINDS.map((k) => option(k, kindLabel(k, locale), f.licence === k)).join('');
   const datasetOpts =
     option('any', t(locale, 'flt.any'), f.dataset === undefined) + datasets.map((d) => option(d.id, d.name, f.dataset === d.id)).join('');
+  const gapOpts = option('any', t(locale, 'flt.any'), f.gap === undefined) + GAP_FIELDS.map((g) => option(g, factLabel(g, locale), f.gap === g)).join('');
   const field = (id: string, key: MessageKey, control: string) =>
     `<div><label for="${id}">${esc(t(locale, key))}</label> ${control}</div>`;
   const controls =
@@ -349,6 +353,7 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     field('ds-f-kind', 'flt.kind', `<select id="ds-f-kind" name="kind" data-filter="kind" style="${FIELD_STYLE}">${kindOpts}</select>`) +
     field('ds-f-tier', 'flt.tier', `<select id="ds-f-tier" name="tier" data-filter="tier" style="${FIELD_STYLE}">${tierOpts}</select>`) +
     field('ds-f-licence', 'flt.licence', `<select id="ds-f-licence" name="lic" data-filter="licence" style="${FIELD_STYLE}">${licenceOpts}</select>`) +
+    field('ds-f-gap', 'flt.gap', `<select id="ds-f-gap" name="gap" data-filter="gap" style="${FIELD_STYLE}">${gapOpts}</select>`) +
     (datasets.length > 1
       ? field('ds-f-dataset', 'flt.dataset', `<select id="ds-f-dataset" name="ds" data-filter="dataset" style="${FIELD_STYLE}">${datasetOpts}</select>`)
       : '') +
@@ -464,7 +469,7 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale, { heading: drillColumnHeading(locale), cell: (kind) => drill({ kind: 'licence', value: kind }) }) +
     renderTierBreakdownHtml(buildTierBreakdown(state.records), locale, { heading: drillColumnHeading(locale), cell: (tier) => drill({ kind: 'tier', value: tier ?? 'unknown' }) }) +
     renderStatusByTierHtml(buildStatusByTier(audit), locale) +
-    renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale) +
+    renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale, { heading: drillColumnHeading(locale), cell: (field) => drill({ kind: 'gap', value: field }) }) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
     renderGlossaryHtml(locale) +
@@ -625,6 +630,35 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     });
   };
 
+  /** Says what the list holds now. When only the first rows are drawn, it says that too, so "shown" is not misread. */
+  const sayList = (before: ListState | null): void => {
+    if (lastList === null) return;
+    const locale = opts.getLocale();
+    const text = describeListChange(before, lastList, locale);
+    const drawn = clampLimit(limit, lastList.shown);
+    announcer.say(drawn < lastList.shown ? `${text} ${showingText(drawn, lastList.shown, locale)}` : text);
+  };
+
+  /**
+   * After a control redraws the panel, the control that was pressed has been replaced, and keyboard
+   * focus would be lost with it. Focus is put back on the same control when it is still there, else on
+   * the first fallback that exists. Only controls that take focus anyway are used, so the tab order is unchanged.
+   */
+  const focusFirst = (selectors: readonly string[]): void => {
+    for (const selector of selectors) {
+      const el = (host.querySelector?.(selector) ?? null) as { focus?: () => void } | null;
+      if (el === null || typeof el.focus !== 'function') continue;
+      try {
+        el.focus();
+      } catch {
+        // A host that cannot take focus is left as it is.
+      }
+      return;
+    }
+  };
+  const byAction = (action: string): string => `[data-action="${action.replace(/["\\]/g, '\\$&')}"]`;
+  const FORM_START = '#ds-f-state';
+
   const updateResults = (): void => {
     const region = host.querySelector?.('[data-region="sources"]') ?? null;
     if (region === null) {
@@ -642,9 +676,9 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     if (views !== null && opts.savedViews) {
       views.innerHTML = renderViewsRegion(audit, opts.getLocale(), filters, { views: opts.savedViews.load(), durable: opts.savedViews.durable, draftName: viewName });
     }
-    const next = listState(audit);
-    announcer.say(describeListChange(lastList, next, opts.getLocale()));
-    lastList = next;
+    const before = lastList;
+    lastList = listState(audit);
+    sayList(before);
   };
 
   const onFilterEvent = (ev: unknown): void => {
@@ -666,6 +700,8 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       filters = withOptionalFilter(filters, 'tier', isTierFilter(value) ? value : undefined);
     } else if (key === 'licence') {
       filters = withOptionalFilter(filters, 'licence', isLicenceKind(value) ? value : undefined);
+    } else if (key === 'gap') {
+      filters = withOptionalFilter(filters, 'gap', isGapField(value) ? value : undefined);
     } else if (key === 'dataset') {
       filters = withOptionalFilter(filters, 'dataset', isDatasetFilter(value) ? value : undefined);
     }
@@ -702,8 +738,10 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       if (!hasActiveFilters(filters) && filters.query === '') return;
       const before = lastList;
       filters = { ...NO_FILTERS };
+      limit = LIVE_STEP;
       refresh();
-      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
+      sayList(before);
+      focusFirst([byAction('reset-filters'), FORM_START]);
       opts.onFiltersChange?.(view());
     } else if (action === 'export-report' && opts.onExportFile) {
       const { text, filename, mime } = buildMarkdownFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
@@ -720,18 +758,22 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         if (outcome === 'saved') viewName = '';
         refresh();
         announcer.say(describeSaveOutcome(outcome, locale));
+        focusFirst(outcome === 'saved' ? [byAction(viewApplyAction(opts.savedViews.load().length - 1)), FORM_START] : [byAction(VIEW_SAVE_ACTION), FORM_START]);
       } else if (act.kind === 'delete') {
         const { removed } = removeViewAt(opts.savedViews, act.index);
         if (!removed) return;
         refresh();
         announcer.say(describeViewDeleted(locale));
+        focusFirst([byAction(VIEW_SAVE_ACTION), '[data-action^="view-apply:"]', FORM_START]);
       } else {
         const query = opts.savedViews.load()[act.index]?.query;
         if (query === undefined) return;
         const before = lastList;
         filters = parseFilters(query);
+        limit = LIVE_STEP;
         refresh();
-        if (lastList !== null) announcer.say(describeListChange(before, lastList, locale));
+        sayList(before);
+        focusFirst([byAction(action ?? ''), FORM_START]);
         opts.onFiltersChange?.(view());
       }
     } else if (parseDrillAction(action) !== null) {
@@ -741,23 +783,28 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       filters = drillFilters(target);
       limit = LIVE_STEP;
       refresh();
-      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
+      sayList(before);
+      focusFirst([byAction(action ?? ''), FORM_START]);
       opts.onFiltersChange?.(view());
     } else if (clearKeyFromAction(action) !== null) {
       const key = clearKeyFromAction(action);
       if (key === null) return;
       const before = lastList;
       filters = withoutFilter(filters, key);
+      limit = LIVE_STEP;
       refresh();
-      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
+      sayList(before);
+      focusFirst(['[data-action^="clear:"]', byAction('reset-filters'), FORM_START]);
       opts.onFiltersChange?.(view());
     } else if (quickFilterFromAction(action) !== null) {
       const id = quickFilterFromAction(action);
       if (id === null) return;
       const before = lastList;
       filters = quickFilterFor(id);
+      limit = LIVE_STEP;
       refresh();
-      if (lastList !== null) announcer.say(describeListChange(before, lastList, opts.getLocale()));
+      sayList(before);
+      focusFirst([byAction(action ?? ''), byAction('reset-filters'), FORM_START]);
       opts.onFiltersChange?.(view());
     } else if (action === 'export-facts' && opts.onExportFile) {
       const { text, filename, mime } = buildFactsFile(lastRecords, opts.getLocale(), nowFn(), thresholds);

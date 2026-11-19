@@ -22,6 +22,7 @@ const TARGETS: DrillTarget[] = [
   { kind: 'licence', value: 'unrecognised' },
   { kind: 'state', value: 'stale' },
   { kind: 'dataset', value: 'p' },
+  { kind: 'gap', value: 'licence' },
 ];
 const sv = { action: '/en/data-status', csvHref: '/c', creditsHref: '/k', summaryHref: '/s' };
 
