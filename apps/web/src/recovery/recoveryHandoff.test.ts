@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   HANDOFF_CONDITIONS, HANDOFF_DECISIONS, HANDOFF_LICENCES, HANDOFF_LIMITS,
   HANDOFF_OPERATIONS, HANDOFF_TIERS, appendHandoffCase, appendHandoffEvent,
-  currentHandoffDecision, exportHandoffDocument, filterHandoffCases,
-  handoffForPack, handoffSummary, handoffUpdatedAt, mergeHandoffDocuments,
+  currentHandoffDecision, exportHandoffDocument, mergeHandoffDocuments,
   newHandoffDocument, nextEventId, nextHandoffId, parseHandoffDocument,
   previewHandoffMerge, validHandoffSource, validateHandoffCase,
   validateHandoffDocument, validateHandoffEvent,
