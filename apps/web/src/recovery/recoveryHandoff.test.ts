@@ -2,13 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   HANDOFF_CONDITIONS, HANDOFF_DECISIONS, HANDOFF_LICENCES, HANDOFF_LIMITS,
   HANDOFF_OPERATIONS, HANDOFF_TIERS, appendHandoffCase, appendHandoffEvent,
-  currentHandoffDecision, exportHandoffDocument, mergeHandoffDocuments,
-  newHandoffDocument, nextEventId, nextHandoffId, parseHandoffDocument,
+  currentHandoffDecision, exportHandoffDocument,
+  newHandoffDocument, parseHandoffDocument,
   previewHandoffMerge, validHandoffSource, validateHandoffCase,
   validateHandoffDocument, validateHandoffEvent,
   type HandoffCase, type HandoffDocument, type HandoffEvent, type HandoffSource,
 } from "./recoveryHandoff";
-import { handoffCopy } from "./recoveryHandoffCopy";
 
 const source: HandoffSource = {
   name: "Local public source", licence: "CC0-1.0", date: "2026-11-19",
