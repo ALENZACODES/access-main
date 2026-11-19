@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { PRIVACY_STORAGE_PREFIX } from "../panel/live";
 import { loadFiles } from "./repoFiles";
 import { STORAGE_REGISTER, UNSCANNED } from "../panel/storageRegister";
-import { checkRegister, compareToRegister, formatComparison, panelCoverage, scanStorageKeys } from "./storageKeys";
+import { checkReach, checkRegister, compareToRegister, formatComparison, panelCoverage, scanStorageKeys } from "./storageKeys";
 
 const ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
 
@@ -40,11 +40,16 @@ describe("storage keys in the source", () => {
     for (const r of STORAGE_REGISTER) expect(r.gated, r.key).toBe(ruled.has(r.key));
   });
 
-  it("records which keys sit outside the panel prefix, so the gap stays visible", () => {
-    const { covered, outside } = panelCoverage(STORAGE_REGISTER, PRIVACY_STORAGE_PREFIX);
-    expect(covered.map((r) => r.key)).toEqual(["access.language", "access.language.set", "access.routeReports.v1"]);
-    expect(outside.map((r) => r.key)).toEqual([
-      "__map_tile_list",
+  it("never marks a key under the panel prefix as outside the panel", () => {
+    expect(checkReach(STORAGE_REGISTER, PRIVACY_STORAGE_PREFIX)).toEqual([]);
+  });
+
+  it("records which keys the panel covers and which it leaves out, so the gap stays visible", () => {
+    const { covered, outside } = panelCoverage(STORAGE_REGISTER);
+    expect(covered.map((r) => r.key)).toEqual([
+      "access.language",
+      "access.language.set",
+      "access.routeReports.v1",
       "app.corrections.v1",
       "app.pack-shortlist.v1",
       "app.preferences.v1",
@@ -52,5 +57,6 @@ describe("storage keys in the source", () => {
       "data-status:saved-views:v1",
       "data-status:snapshot:v1",
     ]);
+    expect(outside.map((r) => r.key)).toEqual(["__map_tile_list"]);
   });
 });

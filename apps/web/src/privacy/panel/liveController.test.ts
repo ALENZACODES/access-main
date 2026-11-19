@@ -11,7 +11,7 @@ const NOW = new Date(2026, 10, 19, 9, 0, 0);
 describe("liveControllerDeps", () => {
   it("lists the exact extra names the panel covers, never one under the prefix or the map tile list", () => {
     const d = liveControllerDeps();
-    expect(d.extraKeys).toEqual(["app.corrections.v1", "app.preferences.v1", "data-status:history:v1", "data-status:saved-views:v1", "data-status:snapshot:v1"]);
+    expect(d.extraKeys).toEqual(["app.corrections.v1", "app.pack-shortlist.v1", "app.preferences.v1", "data-status:history:v1", "data-status:saved-views:v1", "data-status:snapshot:v1"]);
     expect(d.extraKeys?.some((k) => k.startsWith("access."))).toBe(false);
     expect(d.extraKeys).not.toContain("__map_tile_list");
   });
