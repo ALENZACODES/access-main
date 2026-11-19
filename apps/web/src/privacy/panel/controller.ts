@@ -1,5 +1,6 @@
 import { loadActivity, recordActivity, type ActivityEntry } from "./activityLog";
 import { diffInventory, loadSeen, saveSeen, snapshot, type ChangesView } from "./changes";
+import type { OutsideItem } from "./outsideSection";
 import { removeForPurpose, type GateRule, type RefusedWrite } from "./consentGate";
 import { assertValidPurposes, loadConsent, saveConsent, setConsent, type ConsentState, type Purpose } from "./consent";
 import type { Locale } from "./copyLint";
@@ -38,6 +39,8 @@ export interface ControllerDeps {
    * Omit to keep the data and only stop new saves.
    */
   withdrawRules?: readonly GateRule[];
+  /** What the App keeps outside this panel's prefix. Shown as a plain list so the person knows Erase does not reach it. Omit to hide it. */
+  outside?: readonly OutsideItem[];
   now: () => Date;
   reviewedOn?: string;
   /** Keep a visible, local list of the person's privacy actions. Default off. */
@@ -510,6 +513,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         purposes,
         consent: state.consent,
         ...(deps.refused !== undefined ? { refused: deps.refused() } : {}),
+        ...(deps.outside !== undefined ? { outside: deps.outside } : {}),
         ...(deps.reviewedOn !== undefined ? { reviewedOn: deps.reviewedOn } : {}),
         confirmingErase: state.confirmingErase,
         status: state.status,

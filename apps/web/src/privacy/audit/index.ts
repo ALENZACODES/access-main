@@ -8,3 +8,5 @@ export { EXEMPTIONS } from "./exemptions";
 export { auditDocument, extractTexts } from "./htmlAudit";
 export { collectCopy } from "./copyCorpus";
 export type { CopyItem } from "./copyCorpus";
+export { checkRegister, compareToRegister, formatComparison, isScannedSource, panelCoverage, scanStorageKeys } from "./storageKeys";
+export type { Coverage, FoundKey, RegisterComparison } from "./storageKeys";

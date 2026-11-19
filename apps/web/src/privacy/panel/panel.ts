@@ -12,6 +12,7 @@ import type { Reconciled } from "./reconcile";
 import { consentStatus, type ConsentState, type Purpose } from "./consent";
 import { PANEL_STRINGS, type Status } from "./strings";
 import type { RefusedWrite } from "./consentGate";
+import { renderOutsideHtml, type OutsideItem } from "./outsideSection";
 import { renderRefusedHtml } from "./refusedSection";
 import { renderOnDeviceNoticeHtml } from "../onDeviceNotice";
 
@@ -25,6 +26,8 @@ export interface PanelView {
   consent?: ConsentState;
   /** Writes the consent gate stopped this visit. Leave undefined to hide the section. */
   refused?: readonly RefusedWrite[];
+  /** What the App keeps that Download and Erase do not reach. Leave undefined to hide the section. */
+  outside?: readonly OutsideItem[];
   /** Entries newest first. Leave undefined to hide the activity section. */
   activity?: readonly ActivityEntry[];
   /** Leave undefined to hide the stored-items section. */
@@ -117,6 +120,7 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.signals === undefined ? "" : renderSignalsHtml(view.locale, view.signals)}` +
     `${view.device === undefined ? "" : renderDeviceHtml(view.locale, view.device)}` +
     `${renderConsentHtml(view)}` +
+    `${view.outside === undefined ? "" : renderOutsideHtml(view.locale, view.outside)}` +
     `${view.refused === undefined ? "" : renderRefusedHtml(view.locale, view.refused, view.purposes ?? [])}` +
     `${view.activity === undefined ? "" : renderActivityHtml(view.locale, view.activity, view.purposes ?? [])}` +
     `${languageFieldset(view.locale, s.languageLegend)}` +
