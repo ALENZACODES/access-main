@@ -68,7 +68,12 @@ export type CheckId =
   | 'lists'
   | 'sectioning'
   | 'constraints'
-  | 'symbols';
+  | 'symbols'
+  | 'document'
+  | 'table-markup'
+  | 'labels'
+  | 'identifiers'
+  | 'name-words';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -134,6 +139,11 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   sectioning: '1.3.1',
   constraints: '3.3.2',
   symbols: '1.1.1',
+  document: '3.1.1',
+  'table-markup': '1.3.1',
+  labels: '3.3.2',
+  identifiers: '4.1.2',
+  'name-words': '4.1.2',
   regions: '1.3.1',
 };
 
@@ -201,6 +211,11 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'sectioning',
   'constraints',
   'symbols',
+  'document',
+  'table-markup',
+  'labels',
+  'identifiers',
+  'name-words',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -267,6 +282,11 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   sectioning: { en: 'Page parts and landmarks', fr: 'Parties de page et repères' },
   constraints: { en: 'Limits on form entries', fr: 'Limites de saisie des formulaires' },
   symbols: { en: 'Symbols, emoji and icon fonts', fr: 'Symboles, émojis et polices d’icônes' },
+  document: { en: 'Document settings', fr: 'Réglages du document' },
+  'table-markup': { en: 'Table attributes', fr: 'Attributs des tableaux' },
+  labels: { en: 'Label structure', fr: 'Structure des étiquettes' },
+  identifiers: { en: 'Ids and how they are referred to', fr: 'Identifiants et façon de les référencer' },
+  'name-words': { en: 'Words in names', fr: 'Mots dans les noms' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */
