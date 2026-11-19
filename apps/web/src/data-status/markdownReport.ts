@@ -10,6 +10,7 @@ import { ageDays } from './age';
 import { formatDisplayDate } from './locale';
 import { createTranslator, type Messages } from './localText';
 import { t } from './i18n';
+import { tallyTiers, TIER_MESSAGES, tierLabel, tiersInUse } from './tiers';
 
 export const DEFAULT_ROW_LIMIT = 200;
 export const MAX_CELL_LENGTH = 200;
@@ -195,14 +196,21 @@ export function buildMarkdownReport(audit: AuditResult, now: Date, locale: Local
       escapeMarkdown(s.licence ?? t(locale, 'unknown')),
       s.retrievedIso === null ? t(locale, 'unknown') : escapeMarkdown(s.retrievedIso.slice(0, 10)),
       statusText(s, now, locale),
+      s.tier ?? t(locale, 'unknown'),
     ]);
     lines.push(
       ...table(
-        [tx(locale, 'md.colSource'), tx(locale, 'md.colDataset'), tx(locale, 'md.colLicence'), tx(locale, 'md.colRetrieved'), tx(locale, 'md.colStatus')],
+        [tx(locale, 'md.colSource'), tx(locale, 'md.colDataset'), tx(locale, 'md.colLicence'), tx(locale, 'md.colRetrieved'), tx(locale, 'md.colStatus'), t(locale, 'tbl.tier')],
         rows,
       ),
     );
     if (audit.sources.length > limit) lines.push('', tx.count(locale, 'md.rows.more', audit.sources.length - limit, { n: audit.sources.length - limit }));
+  }
+  if (audit.sources.length > 0) {
+    const tally = tallyTiers(audit.sources);
+    const tierRows = tiersInUse(tally).map((id) => [tierLabel(id, locale), String(tally.counts[id])]);
+    if (tally.unknown > 0) tierRows.push([tierLabel(null, locale), String(tally.unknown)]);
+    lines.push('', `## ${TIER_MESSAGES[locale]['tr.caption']}`, '', ...table([t(locale, 'tbl.tier'), TIER_MESSAGES[locale]['tr.colCount']], tierRows));
   }
   lines.push('', `_${tx(locale, 'md.note')}_`, '');
   return lines.join('\n');
