@@ -81,3 +81,8 @@ export { OUTSIDE_STRINGS, outsideItems, renderOutsideHtml } from "./outsideSecti
 export type { OutsideItem } from "./outsideSection";
 export { STORAGE_REGISTER, UNSCANNED } from "./storageRegister";
 export type { RegisterRow, UnscannedRow } from "./storageRegister";
+export { checkLiveControllerDeps, liveControllerDeps } from "./liveController";
+export type { LiveControllerDeps, LiveControllerOptions } from "./liveController";
+export { REGISTER_STRINGS, registerAsCsv, registerAsText, registerLines } from "./registerExport";
+export type { RegisterLine } from "./registerExport";
+
