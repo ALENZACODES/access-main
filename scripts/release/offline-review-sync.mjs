@@ -59,7 +59,6 @@ function sameClaim(a, b) { return a.state === b.state && a.reason === b.reason; 
 function sameProvenance(a, b) { return equal(canonicalEntry(a).provenance, canonicalEntry(b).provenance); }
 function sameLabel(a, b) { return equal(a.label, b.label); }
 function sameHistory(a, b) { return equal(a.history, b.history); }
-function sameWorkflow(a, b) { return a.status === b.status && sameHistory(a, b); }
 
 /** Return the bounded, explicit differences between two accepted records. */
 export function itemDifferences(before, after) {
