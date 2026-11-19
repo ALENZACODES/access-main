@@ -186,8 +186,8 @@ test("Data status: the source list shows each tier and can be filtered by tier",
   await tier.selectOption("any");
   await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(4);
 
-  await panel.getByRole("button", { name: "Tier unknown (1)" }).click();
-  await expect(panel.getByRole("button", { name: "Tier unknown (1)" })).toHaveAttribute("aria-pressed", "true");
+  await panel.getByRole("button", { name: "Tier: Unknown (1)" }).click();
+  await expect(panel.getByRole("button", { name: "Tier: Unknown (1)" })).toHaveAttribute("aria-pressed", "true");
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("unknown");
   await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(2);
   await expect(panel.getByRole("table", { name: "Records by tier and status" }).getByRole("row", { name: /^All tiers/ })).toContainText("3");
@@ -222,5 +222,64 @@ test("Data status: filters in force are listed above the list and can be removed
   await list.getByRole("button", { name: "Remove filter. Dataset: Places" }).click();
   await expect(list.getByRole("row")).toHaveCount(4);
   await expect(list.getByText("filter in force")).toHaveCount(0);
+});
+
+test("Data status: a view can be saved for this page, shown again and deleted, and the list is summarised", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const keysBefore = await page.evaluate(() => Object.keys(localStorage).sort());
+  await expect(list).toContainText("In this list: 1 possibly out of date, 1 with no usable date, 1 with no tier.");
+  await expect(panel).toContainText("Choose at least one filter to save a view.");
+
+  await panel.getByLabel("Tier", { exact: true }).selectOption("E");
+  await expect(list).toContainText("In this list: 1 possibly out of date.");
+  await panel.getByRole("button", { name: "Save the current filters as a view" }).click();
+  await expect(panel.locator('[data-region="announce"]')).toHaveText("View saved.");
+  const show = panel.getByRole("button", { name: "Show view. Tier: E" });
+  await expect(show).toHaveAttribute("aria-pressed", "true");
+
+  await list.getByRole("button", { name: "Remove filter. Tier: E", exact: true }).click();
+  await expect(list.getByRole("row")).toHaveCount(4);
+  await show.click();
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(list.getByRole("row")).toHaveCount(2);
+
+  await panel.getByRole("button", { name: "Delete view. Tier: E" }).click();
+  await expect(panel).toContainText("No view is saved yet.");
+  expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual(keysBefore);
+});
+
+test("Data status: a long list is drawn in steps and can be sorted without reloading", async ({ page }) => {
+  await page.goto("/data-status");
+  const rows = Array.from({ length: 60 }, (_, i) => ({
+    id: `p-${String(i).padStart(2, "0")}`,
+    kind: "place",
+    title: `Place ${String(i).padStart(2, "0")}`,
+    retrieved_at: daysAgo(i + 1),
+    tier: i === 59 ? ("E" as const) : 0,
+  }));
+  await seed(page, rows);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  await expect(list.getByRole("row")).toHaveCount(51);
+  await expect(list).toContainText("Showing 50 of 60 listed sources.");
+
+  await panel.getByLabel("Sort by").selectOption("tier:desc");
+  await expect(panel.locator('[data-region="announce"]')).toContainText("Sorted by tier, descending.");
+  await expect(list.getByRole("row").nth(1)).toContainText("Place 59");
+  await expect(list.getByRole("columnheader", { name: "Tier" })).toHaveAttribute("aria-sort", "descending");
+
+  await list.getByRole("button", { name: "Show 10 more sources" }).click();
+  await expect(list.getByRole("row")).toHaveCount(61);
+  await expect(list.getByRole("button", { name: /^Show \d+ more/ })).toHaveCount(0);
+  await expect(panel.locator('[data-region="announce"]')).toHaveText("All 60 listed sources are shown.");
 });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyChrome, bootstrap, pickLocale, type BootDeps, type DocLike } from './bootstrap';
 import { createSnapshot, createSnapshotStore, lintFrench, scanHtml, visibleText } from '../index';
 import { FakeHost, NOW, RECORDS, memoryStorage } from '../testkit';
+import { SAVED_VIEWS_KEY, VIEW_SAVE_ACTION } from '../savedViews';
 
 const REGISTRY = JSON.stringify([
   {
@@ -181,3 +182,47 @@ describe('bootstrap: offline and bad input', () => {
     expect(d.host.innerHTML).toContain('Alpha');
   });
 });
+
+describe('bootstrap: saved views', () => {
+  it('keeps saved views on the device when storage is available, and offers them on the next visit', async () => {
+    const d = deps({ search: '?state=stale' });
+    await bootstrap(d);
+    expect(d.host.innerHTML).toContain('Views are kept on this device only.');
+    d.host.click(VIEW_SAVE_ACTION);
+    expect(JSON.parse(d.storage.map.get(SAVED_VIEWS_KEY) ?? 'null')).toEqual(['?state=stale']);
+    const again = deps({ storage: d.storage });
+    await bootstrap(again);
+    expect(again.host.innerHTML).toContain('Show view. Status: May be out of date');
+  });
+  it('keeps them for the page only when storage is not available', async () => {
+    const d = deps({ storage: null, search: '?state=stale' });
+    await bootstrap(d);
+    expect(d.host.innerHTML).toContain('Views are kept until you leave this page.');
+    d.host.click(VIEW_SAVE_ACTION);
+    expect(d.host.innerHTML).toContain('Show view. Status: May be out of date');
+  });
+  it('ignores a saved list that is not readable', async () => {
+    const storage = memoryStorage();
+    storage.setItem(SAVED_VIEWS_KEY, '{broken');
+    const d = deps({ storage });
+    await bootstrap(d);
+    expect(d.host.innerHTML).toContain('No view is saved yet.');
+  });
+});
+
+describe('bootstrap: order of the list', () => {
+  it('starts in the order named in the address, and writes a new order back to it', async () => {
+    const searches: string[] = [];
+    const d = deps({ search: '?sort=licence&dir=desc', onSearchChange: (s) => searches.push(s) });
+    const out = await bootstrap(d);
+    expect(out.panel.getSort()).toEqual({ key: 'licence', dir: 'desc' });
+    expect(d.host.innerHTML).toContain('<option value="licence:desc" selected>');
+    d.host.filter('change', 'sort', 'source:asc');
+    expect(searches.at(-1)).toBe('?sort=source');
+  });
+  it('ignores an order it cannot read', async () => {
+    const out = await bootstrap(deps({ search: '?sort=bogus' }));
+    expect(out.panel.getSort()).toBeNull();
+  });
+});
+

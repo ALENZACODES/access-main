@@ -6,6 +6,7 @@
 import type { AuditResult } from './datasetRegistry';
 import type { Locale } from './dataStatus';
 import { applyFilters, NO_FILTERS, serializeFilters, type Filters } from './filters';
+import { t } from './i18n';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 
@@ -67,7 +68,7 @@ const MESSAGES: Messages<Key> = {
     'qf.review': 'Needs review ({n})',
     'qf.stale': 'Possibly out of date ({n})',
     'qf.undated': 'Date unknown ({n})',
-    'qf.noTier': 'Tier unknown ({n})',
+    'qf.noTier': 'Tier: {unknown} ({n})',
     'qf.licence': 'Licence not on the reference list ({n})',
   },
   fr: {
@@ -77,7 +78,7 @@ const MESSAGES: Messages<Key> = {
     'qf.review': 'À examiner ({n})',
     'qf.stale': 'Possiblement périmées ({n})',
     'qf.undated': 'Date inconnue ({n})',
-    'qf.noTier': 'Niveau inconnu ({n})',
+    'qf.noTier': 'Niveau\u00A0: {unknown} ({n})',
     'qf.licence': 'Licence absente de la liste de référence ({n})',
   },
 };
@@ -86,7 +87,8 @@ export const QUICK_FILTER_MESSAGES = MESSAGES;
 const tx = createTranslator(MESSAGES);
 
 export function quickFilterLabel(q: Pick<QuickFilter, 'id' | 'count'>, locale: Locale): string {
-  return tx(locale, `qf.${q.id}`, { n: q.count });
+  // The word for Unknown is the panel's own token, so this label cannot drift from the tables.
+  return tx(locale, `qf.${q.id}`, { n: q.count, unknown: t(locale, 'unknown') });
 }
 
 export interface QuickFilterRenderOptions {
