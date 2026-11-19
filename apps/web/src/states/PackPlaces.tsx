@@ -5,6 +5,7 @@ import { message } from "./messages.ts";
 import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces } from "./packPlaces.ts";
+import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
@@ -54,6 +55,7 @@ export function PackPlaces({ places, locale, today }: Props) {
   const headingId = useId();
   const [text, setText] = useState("");
   const [tag, setTag] = useState<TagFilter>("any");
+  const [facets, setFacets] = useState<FacetSelection>(EMPTY_FACETS);
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const day = today ?? new Date().toISOString().slice(0, 10);
@@ -61,8 +63,8 @@ export function PackPlaces({ places, locale, today }: Props) {
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
   const view = useMemo(
-    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near }, { locale, today: day }),
-    [parsed, text, tag, near, locale, day],
+    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets }, { locale, today: day }),
+    [parsed, text, tag, near, facets, locale, day],
   );
 
   // Other names to try when a typed search finds nothing. Only places the current filter allows are offered.
@@ -85,6 +87,7 @@ export function PackPlaces({ places, locale, today }: Props) {
   const clear = () => {
     setText("");
     setTag("any");
+    setFacets(EMPTY_FACETS);
   };
   const isTag = (value: string): value is TagFilter => (TAG_FILTERS as readonly string[]).includes(value);
 
@@ -101,6 +104,15 @@ export function PackPlaces({ places, locale, today }: Props) {
         }}
         options={view.tagOptions}
       />
+      {view.facetGroups.map((group) => (
+        <ChoiceGroup
+          key={group.facet}
+          label={group.label}
+          value={facets[group.facet as FacetId] ?? ""}
+          onChange={(value) => setFacets((current) => selectFacet(current, group.facet, value))}
+          options={group.options}
+        />
+      ))}
       <fieldset className="stack">
         <legend>{message("pack.nearLegend", locale)}</legend>
         <p>{message("pack.nearHelp", locale)}</p>
@@ -108,6 +120,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
       <p role="status">{view.announcement}</p>
+      {view.facetSummary ? <p>{view.facetSummary}</p> : null}
       {view.unknownHiddenNotice ? <p>{view.unknownHiddenNotice}</p> : null}
       {view.droppedNotice ? <p>{view.droppedNotice}</p> : null}
       {view.kind === "empty" ? (

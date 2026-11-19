@@ -10,12 +10,13 @@ import { t } from './i18n';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 
-export const QUICK_FILTER_IDS = ['review', 'stale', 'undated', 'noTier', 'licence'] as const;
+export const QUICK_FILTER_IDS = ['review', 'stale', 'dueSoon', 'undated', 'noTier', 'licence'] as const;
 export type QuickFilterId = (typeof QUICK_FILTER_IDS)[number];
 
 const PRESETS: Readonly<Record<QuickFilterId, Filters>> = {
   review: { ...NO_FILTERS, onlyIssues: true },
   stale: { ...NO_FILTERS, state: 'stale' },
+  dueSoon: { ...NO_FILTERS, due: 'd30' },
   undated: { ...NO_FILTERS, state: 'unknown' },
   noTier: { ...NO_FILTERS, tier: 'unknown' },
   licence: { ...NO_FILTERS, licence: 'unrecognised' },
@@ -67,6 +68,7 @@ const MESSAGES: Messages<Key> = {
     'qf.none': 'No source needs review, so there is nothing to jump to.',
     'qf.review': 'Needs review ({n})',
     'qf.stale': 'Possibly out of date ({n})',
+    'qf.dueSoon': 'Review due within 30 days ({n})',
     'qf.undated': 'Date unknown ({n})',
     'qf.noTier': 'Tier: {unknown} ({n})',
     'qf.licence': 'Licence not on the reference list ({n})',
@@ -77,6 +79,7 @@ const MESSAGES: Messages<Key> = {
     'qf.none': 'Aucune source n’est à examiner. Il n’y a aucun raccourci à proposer.',
     'qf.review': 'À examiner ({n})',
     'qf.stale': 'Possiblement périmées ({n})',
+    'qf.dueSoon': 'Révision prévue d’ici 30 jours ({n})',
     'qf.undated': 'Date inconnue ({n})',
     'qf.noTier': 'Niveau\u00A0: {unknown} ({n})',
     'qf.licence': 'Licence absente de la liste de référence ({n})',
