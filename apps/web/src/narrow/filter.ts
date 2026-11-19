@@ -90,7 +90,7 @@ export function parseFilter(text: string): ParsedFilter {
       if (idIncludes !== undefined) return bad('The filter gives id more than once. Give one piece of text.', 'Le filtre donne id plus d’une fois. Donnez un seul texte.');
       idIncludes = value;
     } else {
-      return bad(`The filter key "${key}" is not known. Keys: status, route, rule, -rule, id.`, `La clé de filtre "${key}" est inconnue. Clés possibles\u00A0: status, route, rule, -rule, id.`);
+      return bad(`The filter key "${key}" is not known. Keys: status, route, rule, -rule, id.`, `La clé de filtre "${key}" n’est pas reconnue. Clés possibles\u00A0: status, route, rule, -rule, id.`);
     }
   }
   return {

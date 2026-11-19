@@ -53,7 +53,7 @@ export function auditLocaleMarkup(html: string): CheckResult {
         'lang-empty',
         'unknown',
         `This ${n.tag} has an empty lang attribute, which says its language is not known. A screen reader then guesses, or keeps the voice of the text before it. If the language is known, name it. If the content really has none, such as a product code, leave it.`,
-        `Ce ${n.tag} a un attribut lang vide, ce qui indique que sa langue est inconnue. Un lecteur d’écran devine alors, ou garde la voix du texte précédent. Si la langue est connue, nommez-la. Si le contenu n’en a vraiment pas, comme un code de produit, laissez-le ainsi.`,
+        `Ce ${n.tag} a un attribut lang vide, ce qui indique que sa langue n’est pas connue. Un lecteur d’écran devine alors, ou garde la voix du texte précédent. Si la langue est connue, nommez-la. Si le contenu n’en a vraiment pas, comme un code de produit, laissez-le ainsi.`,
       );
     }
 

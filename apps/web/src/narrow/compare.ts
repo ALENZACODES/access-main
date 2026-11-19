@@ -150,7 +150,7 @@ export function describeComparison(c: Comparison, lang: Lang): string {
     const worse = c.statusChanged.filter((x) => x.entry.status === 'fail').length;
     lines.push(
       fr
-        ? `  ${pluriel(c.statusChanged.length, 'anomalie a changé de statut', 'anomalies ont changé de statut')}${colon} ${worse} de INCONNU vers À CORRIGER, ${c.statusChanged.length - worse} dans l’autre sens.`
+        ? `  ${pluriel(c.statusChanged.length, 'anomalie a changé de statut', 'anomalies ont changé de statut')}${colon} ${worse} de UNKNOWN vers À CORRIGER, ${c.statusChanged.length - worse} dans l’autre sens.`
         : `  ${plural(c.statusChanged.length, 'finding changed status', 'findings changed status')}${colon} ${worse} from UNKNOWN to FAIL, ${c.statusChanged.length - worse} the other way.`,
     );
   }
@@ -167,7 +167,7 @@ export function describeComparison(c: Comparison, lang: Lang): string {
   return lines.join('\n') + '\n';
 }
 
-const STATUS = { fail: { en: 'FAIL', fr: 'À CORRIGER' }, unknown: { en: 'UNKNOWN', fr: 'INCONNU' } } as const;
+const STATUS = { fail: { en: 'FAIL', fr: 'À CORRIGER' }, unknown: { en: 'UNKNOWN', fr: 'UNKNOWN' } } as const;
 
 /** The comparison as Markdown, with the new findings and the ones no longer reported listed, up to a limit each. */
 export function renderComparisonMarkdown(c: Comparison, lang: Lang, maxItems = 50): string {

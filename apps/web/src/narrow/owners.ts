@@ -114,7 +114,7 @@ export function describeByOwner(report: AuditReport, owners: Owners, lang: Lang,
     );
     const ordered = [...g.items.filter((x) => x.entry.status === 'fail'), ...g.items.filter((x) => x.entry.status !== 'fail')];
     for (const x of ordered.slice(0, limit)) {
-      const status = x.entry.status === 'fail' ? (fr ? 'À CORRIGER' : 'FAIL') : fr ? 'INCONNU' : 'UNKNOWN';
+      const status = x.entry.status === 'fail' ? (fr ? 'À CORRIGER' : 'FAIL') : 'UNKNOWN';
       lines.push(`  ${status} ${ruleIdOf(x.entry)} ${x.entry.id} (${x.route})`);
     }
     const left = ordered.length - limit;

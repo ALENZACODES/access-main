@@ -24,7 +24,7 @@ const GOOD = [
   'Opening hours',
   'Step-free entrance: unknown',
   'Heures d’ouverture',
-  'Entrée sans marche : inconnu',
+  'Entrée sans marche : UNKNOWN',
   'Raised the ai in said and j’ai fait',
   'Verify your email address',
   'Vérifier mon courriel',

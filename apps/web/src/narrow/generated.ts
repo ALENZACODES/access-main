@@ -88,7 +88,7 @@ export function auditGenerated(f: GeneratedFacts): CheckResult {
         rule: 'icon-glyph',
         message: t(
           'CSS adds an icon font glyph here. Some screen readers announce it as an unknown character or read nothing. Hide it from them and name the control in text, or give it a text alternative.',
-          'Le CSS ajoute ici un glyphe de police d’icônes. Certains lecteurs d’écran l’annoncent comme un caractère inconnu ou ne lisent rien. Masquez-le pour eux et nommez le contrôle par du texte, ou donnez-lui une alternative textuelle.',
+          'Le CSS ajoute ici un glyphe de police d’icônes. Certains lecteurs d’écran l’annoncent comme un caractère sans nom ou ne lisent rien. Masquez-le pour eux et nommez le contrôle par du texte, ou donnez-lui une alternative textuelle.',
         ),
       });
     } else if (LETTERS.test(it.text)) {

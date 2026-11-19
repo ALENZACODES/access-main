@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { exitCode, HELP_TEXT, parseArgs, runCli, type CliDeps } from './cli.js';
 import { mountNarrowPanel, narrowRoute, renderPanel, type PanelRoot } from './panel.js';
+import { NO_EXTRAS } from './cli-extras.js';
 import { buildRouteAudit, makeReport } from './report.js';
 import type { AuditPage } from './run.js';
 import { installDom, type Installed, type Spec } from './testkit.js';
@@ -37,6 +38,7 @@ describe('parseArgs', () => {
         keyboardMax: null,
         formats: [],
         compareFile: null,
+        extras: NO_EXTRAS,
         baselineFile: null,
         writeBaselineFile: null,
         waiversFile: null,

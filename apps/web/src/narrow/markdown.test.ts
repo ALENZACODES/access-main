@@ -57,7 +57,7 @@ describe('renderMarkdown', () => {
   });
   it('gives the totals in one line', () => {
     expect(en).toContain('**To fix: 3** · Unknown: 3 · Checked: 108');
-    expect(fr).toContain('**À corriger\u00A0: 3** · Inconnus\u00A0: 3 · Contrôlés\u00A0: 108');
+    expect(fr).toContain('**À corriger\u00A0: 3** · UNKNOWN\u00A0: 3 · Contrôlés\u00A0: 108');
   });
   it('has a table by check with summed numbers and right-aligned number columns', () => {
     expect(en).toContain('| Check | To fix | Unknown | Checked |\n| --- | ---: | ---: | ---: |');
@@ -86,7 +86,7 @@ describe('renderMarkdown', () => {
     expect(home.lastIndexOf('**FAIL**')).toBeLessThan(home.indexOf('**UNKNOWN**'));
     expect(fr).toContain('### `/` (320\u00A0px)');
     expect(fr).toContain('- **À CORRIGER** `reflow/overflow` `div#map` Texte français pour overflow.');
-    expect(fr).toContain('- **INCONNU** `contrast/image` `h1[0]`');
+    expect(fr).toContain('- **UNKNOWN** `contrast/image` `h1[0]`');
   });
   it('says "No findings." for a clean route and for a report with no route', () => {
     expect(en).toContain('### `/about` (320px)\n\nTo fix: 0 · Unknown: 0 · Checked: 13\n\nNo findings.');
