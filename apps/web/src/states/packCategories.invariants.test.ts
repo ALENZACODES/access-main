@@ -102,7 +102,7 @@ describe("kinds table invariants over generated packs", () => {
         expect(csv).toHaveLength(rows.length + 1);
         const text = kindsToText(rows, "en", TODAY);
         expect(text.split("\n").filter((l) => / — \d+ places?$/.test(l))).toHaveLength(rows.length);
-        expect(text.trimEnd().endsWith("ODbL-1.0")).toBe(true);
+        expect(text.trimEnd().endsWith("© OpenStreetMap contributors")).toBe(true);
         for (const row of rows) {
           const share = reportedShare(row);
           expect(share === null || (share >= 0 && share <= 100), row.key).toBe(true);
