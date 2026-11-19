@@ -26,7 +26,10 @@ export const ALSO_RELATES: Readonly<Partial<Record<CheckId, readonly string[]>>>
   headings: ['2.4.2'],
   handlers: ['2.5.2', '1.4.13'],
   order: ['2.4.3'],
-  consistency: ['2.4.2'],
+  // Rules title-repeat and help-place of the check across pages.
+  consistency: ['2.4.2', '3.2.6'],
+  // Rules few-ways and h1-repeat.
+  'site-links': ['2.4.5', '2.4.6'],
   constraints: ['3.2.2'],
   forms: ['3.3.1'],
   // Rules title, change-context, key-handler and media-captions of the markup check.

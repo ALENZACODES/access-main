@@ -214,7 +214,9 @@ describe('runAudit and selfAudit', () => {
     };
     const report = await runAudit({ page: p, baseUrl: 'http://x', routes: ['/a', '/b'], now: NOW });
     const site = report.routes.find((r) => r.route === 'site');
-    expect(site?.entries.map((e) => [e.id, e.rule, e.status])).toEqual([['/b', 'nav-order', 'fail']]);
+    expect(site?.entries.filter((e) => e.check === 'consistency').map((e) => [e.id, e.rule, e.status])).toEqual([['/b', 'nav-order', 'fail']]);
+    expect(site?.checks.map((c) => c.check)).toEqual(['consistency', 'site-links', 'lang-pairs']);
+    expect(site?.entries.filter((e) => e.check !== 'consistency').every((e) => e.status === 'unknown')).toBe(true);
     expect(totals(report.routes).failed).toBeGreaterThan(0);
   });
 

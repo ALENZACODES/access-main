@@ -1,6 +1,9 @@
 import { applyWaivers, parseWaivers } from './ci.js';
 import { auditBudget } from './budget.js';
 import { auditConsistency } from './consistency.js';
+import { auditLangPairs } from './langpairs.js';
+import { auditSiteLinks } from './sitelinks.js';
+import { readSite, type SitePage } from './sitepages.js';
 import { auditContrast } from './contrast.js';
 import { endorsedByForbiddenOrgSample } from '../../../../packages/shared/test/forbiddenOrg.ts';
 import { auditCopy, COPY_RULES } from './copylint.js';
@@ -202,6 +205,9 @@ export function sampleEntries(): Entry[] {
       },
       { route: '/c', facts: facts({ help: null }) },
     ]).entries,
+    ...auditSiteLinks(readSite(SAMPLE_SITE_PAGES), { complete: true }).entries,
+    ...auditSiteLinks(readSite(SAMPLE_SITE_PAGES)).entries.filter((e) => e.rule === 'page-not-given'),
+    ...auditLangPairs(readSite(SAMPLE_SITE_PAGES)).entries,
     ...waiverEntries,
     ...auditHosts(
       [
@@ -547,3 +553,37 @@ export const SAMPLE_FOCUSABLES_HTML =
 /** Language settings: one finding of each rule of the locale-markup check. */
 export const SAMPLE_LOCALE_MARKUP_HTML =
   '<html lang="en" translate="no"><head><meta http-equiv="content-language" content="fr"><title>Help</title></head><body><p><bdo>abc</bdo></p><p lang="">XK-42</p><p translate="never">Brand</p></body></html>';
+
+const samplePage = (lang: string, title: string, head: string, body: string): string =>
+  `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${title}</title>${head}</head><body>${body}</body></html>`;
+
+/** A small site that breaks every rule of the site-links and lang-pairs checks at least once. */
+export const SAMPLE_SITE_PAGES: readonly SitePage[] = [
+  {
+    route: '/',
+    html: samplePage(
+      'en',
+      'Home',
+      '<link rel="alternate" hreflang="fr" href="/fr"><link rel="alternate" hreflang="fr-CA" href="/fr-ca">',
+      '<header><nav aria-label="Main"><a href="/">Home</a><a href="/places">Places</a><a href="/help">Help</a></nav></header>' +
+        '<main><h1>Welcome</h1><p><a href="/places#nope">A place that is not there</a> <a href="/gone">A page that is gone</a></p></main>' +
+        '<footer><a href="/help">Support</a></footer>',
+    ),
+  },
+  {
+    route: '/places',
+    html: samplePage(
+      'en',
+      'Places',
+      '<link rel="alternate" hreflang="fr" href="/fr/lieux">',
+      '<header><nav aria-label="Main"><a href="/">Home</a><a href="/places">Places</a><a href="/contact">Help</a></nav></header>' +
+        '<main><h1>Welcome</h1><ul id="list"><li>One</li><li>Two</li><li>Three</li></ul><p><a href="/fr/lieux">Français</a></p></main>',
+    ),
+  },
+  { route: '/fr', html: samplePage('en', 'Accueil', '', '<main><h1>Bienvenue</h1></main>') },
+  {
+    route: '/fr/lieux',
+    html: samplePage('fr', 'Lieux', '<link rel="alternate" hreflang="en" href="/places">', '<main><h1>Lieux</h1><h2>Liste</h2><p><a href="/places">English</a></p></main>'),
+  },
+  { route: '/help', html: samplePage('en', 'Help', '', '<main><h1>Help</h1></main>') },
+];

@@ -109,6 +109,18 @@ const SITE: Record<string, string> = {
   '/bad-tabindex': page({ title: 'Bad tabindex', extra: '<div role="note" tabindex="yes">Opening hours are posted at the door.</div>' }),
   '/bad-bdo': page({ title: 'Bad bdo', extra: '<p>The code is <bdo>abc</bdo> today.</p>' }),
   '/bad-regions': page({ title: 'Bad regions', after: '<p id="loose">The ramp is on the left side of the main door of the building.</p>' }),
+  '/pair-en':
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pair</title><style>${CSS}</style>` +
+    '<link rel="alternate" hreflang="fr" href="/pair-fr"></head><body><main><h1>Pair</h1>' +
+    '<p><a href="/pair-fr" lang="fr" style="text-decoration:underline">Français</a> <a href="/a#q" style="text-decoration:underline">Search on the home page</a> ' +
+    '<a id="lost" href="/a#nope" style="text-decoration:underline">A place that is not there</a></p></main></body></html>',
+  '/pair-fr':
+    `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Paire</title><style>${CSS}</style>` +
+    '<link rel="alternate" hreflang="en" href="/pair-en"></head><body><main><h1>Paire</h1><h2>Horaires</h2>' +
+    '<p><a href="/pair-en" lang="en" style="text-decoration:underline">English</a> <a href="/a#q" style="text-decoration:underline">Recherche</a> <a href="/a" style="text-decoration:underline">Accueil</a></p></main></body></html>',
+  '/pair-lost':
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lost pair</title><style>${CSS}</style>` +
+    '<link rel="alternate" hreflang="fr" href="/pair-fr"></head><body><main><h1>Lost pair</h1><p><a href="/pair-fr" lang="fr" style="text-decoration:underline">Français</a></p></main></body></html>',
   '/good-lang': page({ title: 'Good lang', extra: '<p lang="fr">Les heures d’ouverture sont affichées pour vous et pour votre visite cette semaine.</p>' }),
   '/good-form': page({
     title: 'Good form',
@@ -189,6 +201,20 @@ describe.skipIf(!enabled)('real browser gates over a served site', () => {
     const site = report.routes.find((r) => r.route === 'site');
     expect(site?.checks[0]).toMatchObject({ check: 'consistency', checked: 3, failed: 0 });
     expect(totals(report.routes).checked).toBeGreaterThan(100);
+  }, 120_000);
+
+  it('compares the markup of the pages: a link to a missing id, an alternate that is not returned, and versions that differ', async () => {
+    const report = await run(['/a', '/pair-en', '/pair-fr', '/pair-lost']);
+    const site = report.routes.find((r) => r.route === 'site');
+    expect(site?.checks.map((c) => c.check)).toEqual(['consistency', 'site-links', 'lang-pairs']);
+    const found = (site?.entries ?? []).map((e) => `${e.status} ${e.check}/${e.rule ?? ''} ${e.id}`);
+    expect(found.filter((x) => x.includes('anchor-missing'))).toHaveLength(1);
+    expect(found.some((x) => x.startsWith('fail site-links/anchor-missing /pair-en a#lost'))).toBe(true);
+    expect(found).toContain('fail lang-pairs/alternate-one-way /pair-lost hreflang=fr');
+    expect(found).toContain('unknown lang-pairs/structure-differs /pair-en | /pair-fr');
+    expect(found).toContain('unknown lang-pairs/no-alternate /a');
+    expect(found.filter((x) => x.includes('alternate-one-way'))).toHaveLength(1);
+    expect(found.some((x) => x.includes('orphan') || x.includes('page-missing'))).toBe(false);
   }, 120_000);
 
   it('finds navigation that changes order and help that moves', async () => {
