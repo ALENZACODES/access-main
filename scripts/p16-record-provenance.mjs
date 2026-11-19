@@ -12,7 +12,14 @@ export const OFFLINE_STATES = Object.freeze(["cached", "not-cached", "unknown"])
 
 const ID = /^[a-z0-9][a-z0-9._:-]{0,127}$/i;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const CONTROL = /[\u0000-\u001f\u007f]/u;
+/** Reject ASCII control characters without a control-character regular expression. */
+function hasControlCharacters(value) {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (code <= 31 || code === 127) return true;
+  }
+  return false;
+}
 const MAX_TITLE = 200;
 const MAX_DESCRIPTION = 2000;
 const MAX_SOURCE_NAME = 160;
@@ -27,7 +34,7 @@ function isPlainObject(input) {
 
 /** @param {unknown} value */
 function isNonemptyString(value) {
-  return typeof value === "string" && value.trim().length > 0 && !CONTROL.test(value);
+  return typeof value === "string" && value.trim().length > 0 && !hasControlCharacters(value);
 }
 
 /** @param {unknown} value @param {number} max */
@@ -46,7 +53,7 @@ export function isCalendarDate(date) {
 
 /** @param {unknown} raw */
 export function isSecureSourceUrl(raw) {
-  if (typeof raw !== "string" || raw.length > 2048 || CONTROL.test(raw)) return false;
+  if (typeof raw !== "string" || raw.length > 2048 || hasControlCharacters(raw)) return false;
   try {
     const url = new URL(raw);
     return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
@@ -61,7 +68,7 @@ export function isSecureSourceUrl(raw) {
  */
 export function isSafeCacheKey(raw) {
   if (typeof raw !== "string" || raw.length > 1024) return false;
-  if (!raw.startsWith("/") || raw.startsWith("//") || CONTROL.test(raw) || raw.includes("\\")) return false;
+  if (!raw.startsWith("/") || raw.startsWith("//") || hasControlCharacters(raw) || raw.includes("\\")) return false;
   if (raw.includes("?") || raw.includes("#") || raw.includes("%")) return false;
   return !raw.split("/").some((part) => part === "." || part === "..");
 }
