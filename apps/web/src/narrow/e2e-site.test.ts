@@ -88,6 +88,11 @@ const SITE: Record<string, string> = {
   '/bad-order': page({ title: 'Bad order', extra: '<div id="row" style="display:flex;flex-direction:row-reverse"><a href="/a" style="text-decoration:underline">First link</a><a href="/b" style="text-decoration:underline">Second link</a></div>' }),
   '/bad-generated': page({ title: 'Bad generated', extra: '<style>#req::before{content:"Required "}</style><p id="req">Your name</p>' }),
   '/bad-lookalike': page({ title: 'Bad lookalike', extra: '<p><strong>Getting here</strong></p><p>Take the ramp on the left side of the door.</p>' }),
+  '/bad-aria': page({ title: 'Bad aria', extra: '<div id="save" role="buton" tabindex="0" style="min-height:44px">Save</div>' }),
+  '/bad-refs': page({ title: 'Bad refs', extra: '<p>See the <a href="#prices" style="text-decoration:underline">prices</a> below.</p>' }),
+  '/bad-hrefs': page({ title: 'Bad hrefs', extra: '<p>Call <a href="tel:416 555 0100" style="text-decoration:underline">416 555 0100</a> today.</p>' }),
+  '/bad-css': page({ title: 'Bad css', extra: '<style>#q:focus{outline:none}</style>' }),
+  '/bad-obsolete': page({ title: 'Bad obsolete', extra: '<center>Welcome to the centre</center>' }),
   '/bad-regions': page({ title: 'Bad regions', after: '<p id="loose">The ramp is on the left side of the main door of the building.</p>' }),
   '/good-lang': page({ title: 'Good lang', extra: '<p lang="fr">Les heures d’ouverture sont affichées pour vous et pour votre visite cette semaine.</p>' }),
   '/good-form': page({
@@ -316,6 +321,23 @@ describe.skipIf(!enabled)('real browser gates over a served site', () => {
     expect(await got('/bad-lookalike', 'lookalike')).toEqual(['fake-heading:unknown']);
     expect(await got('/bad-regions', 'regions')).toEqual(['outside-landmark:unknown']);
     expect(await got('/bad-heads', 'headings')).toEqual(['heading-generic:unknown', 'heading-duplicate:unknown']);
+  }, 90_000);
+
+  it('reads roles, references, link destinations, page styles and old markup from the live page', async () => {
+    const got = async (route: string, check: string): Promise<string[]> =>
+      ((await run([route])).routes[0]?.entries ?? []).filter((x) => x.check === check).map((x) => `${x.rule}:${x.status}`);
+    expect(await got('/bad-aria', 'aria')).toEqual(['unknown-role:fail']);
+    expect(await got('/bad-refs', 'references')).toEqual(['fragment-missing:fail']);
+    expect(await got('/bad-hrefs', 'hrefs')).toEqual(['tel-format:fail']);
+    expect(await got('/bad-css', 'css')).toEqual(['focus-outline-removed:unknown']);
+    expect(await got('/bad-obsolete', 'obsolete')).toEqual(['presentational-element:unknown']);
+  }, 90_000);
+
+  it('the good site has no finding from the five markup checks', async () => {
+    const report = await run(['/a', '/b', '/c', '/good-lang']);
+    const mine = new Set(['aria', 'references', 'hrefs', 'css', 'obsolete']);
+    expect(report.routes.flatMap((r) => r.entries.filter((x) => mine.has(x.check)))).toEqual([]);
+    expect(report.routes[0]?.checks.map((c) => c.check)).toEqual(expect.arrayContaining([...mine]));
   }, 90_000);
 
   it('the good site has no finding from the eleven text, layout and structure checks', async () => {

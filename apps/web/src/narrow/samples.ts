@@ -29,6 +29,11 @@ import { auditImages } from './images.js';
 import { auditLinks } from './links.js';
 import { auditGenerated } from './generated.js';
 import { auditLookalike } from './lookalike.js';
+import { auditAria } from './aria.js';
+import { auditCss } from './cssrules.js';
+import { auditHrefs } from './hrefs.js';
+import { auditObsolete } from './obsolete.js';
+import { auditReferences } from './references.js';
 import { auditRegions } from './regions.js';
 import { auditHandlers } from './handlers.js';
 import { auditHeadings } from './headings.js';
@@ -315,6 +320,11 @@ export function sampleEntries(): Entry[] {
       truncated: false,
     }).entries,
     ...auditLookalike(SAMPLE_LOOKALIKE_HTML).entries,
+    ...auditAria(SAMPLE_ARIA_HTML).entries,
+    ...auditReferences(SAMPLE_REFERENCES_HTML).entries,
+    ...auditHrefs(SAMPLE_HREFS_HTML).entries,
+    ...auditCss(SAMPLE_CSS_HTML).entries,
+    ...auditObsolete(SAMPLE_OBSOLETE_HTML).entries,
     ...auditRegions({ landmarks: 1, checked: 6, outside: ['p[2]'], outsideCount: 2, truncated: false }).entries,
     ...SAMPLE_HEADINGS.flatMap((f) => auditHeadings(f).entries),
     ...auditTextZoom({ checked: 2, newlyClipped: [{ id: 'div[2]', scrollWidth: 100, clientWidth: 100, scrollHeight: 60, clientHeight: 20 }] }).entries,
@@ -408,3 +418,31 @@ export const SAMPLE_TEXT: Readonly<Record<string, string>> = {
 /** Markup for the look-alike structure sample: one finding of each rule. */
 export const SAMPLE_LOOKALIKE_HTML =
   '<main><p><strong>Getting here</strong></p><p>• Ramp</p><p>• Lift</p><p>• Stairs</p><p></p></main>';
+
+/** Roles and states: one finding of each rule of the aria check. */
+export const SAMPLE_ARIA_HTML =
+  '<body aria-hidden="true"><div role="buton">Save</div><div role="widget">Box</div><button aria-labeledby="t">Go</button><button aria-pressed="yes">Mute</button>' +
+  '<div role="checkbox" tabindex="0">Agree</div><div role="tab" tabindex="0">Hours</div><button role="button">Send</button>' +
+  '<a href="/x" role="presentation">Next</a><div aria-label="Filters">Open now</div></body>';
+
+/** References: one finding of each rule of the references check. */
+export const SAMPLE_REFERENCES_HTML =
+  '<a href="#hours">Hours</a><table><tr><th id="day">Day</th></tr><tr><td headers="d9">Monday</td></tr></table>' +
+  '<input list="towns" aria-label="Town"><button form="signup">Send</button><img usemap="#plan" alt="Floor plan" src="p.png">' +
+  '<div role="listbox" aria-label="Towns" aria-activedescendant="opt9" tabindex="0"></div><button aria-expanded="true" aria-controls="panel9">More</button>' +
+  '<label for="box">Name</label><div id="box"></div><label for="f">First</label><label for="f">Second</label><input id="f">';
+
+/** Link destinations: one finding of each rule of the hrefs check. */
+export const SAMPLE_HREFS_HTML =
+  '<a href="tel:416 555 0100">Call</a><a href="mailto:help at example.org">Email</a><a href="javascript:void(0)">Open</a>' +
+  '<a href="#">Menu</a><a>Details</a><p><a href="/map"><img src="m.png" alt=""></a><a href="/map">Map</a></p>';
+
+/** Page styles: one finding of each rule of the css check. */
+export const SAMPLE_CSS_HTML =
+  '<style>a:focus{outline:none}*{outline:0}p{line-height:1.2 !important}@media (orientation:portrait){body{display:none}}' +
+  '.spin{animation:spin 1s linear infinite}html,body{overflow:hidden}body{-webkit-text-size-adjust:none}</style>';
+
+/** Old markup: one finding of each rule of the obsolete check. */
+export const SAMPLE_OBSOLETE_HTML =
+  '<center>Welcome</center><frameset></frameset><table width="600"><tr><td nowrap>Open</td></tr></table><u>Note</u><del>10 dollars</del>' +
+  '<a href="/m"><img ismap src="m.png" alt="Map"></a>';
