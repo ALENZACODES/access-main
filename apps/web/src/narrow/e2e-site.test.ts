@@ -93,6 +93,11 @@ const SITE: Record<string, string> = {
   '/bad-hrefs': page({ title: 'Bad hrefs', extra: '<p>Call <a href="tel:416 555 0100" style="text-decoration:underline">416 555 0100</a> today.</p>' }),
   '/bad-css': page({ title: 'Bad css', extra: '<style>#q:focus{outline:none}</style>' }),
   '/bad-obsolete': page({ title: 'Bad obsolete', extra: '<center>Welcome to the centre</center>' }),
+  '/bad-states': page({ title: 'Bad states', extra: '<p><a href="/next" disabled style="text-decoration:underline">Next page</a></p>' }),
+  '/bad-lists': page({ title: 'Bad lists', extra: '<ul><div>Ramp at the side door</div><li>Lift in the hall</li></ul>' }),
+  '/bad-parts': page({ title: 'Bad parts', extra: '<section><p>Opening hours are posted at the door.</p></section>' }),
+  '/bad-limits': page({ title: 'Bad limits', extra: '<label for="plate">Plate</label> <input id="plate" name="plate" type="text" pattern="[A-Z]{4}">' }),
+  '/bad-symbols': page({ title: 'Bad symbols', extra: '<button type="button" id="close">\u00D7</button>' }),
   '/bad-regions': page({ title: 'Bad regions', after: '<p id="loose">The ramp is on the left side of the main door of the building.</p>' }),
   '/good-lang': page({ title: 'Good lang', extra: '<p lang="fr">Les heures d’ouverture sont affichées pour vous et pour votre visite cette semaine.</p>' }),
   '/good-form': page({
@@ -331,6 +336,23 @@ describe.skipIf(!enabled)('real browser gates over a served site', () => {
     expect(await got('/bad-hrefs', 'hrefs')).toEqual(['tel-format:fail']);
     expect(await got('/bad-css', 'css')).toEqual(['focus-outline-removed:unknown']);
     expect(await got('/bad-obsolete', 'obsolete')).toEqual(['presentational-element:unknown']);
+  }, 90_000);
+
+  it('reads states, lists, page parts, form limits and symbols from the live page', async () => {
+    const got = async (route: string, check: string): Promise<string[]> =>
+      ((await run([route])).routes[0]?.entries ?? []).filter((x) => x.check === check).map((x) => `${x.rule}:${x.status}`);
+    expect(await got('/bad-states', 'states')).toEqual(['disabled-no-effect:fail']);
+    expect(await got('/bad-lists', 'lists')).toEqual(['list-child:fail']);
+    expect(await got('/bad-parts', 'sectioning')).toEqual(['section-no-heading:unknown']);
+    expect(await got('/bad-limits', 'constraints')).toEqual(['pattern-unexplained:unknown']);
+    expect(await got('/bad-symbols', 'symbols')).toEqual(['symbol-only-name:unknown']);
+  }, 90_000);
+
+  it('the good site has no finding from the second five markup checks', async () => {
+    const report = await run(['/a', '/b', '/c', '/good-lang', '/good-form']);
+    const mine = new Set(['states', 'lists', 'sectioning', 'constraints', 'symbols']);
+    expect(report.routes.flatMap((r) => r.entries.filter((x) => mine.has(x.check)).map((x) => `${r.route} ${x.check}/${x.rule}`))).toEqual([]);
+    expect(report.routes[0]?.checks.map((c) => c.check)).toEqual(expect.arrayContaining([...mine]));
   }, 90_000);
 
   it('the good site has no finding from the five markup checks', async () => {

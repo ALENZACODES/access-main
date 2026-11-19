@@ -2,7 +2,8 @@
 import type { AuditedSource } from './datasetRegistry';
 import type { Locale } from './dataStatus';
 
-export const SORT_KEYS = ['source', 'licence', 'retrieved', 'status'] as const;
+import { TIER_IDS } from './tierValue';
+export const SORT_KEYS = ['source', 'licence', 'retrieved', 'status', 'tier'] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 export type SortDir = 'asc' | 'desc';
 export interface SortSpec {
@@ -65,6 +66,11 @@ export function applySort(sources: readonly AuditedSource[], spec: SortSpec | nu
       case 'status':
         a = x.s.state === 'unknown' ? null : STATE_RANK[x.s.state];
         b = y.s.state === 'unknown' ? null : STATE_RANK[y.s.state];
+        break;
+      case 'tier':
+        // Fixed tier order: 0, 1, 2, 3, 4, then E.
+        a = x.s.tier === null ? null : TIER_IDS.indexOf(x.s.tier);
+        b = y.s.tier === null ? null : TIER_IDS.indexOf(y.s.tier);
         break;
     }
     // Unknown (null) is last whichever way the table is sorted.
