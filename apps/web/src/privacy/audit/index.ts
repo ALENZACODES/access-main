@@ -10,3 +10,5 @@ export { collectCopy } from "./copyCorpus";
 export type { CopyItem } from "./copyCorpus";
 export { checkRegister, checkReach, compareToRegister, formatComparison, isScannedSource, panelCoverage, scanStorageKeys } from "./storageKeys";
 export type { Coverage, FoundKey, RegisterComparison } from "./storageKeys";
+export { compareDevice, formatDeviceComparison, scanDeviceNames } from "./deviceStorageScan";
+export type { DeviceComparison, FoundDevice } from "./deviceStorageScan";

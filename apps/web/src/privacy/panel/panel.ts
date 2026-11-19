@@ -13,6 +13,8 @@ import { consentStatus, type ConsentState, type Purpose } from "./consent";
 import { PANEL_STRINGS, type Status } from "./strings";
 import type { RefusedWrite } from "./consentGate";
 import { renderOutsideHtml, type OutsideItem } from "./outsideSection";
+import type { DescribedDevice } from "./deviceRegister";
+import { renderDeviceKnownHtml } from "./deviceKnown";
 import { renderRefusedHtml } from "./refusedSection";
 import { renderOnDeviceNoticeHtml } from "../onDeviceNotice";
 
@@ -42,6 +44,10 @@ export interface PanelView {
   signals?: Signals | null;
   /** Leave undefined to hide the offline storage section. */
   device?: DeviceView;
+  /** What each name found on the device is, from the App's own list. Leave undefined to hide the section. */
+  deviceNames?: DescribedDevice | null;
+  /** Show the buttons that download everything the App keeps on this device. */
+  keptList?: boolean;
   /** Show the protected copy section. */
   protectedCopy?: boolean;
 }
@@ -119,6 +125,7 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.network === undefined ? "" : renderNetworkHtml(view.locale, view.network)}` +
     `${view.signals === undefined ? "" : renderSignalsHtml(view.locale, view.signals)}` +
     `${view.device === undefined ? "" : renderDeviceHtml(view.locale, view.device)}` +
+    `${view.deviceNames === undefined ? "" : renderDeviceKnownHtml(view.locale, view.deviceNames)}` +
     `${renderConsentHtml(view)}` +
     `${view.outside === undefined ? "" : renderOutsideHtml(view.locale, view.outside)}` +
     `${view.refused === undefined ? "" : renderRefusedHtml(view.locale, view.refused, view.purposes ?? [])}` +
@@ -128,6 +135,7 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.protectedCopy === true ? renderProtectedHtml(view.locale) : ""}` +
     `<div>${button("export", s.exportButton)}${button("export-list-csv", EXTRA_STRINGS[view.locale].list.csvButton)}` +
     `${button("export-list-text", EXTRA_STRINGS[view.locale].list.textButton)}` +
+    `${view.keptList === true ? button("export-kept-csv", EXTRA_STRINGS[view.locale].list.keptCsvButton) + button("export-kept-text", EXTRA_STRINGS[view.locale].list.keptTextButton) : ""}` +
     `${button("export-support", MORE_STRINGS[view.locale].buttons.support)}${button("export-printable", MORE_STRINGS[view.locale].buttons.printable)}` +
     `${button("erase", s.eraseButton)}</div>` +
     `${confirm}<p role="status" aria-live="polite" tabindex="-1" data-privacy-status>${status}</p></section>`

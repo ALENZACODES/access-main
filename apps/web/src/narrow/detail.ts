@@ -1,5 +1,6 @@
 import { ruleIdOf } from './ci.js';
 import { sharedFindings, summariseClusters } from './cluster.js';
+import { COVERAGE_LIMITS, STATE_LABELS, coverageForReport, countStates } from './coverage.js';
 import { byCriterion, byLevel, criterionLabel } from './criteria.js';
 import { guidanceForReport } from './guidance.js';
 import { escapeHtml, REPORT_LABELS, totals, type AuditReport, type RouteAudit } from './report.js';
@@ -26,6 +27,13 @@ const T = {
   shared: { en: 'Findings that repeat across routes', fr: 'Anomalies répétées sur plusieurs routes' },
   routes: { en: 'Routes', fr: 'Routes' },
   nextSteps: { en: 'What to look at by hand', fr: 'À regarder à la main' },
+  coverage: { en: 'What the checks looked at, criterion by criterion', fr: 'Ce que les contrôles ont regardé, critère par critère' },
+  coverageCaption: { en: 'The 55 Level A and AA criteria of WCAG 2.2 and this report', fr: 'Les 55 critères de niveau A et AA des WCAG 2.2 et ce rapport' },
+  inReport: { en: 'In this report', fr: 'Dans ce rapport' },
+  byHandNote: {
+    en: 'A criterion marked by hand only has no check at all. A person has to look at it, and at the others too: the worksheet format lists a first step for each.',
+    fr: 'Un critère marqué à la main seulement n’a aucun contrôle. Une personne doit le regarder, et les autres aussi\u00A0: le format worksheet donne une première étape pour chacun.',
+  },
   scope: { en: 'Scope and sources', fr: 'Portée et sources' },
   routesAudited: { en: 'Routes audited', fr: 'Routes auditées' },
   toFix: { en: 'To fix', fr: 'À corriger' },
@@ -123,6 +131,7 @@ const SECTIONS: readonly { readonly id: string; readonly key: Key }[] = [
   { id: 'shared', key: 'shared' },
   { id: 'routes', key: 'routes' },
   { id: 'next', key: 'nextSteps' },
+  { id: 'coverage', key: 'coverage' },
   { id: 'scope', key: 'scope' },
 ];
 
@@ -276,6 +285,35 @@ function nextSection(report: AuditReport, lang: Lang): string {
   return out.join('\n');
 }
 
+function coverageSection(report: AuditReport, lang: Lang): string {
+  const rows = coverageForReport(report);
+  const n = countStates(rows);
+  const out: string[] = [sectionOpen('coverage', 'coverage', lang)];
+  out.push(`<p>${escapeHtml(COVERAGE_LIMITS[lang])}</p>`);
+  out.push(
+    `<p>${escapeHtml(
+      lang === 'fr'
+        ? `${n.found} critères avec des anomalies trouvées, ${n['see-checks']} à lire dans les anomalies d’un contrôle lié, ${n['nothing-found']} dont les contrôles n’ont rien trouvé, ${n['not-run']} dont les contrôles n’ont pas été exécutés, ${n['by-hand']} sans aucun contrôle.`
+        : `${n.found} criteria with something found, ${n['see-checks']} to read in the findings of a related check, ${n['nothing-found']} whose checks found nothing, ${n['not-run']} whose checks did not run, ${n['by-hand']} with no check at all.`,
+    )}</p>`,
+  );
+  out.push(`<p>${tx('byHandNote', lang)}</p>`);
+  out.push(
+    dataTable(
+      'cov',
+      T.coverageCaption[lang],
+      [{ text: T.criterion[lang] }, { text: T.level[lang] }, { text: T.inReport[lang] }],
+      rows.map((r) => [
+        escapeHtml(`${r.criterion.sc} ${r.criterion[lang]}`),
+        r.criterion.level,
+        escapeHtml(r.state === 'found' ? `${STATE_LABELS[r.state][lang]}${colon(lang)} ${r.failed} ${lang === 'fr' ? 'à corriger' : 'to fix'}, ${r.unknown} UNKNOWN` : STATE_LABELS[r.state][lang]),
+      ]),
+    ),
+  );
+  out.push(backToTop(lang), '</section>');
+  return out.join('\n');
+}
+
 function scopeSection(report: AuditReport, lang: Lang): string {
   const out: string[] = [sectionOpen('scope', 'scope', lang)];
   out.push(`<p>${escapeHtml(report.scopeNote[lang])}</p>`);
@@ -322,7 +360,7 @@ export function renderDetail(report: AuditReport, lang: Lang, options: DetailOpt
   for (const s of SECTIONS) out.push(`<li><a href="#${s.id}-h">${tx(s.key, lang)}</a></li>`);
   out.push('</ul>\n</nav>');
   out.push('<main>');
-  out.push(summarySection(report, lang), criteriaSection(report, lang), sharedSection(report, lang, maxShared), routesSection(report, lang), nextSection(report, lang), scopeSection(report, lang));
+  out.push(summarySection(report, lang), criteriaSection(report, lang), sharedSection(report, lang, maxShared), routesSection(report, lang), nextSection(report, lang), coverageSection(report, lang), scopeSection(report, lang));
   out.push('</main>\n</body>\n</html>\n');
   return out.join('\n');
 }

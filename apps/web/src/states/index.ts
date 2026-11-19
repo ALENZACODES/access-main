@@ -26,6 +26,9 @@ export * from "./packIssueText.ts";
 export * from "./packDuplicates.ts";
 export * from "./packReport.ts";
 export * from "./downloadFile.ts";
+export * from "./packCategories.ts";
+export * from "./packCategoryExport.ts";
+export { PackCategories } from "./PackCategories.tsx";
 export { PackReport } from "./PackReport.tsx";
 export { PackFreshness } from "./PackFreshness.tsx";
 
@@ -121,3 +124,7 @@ export * from "./retryPolicy.ts";
 export * from "./useFailureStreak.ts";
 export * from "./SuggestionList.tsx";
 export * from "./recordTier";
+export * from "./shortlist.ts";
+export * from "./shortlistTable.ts";
+export { browserStore, useShortlist, type ShortlistState } from "./useShortlist.ts";
+export { Shortlist } from "./Shortlist.tsx";

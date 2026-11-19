@@ -72,7 +72,7 @@ const MESSAGES = Object.freeze({
     licence: 'Licence',
     retrieved: 'Consulté',
     tier: 'Niveau de la source',
-    unknown: 'Inconnu',
+    unknown: 'UNKNOWN',
   }),
 });
 
@@ -145,21 +145,26 @@ export function validTranslation(value) {
       value[locale].trim().length > 0 && value[locale].length <= MAX_TEXT);
 }
 
-/** Reject common French punctuation errors without examining URLs. */
+/** Validate French typography in displayed copy, never URLs or schema tokens. */
 export function frenchSpacingIssues(value, path) {
   if (typeof value !== 'string') return [issue('TRANSLATION_INVALID', path)];
   const problems = [];
+  const apostrophe = /\b(?:l|d|j|n|c|s|qu|jusqu|lorsqu|puisqu|aujourd)'(?=\p{L})/giu;
+  for (const match of value.matchAll(apostrophe)) {
+    problems.push(issue('FR_APOSTROPHE', `${path}/${match.index}`));
+  }
   for (let index = 0; index < value.length; index += 1) {
     const char = value[index];
-    if (char === ':' || char === '?' || char === '!') {
-      if (index > 0 && value[index - 1] !== '\u00A0') {
-        problems.push(issue('FR_NBSP', `${path}/${index}`));
-      }
+    if (char === ':' && index > 0 && value[index - 1] !== '\u00A0') {
+      problems.push(issue('FR_NBSP', `${path}/${index}`));
     }
-    if (char === '«' && value[index + 1] !== '\u00A0') {
+    if (';!?'.includes(char) && index > 0 && value[index - 1] !== '\u202F') {
+      problems.push(issue('FR_NARROW_NBSP', `${path}/${index}`));
+    }
+    if (char === '«' && value[index + 1] !== '\u202F') {
       problems.push(issue('FR_GUILLEMET', `${path}/${index}`));
     }
-    if (char === '»' && value[index - 1] !== '\u00A0') {
+    if (char === '»' && value[index - 1] !== '\u202F') {
       problems.push(issue('FR_GUILLEMET', `${path}/${index}`));
     }
   }
