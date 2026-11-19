@@ -260,6 +260,18 @@ const DEFS = {
     en: "© OpenStreetMap contributors",
     fr: "© OpenStreetMap contributors",
   },
+  "hint.didYouMean": { en: "Did you mean one of these?", fr: "Vouliez-vous dire l’un de ceux-ci ?" },
+  "hint.pick": { en: "Search for {name}", fr: "Chercher {name}" },
+  "retry.stillFailing": {
+    en: {
+      one: "This has failed {n} time in a row. If it keeps failing, Help lists what you can do on this device.",
+      other: "This has failed {n} times in a row. If it keeps failing, Help lists what you can do on this device.",
+    },
+    fr: {
+      one: "Cela a échoué {n} fois de suite. Si cela continue, l’aide indique ce que vous pouvez faire sur cet appareil.",
+      other: "Cela a échoué {n} fois de suite. Si cela continue, l’aide indique ce que vous pouvez faire sur cet appareil.",
+    },
+  },
   "pack.nearLegend": { en: "Sort by distance from a point", fr: "Trier selon la distance à partir d’un point" },
   "pack.lat": { en: "Latitude", fr: "Latitude" },
   "pack.lon": { en: "Longitude", fr: "Longitude" },
@@ -273,6 +285,23 @@ const DEFS = {
   },
   "pack.distance": { en: "{d} away", fr: "à {d}" },
   "pack.openSource": { en: "Open the source page for {name}", fr: "Ouvrir la page source de {name}" },
+  "tier.label": { en: "Tier {tier}", fr: "Niveau {tier}" },
+  "tier.labelUnknown": { en: "Tier UNKNOWN", fr: "Niveau UNKNOWN" },
+  "tier.line": { en: "{label}. {meaning}", fr: "{label}. {meaning}" },
+  "tier.meaningUnknown": { en: "The record does not state a tier.", fr: "L’enregistrement n’indique pas de niveau." },
+  "tier.meaning.0": { en: "Open data or another import. Not measured by the App.", fr: "Données ouvertes ou autre importation. Non mesuré par l’App." },
+  "tier.meaning.1": { en: "Self-reported by a venue or operator. Not measured by the App.", fr: "Déclaré par un lieu ou un exploitant. Non mesuré par l’App." },
+  "tier.meaning.2": { en: "Peer report.", fr: "Signalement par un pair." },
+  "tier.meaning.3": { en: "Trained surveyor, with evidence.", fr: "Relevé par une personne formée, avec des preuves." },
+  "tier.meaning.4": { en: "Live feed.", fr: "Flux en direct." },
+  "tier.meaning.E": {
+    en: "Desk check of a published page. It does not decide who qualifies.",
+    fr: "Examen au bureau d’une page publiée. Il ne décide pas qui y a droit.",
+  },
+  "tier.notExpected": {
+    en: "An offline pack on this device does not normally hold this tier. It is shown as the pack gives it.",
+    fr: "Un pack hors ligne sur cet appareil ne contient normalement pas ce niveau. Il est affiché tel que le pack le donne.",
+  },
 } as const satisfies Record<string, Entry>;
 
 export type MessageId = keyof typeof DEFS;

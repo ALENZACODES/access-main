@@ -103,6 +103,11 @@ const SITE: Record<string, string> = {
   '/bad-label': page({ title: 'Bad label', extra: '<label>Dates <input name="from" type="text" autocomplete="off"> <input name="to" type="text" autocomplete="off"></label>' }),
   '/bad-ids': page({ title: 'Bad ids', extra: '<p id="main text">Opening hours are posted at the door.</p>' }),
   '/bad-names': page({ title: 'Bad names', extra: '<button type="button" aria-label="Close button">Close</button>' }),
+  '/bad-typing': page({ title: 'Bad typing', extra: '<label for="mob">Mobile</label> <input id="mob" name="mobile" type="phone" autocomplete="tel">' }),
+  '/bad-popover': page({ title: 'Bad popover', extra: '<button type="button" popovertarget="menu9">Open the menu</button>' }),
+  '/bad-picture': page({ title: 'Bad picture', extra: '<picture><source srcset="/a.webp" type="image/webp"></picture>' }),
+  '/bad-tabindex': page({ title: 'Bad tabindex', extra: '<div role="note" tabindex="yes">Opening hours are posted at the door.</div>' }),
+  '/bad-bdo': page({ title: 'Bad bdo', extra: '<p>The code is <bdo>abc</bdo> today.</p>' }),
   '/bad-regions': page({ title: 'Bad regions', after: '<p id="loose">The ramp is on the left side of the main door of the building.</p>' }),
   '/good-lang': page({ title: 'Good lang', extra: '<p lang="fr">Les heures d’ouverture sont affichées pour vous et pour votre visite cette semaine.</p>' }),
   '/good-form': page({
@@ -361,6 +366,23 @@ describe.skipIf(!enabled)('real browser gates over a served site', () => {
     expect(await got('/bad-label', 'labels')).toEqual(['label-two-controls:fail']);
     expect(await got('/bad-ids', 'identifiers')).toEqual(['id-space:fail']);
     expect(await got('/bad-names', 'name-words')).toEqual(['name-says-role:unknown']);
+  }, 90_000);
+
+  it('reads typing attributes, popovers, image structure, focus attributes and language settings from the live page', async () => {
+    const got = async (route: string, check: string): Promise<string[]> =>
+      ((await run([route])).routes[0]?.entries ?? []).filter((x) => x.check === check).map((x) => `${x.rule}:${x.status}`);
+    expect(await got('/bad-typing', 'typing')).toEqual(['type-invalid:fail']);
+    expect(await got('/bad-popover', 'overlays')).toEqual(['popovertarget-missing:fail']);
+    expect(await got('/bad-picture', 'image-markup')).toEqual(['picture-no-img:fail']);
+    expect(await got('/bad-tabindex', 'focusables')).toEqual(['tabindex-invalid:fail']);
+    expect(await got('/bad-bdo', 'locale-markup')).toEqual(['bdo-no-dir:fail']);
+  }, 90_000);
+
+  it('the good site has no finding from the fourth five markup checks', async () => {
+    const report = await run(['/a', '/b', '/c', '/good-lang', '/good-form']);
+    const mine = new Set(['typing', 'overlays', 'image-markup', 'focusables', 'locale-markup']);
+    expect(report.routes.flatMap((r) => r.entries.filter((x) => mine.has(x.check)).map((x) => `${r.route} ${x.check}/${x.rule}`))).toEqual([]);
+    expect(report.routes[0]?.checks.map((c) => c.check)).toEqual(expect.arrayContaining([...mine]));
   }, 90_000);
 
   it('the good site has no finding from the third five markup checks', async () => {

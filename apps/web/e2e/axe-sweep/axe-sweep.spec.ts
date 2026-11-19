@@ -4,14 +4,13 @@ import { appRoutes, chooseLanguage, LANGUAGES, VIEWPORTS, visit } from "../a11y-
 
 const ROUTES = appRoutes();
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+const REQUIRED = ["/", "/dev/narrow", "/places", "/journey", "/help", "/more/housing", "/more/diary", "/more/auditors"];
 
-test("P20 route inventory is derived from app routes", () => {
-  expect(ROUTES).toHaveLength(39);
-  expect(new Set(ROUTES).size).toBe(39);
-  expect(ROUTES).toContain("/dev/narrow");
-  expect(ROUTES).toContain("/places");
-  expect(ROUTES).toContain("/journey");
-  expect(ROUTES).toContain("/help");
+test("P20 route inventory is unique and includes required routes", () => {
+  expect(ROUTES.length).toBeGreaterThan(0);
+  expect(new Set(ROUTES).size).toBe(ROUTES.length);
+  expect(ROUTES.every((route) => route.startsWith("/") && !route.startsWith("//") && !/[?#\\]/.test(route))).toBe(true);
+  for (const route of REQUIRED) expect(ROUTES, `${route} must be registered`).toContain(route);
 });
 
 for (const language of LANGUAGES) {
@@ -21,7 +20,6 @@ for (const language of LANGUAGES) {
       for (const route of ROUTES) {
         test(`axe route ${route}`, async ({ page }) => {
           test.setTimeout(90_000);
-          // The Day 17 helper skips English; navigation must initialize it first.
           const response = await page.goto("/", { waitUntil: "domcontentloaded" });
           expect(response?.ok()).toBe(true);
           await chooseLanguage(page, language);

@@ -40,6 +40,19 @@ test.describe("semantic browser capture", () => {
     expect(snapshotIssues(snapshot, "en", 320).map((entry) => entry.rule)).toContain("document-language");
   });
 
+  test("captures English text inheriting French with no language marker", async ({ page }) => {
+    await page.setContent(`<!doctype html><html lang="fr"><head><title>Exemple</title></head>
+      <body><main><h1>Exemple</h1><p>Please choose a place</p>
+      <p>Choisissez un lieu</p><p><span lang="en">Please select an option</span></p>
+      </main></body></html>`);
+    const snapshot = await collectSemanticSnapshot(page, "/places");
+    expect(snapshot.fragments.some((entry) => entry.text === "Please choose a place" && entry.explicit === false))
+      .toBe(true);
+    expect(snapshotIssues(snapshot, "fr", 320).map((entry) => entry.rule)).toContain("unmarked-english");
+    expect(snapshot.fragments.some((entry) => entry.text === "Please select an option" && entry.language === "en"))
+      .toBe(true);
+  });
+
   test("a missing skip-link target cannot masquerade as an accessible skip link", async ({ page }) => {
     await page.setContent(`<!doctype html><html lang="en"><head><title>Example</title></head>
       <body><a href="#absent">Skip</a><main><h1>Example</h1></main></body></html>`);

@@ -28,3 +28,4 @@ export * from './noMatchHints';
 export * from './savedViews';
 export * from './listedSummary';
 export * from './liveList';
+export * from './drillDown';

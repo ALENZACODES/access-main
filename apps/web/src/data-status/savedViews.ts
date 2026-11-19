@@ -21,37 +21,71 @@ export function viewQuery(f: Filters): string {
   return serializeFilters(parseFilters(serializeFilters(f)));
 }
 
-/** Keeps readable, non-empty, distinct views, in order, up to the limit. */
-export function cleanViews(raw: unknown): string[] {
+export const MAX_VIEW_NAME_LENGTH = 60;
+
+export interface SavedView {
+  /** The filters, as canonical query text. */
+  query: string;
+  /** The name the person gave the view; null when they gave none. */
+  name: string | null;
+}
+
+/** A usable name: control characters removed, spaces collapsed, cut to the limit; null when nothing is left. */
+export function cleanViewName(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const name = raw
+    .replace(/[\p{Cc}\u2028\u2029]+/gu, ' ')
+    .replace(/ {2,}/g, ' ')
+    .trim()
+    .slice(0, MAX_VIEW_NAME_LENGTH)
+    .trim();
+  return name === '' ? null : name;
+}
+
+function readEntry(item: unknown): SavedView | null {
+  // A plain string is the first stored form (filters only); an object also carries a name.
+  const rawQuery = typeof item === 'string' ? item : typeof item === 'object' && item !== null ? (item as { q?: unknown }).q : null;
+  if (typeof rawQuery !== 'string') return null;
+  const query = serializeFilters(parseFilters(rawQuery));
+  if (query === '') return null;
+  return { query, name: typeof item === 'string' ? null : cleanViewName((item as { name?: unknown }).name) };
+}
+
+/** Keeps readable, non-empty views with distinct filters, in order, up to the limit. */
+export function cleanViews(raw: unknown): SavedView[] {
   if (!Array.isArray(raw)) return [];
-  const out: string[] = [];
+  const out: SavedView[] = [];
   for (const item of raw) {
-    if (typeof item !== 'string') continue;
-    const q = serializeFilters(parseFilters(item));
-    if (q === '' || out.includes(q)) continue;
-    out.push(q);
+    const view = readEntry(item);
+    if (view === null || out.some((v) => v.query === view.query)) continue;
+    out.push(view);
     if (out.length === MAX_SAVED_VIEWS) break;
   }
   return out;
 }
 
+/** The stored form: a plain query for a view without a name, so older lists and newer ones read the same. */
+export function viewsToStored(views: readonly SavedView[]): unknown[] {
+  return views.map((v) => (v.name === null ? v.query : { q: v.query, name: v.name }));
+}
+
 export interface SavedViewStore {
   /** True when views stay on the device after the page is closed. */
   readonly durable: boolean;
-  load(): string[];
+  load(): SavedView[];
   /** Returns false when the list could not be written. */
-  save(views: readonly string[]): boolean;
+  save(views: readonly SavedView[]): boolean;
 }
 
 /** With a storage object the list is kept on the device; with none it lives in memory for this page only. */
 export function createSavedViewStore(storage: StorageLike | null | undefined, key: string = SAVED_VIEWS_KEY): SavedViewStore {
   if (!storage) {
-    let memory: string[] = [];
+    let memory: SavedView[] = [];
     return {
       durable: false,
-      load: () => [...memory],
+      load: () => memory.map((v) => ({ ...v })),
       save: (views) => {
-        memory = cleanViews([...views]);
+        memory = cleanViews(viewsToStored(views));
         return true;
       },
     };
@@ -68,9 +102,9 @@ export function createSavedViewStore(storage: StorageLike | null | undefined, ke
     },
     save: (views) => {
       try {
-        const clean = cleanViews([...views]);
+        const clean = cleanViews(viewsToStored(views));
         if (clean.length === 0) storage.removeItem(key);
-        else storage.setItem(key, JSON.stringify(clean));
+        else storage.setItem(key, JSON.stringify(viewsToStored(clean)));
         return true;
       } catch {
         return false;
@@ -81,19 +115,19 @@ export function createSavedViewStore(storage: StorageLike | null | undefined, ke
 
 export type SaveOutcome = 'saved' | 'exists' | 'empty' | 'full' | 'failed';
 
-/** Adds the current filters as a view. Nothing is written unless the outcome is 'saved'. */
-export function addView(store: SavedViewStore, f: Filters): { outcome: SaveOutcome; views: string[] } {
+/** Adds the current filters as a view, with an optional name. Nothing is written unless the outcome is 'saved'. */
+export function addView(store: SavedViewStore, f: Filters, name?: string | null): { outcome: SaveOutcome; views: SavedView[] } {
   const views = store.load();
   const q = viewQuery(f);
   if (q === '' || !hasActiveFilters(parseFilters(q))) return { outcome: 'empty', views };
-  if (views.includes(q)) return { outcome: 'exists', views };
+  if (views.some((v) => v.query === q)) return { outcome: 'exists', views };
   if (views.length >= MAX_SAVED_VIEWS) return { outcome: 'full', views };
-  const next = [...views, q];
+  const next = [...views, { query: q, name: cleanViewName(name) }];
   return store.save(next) ? { outcome: 'saved', views: next } : { outcome: 'failed', views };
 }
 
 /** Removes the view at a position. Out-of-range positions change nothing. */
-export function removeViewAt(store: SavedViewStore, index: number): { removed: boolean; views: string[] } {
+export function removeViewAt(store: SavedViewStore, index: number): { removed: boolean; views: SavedView[] } {
   const views = store.load();
   if (!Number.isInteger(index) || index < 0 || index >= views.length) return { removed: false, views };
   const next = views.filter((_, i) => i !== index);
@@ -137,6 +171,11 @@ type Key =
   | 'vw.apply'
   | 'vw.delete'
   | 'vw.label.join'
+  | 'vw.named'
+  | 'vw.count.one'
+  | 'vw.count.other'
+  | 'vw.nameLabel'
+  | 'vw.nameHelp'
   | 'vw.said.saved'
   | 'vw.said.exists'
   | 'vw.said.empty'
@@ -155,6 +194,11 @@ const MESSAGES: Messages<Key> = {
     'vw.apply': 'Show view. {label}',
     'vw.delete': 'Delete view. {label}',
     'vw.label.join': ', ',
+    'vw.named': '{name} ({filters})',
+    'vw.count.one': 'Lists {n} source now.',
+    'vw.count.other': 'Lists {n} sources now.',
+    'vw.nameLabel': 'Name for the view (optional)',
+    'vw.nameHelp': 'Up to {max} characters. Without a name, the view is described by its filters.',
     'vw.said.saved': 'View saved.',
     'vw.said.exists': 'This view is already saved.',
     'vw.said.empty': 'There is no filter to save.',
@@ -172,6 +216,11 @@ const MESSAGES: Messages<Key> = {
     'vw.apply': 'Afficher la vue. {label}',
     'vw.delete': 'Supprimer la vue. {label}',
     'vw.label.join': ', ',
+    'vw.named': '{name} ({filters})',
+    'vw.count.one': 'Présente {n} source actuellement.',
+    'vw.count.other': 'Présente {n} sources actuellement.',
+    'vw.nameLabel': 'Nom de la vue (facultatif)',
+    'vw.nameHelp': 'Jusqu’à {max} caractères. Sans nom, la vue est décrite par ses filtres.',
     'vw.said.saved': 'Vue enregistrée.',
     'vw.said.exists': 'Cette vue est déjà enregistrée.',
     'vw.said.empty': 'Il n’y a aucun filtre à enregistrer.',
@@ -191,6 +240,12 @@ export function viewLabel(query: string, locale: Locale, datasetNames?: Readonly
     .join(tx(locale, 'vw.label.join'));
 }
 
+/** A view in words: its name with its filters in brackets, or just its filters when it has no name. */
+export function savedViewLabel(v: SavedView, locale: Locale, datasetNames?: ReadonlyMap<string, string>): string {
+  const filters = viewLabel(v.query, locale, datasetNames);
+  return v.name === null ? filters : tx(locale, 'vw.named', { name: v.name, filters });
+}
+
 export function describeSaveOutcome(outcome: SaveOutcome, locale: Locale): string {
   return tx(locale, `vw.said.${outcome}`);
 }
@@ -205,31 +260,43 @@ export interface SavedViewsRenderOptions {
   active: Filters;
   datasetNames?: ReadonlyMap<string, string>;
   buttonStyle?: string;
+  /** How many sources a view's filters list right now. When given, each view states its count. */
+  countFor?: (filters: Filters) => number;
+  /** What has been typed in the name field so far, so a redraw does not lose it. */
+  draftName?: string;
 }
 
 const DEFAULT_BUTTON_STYLE = 'min-width:44px;min-height:44px;font:inherit';
+const FIELD_STYLE = 'min-height:44px;min-width:44px;font:inherit';
 
-export function renderSavedViewsHtml(views: readonly string[], locale: Locale, opts: SavedViewsRenderOptions): string {
+export function renderSavedViewsHtml(views: readonly SavedView[], locale: Locale, opts: SavedViewsRenderOptions): string {
   const style = opts.buttonStyle ?? DEFAULT_BUTTON_STYLE;
   const current = viewQuery(opts.active);
-  const canSave = current !== '' && !views.includes(current) && views.length < MAX_SAVED_VIEWS;
+  const saved = views.some((v) => v.query === current);
+  const canSave = current !== '' && !saved && views.length < MAX_SAVED_VIEWS;
+  const nameField =
+    `<div><label for="ds-view-name">${escapeHtml(tx(locale, 'vw.nameLabel'))}</label> ` +
+    `<input id="ds-view-name" type="text" data-filter="viewName" maxlength="${MAX_VIEW_NAME_LENGTH}" autocomplete="off" aria-describedby="ds-view-name-help" value="${escapeHtml(opts.draftName ?? '')}" style="${FIELD_STYLE}"> ` +
+    `<span id="ds-view-name-help">${escapeHtml(tx(locale, 'vw.nameHelp', { max: MAX_VIEW_NAME_LENGTH }))}</span></div>`;
   const save = canSave
-    ? `<p><button type="button" data-action="${VIEW_SAVE_ACTION}" style="${style}">${escapeHtml(tx(locale, 'vw.save'))}</button></p>`
+    ? `${nameField}<p><button type="button" data-action="${VIEW_SAVE_ACTION}" style="${style}">${escapeHtml(tx(locale, 'vw.save'))}</button></p>`
     : current === ''
       ? `<p>${escapeHtml(tx(locale, 'vw.saveHint'))}</p>`
-      : views.includes(current)
+      : saved
         ? `<p>${escapeHtml(tx(locale, 'vw.said.exists'))}</p>`
         : `<p>${escapeHtml(tx(locale, 'vw.said.full'))}</p>`;
   const list =
     views.length === 0
       ? `<p>${escapeHtml(tx(locale, 'vw.none'))}</p>`
       : `<ul style="list-style:none;padding:0">${views
-          .map((q, i) => {
-            const label = viewLabel(q, locale, opts.datasetNames);
+          .map((v, i) => {
+            const q = v.query;
+            const label = savedViewLabel(v, locale, opts.datasetNames);
+            const count = opts.countFor ? `<span style="align-self:center">${escapeHtml(tx.count(locale, 'vw.count', opts.countFor(parseFilters(q))))}</span>` : '';
             return (
               `<li style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px">` +
               `<button type="button" data-action="${viewApplyAction(i)}" aria-pressed="${q === current ? 'true' : 'false'}" style="${style}">${escapeHtml(tx(locale, 'vw.apply', { label }))}</button>` +
-              `<button type="button" data-action="${viewDeleteAction(i)}" style="${style}">${escapeHtml(tx(locale, 'vw.delete', { label }))}</button></li>`
+              `<button type="button" data-action="${viewDeleteAction(i)}" style="${style}">${escapeHtml(tx(locale, 'vw.delete', { label }))}</button>${count}</li>`
             );
           })
           .join('')}</ul>`;

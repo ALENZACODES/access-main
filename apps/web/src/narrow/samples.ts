@@ -44,6 +44,11 @@ import { auditIdentifiers } from './identifiers.js';
 import { auditLabels } from './labels.js';
 import { auditNameWords } from './namewords.js';
 import { auditTableMarkup } from './tablemarkup.js';
+import { auditFocusables } from './focusables.js';
+import { auditImageMarkup } from './imagemarkup.js';
+import { auditLocaleMarkup } from './localemarkup.js';
+import { auditOverlays } from './overlays.js';
+import { auditTyping } from './typing.js';
 import { auditRegions } from './regions.js';
 import { auditHandlers } from './handlers.js';
 import { auditHeadings } from './headings.js';
@@ -345,6 +350,11 @@ export function sampleEntries(): Entry[] {
     ...auditLabels(SAMPLE_LABELS_HTML).entries,
     ...auditIdentifiers(SAMPLE_IDENTIFIERS_HTML).entries,
     ...auditNameWords(SAMPLE_NAME_WORDS_HTML).entries,
+    ...auditTyping(SAMPLE_TYPING_HTML).entries,
+    ...auditOverlays(SAMPLE_OVERLAYS_HTML).entries,
+    ...auditImageMarkup(SAMPLE_IMAGE_MARKUP_HTML).entries,
+    ...auditFocusables(SAMPLE_FOCUSABLES_HTML).entries,
+    ...auditLocaleMarkup(SAMPLE_LOCALE_MARKUP_HTML).entries,
     ...auditRegions({ landmarks: 1, checked: 6, outside: ['p[2]'], outsideCount: 2, truncated: false }).entries,
     ...SAMPLE_HEADINGS.flatMap((f) => auditHeadings(f).entries),
     ...auditTextZoom({ checked: 2, newlyClipped: [{ id: 'div[2]', scrollWidth: 100, clientWidth: 100, scrollHeight: 60, clientHeight: 20 }] }).entries,
@@ -513,3 +523,27 @@ export const SAMPLE_IDENTIFIERS_HTML =
 export const SAMPLE_NAME_WORDS_HTML =
   '<div alt="Ramp">Ramp</div><button aria-label="Close button">x</button><a href="/map" aria-label="Open the map of step-free entrances, lifts, ramps and accessible washrooms for every public building in the city centre">Map</a>' +
   '<button aria-label="Save">Save</button><input name="q" aria-label=""><input name="note" aria-label="Note" placeholder="Tell us in a few words what you were trying to do when the problem happened">';
+
+/** Typing help: one finding of each rule of the typing check. */
+export const SAMPLE_TYPING_HTML =
+  '<input type="phone" name="mobile"><input name="qty" inputmode="number"><input name="q" enterkeyhint="submit"><input name="title" autocapitalize="title">' +
+  '<input type="email" name="mail" inputmode="numeric"><input type="text" name="username">';
+
+/** Dialogs and popovers: one finding of each rule of the overlays check. */
+export const SAMPLE_OVERLAYS_HTML =
+  '<button popovertarget="menu9">Menu</button><button popovertarget="panel">Panel</button><div id="panel">Filters</div><div popover="open">Tips</div>' +
+  '<div aria-modal="true">Sign in</div><dialog aria-label="Filters"><p>Choose a day.</p><button type="button">Apply</button></dialog>';
+
+/** Image structure: one finding of each rule of the image-markup check. */
+export const SAMPLE_IMAGE_MARKUP_HTML =
+  '<picture><source srcset="a.webp" type="image/webp"></picture><map name="plan"><area href="/east" shape="rect" coords="0,0,9,9"></map>' +
+  '<figure><figcaption>One</figcaption><img src="a.png" alt="Ramp"><figcaption>Two</figcaption></figure><img src="deco.png" alt="" title="Swirl">' +
+  '<img src="chart.png" alt="Visits by month" longdesc="chart.html">';
+
+/** Focus attributes: one finding of each rule of the focusables check. */
+export const SAMPLE_FOCUSABLES_HTML =
+  '<div tabindex="yes">Card</div><button accesskey="save">Save</button><input name="a" autofocus><input name="b" autofocus><div tabindex="0">Scroll area</div><div contenteditable="true"></div>';
+
+/** Language settings: one finding of each rule of the locale-markup check. */
+export const SAMPLE_LOCALE_MARKUP_HTML =
+  '<html lang="en" translate="no"><head><meta http-equiv="content-language" content="fr"><title>Help</title></head><body><p><bdo>abc</bdo></p><p lang="">XK-42</p><p translate="never">Brand</p></body></html>';
