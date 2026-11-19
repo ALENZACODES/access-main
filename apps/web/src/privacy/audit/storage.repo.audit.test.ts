@@ -51,6 +51,7 @@ describe("storage keys in the source", () => {
       "access.language.set",
       "access.routeReports.v1",
       "app.corrections.v1",
+      "app.pack-shortlist.v1",
       "app.preferences.v1",
       "data-status:history:v1",
       "data-status:saved-views:v1",
