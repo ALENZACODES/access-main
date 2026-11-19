@@ -1,0 +1,57 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import {
+  LINEAGE_ACTIONS, revisionKey, revisionIndex, auditRevisionHistory,
+  sourceLineage, rollbackCandidates, rollbackSummary, latestSnapshot, lineageStats,
+} from "./lineage.mjs";
+import { TODAY, cache, clone, french, pair, record, source } from "./fixtures.mjs";
+
+const history = () => [{ asOf: "2026-11-18", records: pair() }, { asOf: TODAY, records: pair() }];
+test("Lineage actions are non-executing", () => assert.deepEqual(LINEAGE_ACTIONS, ["KEEP", "REVIEW", "RESTORE-CANDIDATE", "NO-BASELINE"]));
+test("Revision key contains language", () => assert.equal(revisionKey(record()), "en/example-en@1"));
+test("Revision key contains revision", () => assert.equal(revisionKey(record({ revision: 3 })), "en/example-en@3"));
+test("Revision key rejects invalid locale", () => assert.equal(revisionKey(record({ language: "de" })), null));
+test("Revision key rejects invalid ID", () => assert.equal(revisionKey(record({ id: "bad id" })), null));
+test("Revision key rejects fractional revision", () => assert.equal(revisionKey(record({ revision: 1.2 })), null));
+test("Revision key rejects zero revision", () => assert.equal(revisionKey(record({ revision: 0 })), null));
+test("Revision key rejects absent record", () => assert.equal(revisionKey(null), null));
+test("Revision index contains each locale", () => assert.equal(revisionIndex(history()).size, 2));
+test("Revision index records each observation", () => assert.equal(revisionIndex(history()).get("en/example-en@1").length, 2));
+test("Revision index rejects invalid snapshots", () => assert.equal(revisionIndex(null).size, 0));
+test("Revision index ignores invalid revision", () => assert.equal(revisionIndex([{ asOf: TODAY, records: [record({ revision: -1 })] }]).size, 0));
+test("History with repeated unchanged revisions is valid", () => assert.deepEqual(auditRevisionHistory(history()), []));
+test("History rejects non-array", () => assert.deepEqual(auditRevisionHistory(null), [{ code: "history.array", path: "snapshots" }]));
+test("History rejects too many snapshots", () => assert.equal(auditRevisionHistory(Array(501).fill(null))[0].code, "history.array"));
+test("History rejects missing records array", () => assert.ok(auditRevisionHistory([{ asOf: TODAY }]).some((item) => item.code === "history.records")));
+test("History rejects malformed date", () => assert.ok(auditRevisionHistory([{ asOf: "bad", records: [] }]).some((item) => item.code === "history.date-order")));
+test("History rejects decreasing observation dates", () => assert.ok(auditRevisionHistory([{ asOf: TODAY, records: [] }, { asOf: "2026-11-18", records: [] }]).some((item) => item.code === "history.date-order")));
+test("History rejects repeated observation dates", () => assert.ok(auditRevisionHistory([{ asOf: TODAY, records: [] }, { asOf: TODAY, records: [] }]).some((item) => item.code === "history.date-order")));
+test("History detects a revision regression", () => assert.ok(auditRevisionHistory([{ asOf: "2026-11-18", records: [record({ revision: 3 })] }, { asOf: TODAY, records: [record()] }]).some((item) => item.code === "history.revision-regressed")));
+test("History detects a recorded date regression", () => assert.ok(auditRevisionHistory([{ asOf: "2026-11-18", records: [record()] }, { asOf: TODAY, records: [record({ recordedOn: "2026-11-17" })] }]).some((item) => item.code === "history.record-date-regressed")));
+test("History detects changing source with same revision", () => assert.ok(auditRevisionHistory([{ asOf: "2026-11-18", records: [record()] }, { asOf: TODAY, records: [record({ sources: [source({ licence: "CC0" })] })] }]).some((item) => item.code === "history.source-changed-without-revision")));
+test("History detects changing cache with same revision", () => assert.ok(auditRevisionHistory([{ asOf: "2026-11-18", records: [record()] }, { asOf: TODAY, records: [record({ cache: cache({ path: "/offline/other.json" }) })] }]).some((item) => item.code === "history.cache-changed-without-revision")));
+test("History allows increasing revision", () => assert.deepEqual(auditRevisionHistory([{ asOf: "2026-11-18", records: [record()] }, { asOf: TODAY, records: [record({ revision: 2, cache: cache({ revision: 2 }) })] }]), []));
+test("Source lineage groups repeated source", () => assert.equal(sourceLineage(history()).length, 1));
+test("Source lineage observes first date", () => assert.equal(sourceLineage(history())[0].firstSeen, "2026-11-18"));
+test("Source lineage observes last date", () => assert.equal(sourceLineage(history())[0].lastSeen, TODAY));
+test("Source lineage tracks evidence tier", () => assert.equal(sourceLineage(history())[0].tier, "PRIMARY"));
+test("Source lineage tracks source claim", () => assert.equal(sourceLineage(history())[0].claim, "SUPPORTED"));
+test("Source lineage downgrades conflicting tier", () => assert.equal(sourceLineage([{ asOf: "2026-11-18", records: [record()] }, { asOf: TODAY, records: [record({ sources: [source({ tier: "UNKNOWN" })] })] }])[0].tier, "UNKNOWN"));
+test("Source lineage downgrades conflicting claim", () => assert.equal(sourceLineage([{ asOf: "2026-11-18", records: [record()] }, { asOf: TODAY, records: [record({ sources: [source({ claim: "UNKNOWN" })] })] }])[0].claim, "UNKNOWN"));
+test("Source lineage handles invalid snapshot input", () => assert.deepEqual(sourceLineage(null), []));
+test("Source lineage excludes missing source lists", () => assert.deepEqual(sourceLineage([{ asOf: TODAY, records: [{ id: "a" }] }]), []));
+test("Rollback from matching versions is a candidate proposal", () => assert.equal(rollbackSummary(pair(), pair(), { asOf: TODAY }).safeCandidates, 2));
+test("Rollback from older revision requires manual review", () => assert.ok(rollbackCandidates(pair().map((item) => ({ ...item, revision: 2, cache: { ...item.cache, revision: 2 } })), pair(), { asOf: TODAY }).candidates.every((item) => item.action === "REVIEW")));
+test("Rollback to unknown baseline needs review", () => assert.equal(rollbackCandidates(pair(), [record({ access: "UNKNOWN" }), french()], { asOf: TODAY }).status, "HOLD"));
+test("Rollback to missing baseline produces no invented candidate", () => assert.equal(rollbackCandidates(pair(), [], { asOf: TODAY }).candidates.length, 0));
+test("Rollback to malformed local path needs review", () => assert.equal(rollbackCandidates(pair(), [record({ cache: cache({ path: "/bad" }) }), french()], { asOf: TODAY }).status, "HOLD"));
+test("Rollback proposals do not mutate snapshots", () => { const items = pair(); const copy = clone(items); rollbackCandidates(items, items, { asOf: TODAY }); assert.deepEqual(items, copy); });
+test("Latest snapshot picks newer date", () => assert.equal(latestSnapshot(history()).asOf, TODAY));
+test("Latest snapshot ignores invalid date", () => assert.equal(latestSnapshot([{ asOf: "bad", records: [] }, ...history()]).asOf, TODAY));
+test("Latest snapshot handles invalid input", () => assert.equal(latestSnapshot(null), null));
+test("Latest snapshot handles empty history", () => assert.equal(latestSnapshot([]), null));
+test("Lineage statistics count observations", () => assert.equal(lineageStats(history()).snapshots, 2));
+test("Lineage statistics count sources", () => assert.equal(lineageStats(history()).uniqueSources, 1));
+test("Lineage statistics count revision keys", () => assert.equal(lineageStats(history()).observedRevisions, 2));
+test("Lineage statistics count conflicts", () => assert.equal(lineageStats(history()).conflicts, 0));
+test("Lineage statistics retain unknown source count", () => assert.equal(lineageStats([{ asOf: TODAY, records: [record({ sources: [source({ tier: "UNKNOWN" })] })] }]).unknownSources, 1));
