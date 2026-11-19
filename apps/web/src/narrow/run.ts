@@ -29,6 +29,11 @@ import { auditIdentifiers } from './identifiers.js';
 import { auditLabels } from './labels.js';
 import { auditNameWords } from './namewords.js';
 import { auditTableMarkup } from './tablemarkup.js';
+import { auditFocusables } from './focusables.js';
+import { auditImageMarkup } from './imagemarkup.js';
+import { auditLocaleMarkup } from './localemarkup.js';
+import { auditOverlays } from './overlays.js';
+import { auditTyping } from './typing.js';
 import { auditRegions, regionsInPage, type RegionFacts } from './regions.js';
 import { auditGenerated, generatedInPage, type GeneratedFacts } from './generated.js';
 import { auditHandlers } from './handlers.js';
@@ -195,6 +200,11 @@ export function markupResults(html: string): Parameters<typeof buildRouteAudit>[
     labels: auditLabels(html),
     identifiers: auditIdentifiers(html),
     'name-words': auditNameWords(html),
+    typing: auditTyping(html),
+    overlays: auditOverlays(html),
+    'image-markup': auditImageMarkup(html),
+    focusables: auditFocusables(html),
+    'locale-markup': auditLocaleMarkup(html),
   };
 }
 

@@ -13,6 +13,11 @@ import { IDENTIFIER_RULES } from './identifiers.js';
 import { LABEL_RULES } from './labels.js';
 import { NAME_WORD_RULES } from './namewords.js';
 import { TABLE_MARKUP_RULES } from './tablemarkup.js';
+import { FOCUSABLE_RULES } from './focusables.js';
+import { IMAGE_MARKUP_RULES } from './imagemarkup.js';
+import { LOCALE_MARKUP_RULES } from './localemarkup.js';
+import { OVERLAY_RULES } from './overlays.js';
+import { TYPING_RULES } from './typing.js';
 import { noFrIssues } from './expect-fr.js';
 import { HREF_RULES } from './hrefs.js';
 import { snapshotInPage } from './inpage.js';
@@ -26,17 +31,22 @@ import {
   SAMPLE_CONSTRAINTS_HTML,
   SAMPLE_CSS_HTML,
   SAMPLE_DOCUMENT_HTML,
+  SAMPLE_FOCUSABLES_HTML,
   SAMPLE_HREFS_HTML,
   SAMPLE_IDENTIFIERS_HTML,
+  SAMPLE_IMAGE_MARKUP_HTML,
   SAMPLE_LABELS_HTML,
   SAMPLE_LISTS_HTML,
+  SAMPLE_LOCALE_MARKUP_HTML,
   SAMPLE_NAME_WORDS_HTML,
   SAMPLE_OBSOLETE_HTML,
+  SAMPLE_OVERLAYS_HTML,
   SAMPLE_REFERENCES_HTML,
   SAMPLE_SECTIONING_HTML,
   SAMPLE_STATES_HTML,
   SAMPLE_SYMBOLS_HTML,
   SAMPLE_TABLE_MARKUP_HTML,
+  SAMPLE_TYPING_HTML,
   sampleEntries,
 } from './samples.js';
 import { selectChecks } from './select.js';
@@ -46,6 +56,7 @@ import { CHECK_LABELS, CHECK_ORDER, CHECK_SC, type CheckId } from './types.js';
 const MINE: readonly CheckId[] = [
   'aria', 'references', 'hrefs', 'css', 'obsolete', 'states', 'lists', 'sectioning', 'constraints', 'symbols',
   'document', 'table-markup', 'labels', 'identifiers', 'name-words',
+  'typing', 'overlays', 'image-markup', 'focusables', 'locale-markup',
 ];
 
 const GOOD = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Hours</title>
@@ -73,7 +84,7 @@ afterEach(() => {
 });
 
 describe('check tables', () => {
-  it('list the fifteen markup checks once each, with labels in both languages and a criterion', () => {
+  it('list the twenty markup checks once each, with labels in both languages and a criterion', () => {
     for (const id of MINE) {
       expect(CHECK_ORDER.filter((c) => c === id)).toHaveLength(1);
       expect(CHECK_LABELS[id].en.trim()).not.toBe('');
@@ -96,6 +107,11 @@ describe('check tables', () => {
     expect(CHECK_SC.labels).toBe('3.3.2');
     expect(CHECK_SC.identifiers).toBe('4.1.2');
     expect(CHECK_SC['name-words']).toBe('4.1.2');
+    expect(CHECK_SC.typing).toBe('1.3.5');
+    expect(CHECK_SC.overlays).toBe('4.1.2');
+    expect(CHECK_SC['image-markup']).toBe('1.1.1');
+    expect(CHECK_SC.focusables).toBe('4.1.2');
+    expect(CHECK_SC['locale-markup']).toBe('3.1.2');
   });
   it('has no check id twice and a label for every id in the order', () => {
     expect(new Set(CHECK_ORDER).size).toBe(CHECK_ORDER.length);
@@ -104,7 +120,7 @@ describe('check tables', () => {
 });
 
 describe('markupResults', () => {
-  it('runs the fifteen checks and nothing else', () => {
+  it('runs the twenty checks and nothing else', () => {
     expect(Object.keys(markupResults('<p>x</p>')).sort()).toEqual([...MINE].sort());
   });
   it('finds nothing on a good page and says how much it read', () => {
@@ -125,9 +141,14 @@ describe('markupResults', () => {
     expect(r['labels']?.checked).toBe(1);
     expect(r['identifiers']?.checked).toBeGreaterThan(5);
     expect(r['name-words']?.checked).toBeGreaterThan(5);
+    expect(r['typing']?.checked).toBe(1);
+    expect(r['overlays']?.checked).toBe(0);
+    expect(r['image-markup']?.checked).toBe(1);
+    expect(r['focusables']?.checked).toBe(0);
+    expect(r['locale-markup']?.checked).toBe(0);
   });
   it('tags every entry with its own check', () => {
-    const all = SAMPLE_TABLE_MARKUP_HTML + SAMPLE_LABELS_HTML + SAMPLE_IDENTIFIERS_HTML + SAMPLE_NAME_WORDS_HTML + SAMPLE_REFERENCES_HTML + SAMPLE_HREFS_HTML + SAMPLE_CSS_HTML + SAMPLE_OBSOLETE_HTML + SAMPLE_STATES_HTML + SAMPLE_LISTS_HTML + SAMPLE_SECTIONING_HTML + SAMPLE_CONSTRAINTS_HTML + SAMPLE_SYMBOLS_HTML + SAMPLE_ARIA_HTML;
+    const all = SAMPLE_TYPING_HTML + SAMPLE_OVERLAYS_HTML + SAMPLE_IMAGE_MARKUP_HTML + SAMPLE_FOCUSABLES_HTML + SAMPLE_TABLE_MARKUP_HTML + SAMPLE_LABELS_HTML + SAMPLE_IDENTIFIERS_HTML + SAMPLE_NAME_WORDS_HTML + SAMPLE_REFERENCES_HTML + SAMPLE_HREFS_HTML + SAMPLE_CSS_HTML + SAMPLE_OBSOLETE_HTML + SAMPLE_STATES_HTML + SAMPLE_LISTS_HTML + SAMPLE_SECTIONING_HTML + SAMPLE_CONSTRAINTS_HTML + SAMPLE_SYMBOLS_HTML + SAMPLE_ARIA_HTML;
     let seen = 0;
     for (const [id, result] of Object.entries(markupResults(all))) {
       for (const e of result?.entries ?? []) {
@@ -135,7 +156,7 @@ describe('markupResults', () => {
         seen++;
       }
     }
-    expect(seen).toBeGreaterThan(60);
+    expect(seen).toBeGreaterThan(80);
   });
 });
 
@@ -193,6 +214,9 @@ describe('selfAudit', () => {
 });
 
 describe('a whole document sample', () => {
+  it('reports the language setting rules from one page', () => {
+    expect(markupResults(SAMPLE_LOCALE_MARKUP_HTML)['locale-markup']?.entries.map((e) => e.rule).sort()).toEqual([...LOCALE_MARKUP_RULES].sort());
+  });
   it('reports the document rules from one page', () => {
     expect(markupResults(SAMPLE_DOCUMENT_HTML)['document']?.entries.map((e) => e.rule).sort()).toEqual([...DOCUMENT_RULES].sort());
   });
@@ -201,7 +225,7 @@ describe('a whole document sample', () => {
 describe('the sample set', () => {
   const all = sampleEntries();
   const rulesOf = (check: CheckId): Set<string | undefined> => new Set(all.filter((e) => e.check === check).map((e) => e.rule));
-  it('has an entry for each rule of the fifteen checks', () => {
+  it('has an entry for each rule of the twenty checks', () => {
     for (const r of ARIA_RULES) expect(rulesOf('aria').has(r), `aria ${r}`).toBe(true);
     for (const r of REFERENCE_RULES) expect(rulesOf('references').has(r), `references ${r}`).toBe(true);
     for (const r of HREF_RULES) expect(rulesOf('hrefs').has(r), `hrefs ${r}`).toBe(true);
@@ -217,6 +241,11 @@ describe('the sample set', () => {
     for (const r of LABEL_RULES) expect(rulesOf('labels').has(r), `labels ${r}`).toBe(true);
     for (const r of IDENTIFIER_RULES) expect(rulesOf('identifiers').has(r), `identifiers ${r}`).toBe(true);
     for (const r of NAME_WORD_RULES) expect(rulesOf('name-words').has(r), `name-words ${r}`).toBe(true);
+    for (const r of TYPING_RULES) expect(rulesOf('typing').has(r), `typing ${r}`).toBe(true);
+    for (const r of OVERLAY_RULES) expect(rulesOf('overlays').has(r), `overlays ${r}`).toBe(true);
+    for (const r of IMAGE_MARKUP_RULES) expect(rulesOf('image-markup').has(r), `image-markup ${r}`).toBe(true);
+    for (const r of FOCUSABLE_RULES) expect(rulesOf('focusables').has(r), `focusables ${r}`).toBe(true);
+    for (const r of LOCALE_MARKUP_RULES) expect(rulesOf('locale-markup').has(r), `locale-markup ${r}`).toBe(true);
   });
   it('has clean French, and both languages differ', () => {
     noFrIssues(all.filter((e) => MINE.includes(e.check)));

@@ -36,6 +36,7 @@ describe('parseArgs', () => {
         requireFacts: [],
         keyboardMax: null,
         formats: [],
+        compareFile: null,
         baselineFile: null,
         writeBaselineFile: null,
         waiversFile: null,
