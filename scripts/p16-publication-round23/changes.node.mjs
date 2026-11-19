@@ -5,7 +5,7 @@ import {
   actionCounts, proposedRetirements, retainableCachePaths,
   reconcilePairs, planResourceBudget,
 } from "./changes.mjs";
-import { AT, cache, clone, french, pair, pairedRecord, record, source } from "./fixtures.node.mjs";
+import { AT, cache, clone, french, pair, record, source } from "./fixtures.node.mjs";
 
 const policy = { asOf: AT };
 const comparison = (before, after) => compareSnapshots(before, after, policy);
