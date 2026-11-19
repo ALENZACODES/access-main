@@ -6,7 +6,7 @@ import {
   exportInventory, exportBilingualStatus, exportAuditSummary,
   safeJsonLines, publishedDateRange, publicSummary,
 } from "./export.mjs";
-import { AT, cache, clone, french, pair, pairedRecord, record, source } from "./fixtures.node.mjs";
+import { AT, clone, french, pair, record, source } from "./fixtures.node.mjs";
 
 const options = { asOf: AT };
 
