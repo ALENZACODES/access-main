@@ -3,9 +3,11 @@ import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { StateNotice } from "./StateNotice.tsx";
 import { message } from "./messages.ts";
 import { parsePointInput } from "./packGeo.ts";
+import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces } from "./packPlaces.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
+import { SuggestionList } from "./SuggestionList.tsx";
 import type { Locale } from "./stateCopy.ts";
 
 interface Props {
@@ -62,6 +64,12 @@ export function PackPlaces({ places, locale, today }: Props) {
     [parsed, text, tag, near, locale, day],
   );
 
+  // Other names to try when a typed search finds nothing. Only places the current filter allows are offered.
+  const hints = useMemo(() => {
+    if (view.kind !== "empty" || text.trim() === "") return [];
+    return placeNameHints(text, tag === "any" ? parsed.places : parsed.places.filter((p) => p.tag === tag));
+  }, [view.kind, text, tag, parsed.places]);
+
   // A pack with no usable places at all is a load problem, not a "no matches" result.
   if (parsed.places.length === 0) {
     return (
@@ -102,7 +110,10 @@ export function PackPlaces({ places, locale, today }: Props) {
       {view.unknownHiddenNotice ? <p>{view.unknownHiddenNotice}</p> : null}
       {view.droppedNotice ? <p>{view.droppedNotice}</p> : null}
       {view.kind === "empty" ? (
-        <StateNotice view={view.view} lang={locale} onAction={{ "clear-search": clear }} />
+        <>
+          <StateNotice view={view.view} lang={locale} onAction={{ "clear-search": clear }} />
+          <SuggestionList hints={hints} locale={locale} onPick={setText} />
+        </>
       ) : (
         <ul className="record-list">
           {view.cards.map((card) => (

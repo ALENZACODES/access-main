@@ -260,6 +260,18 @@ const DEFS = {
     en: "© OpenStreetMap contributors",
     fr: "© OpenStreetMap contributors",
   },
+  "hint.didYouMean": { en: "Did you mean one of these?", fr: "Vouliez-vous dire l’un de ceux-ci ?" },
+  "hint.pick": { en: "Search for {name}", fr: "Chercher {name}" },
+  "retry.stillFailing": {
+    en: {
+      one: "This has failed {n} time in a row. If it keeps failing, Help lists what you can do on this device.",
+      other: "This has failed {n} times in a row. If it keeps failing, Help lists what you can do on this device.",
+    },
+    fr: {
+      one: "Cela a échoué {n} fois de suite. Si cela continue, l’aide indique ce que vous pouvez faire sur cet appareil.",
+      other: "Cela a échoué {n} fois de suite. Si cela continue, l’aide indique ce que vous pouvez faire sur cet appareil.",
+    },
+  },
   "pack.nearLegend": { en: "Sort by distance from a point", fr: "Trier selon la distance à partir d’un point" },
   "pack.lat": { en: "Latitude", fr: "Latitude" },
   "pack.lon": { en: "Longitude", fr: "Longitude" },
