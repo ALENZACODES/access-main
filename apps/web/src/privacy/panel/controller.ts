@@ -1,6 +1,6 @@
 import { loadActivity, recordActivity, type ActivityEntry } from "./activityLog";
 import { diffInventory, loadSeen, saveSeen, snapshot, type ChangesView } from "./changes";
-import type { RefusedWrite } from "./consentGate";
+import { removeForPurpose, type GateRule, type RefusedWrite } from "./consentGate";
 import { assertValidPurposes, loadConsent, saveConsent, setConsent, type ConsentState, type Purpose } from "./consent";
 import type { Locale } from "./copyLint";
 import { purgeExpired } from "./expiry";
@@ -32,6 +32,12 @@ export interface ControllerDeps {
   purposes?: readonly Purpose[];
   /** Where to read the writes the consent gate stopped (for example `() => gate.refused()`). Omit to hide that section. */
   refused?: () => readonly RefusedWrite[];
+  /**
+   * The consent gate's rules. When given, saying "do not allow" also removes what that
+   * feature already saved on this device, and the status says how many items went.
+   * Omit to keep the data and only stop new saves.
+   */
+  withdrawRules?: readonly GateRule[];
   now: () => Date;
   reviewedOn?: string;
   /** Keep a visible, local list of the person's privacy actions. Default off. */
@@ -192,12 +198,18 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const consent = setConsent(state.consent, purpose, action.value, deps.now());
         const saved = saveConsent(storage, deps.prefix, consent);
         log({ kind: action.value === "granted" ? "consent-granted" : "consent-declined", purposeId: purpose.id });
+        const removed =
+          saved && action.value === "declined" && storage !== null && deps.withdrawRules !== undefined
+            ? removeForPurpose(storage, deps.withdrawRules, purpose.id).length
+            : 0;
         state = {
           ...state,
           consent,
           confirmingErase: false,
           lastExport: null,
-          status: saved
+          status: removed > 0
+            ? { kind: "consent-withdrawn", label: purpose.label[state.prefs.locale], removed }
+            : saved
             ? { kind: "consent-saved", value: action.value, label: purpose.label[state.prefs.locale] }
             : { kind: "save-failed" },
         };
