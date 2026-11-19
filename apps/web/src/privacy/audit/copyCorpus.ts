@@ -35,6 +35,8 @@ const STATUSES: readonly Status[] = [
   { kind: "expired-removed", count: 2 },
   { kind: "list-exported", format: "csv" },
   { kind: "list-exported", format: "text" },
+  { kind: "kept-exported", format: "csv" },
+  { kind: "kept-exported", format: "text" },
   { kind: "seen-saved" },
   { kind: "import-ready", additions: 2, overwrites: 1, unchanged: 3 },
   { kind: "import-done", count: 4 },

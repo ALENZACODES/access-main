@@ -105,11 +105,34 @@ test('translation requires both language keys', () => {
   assert.equal(validTranslation({ en: 'Example', fr: 'Exemple', es: 'Ejemplo' }), false);
 });
 
-test('French punctuation validates NBSP before colon, question and exclamation', () => {
-  assert.deepEqual(frenchSpacingIssues('Source\u00A0: oui\u00A0!', '/fr'), []);
+test('French punctuation uses NBSP before colon and narrow NBSP elsewhere', () => {
+  assert.deepEqual(frenchSpacingIssues('Source\u00A0: oui\u202F!', '/fr'), []);
   assert.ok(frenchSpacingIssues('Source : oui !', '/fr').length === 2);
-  assert.equal(frenchSpacingIssues('«\u00A0exemple\u00A0»', '/fr').length, 0);
+  assert.deepEqual(frenchSpacingIssues('«\u202Fexemple\u202F»', '/fr'), []);
   assert.equal(frenchSpacingIssues('«exemple»', '/fr').length, 2);
+});
+
+test('French punctuation enforces narrow space before semicolon and question mark', () => {
+  assert.deepEqual(frenchSpacingIssues('Oui\u202F; pourquoi\u202F?', '/fr'), []);
+  assert.equal(frenchSpacingIssues('Oui ; pourquoi ?', '/fr').length, 2);
+  assert.ok(frenchSpacingIssues('Oui\u00A0?', '/fr').some((p) => p.code === 'FR_NARROW_NBSP'));
+});
+
+test('French punctuation rejects NBSP where narrow NBSP is mandatory', () => {
+  for (const sample of ['Oui\u00A0!', 'Oui\u00A0;', 'Oui\u00A0?', '«\u00A0essai\u00A0»']) {
+    assert.ok(frenchSpacingIssues(sample, '/fr').length > 0, sample);
+  }
+});
+
+test('French apostrophe rule rejects straight lexical apostrophes', () => {
+  assert.ok(frenchSpacingIssues("L'application", '/fr').some((p) => p.code === 'FR_APOSTROPHE'));
+  assert.deepEqual(frenchSpacingIssues('L’application', '/fr'), []);
+});
+
+test('UNKNOWN remains a token in French formatted reports', () => {
+  const text = formatQueueReport(queue(fixture()), 'fr', CHECK);
+  assert.ok(text.includes('UNKNOWN'));
+  assert.ok(!text.includes('Inconnu'));
 });
 
 test('accepts synthetic review with Unknown claim and complete provenance', () => {

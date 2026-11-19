@@ -17,8 +17,8 @@ export interface InputDeps {
 
 export type Expanded = { readonly ok: true; readonly argv: readonly string[] } | { readonly ok: false; readonly error: Text };
 
-export const INPUT_HELP_EN = '                    [--config FILE.json] [--routes-file FILE ...]\n';
-export const INPUT_HELP_FR = '                    [--config FICHIER.json] [--routes-file FICHIER ...]\n';
+export const INPUT_HELP_EN = '                    [--config FILE.json] [--routes-file FILE ...] [--html-list FILE ...]\n';
+export const INPUT_HELP_FR = '                    [--config FICHIER.json] [--routes-file FICHIER ...] [--html-list FICHIER ...]\n';
 
 function valueAfter(argv: readonly string[], flag: string): string | null {
   let found: string | null = null;
@@ -68,9 +68,53 @@ export async function expandRoutesFiles(argv: readonly string[], deps: InputDeps
   return { ok: true, argv: out };
 }
 
-/** Both steps, the config file first so that it may name routes files. */
+/** Files named in a list file, one per line. Blank lines and lines that start with `#` are skipped. */
+export function parseHtmlList(text: string): string[] {
+  const seen = new Set<string>();
+  for (const line of text.replace(/^\uFEFF/, '').split(/\r?\n/)) {
+    const file = line.trim();
+    if (file !== '' && !file.startsWith('#')) seen.add(file);
+  }
+  return [...seen];
+}
+
+/**
+ * Replaces each `--html-list FILE` by one `--html` per file the list names. A
+ * site has too many built pages to name on a command line, and a build can
+ * write the list. Paths are used as written, relative to where the command
+ * runs.
+ */
+export async function expandHtmlLists(argv: readonly string[], deps: InputDeps): Promise<Expanded> {
+  if (!argv.includes('--html-list')) return { ok: true, argv };
+  const out: string[] = [];
+  // A file already given with --html is not added a second time.
+  const seen = new Set<string>(argv.filter((_a, i) => argv[i - 1] === '--html'));
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i] ?? '';
+    if (a !== '--html-list') {
+      out.push(a);
+      continue;
+    }
+    const file = argv[++i];
+    if (!file || file.startsWith('--')) return { ok: false, error: { en: '--html-list needs a file.', fr: '--html-list demande un fichier.' } };
+    const files = parseHtmlList(await deps.readText(file));
+    if (files.length === 0) return { ok: false, error: { en: `${file}: The list names no file.`, fr: `${file}\u00A0: La liste ne nomme aucun fichier.` } };
+    const flagLike = files.find((f) => f.startsWith('--'));
+    if (flagLike !== undefined) return { ok: false, error: { en: `${file}: A line of the list looks like an option, not a file: ${flagLike.slice(0, 60)}`, fr: `${file}\u00A0: Une ligne de la liste ressemble à une option et non à un fichier\u00A0: ${flagLike.slice(0, 60)}` } };
+    for (const f of files) {
+      if (seen.has(f)) continue;
+      seen.add(f);
+      out.push('--html', f);
+    }
+  }
+  return { ok: true, argv: out };
+}
+
+/** All three steps, the config file first so that it may name routes files and lists of pages. */
 export async function expandInputs(argv: readonly string[], deps: InputDeps): Promise<Expanded> {
   const withConfig = await expandConfig(argv, deps);
   if (!withConfig.ok) return withConfig;
-  return expandRoutesFiles(withConfig.argv, deps);
+  const withRoutes = await expandRoutesFiles(withConfig.argv, deps);
+  if (!withRoutes.ok) return withRoutes;
+  return expandHtmlLists(withRoutes.argv, deps);
 }

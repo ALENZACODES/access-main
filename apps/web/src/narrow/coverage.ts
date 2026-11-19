@@ -134,12 +134,14 @@ export function countStates(rows: readonly ReportCoverageRow[]): Readonly<Record
 
 const colon = (lang: Lang): string => (lang === 'fr' ? `${NBSP}:` : ':');
 
-const LIMITS = {
+/** What no count of this module can say. Shown with every coverage view. */
+export const COVERAGE_LIMITS = {
   en: 'A check that relates to a criterion looks at part of it, never at the whole. No count here says that a page conforms.',
   fr: 'Un contrôle lié à un critère n’en regarde qu’une partie, jamais la totalité. Aucun décompte ici ne dit qu’une page est conforme.',
 } as const;
 
-const STATE_LABELS: Readonly<Record<ReportState, { readonly en: string; readonly fr: string }>> = {
+/** What one report says about one criterion, in words. */
+export const STATE_LABELS: Readonly<Record<ReportState, { readonly en: string; readonly fr: string }>> = {
   found: { en: 'something found', fr: 'anomalies trouvées' },
   'see-checks': { en: 'a related check ran, read its findings', fr: 'un contrôle lié a été exécuté, lisez ses anomalies' },
   'nothing-found': { en: 'checks ran, nothing found', fr: 'contrôles exécutés, rien trouvé' },
@@ -159,7 +161,7 @@ export function describeCoverage(lang: Lang): string {
         : `Level ${s.level}${colon(lang)} ${s.partlyAutomated} of ${s.total} criteria have at least one automated check, ${s.byHand} have none.`,
     );
   }
-  lines.push(LIMITS[lang]);
+  lines.push(COVERAGE_LIMITS[lang]);
   const byHand = rows.filter((r) => r.kind === 'by-hand');
   if (byHand.length > 0) {
     lines.push(fr ? `Critères sans aucun contrôle, à regarder à la main${colon(lang)}` : `Criteria with no check, to look at by hand${colon(lang)}`);
@@ -178,7 +180,7 @@ export function describeReportCoverage(report: AuditReport, lang: Lang): string 
     fr
       ? `  ${n.found} avec des anomalies trouvées, ${n['see-checks']} à lire dans les anomalies d’un contrôle lié, ${n['nothing-found']} dont les contrôles n’ont rien trouvé, ${n['not-run']} dont les contrôles n’ont pas été exécutés, ${n['by-hand']} sans aucun contrôle.`
       : `  ${n.found} with something found, ${n['see-checks']} to read in the findings of a related check, ${n['nothing-found']} whose checks found nothing, ${n['not-run']} whose checks did not run, ${n['by-hand']} with no check at all.`,
-    `  ${LIMITS[lang]}`,
+    `  ${COVERAGE_LIMITS[lang]}`,
   ];
   if (n['nothing-found'] > 0) {
     lines.push(
@@ -202,13 +204,14 @@ export function describeReportCoverage(report: AuditReport, lang: Lang): string 
 
 const cell = (text: string): string => text.replace(/\|/g, '\\|');
 
-/** A Markdown table of the 55 criteria. With a report, a column says what that report found. */
-export function renderCoverageMarkdown(lang: Lang, report?: AuditReport): string {
+/** A Markdown table of the 55 criteria. With a report, a column says what that report found. With `byHand`, a last column holds a line per criterion number, such as what a person noted when they looked. */
+export function renderCoverageMarkdown(lang: Lang, report?: AuditReport, byHand?: ReadonlyMap<string, string>): string {
   const fr = lang === 'fr';
   const rows = report ? coverageForReport(report) : null;
-  const out: string[] = [fr ? '# Couverture des critères WCAG 2.2 (A et AA)' : '# Coverage of WCAG 2.2 criteria (A and AA)', '', LIMITS[lang], ''];
+  const out: string[] = [fr ? '# Couverture des critères WCAG 2.2 (A et AA)' : '# Coverage of WCAG 2.2 criteria (A and AA)', '', COVERAGE_LIMITS[lang], ''];
   const head = fr ? ['Critère', 'Niveau', 'Contrôles liés'] : ['Criterion', 'Level', 'Related checks'];
   if (rows) head.push(fr ? 'Dans ce rapport' : 'In this report');
+  if (byHand) head.push(fr ? 'À la main' : 'By hand');
   out.push(`| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`);
   const none = fr ? 'aucun, à regarder à la main' : 'none, look by hand';
   coverage().forEach((row, i) => {
@@ -218,6 +221,7 @@ export function renderCoverageMarkdown(lang: Lang, report?: AuditReport): string
       const detail = r.state === 'found' ? (fr ? `${colon(lang)} ${r.failed} à corriger, ${r.unknown} UNKNOWN` : `${colon(lang)} ${r.failed} to fix, ${r.unknown} UNKNOWN`) : '';
       cells.push(`${STATE_LABELS[r.state][lang]}${detail}`);
     }
+    if (byHand) cells.push(cell(byHand.get(row.criterion.sc) ?? '').replace(/\n/g, ' '));
     out.push(`| ${cells.join(' | ')} |`);
   });
   return `${out.join('\n')}\n`;

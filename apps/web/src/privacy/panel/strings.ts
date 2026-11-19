@@ -21,6 +21,7 @@ export type Status =
   | { kind: "save-failed" }
   | { kind: "expired-removed"; count: number }
   | { kind: "list-exported"; format: "csv" | "text" }
+  | { kind: "kept-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
   | DeviceStatus;
@@ -115,6 +116,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Expired items removed from this device: ${s.count}.`;
         case "list-exported":
           return `Data list prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "kept-exported":
+          return `List of everything the App keeps on this device prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
           return "The list is marked as seen.";
         default:
@@ -179,6 +182,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Éléments expirés retirés de cet appareil${NBSP}: ${s.count}.`;
         case "list-exported":
           return `Liste des données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "kept-exported":
+          return `Liste de tout ce que l’App conserve sur cet appareil préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":
           return "La liste est marquée comme vue.";
         default:

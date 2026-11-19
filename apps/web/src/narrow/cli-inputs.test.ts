@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HELP_TEXT, runCli, type CliDeps } from './cli.js';
-import { expandConfig, expandInputs, expandRoutesFiles, type InputDeps } from './cli-inputs.js';
+import { expandConfig, expandHtmlLists, expandInputs, expandRoutesFiles, parseHtmlList, type InputDeps } from './cli-inputs.js';
 import { lintHtml } from './htmllint.js';
 import { frTypographyIssues } from './i18n.js';
 import { parseReport } from './reportio.js';
@@ -224,6 +224,37 @@ describe('the detail format on the command line', () => {
 
   it('lists the new options in the help, in both languages', () => {
     for (const flag of ['--config', '--routes-file']) expect(HELP_TEXT.split(flag).length - 1, flag).toBe(2);
-    expect(HELP_TEXT.match(/digest,detail\]/g)).toHaveLength(2);
+    expect(HELP_TEXT.match(/digest,detail,coverage,worksheet\]/g)).toHaveLength(2);
+  });
+});
+
+describe('parseHtmlList and expandHtmlLists', () => {
+  it('reads one file per line, each once, skipping blank lines and comments', () => {
+    expect(parseHtmlList('\uFEFF# pages\r\ndist/a.html\r\n\r\n  dist/b.html \ndist/a.html\n')).toEqual(['dist/a.html', 'dist/b.html']);
+    expect(parseHtmlList('')).toEqual([]);
+  });
+
+  it('leaves arguments with no list alone', async () => {
+    const argv = ['--html', 'a.html'];
+    expect(await expandHtmlLists(argv, input({}).deps)).toEqual({ ok: true, argv });
+  });
+
+  it('gives one --html per file where the option stood, and skips a file already given', async () => {
+    const { deps } = input({ 'p.txt': 'a.html\nb.html\nc.html\n' });
+    expect(await expandHtmlLists(['--html', 'b.html', '--html-list', 'p.txt', '--out', 'o'], deps)).toEqual({
+      ok: true,
+      argv: ['--html', 'b.html', '--html', 'a.html', '--html', 'c.html', '--out', 'o'],
+    });
+  });
+
+  it('gives a file named by two lists once', async () => {
+    const { deps } = input({ 'p1.txt': 'a.html\n', 'p2.txt': 'a.html\nb.html\n' });
+    const out = await expandHtmlLists(['--html-list', 'p1.txt', '--html-list', 'p2.txt'], deps);
+    expect(out.ok && out.argv).toEqual(['--html', 'a.html', '--html', 'b.html']);
+  });
+
+  it('lets the config file name a list of pages', async () => {
+    const { deps } = input({ 'c.json': '{"htmlList": ["p.txt"], "out": "o"}', 'p.txt': 'a.html\n' });
+    expect(await expandInputs(['--config', 'c.json'], deps)).toEqual({ ok: true, argv: ['--out', 'o', '--html', 'a.html'] });
   });
 });
