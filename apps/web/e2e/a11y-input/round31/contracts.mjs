@@ -1,3 +1,5 @@
+import { URL } from "node:url";
+
 /** Read-only semantic contracts for keyboard and assistive-technology audits. */
 export const LANGUAGES = Object.freeze(["en", "fr"]);
 export const EVIDENCE = Object.freeze(["PRIMARY", "SECONDARY", "COMMUNITY", "UNKNOWN"]);
