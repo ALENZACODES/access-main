@@ -38,7 +38,9 @@ import { buildSummary, summaryToJson } from './summary';
 import { parseViewState } from './thresholds';
 import { PAGE_CSS } from './page';
 import { buildFactsCsv } from './factsCsv';
+import { parseColumns } from './columns';
 import { buildListedJsonFile } from './listedJson';
+import { buildListedTable, buildListedTableFile } from './listedTable';
 import { buildChecklist, buildChecklistFile } from './reviewChecklist';
 import { parseSort } from './sorting';
 import { buildTablesCsv } from './tablesCsv';
@@ -76,7 +78,7 @@ const BASE_HEADERS = {
   'cross-origin-opener-policy': 'same-origin',
 } as const;
 
-type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue' | 'completeness' | 'consistency' | 'checklistMd' | 'checklistCsv' | 'facts' | 'tables' | 'textSummary' | 'listedJson';
+type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue' | 'completeness' | 'consistency' | 'checklistMd' | 'checklistCsv' | 'facts' | 'tables' | 'textSummary' | 'listedJson' | 'listedMd' | 'listedTxt';
 const SUFFIX: Readonly<Record<string, Kind>> = {
   '': 'html',
   '/sources.csv': 'csv',
@@ -92,6 +94,8 @@ const SUFFIX: Readonly<Record<string, Kind>> = {
   '/planning-tables.csv': 'tables',
   '/summary.txt': 'textSummary',
   '/listed-sources.json': 'listedJson',
+  '/listed-sources.md': 'listedMd',
+  '/listed-sources.txt': 'listedTxt',
 };
 
 function header(req: DsRequest, name: string): string | undefined {
@@ -121,7 +125,7 @@ export function matchRoute(url: string, basePath: string = DEFAULT_BASE_PATH): R
   }
   let path = parsed.pathname;
   if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json|\/completeness\.json|\/consistency\.json|\/review-checklist\.md|\/review-checklist\.csv|\/record-facts\.csv|\/planning-tables\.csv|\/summary\.txt|\/listed-sources\.json)?$/.exec(path);
+  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json|\/completeness\.json|\/consistency\.json|\/review-checklist\.md|\/review-checklist\.csv|\/record-facts\.csv|\/planning-tables\.csv|\/summary\.txt|\/listed-sources\.json|\/listed-sources\.md|\/listed-sources\.txt)?$/.exec(path);
   if (!m || (m[2] ?? '') !== basePath) return null;
   return { locale: (m[1] as Locale | undefined) ?? null, kind: SUFFIX[m[3] ?? ''] as Kind, pathname: path, search: parsed.search };
 }
@@ -225,6 +229,13 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
       const file = buildChecklistFile(checklist, format, view.filters, now, locale, { datasetNames: names });
       return respond(req, 200, { ...common, 'content-type': file.mime.replace(';charset=', '; charset='), 'content-disposition': `attachment; filename="${file.filename}"` }, file.text);
     }
+    case 'listedMd':
+    case 'listedTxt': {
+      const table = buildListedTable(audit, view.filters, locale, { sort: parseSort(route.search), columns: parseColumns(route.search) });
+      const names = new Map(audit.datasets.map((d) => [d.id, d.name] as const));
+      const file = buildListedTableFile(table, route.kind === 'listedMd' ? 'md' : 'txt', view.filters, now, locale, { datasetNames: names });
+      return respond(req, 200, { ...common, 'content-type': file.mime.replace(';charset=', '; charset='), 'content-disposition': `attachment; filename="${file.filename}"` }, file.text);
+    }
     case 'listedJson': {
       const file = buildListedJsonFile(audit, view.filters, now, locale, parseSort(route.search));
       return respond(req, 200, { ...common, 'content-type': 'application/json; charset=utf-8', 'content-disposition': `attachment; filename="${file.filename}"` }, file.text);
@@ -269,6 +280,8 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
             tablesHref: `${prefix}/planning-tables.csv`,
             textSummaryHref: `${prefix}/summary.txt`,
             listedJsonHref: `${prefix}/listed-sources.json`,
+            listedMdHref: `${prefix}/listed-sources.md`,
+            listedTxtHref: `${prefix}/listed-sources.txt`,
           },
         }),
       );

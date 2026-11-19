@@ -203,20 +203,20 @@ test("Data status: filters in force are listed above the list and can be removed
   await page.reload();
   const panel = page.getByRole("region", { name: "Data status panel" });
   const list = panel.locator('[data-region="sources"]');
-  await panel.getByLabel("Licence type").selectOption("open");
+  await panel.getByLabel("Licence type", { exact: true }).selectOption("open");
   await expect(list).toContainText("1 filter in force");
   await expect(list.getByRole("row")).toHaveCount(4);
   await panel.getByLabel("Dataset", { exact: true }).selectOption({ label: "Places" });
   await expect(list).toContainText("2 filters in force");
   await expect(list.getByRole("row")).toHaveCount(3);
-  await panel.getByLabel("Licence type").selectOption("unknown");
+  await panel.getByLabel("Licence type", { exact: true }).selectOption("unknown");
   await expect(list).toContainText("No sources match");
   await expect(list).toContainText("Removing one filter would bring sources back.");
   await expect(list.getByRole("button", { name: "Remove filter. Licence type: Unknown (shows 2 sources)" })).toBeVisible();
 
   await list.getByRole("button", { name: "Remove filter. Licence type: Unknown", exact: true }).click();
   await expect(list).toContainText("1 filter in force");
-  await expect(panel.getByLabel("Licence type")).toHaveValue("any");
+  await expect(panel.getByLabel("Licence type", { exact: true })).toHaveValue("any");
   await expect(panel.getByLabel("Dataset", { exact: true })).not.toHaveValue("any");
   await expect(list.getByRole("row")).toHaveCount(3);
   await list.getByRole("button", { name: "Remove filter. Dataset: Places" }).click();
@@ -347,11 +347,11 @@ test("Data status: the list can be narrowed by age of the retrieved date and by 
 
   await panel.getByRole("button", { name: "List these sources. Age of retrieved date: More than 365 days" }).click();
   await expect(panel.getByLabel("Review date", { exact: true })).toHaveValue("any");
-  await expect(panel.getByLabel("Age of retrieved date")).toHaveValue("d366_plus");
+  await expect(panel.getByLabel("Age of retrieved date", { exact: true })).toHaveValue("d366_plus");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Old place");
 
-  await panel.getByLabel("Age of retrieved date").selectOption("unknown");
+  await panel.getByLabel("Age of retrieved date", { exact: true }).selectOption("unknown");
   await expect(list).toContainText("Undated journey");
   await expect(panel.locator('[data-region="announce"]')).toContainText("age of retrieved date unknown date");
 });
@@ -480,4 +480,48 @@ test("Data status: the list can be narrowed from its own counts, a slip in the s
   const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
   await fr.getByRole("button", { name: "Effacer les filtres" }).click();
   await expect(fr.locator('[data-region="sources"]').getByRole("button", { name: "Niveau : UNKNOWN (1)" })).toBeVisible();
+});
+
+test("Data status: extra columns can be added to the list, the listed sources save as a table, and shared pages are listed", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+  const table = list.getByRole("table", { name: "Sources", exact: true });
+
+  await expect(table.getByRole("columnheader")).toHaveCount(5);
+  const chooser = panel.getByRole("group", { name: "More columns" });
+  await chooser.getByLabel("Column: Time to review date").check();
+  await expect(said).toHaveText("1 extra column shown. Time to review date.");
+  await expect(table.getByRole("columnheader")).toHaveCount(6);
+  await expect(table.getByRole("row", { name: /Old place/ })).toContainText("Passed 220 days ago");
+  await expect(table.getByRole("row", { name: /No tier journey/ }).getByRole("cell").last()).toHaveText("UNKNOWN");
+  await chooser.getByLabel("Column: Kind of data").check();
+  await expect(said).toHaveText("2 extra columns shown. Kind of data, Time to review date.");
+  await expect(chooser.getByLabel("Column: Time to review date")).toBeChecked();
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    panel.getByRole("button", { name: "Download the listed sources as a table (Markdown)" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("listed-sources.md");
+  await expect(said).toHaveText("File saved with 3 sources.");
+
+  await chooser.getByLabel("Column: Kind of data").uncheck();
+  await chooser.getByLabel("Column: Time to review date").uncheck();
+  await expect(said).toHaveText("No extra column is shown.");
+  await expect(table.getByRole("columnheader")).toHaveCount(5);
+
+  await expect(panel.getByRole("region", { name: "Pages recorded for more than one source" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await fr.getByRole("group", { name: "Colonnes supplémentaires" }).getByLabel("Colonne\u00A0: Date de révision", { exact: true }).check();
+  await expect(fr.locator('[data-region="announce"]')).toHaveText("1 colonne supplémentaire affichée. Date de révision.");
 });

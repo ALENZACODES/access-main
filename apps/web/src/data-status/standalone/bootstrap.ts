@@ -7,6 +7,7 @@ import type { Locale } from '../dataStatus';
 import { t } from '../i18n';
 import { parseFilters } from '../filters';
 import { parseSort } from '../sorting';
+import { parseColumns } from '../columns';
 import { parseGroup } from '../groupedList';
 import { localeFromPath, resolveLocale } from '../locale';
 import { mountDataStatusPanel, type MountedPanel, type PanelHost } from '../panel';
@@ -92,6 +93,7 @@ export async function bootstrap(deps: BootDeps): Promise<BootResult> {
     initialFilters: parseFilters(deps.search),
     initialSort: parseSort(deps.search),
     initialGroup: parseGroup(deps.search),
+    initialColumns: parseColumns(deps.search),
     onFiltersChange: deps.onSearchChange,
     onExport: deps.onExport,
     getNotices: (l) => issues.map((i) => describeLoadIssue(i, l)),

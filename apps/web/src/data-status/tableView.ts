@@ -1,4 +1,5 @@
 /** How the sources table is arranged (sort, page, grouping, row details), and links that keep every other setting. */
+import { columnParams, parseColumns, type ColumnId } from './columns';
 import { isGroupKey, parseGroup, type GroupKey } from './groupedList';
 import { parsePaging, pagingParams, type Paging } from './paging';
 import { parseSort, sortParams, type SortSpec } from './sorting';
@@ -11,6 +12,8 @@ export interface TableView {
   group?: GroupKey;
   /** Present (true) only when the facts behind each row are shown. */
   details?: true;
+  /** Extra columns, in their fixed order. Present only when at least one is chosen. */
+  columns?: readonly ColumnId[];
 }
 
 /** `?details=1` turns row details on; anything else leaves them off. */
@@ -21,19 +24,22 @@ export function parseDetails(search: string): boolean {
 
 export function parseTableView(search: string): TableView {
   const group = parseGroup(search);
+  const columns = parseColumns(search);
   return {
     sort: parseSort(search),
     paging: parsePaging(search),
     ...(group === 'none' ? {} : { group }),
     ...(parseDetails(search) ? { details: true as const } : {}),
+    ...(columns.length === 0 ? {} : { columns }),
   };
 }
 
 /** The layout part of a table view as query pairs: nothing for one plain table. */
-export function layoutParams(table: Pick<TableView, 'group' | 'details'>): [string, string][] {
+export function layoutParams(table: Pick<TableView, 'group' | 'details' | 'columns'>): [string, string][] {
   const out: [string, string][] = [];
   if (table.group !== undefined && table.group !== 'none' && isGroupKey(table.group)) out.push(['group', table.group]);
   if (table.details === true) out.push(['details', '1']);
+  out.push(...columnParams(table.columns));
   return out;
 }
 

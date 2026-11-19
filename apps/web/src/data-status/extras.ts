@@ -40,3 +40,6 @@ export * from './unknownWord';
 export * from './facets';
 export * from './nameSuggestions';
 export * from './listedJson';
+export * from './columns';
+export * from './listedTable';
+export * from './sharedPages';

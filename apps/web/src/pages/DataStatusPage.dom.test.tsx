@@ -654,4 +654,40 @@ describe("planning sections and extra downloads on the live panel", () => {
     const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
+
+  it("adds extra columns to the list, saves the listed sources as text, and shows the shared pages section", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "No tier stop", source: "Other source", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    const chooser = within(panel).getByRole("group", { name: "More columns" });
+    const sources = () => within(panel).getByRole("table", { name: "Sources" });
+    expect(within(sources()).getAllByRole("columnheader")).toHaveLength(5);
+    user.click(within(chooser).getByLabelText("Column: Age of retrieved date"));
+    hasText(panel, "1 extra column shown. Age of retrieved date.");
+    expect(within(sources()).getAllByRole("columnheader")).toHaveLength(6);
+    hasText(sources(), "3 days");
+    hasText(sources(), "UNKNOWN");
+
+    user.click(within(panel).getByRole("button", { name: "Download the listed sources (text)" }));
+    expect(saved).toHaveLength(1);
+    expect(saved[0]!.type).toBe("text/plain;charset=utf-8");
+    const text = await readBlob(saved[0]!);
+    expect(text.startsWith("Listed sources\n")).toBe(true);
+    expect(text).toContain("3 sources listed, of 3 in all.");
+    expect(text).toContain("Age of retrieved date: 3 days");
+    expect(text).toContain("Tier: UNKNOWN");
+    hasText(panel, "File saved with 3 sources.");
+
+    user.click(within(chooser).getByLabelText("Column: Age of retrieved date"));
+    hasText(panel, "No extra column is shown.");
+    expect(within(sources()).getAllByRole("columnheader")).toHaveLength(5);
+    expect(within(panel).getByRole("heading", { level: 2, name: "Pages recorded for more than one source" })).toBeTruthy();
+    const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
 });

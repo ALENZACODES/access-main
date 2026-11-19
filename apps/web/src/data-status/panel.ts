@@ -44,6 +44,24 @@ import {
   buildNoMatchHints,
   renderDueSummaryHtml,
   clampLimit,
+  buildSharedPages,
+  renderSharedPagesHtml,
+  buildListedTable,
+  buildListedTableFile,
+  columnCellsHtml,
+  columnHeadsHtml,
+  columnParams,
+  describeColumns,
+  describeListedTableSaved,
+  isColumnId,
+  LISTED_TABLE_FORMATS,
+  listedTableAction,
+  listedTableFormatFromAction,
+  listedTableLabel,
+  normaliseColumns,
+  renderColumnChooser,
+  toggleColumn,
+  type ColumnId,
   buildFacets,
   buildListedJsonFile,
   buildNameSuggestions,
@@ -214,6 +232,9 @@ export interface StaticView {
   textSummaryHref?: string;
   /** The listed sources, in the order of the list (JSON). */
   listedJsonHref?: string;
+  /** The listed sources as a Markdown table and as plain text, with the extra columns of the list. */
+  listedMdHref?: string;
+  listedTxtHref?: string;
 }
 
 const esc = escapeHtml;
@@ -300,6 +321,8 @@ export interface LiveList {
   group?: GroupKey | undefined;
   /** Put the facts behind each row under its name. */
   details?: boolean | undefined;
+  /** Extra columns after the five fixed ones. */
+  columns?: readonly ColumnId[] | undefined;
 }
 
 export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, live?: LiveList): string {
@@ -316,6 +339,7 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
   const liveCount = !nav && live ? clampLimit(live.limit, sorted.length) : sorted.length;
   const shown = slice ? slice.items : sorted.slice(0, liveCount);
   const withDetails = nav ? nav.table.details === true : live?.details === true;
+  const columns = normaliseColumns(nav ? (nav.table.columns ?? []) : (live?.columns ?? []));
   const row = (s: AuditedSource): string => {
     const label = esc(`${s.datasetName} / ${s.name ?? t(locale, 'unknownName')}`);
     const name =
@@ -331,7 +355,7 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
     const detail = withDetails ? renderRowDetailHtml(buildRowDetail(s, audit.findings, locale)) : '';
     return (
       `<tr><th scope="row">${name}${detail}</th><td>${esc(s.licence ?? unknown)}</td><td>${date}</td>` +
-      `<td>${statusBadge(s.state, locale)}</td><td>${esc(s.tier ?? unknown)}</td></tr>`
+      `<td>${statusBadge(s.state, locale)}</td><td>${esc(s.tier ?? unknown)}</td>${columnCellsHtml(columns, s, locale)}</tr>`
     );
   };
   const heads =
@@ -339,7 +363,9 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
     sortHeading(locale, 'licence', 'tbl.licence', nav, filters, liveSort) +
     sortHeading(locale, 'retrieved', 'tbl.retrieved', nav, filters, liveSort) +
     sortHeading(locale, 'status', 'tbl.status', nav, filters, liveSort) +
-    sortHeading(locale, 'tier', 'tbl.tier', nav, filters, liveSort);
+    sortHeading(locale, 'tier', 'tbl.tier', nav, filters, liveSort) +
+    // Extra columns are not sortable: the five fixed ones are.
+    columnHeadsHtml(columns, locale);
   const tableOf = (caption: string, sources: readonly AuditedSource[]): string =>
     scrollable(caption, `<table><caption>${esc(caption)}</caption><thead><tr>${heads}</tr></thead><tbody>${sources.map(row).join('')}</tbody></table>`);
   const help = nav ? `<p>${esc(t(locale, 'sort.help'))}</p>` : '';
@@ -447,7 +473,7 @@ export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: F
   return active + tokens + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + facets + suggestions + hints;
 }
 
-export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null, liveLayout?: { group: GroupKey; details: boolean }): string {
+export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null, liveLayout?: { group: GroupKey; details: boolean; columns?: readonly ColumnId[] }): string {
   const stateOpts =
     option('any', t(locale, 'flt.any'), f.state === 'any') +
     FILTER_STATES.map((s) => option(s, t(locale, `state.${s}`), f.state === s)).join('');
@@ -488,7 +514,7 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     `<input type="checkbox" id="ds-f-issues" name="issues" value="1" data-filter="onlyIssues" style="width:24px;height:24px"${f.onlyIssues ? ' checked' : ''}>` +
     `${esc(t(locale, 'flt.onlyIssues'))}</label></div>`;
   if (!form) {
-    return controls + (liveSort === undefined ? '' : renderSortControl(liveSort, locale)) + (liveLayout === undefined ? '' : renderGroupControl(liveLayout.group, locale) + renderDetailsToggle(liveLayout.details, locale)) + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
+    return controls + (liveSort === undefined ? '' : renderSortControl(liveSort, locale)) + (liveLayout === undefined ? '' : renderGroupControl(liveLayout.group, locale) + renderDetailsToggle(liveLayout.details, locale) + renderColumnChooser(liveLayout.columns ?? [], locale)) + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
   }
   const sort = form.table?.sort ?? null;
   const size = form.table?.paging.size ?? DEFAULT_PAGE_SIZE;
@@ -501,7 +527,8 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     ? field('ds-f-size', 'pg.size', `<select id="ds-f-size" name="size" style="${FIELD_STYLE}">${PAGE_SIZES.map((n) => option(String(n), String(n), n === size)).join('')}</select>`) +
       // Grouping and row details are part of the form, so they work without scripts and survive every submit.
       renderGroupControl(form.table.group ?? 'none', locale) +
-      renderDetailsToggle(form.table.details === true, locale)
+      renderDetailsToggle(form.table.details === true, locale) +
+      renderColumnChooser(form.table.columns ?? [], locale)
     : '';
   return (
     `<form method="get" action="${esc(form.action)}">${controls}${sizeField}${hidden}` +
@@ -552,6 +579,15 @@ export function withSort(query: string, sort: SortSpec | null): string {
   return `?${p.toString()}`;
 }
 
+/** The query with the extra columns added; unchanged when none is chosen. */
+export function withColumns(query: string, columns: readonly ColumnId[] | undefined): string {
+  const pairs = columnParams(columns);
+  if (pairs.length === 0) return query;
+  const p = new URLSearchParams(query.replace(/^\?/, ''));
+  for (const [k, v] of pairs) p.set(k, v);
+  return `?${p.toString()}`;
+}
+
 function downloadLink(href: string, label: string): string {
   return `<a href="${esc(href)}" style="display:inline-flex;align-items:center;min-width:44px;min-height:44px">${esc(label)}</a>`;
 }
@@ -568,6 +604,8 @@ export function renderDataStatusPanel(state: PanelState): string {
   const query = serializeViewState({ filters, thresholds });
   const thrQuery = serializeViewState({ filters: NO_FILTERS, thresholds });
   const listQuery = withSort(query, state.table?.sort ?? null);
+  // The table files also follow the extra columns of the list.
+  const tableQuery = withColumns(listQuery, state.table?.columns);
   const actions = sv
     ? `<div>${downloadLink(sv.csvHref + query, t(locale, 'act.exportCsv'))} ${downloadLink(sv.creditsHref, t(locale, 'dl.credits'))} ${downloadLink(sv.summaryHref + thrQuery, t(locale, 'dl.summary'))}` +
       (sv.icsHref ? ` ${downloadLink(sv.icsHref + thrQuery, t(locale, 'dl.ics'))}` : '') +
@@ -579,8 +617,10 @@ export function renderDataStatusPanel(state: PanelState): string {
       (sv.checklistMdHref ? ` ${downloadLink(sv.checklistMdHref + listQuery, checklistLabel('md', locale))}` : '') +
       (sv.checklistCsvHref ? ` ${downloadLink(sv.checklistCsvHref + listQuery, checklistLabel('csv', locale))}` : '') +
       (sv.listedJsonHref ? ` ${downloadLink(sv.listedJsonHref + listQuery, listedJsonLabel(locale))}` : '') +
+      (sv.listedMdHref ? ` ${downloadLink(sv.listedMdHref + tableQuery, listedTableLabel('md', locale))}` : '') +
+      (sv.listedTxtHref ? ` ${downloadLink(sv.listedTxtHref + tableQuery, listedTableLabel('txt', locale))}` : '') +
       `</div>`
-    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')} ${btn(LISTED_JSON_ACTION, listedJsonLabel(locale))}</div>`;
+    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')} ${btn(LISTED_JSON_ACTION, listedJsonLabel(locale))} ${LISTED_TABLE_FORMATS.map((f) => btn(listedTableAction(f), listedTableLabel(f, locale))).join(' ')}</div>`;
   const drillNames = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
   const drill = (target: DrillTarget): string =>
     renderDrillControl(target, locale, {
@@ -604,10 +644,11 @@ export function renderDataStatusPanel(state: PanelState): string {
       cell: (id) => drill(id === 'past' ? { kind: 'state', value: 'stale' } : id === 'unscheduled' ? { kind: 'state', value: 'unknown' } : { kind: 'due', value: id }),
     }) +
     renderReviewCalendarHtml(buildReviewCalendar(audit, state.now), locale) +
+    renderSharedPagesHtml(buildSharedPages(audit), locale) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
     `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
-    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort, sv || !state.live ? undefined : { group: state.live.group ?? 'none', details: state.live.details === true }) +
+    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort, sv || !state.live ? undefined : { group: state.live.group ?? 'none', details: state.live.details === true, columns: state.live.columns ?? [] }) +
     (sv || !state.savedViews ? '' : `<div data-region="views">${renderViewsRegion(audit, locale, filters, state.savedViews)}</div>`) +
     (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
     `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined, sv ? undefined : state.live)}</div>` +
@@ -659,6 +700,8 @@ export interface MountOptions {
   initialSort?: SortSpec | null | undefined;
   /** How the list is grouped to start with; none means one table. */
   initialGroup?: GroupKey | undefined;
+  /** Extra columns to start with, e.g. from the address. */
+  initialColumns?: readonly ColumnId[] | undefined;
   /** Staleness thresholds in days per dataset type (for example parsed from the URL). */
   thresholds?: Thresholds | undefined;
   /** On-device history of totals; today's totals are recorded when live data loads. */
@@ -678,6 +721,7 @@ export interface MountedPanel {
   getFilters(): Filters;
   getSort(): SortSpec | null;
   getGroup(): GroupKey;
+  getColumns(): ColumnId[];
   destroy(): void;
 }
 
@@ -687,6 +731,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   let sort: SortSpec | null = opts.initialSort ?? null;
   let limit = LIVE_STEP;
   let group: GroupKey = opts.initialGroup ?? 'none';
+  let columns: ColumnId[] = normaliseColumns(opts.initialColumns ?? []);
   let details = false;
   // What has been typed as a name for the next saved view. Kept here so redraws do not lose it.
   let viewName = '';
@@ -694,10 +739,11 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   const thresholds: Thresholds = { ...(opts.thresholds ?? {}) };
   const view = (): string => {
     const base = serializeViewState({ filters: { ...filters, query: normaliseQuery(filters.query) }, thresholds });
-    if (sort === null && group === 'none') return base;
+    if (sort === null && group === 'none' && columns.length === 0) return base;
     const p = new URLSearchParams(base.replace(/^\?/, ''));
     for (const [k, v] of sortParams(sort)) p.set(k, v);
     if (group !== 'none') p.set('group', group);
+    for (const [k, v] of columnParams(columns)) p.set(k, v);
     return `?${p.toString()}`;
   };
 
@@ -778,7 +824,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       changes,
       notices: opts.getNotices?.(locale),
       plainTables: opts.plainTables,
-      live: { sort, limit, group, details },
+      live: { sort, limit, group, details, columns },
       savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable, draftName: viewName } : undefined,
     });
   };
@@ -820,7 +866,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     }
     const now = nowFn();
     const audit = auditRegistry(lastRecords, now, thresholds);
-    const results = renderResultsHtml(audit, opts.getLocale(), filters, now, undefined, undefined, { sort, limit, group, details });
+    const results = renderResultsHtml(audit, opts.getLocale(), filters, now, undefined, undefined, { sort, limit, group, details, columns });
     region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
     // Keep the controls that describe the filters in step with them, without touching the form fields.
     const quick = host.querySelector?.('[data-region="quick"]') ?? null;
@@ -849,6 +895,15 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     if (key === 'query' && value.slice(0, MAX_QUERY_LENGTH) === filters.query) return;
     // Any change to what is listed, or its order, starts again from the first rows.
     limit = LIVE_STEP;
+    if (key === 'col') {
+      // Which facts are shown beside each source changed, not which sources are listed.
+      if (!isColumnId(value)) return;
+      columns = toggleColumn(columns, value, el.checked === true);
+      updateResults();
+      announcer.say(describeColumns(columns, opts.getLocale()));
+      opts.onFiltersChange?.(view());
+      return;
+    }
     if (key === 'group' || key === 'details') {
       // How the rows are set out changed, not which sources are listed, so only that is said.
       if (key === 'group') group = isGroupKey(value) ? value : 'none';
@@ -966,6 +1021,15 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         focusFirst([byAction(action ?? ''), FORM_START]);
         opts.onFiltersChange?.(view());
       }
+    } else if (listedTableFormatFromAction(action) !== null && opts.onExportFile) {
+      const format = listedTableFormatFromAction(action);
+      if (format === null) return;
+      const locale = opts.getLocale();
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
+      const table = buildListedTable(audit, filters, locale, { sort, columns });
+      const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
+      opts.onExportFile(buildListedTableFile(table, format, filters, nowFn(), locale, { datasetNames: names }));
+      announcer.say(describeListedTableSaved(table, locale));
     } else if (action === LISTED_JSON_ACTION && opts.onExportFile) {
       const locale = opts.getLocale();
       const audit = auditRegistry(lastRecords, nowFn(), thresholds);
@@ -1053,6 +1117,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     getFilters: () => ({ ...filters }),
     getSort: () => (sort === null ? null : { ...sort }),
     getGroup: () => group,
+    getColumns: () => [...columns],
     destroy: () => {
       host.removeEventListener('click', onClick);
       host.removeEventListener('change', onFilterEvent);
