@@ -132,7 +132,9 @@ describe("PackPlaces accessibility", () => {
     for (const control of container.querySelectorAll("input")) {
       expect(control.labels?.length ?? 0, control.outerHTML).toBeGreaterThan(0);
     }
-    expect(within(container).getAllByRole("radio")).toHaveLength(6);
+    // 6 wheelchair-tag choices plus the choices of the four filters (source, licence, tier, retrieved).
+    expect(within(container).getAllByRole("radiogroup")).toHaveLength(5);
+    expect(within(container).getAllByRole("radio").length).toBeGreaterThan(6);
   });
   it("never uses colour alone: the tag is written out on every card", () => {
     const { container } = show(realPlaces);
@@ -141,3 +143,34 @@ describe("PackPlaces accessibility", () => {
     }
   });
 });
+
+describe("PackPlaces filters", () => {
+  it("offers source, licence, tier and retrieved filters, each with a count", () => {
+    show(small);
+    for (const name of ["Source", "Licence", "Tier", "Retrieved"]) expect(screen.getByRole("radiogroup", { name })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "ODbL 1.0 (3)" })).toBeTruthy();
+  });
+  it("filters by tier, names the filter and lists UNKNOWN last", () => {
+    show([rec("a", "Alpha Hall", "yes", { provenance: { ...prov, tier: 1 } }), rec("b", "Beta Court", "no", { provenance: null })]);
+    const tier = screen.getByRole("radiogroup", { name: "Tier" });
+    expect(within(tier).getAllByRole("radio").map((r) => r.closest("label")?.textContent)).toEqual(["Any (2)", "Tier 1 (1)", "UNKNOWN (1)"]);
+    fireEvent.click(within(tier).getByRole("radio", { name: "UNKNOWN (1)" }));
+    expect(titles()).toEqual(["Beta Court"]);
+    expect(screen.getByText("Filtered by Tier: UNKNOWN.")).toBeTruthy();
+  });
+  it("clears the filters from the empty state", () => {
+    show(small);
+    fireEvent.click(screen.getByRole("radio", { name: "ODbL 1.0 (3)" }));
+    fireEvent.change(screen.getByLabelText("Search by name, address or kind"), { target: { value: "zzz" } });
+    fireEvent.click(screen.getByRole("button", { name: /clear/i }));
+    expect(titles()).toEqual(["Alpha Hall", "Beta Court", "Gamma Gate"]);
+    expect(screen.queryByText(/^Filtered by/)).toBeNull();
+  });
+  it("is in French with the UNKNOWN token and passes axe", async () => {
+    const { container } = show(small, "fr");
+    expect(screen.getByRole("radiogroup", { name: "Niveau" })).toBeTruthy();
+    for (const name of ["Source", "Licence", "Niveau", "Consulté"]) expect(screen.getByRole("radiogroup", { name }).textContent).not.toContain("INCONNU");
+    expect((await axe.run(container, axeRules)).violations).toEqual([]);
+  });
+});
+

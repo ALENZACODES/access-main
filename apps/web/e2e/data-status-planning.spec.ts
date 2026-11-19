@@ -260,7 +260,7 @@ test("Data status: a view can be saved for this page, shown again and deleted, a
   await panel.getByRole("button", { name: "Rename with the typed name. Desk checks (Tier: E)" }).click();
   await expect(panel.locator('[data-region="announce"]')).toHaveText("View renamed.");
   await expect(panel.getByRole("button", { name: "Show view. E only (Tier: E)" })).toBeVisible();
-  await panel.getByRole("button", { name: "List these sources. Status: May be out of date" }).click();
+  await panel.getByRole("button", { name: "List these sources. Status: May be out of date" }).first().click();
   await expect(panel.getByLabel("Status", { exact: true })).toHaveValue("stale");
   await panel.getByRole("button", { name: "Delete view. E only (Tier: E)" }).click();
   await expect(panel).toContainText("No view is saved yet.");
@@ -326,5 +326,33 @@ test("Data status: a count in the tier or dataset table can list its sources", a
   await page.getByRole("button", { name: "Français" }).click();
   const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
   await expect(fr.getByRole("button", { name: "Afficher ces sources. Niveau\u00a0: E" })).toBeVisible();
+});
+
+test("Data status: the list can be narrowed by age of the retrieved date and by review date", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-new", kind: "place", title: "New place", retrieved_at: daysAgo(3) },
+    { id: "p-soon", kind: "place", title: "Soon place", retrieved_at: daysAgo(170) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400) },
+    { id: "j-none", kind: "journey", title: "Undated journey", retrieved_at: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+
+  await panel.getByRole("button", { name: "Review due within 30 days (1)" }).click();
+  await expect(panel.getByLabel("Review date")).toHaveValue("d30");
+  await expect(list.getByRole("row")).toHaveCount(2);
+  await expect(list).toContainText("Soon place");
+
+  await panel.getByRole("button", { name: "List these sources. Age of retrieved date: More than 365 days" }).click();
+  await expect(panel.getByLabel("Review date")).toHaveValue("any");
+  await expect(panel.getByLabel("Age of retrieved date")).toHaveValue("d366_plus");
+  await expect(list.getByRole("row")).toHaveCount(2);
+  await expect(list).toContainText("Old place");
+
+  await panel.getByLabel("Age of retrieved date").selectOption("unknown");
+  await expect(list).toContainText("Undated journey");
+  await expect(panel.locator('[data-region="announce"]')).toContainText("age of retrieved date unknown date");
 });
 

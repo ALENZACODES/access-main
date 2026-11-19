@@ -46,7 +46,7 @@ describe('quick filter presets', () => {
 
 describe('buildQuickFilters', () => {
   it('counts what each filter would list on the sample registry', () => {
-    expect(buildQuickFilters(audit).map((q) => [q.id, q.count])).toEqual([['review', 2], ['stale', 1], ['undated', 1], ['noTier', 1], ['licence', 1]]);
+    expect(buildQuickFilters(audit).map((q) => [q.id, q.count])).toEqual([['review', 2], ['stale', 1], ['dueSoon', 0], ['undated', 1], ['noTier', 1], ['licence', 1]]);
   });
   it('always agrees with applying the filter, on random registries', () => {
     for (let seed = 1; seed <= 20; seed++) {
