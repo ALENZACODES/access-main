@@ -30,6 +30,19 @@ describe("moduleStateFor: named rules", () => {
     for (const module of MODULE_KEYS) {
       expect(pick({ module, availability: "loading" })).toBeNull();
       expect(pick({ module, availability: "stub" })).toBeNull();
+      expect(pick({ module, availability: "stub", online: true, packStored: false })).toBeNull();
+      expect(pick({ module, availability: "loading", online: false, packStored: false })).toBeNull();
+    }
+  });
+  it("offline with no pack, a stub module still gets the offline-no-pack state with its pack download and retry", () => {
+    for (const module of ["places", "journey", "finders"] as const) {
+      expect(pick({ module, availability: "stub", online: false, packStored: false })).toBe("error:offline-no-pack");
+      const c = moduleStateFor({ module, availability: "stub", itemCount: 0, asked: false, online: false, packStored: false });
+      const view = moduleStateView(c!, "en");
+      expect(view.title).toBe("No connection and no offline pack");
+      expect(view.actions.map((a) => a.id)).toEqual(expect.arrayContaining(["download-pack", "retry"]));
+    }
+    for (const module of ["navigator", "games", "help"] as const) {
       expect(pick({ module, availability: "stub", online: false, packStored: false })).toBeNull();
     }
   });
@@ -58,7 +71,7 @@ describe("moduleStateFor: named rules", () => {
   it("shows offline-no-pack for search modules that are offline, have no stored pack and did not get a ready result", () => {
     for (const module of ["places", "journey", "finders"] as const) {
       expect(pick({ module, availability: "error", online: false, packStored: false })).toBe("error:offline-no-pack");
-      expect(pick({ module, availability: "stub", online: false, packStored: false })).toBeNull();
+      expect(pick({ module, availability: "stub", online: false, packStored: false })).toBe("error:offline-no-pack");
     }
   });
   it("does not say there is no pack while that is still being read, or when one is stored", () => {
@@ -127,9 +140,10 @@ describe("moduleStateFor: every combination", () => {
       if (offlineNoPack) expect(!input.online && input.packStored === false && input.availability !== "ready").toBe(true);
     }
   });
-  it("shows nothing while loading or for a module that is not connected", () => {
+  it("shows nothing while loading, or for a stub module unless it is offline with no pack on a search route", () => {
     for (const input of combos.filter((i) => i.availability === "loading" || i.availability === "stub")) {
-      expect(moduleStateFor(input)).toBeNull();
+      const c = moduleStateFor(input);
+      if (c) expect(input.availability === "stub" && !input.online && input.packStored === false && c.kind === "offline-no-pack").toBe(true);
     }
   });
   it("gives every state a next action the person can use with the handlers the pages supply", () => {

@@ -72,11 +72,13 @@ const EMPTY_BY_MODULE: Readonly<Record<ModuleKey, { kind: EmptyKind; needsAsk: b
 export function moduleStateFor(input: ModuleStateInput): ModuleStateChoice | null {
   const { module, availability, itemCount, asked, online, packStored } = input;
   const route = MODULE_ROUTE[module];
-  if (availability === "loading" || availability === "stub") return null;
+  if (availability === "loading") return null;
 
+  // A stub module is not a result: offline with no pack, the person still needs the pack download.
   if (SEARCHES_OFFLINE.has(module) && !online && packStored === false && availability !== "ready") {
     return { route, type: "error", kind: "offline-no-pack" };
   }
+  if (availability === "stub") return null;
   if (availability === "error") {
     return { route, type: "error", kind: module === "games" ? "game-load-failed" : "module-load-failed" };
   }

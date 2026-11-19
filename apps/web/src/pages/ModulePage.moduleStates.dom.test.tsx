@@ -14,11 +14,24 @@ import { initI18n } from "../i18n/index.ts";
 const ready = (moduleId: string, items: unknown[] = []) => ({ moduleId, availability: "ready", items, messageKey: "modules.ready", asOf: null, liveStatus: "unavailable" });
 const failed = (moduleId: string) => ({ moduleId, availability: "error", items: [], messageKey: "modules.error", asOf: null, liveStatus: "unavailable" });
 const fns = { places: vi.fn(), journey: vi.fn(), finders: vi.fn(), navigator: vi.fn(), games: vi.fn() };
-const flags = vi.hoisted(() => ({ online: true }));
+const flags = vi.hoisted(() => ({ online: true, listeners: new Set<() => void>() }));
 const getPack = vi.fn();
 
 vi.mock("../storage/repository.ts", () => ({ getPack: (...a: unknown[]) => getPack(...a) }));
-vi.mock("../shell/useOnline.ts", () => ({ useOnline: () => flags.online }));
+vi.mock("../shell/useOnline.ts", async () => {
+  const react = await import("react");
+  return {
+    useOnline: () => {
+      const [, bump] = react.useState(0);
+      react.useEffect(() => {
+        const l = () => bump((n) => n + 1);
+        flags.listeners.add(l);
+        return () => { flags.listeners.delete(l); };
+      }, []);
+      return flags.online;
+    },
+  };
+});
 vi.mock("../profile/ProfileProvider.tsx", () => ({ useProfileState: () => ({ profile: null }) }));
 vi.mock("../modules/linked.ts", () => ({
   getModules: () => ({
@@ -91,6 +104,46 @@ describe("a list that fails to load shows a retry on every module page", () => {
     fns.places.mockImplementation(async () => failed("places"));
     await page("places");
     expect(await screen.findByRole("heading", { name: "No connection and no offline pack" })).toBeTruthy();
+  });
+});
+
+const stub = (moduleId: string) => ({ moduleId, availability: "stub", items: [], messageKey: "modules.stub", asOf: null, liveStatus: "unavailable" });
+
+describe("going offline with no pack, as in the Day 22 e2e (stub modules, lanes not pinned)", () => {
+  for (const id of ["places", "finders", "journey"] as const) {
+    it(`${id}: online first, then offline, shows the no-pack state with Download an offline pack and Try again`, async () => {
+      fns[id].mockImplementation(async () => stub(id));
+      await page(id);
+      expect(document.querySelector(".state-notice")).toBeNull();
+      flags.online = false;
+      await act(async () => { for (const l of flags.listeners) l(); });
+      const heading = await screen.findByRole("heading", { name: "No connection and no offline pack" });
+      const notice = heading.closest(".state-notice") as HTMLElement;
+      expect(notice.querySelectorAll("[role='alert']").length).toBe(1);
+      expect(notice.querySelector("a[href$='/offline']")?.textContent).toBe("Download an offline pack");
+      expect(notice.querySelector("button")?.textContent).toBe("Try again");
+    });
+  }
+  it("in French, with the same actions", async () => {
+    flags.online = false;
+    fns.finders.mockImplementation(async () => stub("finders"));
+    await page("finders", "fr");
+    expect(await screen.findByRole("heading", { name: "Pas de connexion ni de pack hors ligne" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Télécharger un pack hors ligne" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Réessayer" })).toBeTruthy();
+  });
+  it("online, a stub module shows no state; offline with a stored pack, none either", async () => {
+    fns.places.mockImplementation(async () => stub("places"));
+    await page("places");
+    await screen.findByRole("heading", { level: 1 });
+    expect(document.querySelector(".state-notice")).toBeNull();
+    cleanup();
+    flags.online = false;
+    getPack.mockResolvedValue({ id: "x", content: { places: [] } });
+    await page("places");
+    await screen.findByRole("heading", { level: 1 });
+    await waitFor(() => expect(getPack).toHaveBeenCalled());
+    expect(screen.queryByRole("heading", { name: "No connection and no offline pack" })).toBeNull();
   });
 });
 
