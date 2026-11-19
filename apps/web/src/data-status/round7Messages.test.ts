@@ -25,6 +25,8 @@ import { QUICK_FILTER_MESSAGES } from './quickFilters';
 import { STATUS_BY_TIER_MESSAGES } from './statusByTier';
 import { ACTIVE_FILTER_MESSAGES } from './activeFilters';
 import { NO_MATCH_MESSAGES } from './noMatchHints';
+import { SAVED_VIEW_MESSAGES } from './savedViews';
+import { LISTED_SUMMARY_MESSAGES } from './listedSummary';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -50,6 +52,8 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['statusByTier', STATUS_BY_TIER_MESSAGES],
   ['activeFilters', ACTIVE_FILTER_MESSAGES],
   ['noMatchHints', NO_MATCH_MESSAGES],
+  ['savedViews', SAVED_VIEW_MESSAGES],
+  ['listedSummary', LISTED_SUMMARY_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {

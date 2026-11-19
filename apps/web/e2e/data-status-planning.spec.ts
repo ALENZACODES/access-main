@@ -224,3 +224,35 @@ test("Data status: filters in force are listed above the list and can be removed
   await expect(list.getByText("filter in force")).toHaveCount(0);
 });
 
+test("Data status: a view can be saved for this page, shown again and deleted, and the list is summarised", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const keysBefore = await page.evaluate(() => Object.keys(localStorage).sort());
+  await expect(list).toContainText("In this list: 1 possibly out of date, 1 with no usable date, 1 with no tier.");
+  await expect(panel).toContainText("Choose at least one filter to save a view.");
+
+  await panel.getByLabel("Tier", { exact: true }).selectOption("E");
+  await expect(list).toContainText("In this list: 1 possibly out of date.");
+  await panel.getByRole("button", { name: "Save the current filters as a view" }).click();
+  await expect(panel.locator('[data-region="announce"]')).toHaveText("View saved.");
+  const show = panel.getByRole("button", { name: "Show view. Tier: E" });
+  await expect(show).toHaveAttribute("aria-pressed", "true");
+
+  await list.getByRole("button", { name: "Remove filter. Tier: E", exact: true }).click();
+  await expect(list.getByRole("row")).toHaveCount(4);
+  await show.click();
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(list.getByRole("row")).toHaveCount(2);
+
+  await panel.getByRole("button", { name: "Delete view. Tier: E" }).click();
+  await expect(panel).toContainText("No view is saved yet.");
+  expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual(keysBefore);
+});
+

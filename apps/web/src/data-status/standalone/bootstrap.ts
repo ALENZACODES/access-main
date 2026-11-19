@@ -10,6 +10,7 @@ import { localeFromPath, resolveLocale } from '../locale';
 import { mountDataStatusPanel, type MountedPanel, type PanelHost } from '../panel';
 import { describeLoadIssue, parseRegistryText, type LoadIssue } from '../registryLoader';
 import { createSnapshotStore, type StorageLike } from '../snapshot';
+import { createSavedViewStore } from '../savedViews';
 
 export interface DocLike {
   documentElement: { lang: string };
@@ -85,6 +86,7 @@ export async function bootstrap(deps: BootDeps): Promise<BootResult> {
     getLocale: () => locale,
     now: deps.now,
     store: createSnapshotStore(deps.storage),
+    savedViews: createSavedViewStore(deps.storage),
     initialFilters: parseFilters(deps.search),
     onFiltersChange: deps.onSearchChange,
     onExport: deps.onExport,

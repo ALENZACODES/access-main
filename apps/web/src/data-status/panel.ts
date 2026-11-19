@@ -13,7 +13,7 @@ import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
-import { applyFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
+import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, hasActiveFilters, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
 import { isDatasetKind } from './freshnessPolicy';
@@ -36,12 +36,20 @@ import {
   buildFactsFile,
   buildMarkdownFile,
   buildRecordFacts,
+  addView,
+  buildListedSummary,
   buildNoMatchHints,
   buildQuickFilters,
   clearKeyFromAction,
   kindLabel,
   listActiveFilters,
+  describeSaveOutcome,
+  describeViewDeleted,
+  parseViewAction,
+  removeViewAt,
   renderActiveFiltersHtml,
+  renderListedSummaryHtml,
+  renderSavedViewsHtml,
   renderNoMatchHintsHtml,
   withoutFilter,
   buildStatusByTier,
@@ -69,6 +77,7 @@ import {
   renderTocHtml,
   renderWorkloadHtml,
   runSelfCheck,
+  type SavedViewStore,
   quickFilterFor,
   quickFilterFromAction,
   type ListState,
@@ -108,6 +117,8 @@ export interface PanelState {
    * scrolling, so no focusable scroll container is added. Default false (scrolling regions).
    */
   plainTables?: boolean | undefined;
+  /** Saved views to offer (query texts). Leave undefined to leave the section out; it is never shown in the static view. */
+  savedViews?: { views: readonly string[]; durable: boolean } | undefined;
 }
 
 const esc = escapeHtml;
@@ -252,17 +263,34 @@ export function datasetOptions(audit: AuditResult): DatasetOption[] {
   return out;
 }
 
+/** The quick filters; this is what the quick region holds, so the pressed state can follow the filters. */
+export function renderQuickRegion(audit: AuditResult, locale: Locale, filters: Filters, hrefFor?: (f: Filters) => string): string {
+  return renderQuickFiltersHtml(buildQuickFilters(audit), locale, { active: filters, buttonStyle: buttonInlineStyle(), ...(hrefFor ? { hrefFor } : {}) });
+}
+
+/** The saved views; this is what the views region holds, so saving is offered as soon as a filter is chosen. */
+export function renderViewsRegion(audit: AuditResult, locale: Locale, filters: Filters, saved: { views: readonly string[]; durable: boolean }): string {
+  return renderSavedViewsHtml(saved.views, locale, {
+    durable: saved.durable,
+    active: filters,
+    datasetNames: new Map(datasetOptions(audit).map((d) => [d.id, d.name])),
+    buttonStyle: buttonInlineStyle(),
+  });
+}
+
 /** The source list with the filters in force above it; this is what the sources region holds. */
 export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, hrefWithout?: (f: Filters) => string): string {
   const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
   const activeList = listActiveFilters(filters, locale, names);
   const links = hrefWithout ? { hrefFor: (key: Parameters<typeof withoutFilter>[1]) => hrefWithout(withoutFilter(filters, key)) } : {};
   const active = renderActiveFiltersHtml(activeList, locale, { buttonStyle: buttonInlineStyle(), ...links });
-  const noMatch = audit.sources.length > 0 && applyFilters(audit.sources, filters).length === 0;
+  const listed = applyFilters(audit.sources, filters);
+  const noMatch = audit.sources.length > 0 && listed.length === 0;
   const hints = noMatch
     ? renderNoMatchHintsHtml(buildNoMatchHints(audit.sources, filters, locale, names), locale, { buttonStyle: buttonInlineStyle(), activeCount: activeList.length, ...links })
     : '';
-  return active + renderSourcesRegion(audit, locale, filters, now, nav) + hints;
+  // The summary describes every source the filters list, not only the page of rows on screen.
+  return active + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav) + hints;
 }
 
 export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = []): string {
@@ -386,12 +414,9 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
-    renderQuickFiltersHtml(buildQuickFilters(audit), locale, {
-      active: filters,
-      buttonStyle: buttonInlineStyle(),
-      ...(sv ? { hrefFor: (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` } : {}),
-    }) +
+    `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
     renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit)) +
+    (sv || !state.savedViews ? '' : `<div data-region="views">${renderViewsRegion(audit, locale, filters, state.savedViews)}</div>`) +
     (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
     `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
     coverageSection(state) +
@@ -444,6 +469,8 @@ export interface MountOptions {
   history?: HistoryStore | undefined;
   /** Called with the new query string ('' or '?state=…', thresholds included) after filters change. */
   onFiltersChange?: ((search: string) => void) | undefined;
+  /** Where saved views are kept. Without it the saved-views section is not shown. */
+  savedViews?: SavedViewStore | undefined;
   /** Extra localized notices, for example files that could not be read. */
   getNotices?: ((locale: Locale) => readonly string[]) | undefined;
   /** See PanelState.plainTables. */
@@ -540,6 +567,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       changes,
       notices: opts.getNotices?.(locale),
       plainTables: opts.plainTables,
+      savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable } : undefined,
     });
   };
 
@@ -553,6 +581,13 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     const audit = auditRegistry(lastRecords, now, thresholds);
     const results = renderResultsHtml(audit, opts.getLocale(), filters, now);
     region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
+    // Keep the controls that describe the filters in step with them, without touching the form fields.
+    const quick = host.querySelector?.('[data-region="quick"]') ?? null;
+    if (quick !== null) quick.innerHTML = renderQuickRegion(audit, opts.getLocale(), filters);
+    const views = host.querySelector?.('[data-region="views"]') ?? null;
+    if (views !== null && opts.savedViews) {
+      views.innerHTML = renderViewsRegion(audit, opts.getLocale(), filters, { views: opts.savedViews.load(), durable: opts.savedViews.durable });
+    }
     const next = listState(audit);
     announcer.say(describeListChange(lastList, next, opts.getLocale()));
     lastList = next;
@@ -608,6 +643,28 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     } else if (action === 'export-tables' && opts.onExportFile) {
       const { text, filename, mime } = buildTablesFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
       opts.onExportFile({ text, filename, mime });
+    } else if (opts.savedViews && parseViewAction(action) !== null) {
+      const act = parseViewAction(action);
+      if (act === null) return;
+      const locale = opts.getLocale();
+      if (act.kind === 'save') {
+        const { outcome } = addView(opts.savedViews, filters);
+        refresh();
+        announcer.say(describeSaveOutcome(outcome, locale));
+      } else if (act.kind === 'delete') {
+        const { removed } = removeViewAt(opts.savedViews, act.index);
+        if (!removed) return;
+        refresh();
+        announcer.say(describeViewDeleted(locale));
+      } else {
+        const query = opts.savedViews.load()[act.index];
+        if (query === undefined) return;
+        const before = lastList;
+        filters = parseFilters(query);
+        refresh();
+        if (lastList !== null) announcer.say(describeListChange(before, lastList, locale));
+        opts.onFiltersChange?.(view());
+      }
     } else if (clearKeyFromAction(action) !== null) {
       const key = clearKeyFromAction(action);
       if (key === null) return;

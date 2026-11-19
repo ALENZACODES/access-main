@@ -500,4 +500,29 @@ describe("planning sections and extra downloads on the live panel", () => {
     const select = within(panel).getByLabelText("Tier") as HTMLSelectElement;
     expect([...select.options].map((o) => o.value)).toEqual(["any", "0", "1", "2", "3", "4", "E", "unknown"]);
   });
+
+  it("saves a view for this page only, shows it again, and writes nothing new to this device's storage", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(5), tier: "E" },
+    ];
+    const before = Object.keys(localStorage).sort();
+    await view("en");
+    await screen.findByRole("heading", { name: "Saved views" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    hasText(panel, "Views are kept until you leave this page.");
+    hasText(panel, "Choose at least one filter to save a view.");
+    const tier = within(panel).getByLabelText("Tier") as HTMLSelectElement;
+    tier.value = "E";
+    tier.dispatchEvent(new Event("change", { bubbles: true }));
+    hasText(panel, "1 filter in force");
+    user.click(within(panel).getByRole("button", { name: "Save the current filters as a view" }));
+    expect(within(panel).getByRole("button", { name: "Show view. Tier: E" }).getAttribute("aria-pressed")).toBe("true");
+    hasText(panel, "View saved.");
+    user.click(within(panel).getByRole("button", { name: "Remove filter. Tier: E" }));
+    expect(within(panel).getByRole("button", { name: "Show view. Tier: E" }).getAttribute("aria-pressed")).toBe("false");
+    user.click(within(panel).getByRole("button", { name: "Show view. Tier: E" }));
+    expect((within(panel).getByLabelText("Tier") as HTMLSelectElement).value).toBe("E");
+    expect(Object.keys(localStorage).sort()).toEqual(before);
+  });
 });

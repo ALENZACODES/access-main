@@ -7,6 +7,8 @@ export class FakeHost implements PanelHost {
   listeners: Record<'click' | 'change' | 'input', ((ev: unknown) => void)[]> = { click: [], change: [], input: [] };
   region = { innerHTML: '' };
   announce = { innerHTML: '' };
+  quick = { innerHTML: '' };
+  views = { innerHTML: '' };
   constructor(private readonly withRegion = true) {}
 
   setAttribute(n: string, v: string) {
@@ -22,6 +24,8 @@ export class FakeHost implements PanelHost {
     if (!this.withRegion) return null;
     if (sel === '[data-region="sources"]') return this.region;
     if (sel === '[data-region="announce"]') return this.announce;
+    if (sel === '[data-region="quick"]') return this.quick;
+    if (sel === '[data-region="views"]') return this.views;
     return null;
   }
   fire(type: 'click' | 'change' | 'input', ev: unknown) {

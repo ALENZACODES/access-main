@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyChrome, bootstrap, pickLocale, type BootDeps, type DocLike } from './bootstrap';
 import { createSnapshot, createSnapshotStore, lintFrench, scanHtml, visibleText } from '../index';
 import { FakeHost, NOW, RECORDS, memoryStorage } from '../testkit';
+import { SAVED_VIEWS_KEY, VIEW_SAVE_ACTION } from '../savedViews';
 
 const REGISTRY = JSON.stringify([
   {
@@ -181,3 +182,31 @@ describe('bootstrap: offline and bad input', () => {
     expect(d.host.innerHTML).toContain('Alpha');
   });
 });
+
+describe('bootstrap: saved views', () => {
+  it('keeps saved views on the device when storage is available, and offers them on the next visit', async () => {
+    const d = deps({ search: '?state=stale' });
+    await bootstrap(d);
+    expect(d.host.innerHTML).toContain('Views are kept on this device only.');
+    d.host.click(VIEW_SAVE_ACTION);
+    expect(JSON.parse(d.storage.map.get(SAVED_VIEWS_KEY) ?? 'null')).toEqual(['?state=stale']);
+    const again = deps({ storage: d.storage });
+    await bootstrap(again);
+    expect(again.host.innerHTML).toContain('Show view. Status: May be out of date');
+  });
+  it('keeps them for the page only when storage is not available', async () => {
+    const d = deps({ storage: null, search: '?state=stale' });
+    await bootstrap(d);
+    expect(d.host.innerHTML).toContain('Views are kept until you leave this page.');
+    d.host.click(VIEW_SAVE_ACTION);
+    expect(d.host.innerHTML).toContain('Show view. Status: May be out of date');
+  });
+  it('ignores a saved list that is not readable', async () => {
+    const storage = memoryStorage();
+    storage.setItem(SAVED_VIEWS_KEY, '{broken');
+    const d = deps({ storage });
+    await bootstrap(d);
+    expect(d.host.innerHTML).toContain('No view is saved yet.');
+  });
+});
+
