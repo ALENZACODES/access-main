@@ -5,7 +5,7 @@
  */
 import { listActiveFilters } from './activeFilters';
 import type { FreshnessState, LicenceKind, Locale } from './dataStatus';
-import { isDatasetFilter, isGapField, isLicenceKind, isTierFilter, NO_FILTERS, type Filters, type GapField, type TierFilter } from './filters';
+import { isAgeFilter, isDatasetFilter, isDueWindow, isGapField, isLicenceKind, isTierFilter, NO_FILTERS, type AgeFilter, type DueWindow, type Filters, type GapField, type TierFilter } from './filters';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 
@@ -14,9 +14,11 @@ export type DrillTarget =
   | { kind: 'licence'; value: LicenceKind }
   | { kind: 'state'; value: FreshnessState }
   | { kind: 'dataset'; value: string }
-  | { kind: 'gap'; value: GapField };
+  | { kind: 'gap'; value: GapField }
+  | { kind: 'age'; value: AgeFilter }
+  | { kind: 'due'; value: DueWindow };
 
-export const DRILL_KINDS = ['tier', 'licence', 'state', 'dataset', 'gap'] as const;
+export const DRILL_KINDS = ['tier', 'licence', 'state', 'dataset', 'gap', 'age', 'due'] as const;
 const STATES: readonly FreshnessState[] = ['fresh', 'stale', 'unknown'];
 
 /** The filters a target applies: that one filter and nothing else. */
@@ -32,6 +34,10 @@ export function drillFilters(target: DrillTarget): Filters {
       return { ...NO_FILTERS, dataset: target.value };
     case 'gap':
       return { ...NO_FILTERS, gap: target.value };
+    case 'age':
+      return { ...NO_FILTERS, age: target.value };
+    case 'due':
+      return { ...NO_FILTERS, due: target.value };
   }
 }
 
@@ -53,6 +59,8 @@ export function parseDrillAction(action: string | null | undefined): DrillTarget
   if (kind === 'tier') return isTierFilter(raw) ? { kind, value: raw } : null;
   if (kind === 'licence') return isLicenceKind(raw) ? { kind, value: raw } : null;
   if (kind === 'state') return (STATES as readonly string[]).includes(raw) ? { kind, value: raw as FreshnessState } : null;
+  if (kind === 'due') return isDueWindow(raw) ? { kind, value: raw } : null;
+  if (kind === 'age') return isAgeFilter(raw) ? { kind, value: raw } : null;
   if (kind === 'gap') return isGapField(raw) ? { kind, value: raw } : null;
   if (kind === 'dataset') {
     let id: string;

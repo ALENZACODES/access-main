@@ -5,7 +5,8 @@
  * must be heard again (for example after pressing Apply with no change in results).
  */
 import type { Filters } from './filters';
-import { hasActiveFilters } from './filters';
+import { DUE_WINDOW_DAYS, hasActiveFilters } from './filters';
+import { ageValueLabel } from './ageBands';
 import type { Locale } from './dataStatus';
 import { createTranslator, type Messages } from './localText';
 import { t } from './i18n';
@@ -34,6 +35,8 @@ type Key =
   | 'an.filterLicence'
   | 'an.filterDataset'
   | 'an.filterGap'
+  | 'an.filterAge'
+  | 'an.filterDue'
   | 'an.col.tier'
   | 'an.filterQuery'
   | 'an.filterIssues'
@@ -63,6 +66,8 @@ const MESSAGES: Messages<Key> = {
     'an.filterLicence': 'licence type {value}',
     'an.filterDataset': 'dataset {value}',
     'an.filterGap': 'no {value}',
+    'an.filterAge': 'age of retrieved date {value}',
+    'an.filterDue': 'review due within {days} days',
     'an.col.tier': 'tier',
     'an.filterQuery': 'name contains “{value}”',
     'an.filterIssues': 'only items to review',
@@ -91,6 +96,8 @@ const MESSAGES: Messages<Key> = {
     'an.filterLicence': 'type de licence {value}',
     'an.filterDataset': 'jeu de données {value}',
     'an.filterGap': 'sans {value}',
+    'an.filterAge': 'âge de la date de récupération {value}',
+    'an.filterDue': 'révision prévue d’ici {days} jours',
     'an.col.tier': 'niveau',
     'an.filterQuery': 'le nom contient « {value} »',
     'an.filterIssues': 'seulement les éléments à examiner',
@@ -122,6 +129,8 @@ export function filterParts(f: Filters, locale: Locale): string[] {
   if (f.tier !== undefined) parts.push(f.tier === 'unknown' ? tx(locale, 'an.filterTierUnknown') : tx(locale, 'an.filterTier', { value: f.tier }));
   if (f.licence !== undefined) parts.push(tx(locale, 'an.filterLicence', { value: kindLabel(f.licence, locale).toLowerCase() }));
   if (f.dataset !== undefined) parts.push(tx(locale, 'an.filterDataset', { value: f.dataset }));
+  if (f.age !== undefined) parts.push(tx(locale, 'an.filterAge', { value: (ageValueLabel(f.age, locale) ?? f.age).toLowerCase() }));
+  if (f.due !== undefined) parts.push(tx(locale, 'an.filterDue', { days: DUE_WINDOW_DAYS[f.due] }));
   if (f.gap !== undefined) parts.push(tx(locale, 'an.filterGap', { value: factLabel(f.gap, locale).toLowerCase() }));
   return parts;
 }

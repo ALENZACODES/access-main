@@ -148,19 +148,33 @@ export function shareText(count: number, total: number, locale: Locale): string 
   return new Intl.NumberFormat(locale === 'fr' ? 'fr-CA' : 'en-CA', { style: 'percent', maximumFractionDigits: 0 }).format(count / total);
 }
 
-export function renderAgeBandsHtml(d: AgeDistribution, locale: Locale): string {
+/** The words for one age filter value: a band's label, or the Unknown-date label. Null for an id that is not a band. */
+export function ageValueLabel(id: string, locale: Locale): string | null {
+  if (id === 'unknown') return tx(locale, 'age.unknownRow');
+  const band = AGE_BANDS.find((b) => b.id === id);
+  return band === undefined ? null : bandLabel(band, locale);
+}
+
+/** An extra last column on the age table: a heading and one cell of ready-made HTML for each row ('unknown' is the last row). */
+export interface AgeRowExtra {
+  heading: string;
+  cell: (id: string) => string;
+}
+
+/** With `extra`, a row that counts no source gets an empty cell. */
+export function renderAgeBandsHtml(d: AgeDistribution, locale: Locale, extra?: AgeRowExtra): string {
   const title = `<h2 id="ds-age-title">${escapeHtml(tx(locale, 'age.title'))}</h2>`;
   if (d.total === 0) {
     return `<section aria-labelledby="ds-age-title">${title}<p>${escapeHtml(tx(locale, 'age.none'))}</p></section>`;
   }
   const rows = [
-    ...d.bands.map((b) => ({ label: bandLabel(b, locale), count: b.count })),
-    { label: tx(locale, 'age.unknownRow'), count: d.unknown },
+    ...d.bands.map((b) => ({ id: b.id, label: bandLabel(b, locale), count: b.count })),
+    { id: 'unknown', label: tx(locale, 'age.unknownRow'), count: d.unknown },
   ];
   const body = rows
     .map(
       (r) =>
-        `<tr><th scope="row">${escapeHtml(r.label)}</th><td>${r.count}</td><td>${escapeHtml(shareText(r.count, d.total, locale))}</td></tr>`,
+        `<tr><th scope="row">${escapeHtml(r.label)}</th><td>${r.count}</td><td>${escapeHtml(shareText(r.count, d.total, locale))}</td>${extra ? `<td>${r.count > 0 ? extra.cell(r.id) : ''}</td>` : ''}</tr>`,
     )
     .join('');
   const notes: string[] = [];
@@ -172,7 +186,7 @@ export function renderAgeBandsHtml(d: AgeDistribution, locale: Locale): string {
     `<section aria-labelledby="ds-age-title">${title}<p>${escapeHtml(tx(locale, 'age.intro'))}</p>` +
     `<table><caption>${escapeHtml(tx(locale, 'age.caption'))}</caption><thead><tr>` +
     `<th scope="col">${escapeHtml(tx(locale, 'age.colBand'))}</th><th scope="col">${escapeHtml(tx(locale, 'age.colCount'))}</th>` +
-    `<th scope="col">${escapeHtml(tx(locale, 'age.colShare'))}</th></tr></thead><tbody>${body}</tbody></table>` +
+    `<th scope="col">${escapeHtml(tx(locale, 'age.colShare'))}</th>${extra ? `<th scope="col">${escapeHtml(extra.heading)}</th>` : ''}</tr></thead><tbody>${body}</tbody></table>` +
     notes.map((n) => `<p>${escapeHtml(n)}</p>`).join('') +
     '</section>'
   );
