@@ -46,6 +46,21 @@ describe("validateRules", () => {
     ];
     expect(validateRules(bad, [PLACES]).map((p) => p.code)).toEqual(["unknown-purpose", "empty-key", "duplicate-rule"]);
   });
+  it("reports an overlap whichever rule comes first", () => {
+    const wide: GateRule = { purposeId: "saved-places", key: "app.", prefix: true };
+    const narrow: GateRule = { purposeId: "map-hints", key: "app.hints" };
+    const narrowPrefix: GateRule = { purposeId: "map-hints", key: "app.hints.", prefix: true };
+    for (const rules of [[wide, narrow], [narrow, wide], [wide, narrowPrefix], [narrowPrefix, wide]]) {
+      expect(validateRules(rules, [PLACES, HINTS]).map((p) => p.code)).toEqual(["overlap"]);
+    }
+  });
+  it("does not report rules that cannot meet", () => {
+    const a: GateRule = { purposeId: "saved-places", key: "app.places.", prefix: true };
+    const b: GateRule = { purposeId: "map-hints", key: "app.hints.", prefix: true };
+    const c: GateRule = { purposeId: "map-hints", key: "app.hints" };
+    expect(validateRules([a, b, c], [PLACES, HINTS])).toEqual([]);
+    expect(validateRules([c, b, a], [PLACES, HINTS])).toEqual([]);
+  });
   it("reports two purposes that claim the same key", () => {
     const rules: GateRule[] = [
       { purposeId: "saved-places", key: "app.", prefix: true },
