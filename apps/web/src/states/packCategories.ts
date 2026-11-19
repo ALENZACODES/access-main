@@ -175,7 +175,7 @@ export function kindsLine(summary: KindSummary, locale: Locale): string {
   if (summary.places === 0) return t(locale, "No places to group.", "Aucun lieu à regrouper.");
   const kinds = plural(summary.kinds, locale, ["{n} kind as tagged", "{n} kinds as tagged"], ["{n} type indiqué", "{n} types indiqués"]).replace("{n}", String(summary.kinds));
   const places = placeCount(summary.places, locale);
-  const base = t(locale, `${places}: ${kinds}.`, `${places} : ${kinds}.`);
+  const base = t(locale, `${places}: ${kinds}.`, `${places}\u00a0: ${kinds}.`);
   if (summary.unknownPlaces === 0) return base;
   const unknown = plural(
     summary.unknownPlaces,

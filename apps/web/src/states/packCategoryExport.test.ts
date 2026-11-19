@@ -128,7 +128,7 @@ describe("kindsToText", () => {
     expect(text).toContain("fast food — 2 places");
     expect(kindsToText(rowsOf([raw("a")]), "fr", TODAY)).toContain("cafe — 1 lieu");
     expect(text).toContain("Wheelchair tag: yes 1, limited 1, no 0, designated 0, UNKNOWN 0");
-    expect(text.trimEnd().endsWith("© OpenStreetMap contributors, ODbL-1.0")).toBe(true);
+    expect(text.trimEnd().split("\n").pop()).toBe("© OpenStreetMap contributors");
   });
   it("states the share and the old-source count", () => {
     const text = kindsToText(rows, "en", TODAY);
