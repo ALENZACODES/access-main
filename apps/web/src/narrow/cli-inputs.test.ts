@@ -224,7 +224,7 @@ describe('the detail format on the command line', () => {
 
   it('lists the new options in the help, in both languages', () => {
     for (const flag of ['--config', '--routes-file']) expect(HELP_TEXT.split(flag).length - 1, flag).toBe(2);
-    expect(HELP_TEXT.match(/digest,detail,coverage,worksheet\]/g)).toHaveLength(2);
+    expect(HELP_TEXT.match(/digest,detail,coverage,worksheet,trend,index\]/g)).toHaveLength(2);
   });
 });
 
