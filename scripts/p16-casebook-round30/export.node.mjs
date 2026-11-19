@@ -9,7 +9,7 @@ import {
 } from "./export.mjs";
 import {
   TODAY, caseRecord, secondCase, event, secondEvent,
-  reference, cache, clone,
+  reference, clone,
 } from "./fixtures.node.mjs";
 
 const cases=[caseRecord(),secondCase()];
