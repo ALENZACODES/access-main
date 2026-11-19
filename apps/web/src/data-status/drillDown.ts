@@ -5,7 +5,7 @@
  */
 import { listActiveFilters } from './activeFilters';
 import type { FreshnessState, LicenceKind, Locale } from './dataStatus';
-import { isDatasetFilter, isLicenceKind, isTierFilter, NO_FILTERS, type Filters, type TierFilter } from './filters';
+import { isDatasetFilter, isGapField, isLicenceKind, isTierFilter, NO_FILTERS, type Filters, type GapField, type TierFilter } from './filters';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 
@@ -13,9 +13,10 @@ export type DrillTarget =
   | { kind: 'tier'; value: TierFilter }
   | { kind: 'licence'; value: LicenceKind }
   | { kind: 'state'; value: FreshnessState }
-  | { kind: 'dataset'; value: string };
+  | { kind: 'dataset'; value: string }
+  | { kind: 'gap'; value: GapField };
 
-export const DRILL_KINDS = ['tier', 'licence', 'state', 'dataset'] as const;
+export const DRILL_KINDS = ['tier', 'licence', 'state', 'dataset', 'gap'] as const;
 const STATES: readonly FreshnessState[] = ['fresh', 'stale', 'unknown'];
 
 /** The filters a target applies: that one filter and nothing else. */
@@ -29,6 +30,8 @@ export function drillFilters(target: DrillTarget): Filters {
       return { ...NO_FILTERS, state: target.value };
     case 'dataset':
       return { ...NO_FILTERS, dataset: target.value };
+    case 'gap':
+      return { ...NO_FILTERS, gap: target.value };
   }
 }
 
@@ -50,6 +53,7 @@ export function parseDrillAction(action: string | null | undefined): DrillTarget
   if (kind === 'tier') return isTierFilter(raw) ? { kind, value: raw } : null;
   if (kind === 'licence') return isLicenceKind(raw) ? { kind, value: raw } : null;
   if (kind === 'state') return (STATES as readonly string[]).includes(raw) ? { kind, value: raw as FreshnessState } : null;
+  if (kind === 'gap') return isGapField(raw) ? { kind, value: raw } : null;
   if (kind === 'dataset') {
     let id: string;
     try {

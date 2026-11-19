@@ -297,6 +297,7 @@ test("Data status: a count in the tier or dataset table can list its sources", a
   const list = panel.locator('[data-region="sources"]');
   await panel.getByRole("button", { name: "List these sources. Tier: E" }).click();
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(panel.getByRole("button", { name: "List these sources. Tier: E" })).toBeFocused();
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Desk place");
   await panel.getByRole("button", { name: "List these sources. Dataset: Journeys" }).click();
@@ -305,6 +306,13 @@ test("Data status: a count in the tier or dataset table can list its sources", a
   await expect(list).toContainText("No tier journey");
   await panel.getByRole("button", { name: "List these sources. Licence type: Open licence" }).click();
   await expect(list.getByRole("row")).toHaveCount(4);
+
+  await panel.getByRole("button", { name: "List these sources. Unknown: Tier" }).click();
+  await expect(panel.getByLabel("Unknown fact")).toHaveValue("tier");
+  await expect(list.getByRole("row")).toHaveCount(2);
+  await expect(list).toContainText("No tier journey");
+  await list.getByRole("button", { name: "Remove filter. Unknown: Tier", exact: true }).click();
+  await expect(panel.getByRole("button", { name: "Clear filters" })).toBeFocused();
 
   await page.getByRole("button", { name: "Français" }).click();
   const fr = page.getByRole("region", { name: "Panneau de l’état des données" });

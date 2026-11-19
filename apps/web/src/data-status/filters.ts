@@ -1,4 +1,5 @@
 /** Filter model for the source list. Deep-linkable via the query string; invalid values are ignored. */
+import { isFieldKnown } from './completeness';
 import type { AuditedSource } from './datasetRegistry';
 import { licenceKind, type FreshnessState, type LicenceKind } from './dataStatus';
 import { foldText, matchesQuery } from './searchText';
@@ -24,6 +25,22 @@ export interface Filters {
   licence?: LicenceKind;
   /** A dataset id. Present only when a dataset filter is active. */
   dataset?: string;
+  /** Keeps sources where this fact is unknown. Present only when the filter is active. */
+  gap?: GapField;
+}
+
+/** The four facts every record should carry; the gap filter keeps sources where one of them is unknown. */
+export const GAP_FIELDS = ['source', 'licence', 'date', 'tier'] as const;
+export type GapField = (typeof GAP_FIELDS)[number];
+
+export function isGapField(v: unknown): v is GapField {
+  return typeof v === 'string' && (GAP_FIELDS as readonly string[]).includes(v);
+}
+
+/** Whether the fact is unknown for a source, by the same rules as the completeness tables. */
+export function hasGap(s: AuditedSource, field: GapField): boolean {
+  if (field === 'tier') return s.tier === null;
+  return !isFieldKnown(s, field === 'date' ? 'retrieved' : field);
 }
 
 export const FILTER_LICENCE_KINDS: readonly LicenceKind[] = ['open', 'terms', 'unrecognised', 'unknown'];
@@ -41,7 +58,7 @@ export function isDatasetFilter(v: unknown): v is string {
   return typeof v === 'string' && v.trim() !== '' && v !== 'any' && v.length <= MAX_DATASET_ID_LENGTH;
 }
 
-export const OPTIONAL_FILTER_KEYS = ['tier', 'licence', 'dataset'] as const;
+export const OPTIONAL_FILTER_KEYS = ['tier', 'licence', 'dataset', 'gap'] as const;
 export type OptionalFilterKey = (typeof OPTIONAL_FILTER_KEYS)[number];
 
 /** A copy with one optional filter set, or removed when the value is undefined. The input is not changed. */
@@ -69,6 +86,7 @@ export function parseFilters(search: string): Filters {
   const tier = p.get('tier');
   const licence = p.get('lic');
   const dataset = p.get('ds');
+  const gap = p.get('gap');
   return {
     state: STATES.includes(state as FreshnessState) ? (state as FreshnessState) : 'any',
     kind: isDatasetKind(kind) ? kind : 'any',
@@ -77,6 +95,7 @@ export function parseFilters(search: string): Filters {
     ...(isTierFilter(tier) ? { tier } : {}),
     ...(isLicenceKind(licence) ? { licence } : {}),
     ...(isDatasetFilter(dataset) ? { dataset } : {}),
+    ...(isGapField(gap) ? { gap } : {}),
   };
 }
 
@@ -91,12 +110,13 @@ export function serializeFilters(f: Filters): string {
   if (f.tier !== undefined) p.set('tier', f.tier);
   if (f.licence !== undefined) p.set('lic', f.licence);
   if (f.dataset !== undefined) p.set('ds', f.dataset);
+  if (f.gap !== undefined) p.set('gap', f.gap);
   const s = p.toString();
   return s === '' ? '' : `?${s}`;
 }
 
 export function hasActiveFilters(f: Filters): boolean {
-  return f.state !== 'any' || f.kind !== 'any' || normaliseQuery(f.query) !== '' || f.onlyIssues || f.tier !== undefined || f.licence !== undefined || f.dataset !== undefined;
+  return f.state !== 'any' || f.kind !== 'any' || normaliseQuery(f.query) !== '' || f.onlyIssues || f.tier !== undefined || f.licence !== undefined || f.dataset !== undefined || f.gap !== undefined;
 }
 
 export function needsReview(s: AuditedSource): boolean {
@@ -112,6 +132,7 @@ export function applyFilters(sources: readonly AuditedSource[], f: Filters): Aud
     if (f.tier !== undefined && (s.tier ?? 'unknown') !== f.tier) return false;
     if (f.licence !== undefined && licenceKind(s.licence) !== f.licence) return false;
     if (f.dataset !== undefined && s.datasetId !== f.dataset) return false;
+    if (f.gap !== undefined && !hasGap(s, f.gap)) return false;
     if (q === '') return true;
     return matchesQuery([s.datasetName, s.name ?? '', s.sourceId, s.licence ?? ''].join(' '), q);
   });
