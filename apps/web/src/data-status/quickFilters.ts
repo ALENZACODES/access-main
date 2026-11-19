@@ -9,7 +9,7 @@ import { applyFilters, NO_FILTERS, serializeFilters, type Filters } from './filt
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 
-export const QUICK_FILTER_IDS = ['review', 'stale', 'undated', 'noTier'] as const;
+export const QUICK_FILTER_IDS = ['review', 'stale', 'undated', 'noTier', 'licence'] as const;
 export type QuickFilterId = (typeof QUICK_FILTER_IDS)[number];
 
 const PRESETS: Readonly<Record<QuickFilterId, Filters>> = {
@@ -17,6 +17,7 @@ const PRESETS: Readonly<Record<QuickFilterId, Filters>> = {
   stale: { ...NO_FILTERS, state: 'stale' },
   undated: { ...NO_FILTERS, state: 'unknown' },
   noTier: { ...NO_FILTERS, tier: 'unknown' },
+  licence: { ...NO_FILTERS, licence: 'unrecognised' },
 };
 
 /** A fresh copy of the filters a quick filter applies. Any other filter is cleared. */
@@ -67,6 +68,7 @@ const MESSAGES: Messages<Key> = {
     'qf.stale': 'Possibly out of date ({n})',
     'qf.undated': 'Date unknown ({n})',
     'qf.noTier': 'Tier unknown ({n})',
+    'qf.licence': 'Licence not on the reference list ({n})',
   },
   fr: {
     'qf.title': 'Filtres rapides',
@@ -76,6 +78,7 @@ const MESSAGES: Messages<Key> = {
     'qf.stale': 'Possiblement périmées ({n})',
     'qf.undated': 'Date inconnue ({n})',
     'qf.noTier': 'Niveau inconnu ({n})',
+    'qf.licence': 'Licence absente de la liste de référence ({n})',
   },
 };
 
