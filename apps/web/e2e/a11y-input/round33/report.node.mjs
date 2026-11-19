@@ -4,7 +4,7 @@ import { inspection, diffInspections, safeCell, csvCell, csvLine, exportInspecti
   exportInspectionJsonl, releaseGate, coverage, regressionFindings, reviewQueue, compareCoverage,
   sanitizeFilename, reportSummary, HEADERS } from './report.mjs';
 import { finding } from './contracts.mjs';
-import { journey, clone, announcement, announcements, focusWalk, live, control, bilingual } from './fixtures.node.mjs';
+import { journey, clone, announcement, announcements, focusWalk, live, control } from './fixtures.node.mjs';
 const codes = (issues) => issues.map((issue) => issue.code);
 const has = (issues, code) => assert.ok(codes(issues).includes(code), `${code} absent`);
 const good = () => inspection(journey(), { focus: focusWalk(), announcements: announcements(), live: [live()], actions: ['NEXT', 'SELECT'] });
