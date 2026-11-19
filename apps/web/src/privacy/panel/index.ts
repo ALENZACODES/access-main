@@ -77,3 +77,7 @@ export { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, ROUTE_REPORTS_PURPOS
 export type { SaveResult } from "./live";
 export { groupRefused, refusedLines, renderRefusedHtml, REFUSED_STRINGS } from "./refusedSection";
 export type { RefusedGroup } from "./refusedSection";
+export { OUTSIDE_STRINGS, outsideItems, renderOutsideHtml } from "./outsideSection";
+export type { OutsideItem } from "./outsideSection";
+export { STORAGE_REGISTER, UNSCANNED } from "./storageRegister";
+export type { RegisterRow, UnscannedRow } from "./storageRegister";
