@@ -61,12 +61,7 @@ export * from "./recoveryBatchesCopy";
 export * from "./recoveryBatchesExport";
 export * from "./recoveryBatchesPanel";
 
-export * from "./storageScenario";
-export * from "./storageScenarioCopy";
-export * from "./storageScenarioExport";
-export * from "./storageScenarioPanel";
-
-export * from "./recoveryJournal";
-export * from "./recoveryJournalCopy";
-export * from "./recoveryJournalExport";
-export * from "./recoveryJournalPanel";
+export * from "./recoveryGuide";
+export * from "./recoveryGuideCopy";
+export * from "./recoveryGuideExport";
+export * from "./recoveryGuidePanel";
