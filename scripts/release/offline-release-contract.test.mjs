@@ -6,8 +6,8 @@ import {
   MAX_REFERENCES, MAX_DEPTH, MAX_INPUT_BYTES, CLAIM_FIELDS, RESOURCE_KINDS,
   RESOURCE_POLICIES, ENTRY_STATES, REVIEW_STATES, problem, pointer, plainObject,
   safeIdentifier, safeText, validDay, safeHttpsUrl, safeAssetPath,
-  frenchTextIssues, textPairIssues, privatePaths, unknownKeys,
-  sourceIssues, assetIssues, claimIssues, assetCycles, releaseIssues,
+  frenchTextIssues, textPairIssues, privatePaths,
+  sourceIssues, assetIssues, claimIssues, assetCycles,
   inspectRelease, releaseSummary, canonicalRelease, fingerprintRelease,
   parseRelease, serializeRelease,
 } from './offline-release-contract.mjs';
