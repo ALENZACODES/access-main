@@ -16,3 +16,8 @@ export * from './selfCheck';
 export * from './toc';
 export * from './sourceDetail';
 export * from './tablesCsv';
+export * from './tiers';
+export * from './recordFacts';
+export * from './factsCsv';
+export * from './glossary';
+export * from './textSummary';

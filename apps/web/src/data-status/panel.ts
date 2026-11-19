@@ -33,9 +33,13 @@ import {
   buildActions,
   buildChecksumFile,
   buildLicenceBreakdown,
+  buildFactsFile,
   buildMarkdownFile,
+  buildRecordFacts,
+  buildSummaryFile,
   buildSourceDetails,
   buildTablesFile,
+  buildTierBreakdown,
   buildToc,
   buildWorkload,
   createAnnouncer,
@@ -45,9 +49,12 @@ import {
   renderActionsHtml,
   renderAgeBandsHtml,
   renderGlanceHtml,
+  renderGlossaryHtml,
   renderLicenceBreakdownHtml,
+  renderRecordFactsHtml,
   renderSelfCheckHtml,
   renderSourceDetailsHtml,
+  renderTierBreakdownHtml,
   renderTocHtml,
   renderWorkloadHtml,
   runSelfCheck,
@@ -308,7 +315,7 @@ export function renderDataStatusPanel(state: PanelState): string {
       (sv.icsHref ? ` ${downloadLink(sv.icsHref + thrQuery, t(locale, 'dl.ics'))}` : '') +
       (sv.catalogueHref ? ` ${downloadLink(sv.catalogueHref + thrQuery, t(locale, 'dl.catalogue'))}` : '') +
       `</div>`
-    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))}</div>`;
+    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))}</div>`;
   const head = notices + snapshotLine(state) + actions + renderGlanceHtml(audit, locale);
   const body =
     renderQaReportHtml(buildQaReport(audit, locale), locale) +
@@ -327,8 +334,11 @@ export function renderDataStatusPanel(state: PanelState): string {
     coverageSection(state) +
     renderCompletenessHtml(buildCompleteness(audit), locale) +
     renderLicenceBreakdownHtml(buildLicenceBreakdown(audit), locale) +
+    renderTierBreakdownHtml(buildTierBreakdown(state.records), locale) +
+    renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
+    renderGlossaryHtml(locale) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale));
   const html = head + renderTocHtml(buildToc(body), locale) + body;
   return state.plainTables === true ? plainTables(html) : html;
@@ -526,6 +536,12 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       opts.onExportFile({ text, filename, mime });
     } else if (action === 'export-tables' && opts.onExportFile) {
       const { text, filename, mime } = buildTablesFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
+      opts.onExportFile({ text, filename, mime });
+    } else if (action === 'export-facts' && opts.onExportFile) {
+      const { text, filename, mime } = buildFactsFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
+      opts.onExportFile({ text, filename, mime });
+    } else if (action === 'export-summary' && opts.onExportFile) {
+      const { text, filename, mime } = buildSummaryFile(lastRecords, opts.getLocale(), nowFn(), thresholds);
       opts.onExportFile({ text, filename, mime });
     } else if (action === 'export-checksums') {
       void exportChecksums();

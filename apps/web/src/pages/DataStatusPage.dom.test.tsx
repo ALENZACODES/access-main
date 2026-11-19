@@ -35,6 +35,7 @@ interface Seed {
   licence?: string;
   retrieved: string | null;
   url?: string | null;
+  tier?: number | string | null;
 }
 
 let seeds: Seed[] = [];
@@ -53,7 +54,7 @@ vi.mock("../storage/repository.ts", () => ({
         licence_url: null,
         source_date: "2026-01-01",
         retrieved_at: s.retrieved,
-        tier: 0,
+        tier: s.tier === undefined ? 0 : s.tier,
         prototype_label: "SEEDED",
         freshness: "unknown",
       },
@@ -418,5 +419,68 @@ describe("planning sections and extra downloads on the live panel", () => {
     const panel = screen.getByRole("region", { name: "Data status panel" });
     expect(panel.querySelectorAll("[aria-live]")).toHaveLength(1);
     expect(panel.querySelector('[data-region="sources"]')?.hasAttribute("aria-live")).toBe(false);
+  });
+
+  it("counts saved records by the tier written on each, and lists the ones with a gap", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "No tier stop", retrieved: daysAgo(7), tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    const tiers = within(panel).getByRole("table", { name: "Records by tier" });
+    const rows = within(tiers).getAllByRole("row").map((r) => cells(r));
+    expect(rows.find((r) => r[0] === "Tier 0")?.[2]).toBe("1");
+    expect(rows.find((r) => r[0] === "Tier E")?.[2]).toBe("1");
+    expect(rows.find((r) => r[0] === "Unknown")?.[2]).toBe("1");
+    hasText(panel, "Records that state a tier: 2 of 3.");
+    hasText(panel, "Records that carry all four: 2 of 3.");
+    const gaps = within(panel).getByRole("table", { name: "Records with a missing source, licence, date or tier" });
+    const gapRows = within(gaps).getAllByRole("row").map((r) => cells(r));
+    expect(gapRows).toHaveLength(2);
+    expect(gapRows[1]?.slice(1)).toEqual(["Recorded", "Recorded", "Recorded", "Unknown"]);
+  });
+
+  it("shows the tier sections in French", async () => {
+    seeds = [{ id: "a", title: "Fresh stop", retrieved: daysAgo(3) }];
+    await view("fr");
+    await screen.findByRole("heading", { name: "Niveau de chaque enregistrement" });
+    const panel = screen.getByRole("region", { name: "Panneau de l’état des données" });
+    expect(within(panel).getByRole("table", { name: "Enregistrements selon le niveau" })).toBeTruthy();
+    hasText(panel, "Chaque enregistrement comporte une source, une licence, une date de récupération et un niveau.");
+    expect(within(panel).getByRole("heading", { name: "Termes employés dans ce panneau" })).toBeTruthy();
+  });
+
+  it("saves source, licence, date and tier for each record as a CSV file", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "c", title: "No tier stop", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    user.click(screen.getByRole("button", { name: "Download source, licence, date and tier for each record (CSV)" }));
+    expect(saved).toHaveLength(1);
+    expect(saved[0]!.type).toBe("text/csv;charset=utf-8");
+    const lines = (await readBlob(saved[0]!)).replace(/^\uFEFF/, "").trim().split("\r\n");
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toBe("Dataset,Record ID,Record,Source,Source page,Licence,Retrieved (YYYY-MM-DD),Status,Tier,Facts that are unknown");
+    expect(lines[1]?.split(",").slice(-2)).toEqual(["0", "0"]);
+    expect(lines[2]?.split(",").slice(-2)).toEqual(["Unknown", "2"]);
+  });
+
+  it("has no axe violations with the tier sections, in both languages", async () => {
+    for (const lang of ["en", "fr"] as const) {
+      seeds = [
+        { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+        { id: "c", title: "No tier stop", retrieved: null, tier: "gold" },
+      ];
+      const { container } = await view(lang);
+      await screen.findByRole("heading", { name: /Tier of each record|Niveau de chaque enregistrement/ });
+      const results = await axe.run(container, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+      cleanup();
+    }
   });
 });

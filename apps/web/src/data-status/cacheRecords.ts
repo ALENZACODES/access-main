@@ -16,6 +16,7 @@ export interface CachedEntryLike {
     source_url?: string | null | undefined;
     licence?: string | null | undefined;
     retrieved_at?: string | null | undefined;
+    tier?: string | number | null | undefined;
   };
 }
 
@@ -72,6 +73,7 @@ export function buildCacheRecords(entries: readonly CachedEntryLike[], locale: L
       url: entry.provenance.source_url ?? null,
       licence: entry.provenance.licence ?? null,
       retrievedAt: entry.provenance.retrieved_at ?? null,
+      tier: entry.provenance.tier ?? null,
     });
   }
   return [...byKind.values()].sort((a, b) => a.name.localeCompare(b.name, locale));
