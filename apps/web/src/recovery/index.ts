@@ -411,3 +411,20 @@ export { RecoveryRepairAttempts } from "./RecoveryRepairAttempts";
 export type { RecoveryRepairAttemptsProps } from "./RecoveryRepairAttempts";
 export { ATTEMPT_COPY, addRecoveryAttempt, emptyAttemptDocument, exportRecoveryAttempts, isAttemptProvenance, mergeRecoveryAttempts, parseRecoveryAttempts, previewAttemptMerge, replaceRecoveryAttempt, summarizeRecoveryAttempts, validateAttempt, validateAttemptDocument } from "./recoveryRepairReceipt";
 export type { AttemptDocument, AttemptIssue, AttemptKind, AttemptMergePreview, AttemptOutcome, AttemptProvenance, AttemptResult, AttemptSummary, RecoveryAttempt } from "./recoveryRepairReceipt";
+
+// Local, manual provenance reconciliation. The model does not change pack state.
+export { RecoveryProvenanceLedger } from "./RecoveryProvenanceLedger";
+export type { RecoveryProvenanceLedgerProps } from "./RecoveryProvenanceLedger";
+export { provenanceCopy } from "./recoveryProvenanceCopy";
+export {
+  LEDGER_LIMITS, LEDGER_LICENCES, LEDGER_PHASES, LEDGER_TIERS, LEDGER_VALUES,
+  appendLedgerStatement, compareLedgers, filterLedger, ledgerConflicts, ledgerIds,
+  ledgerSummary, loadLedger, mergeLedgerDocuments, newLedgerDocument, nextLedgerId,
+  parseLedgerDocument, previewLedgerMerge, reviewLedgerStatement, saveLedger,
+  sourceIssue, statementIssue, fieldOverviews, requestedFieldCoverage,
+} from "./recoveryProvenanceLedger";
+export type {
+  LedgerChange, LedgerConflict, LedgerDocument, LedgerFilter, LedgerIssue,
+  LedgerPhase, LedgerPreview, LedgerResult, LedgerSource, LedgerStatement,
+  LedgerSummary, LedgerTier, LedgerValue, LedgerFieldOverview, RequestedLedgerField, LedgerCoverageRow,
+} from "./recoveryProvenanceLedger";
