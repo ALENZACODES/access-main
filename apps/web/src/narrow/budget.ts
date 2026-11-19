@@ -54,7 +54,7 @@ export function parseBudget(text: string): ParsedBudget {
   }
   const checks: Partial<Record<CheckId, Limit>> = {};
   for (const [k, v] of Object.entries(o.checks as Record<string, unknown>)) {
-    if (!KNOWN.includes(k as CheckId)) return bad(`The budget names an unknown check: ${k}.`, `Le budget nomme un contrôle inconnu\u00A0: ${k}.`);
+    if (!KNOWN.includes(k as CheckId)) return bad(`The budget names an unknown check: ${k}.`, `Le budget nomme un contrôle qui n’existe pas\u00A0: ${k}.`);
     const l = v as { fail?: unknown; unknown?: unknown } | null;
     const whole = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0;
     if (!l || !whole(l.fail) || !whole(l.unknown)) return bad(`The limit for ${k} needs whole numbers for fail and unknown.`, `La limite pour ${k} doit avoir des nombres entiers pour fail et unknown.`);
@@ -91,7 +91,7 @@ export function auditBudget(report: AuditReport, budget: Budget): CheckResult {
         rule: 'unknown-grew',
         message: t(
           `${CHECK_LABELS[check].en} has ${have.unknown} unknowns, more than the ${limit.unknown} agreed. Something stopped being measured, or a new case needs a decision.`,
-          `${CHECK_LABELS[check].fr} compte ${have.unknown} cas inconnus, plus que les ${limit.unknown} convenus. Quelque chose n’est plus mesuré, ou un nouveau cas demande une décision.`,
+          `${CHECK_LABELS[check].fr} compte ${have.unknown} cas UNKNOWN, plus que les ${limit.unknown} convenus. Quelque chose n’est plus mesuré, ou un nouveau cas demande une décision.`,
         ),
       });
     }
@@ -136,7 +136,7 @@ export function describeBudget(report: AuditReport, budget: Budget, lang: Lang):
     const have = counts[c] ?? { fail: 0, unknown: 0 };
     const lim = budget.checks[c] ?? { fail: 0, unknown: 0 };
     return lang === 'fr'
-      ? `  ${CHECK_LABELS[c].fr}${colon} ${have.fail}/${lim.fail} anomalies, ${have.unknown}/${lim.unknown} inconnus`
+      ? `  ${CHECK_LABELS[c].fr}${colon} ${have.fail}/${lim.fail} anomalies, ${have.unknown}/${lim.unknown} UNKNOWN`
       : `  ${CHECK_LABELS[c].en}${colon} ${have.fail}/${lim.fail} failures, ${have.unknown}/${lim.unknown} unknown`;
   });
   return [head, ...lines].join('\n');

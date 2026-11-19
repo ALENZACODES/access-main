@@ -57,3 +57,17 @@ out.
 They are most likely in a shared part of the site, such as the header. That is
 a likelihood, not a measurement: each route still has to be looked at after a
 change.
+
+## From the command line
+
+| Option | What it does |
+| --- | --- |
+| `--merge REPORT.json` | Joins an earlier report with this run (repeatable). May be used with nothing else to audit. A newer result replaces an older one for the same route and check, and each replacement is logged. |
+| `--filter "status:fail route:/help*"` | Filters the views for people: the printed text, the HTML and the `--format` files. `narrow-audit.json` stays whole. |
+| `--shared` | Prints the findings that repeat across routes. |
+| `--next-steps` | Prints who each check matters to and how to look by hand. |
+| `--annotations` | Prints workflow command lines (`::error`, `::notice`) for the first findings. |
+
+None of these changes the exit code: it is always decided on the full report.
+
+In French output the status token is UNKNOWN, the same as in English.

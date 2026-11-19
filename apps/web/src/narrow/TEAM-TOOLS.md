@@ -57,3 +57,15 @@ and fragment of routes, and the id values of element ids. Checks, rules,
 statuses, lines and counts are kept. It reduces what is exposed and does not
 promise that nothing personal is left: a route path can still name a person
 or a place, so read the result before sharing it.
+
+## From the command line
+
+| Option | What it does |
+| --- | --- |
+| `--ledger FILE` | Reads the ledger if it exists, adds this run, writes it back and prints the age of open failures. |
+| `--owners FILE` | Prints findings by owner, and the lines of the owners file that match nothing in this run. |
+| `--review FILE` | Prints what people noted for the UNKNOWN findings. With `--out`, writes the worksheet as `narrow-audit.review.<lang>.txt`. |
+| `--redact` | Redacts what is printed and what is written into `--out`. The ledger, history, baseline and budget files still get the full report, because their keys use element ids. |
+
+A redacted `narrow-audit.json` has other element ids than the full one, so do
+not use it later with `--compare`, `--merge` or as a baseline.

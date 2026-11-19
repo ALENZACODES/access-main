@@ -1,5 +1,7 @@
 import { applyWaivers, describeDiff, describeWaived, diffAgainstBaseline, makeBaseline, parseBaseline, parseWaivers, renderJunit, renderSarif } from './ci.js';
 import { applyBudget, describeBudget, parseBudget, ratchet, type Budget } from './budget.js';
+import { mergeEarlier, NO_EXTRAS, parseExtraFlag, runExtras, shownReport, storedReport, EXTRA_HELP_EN, EXTRA_HELP_FR, type ExtraArgs } from './cli-extras.js';
+import { runPlan } from './plan-cli.js';
 import { compareReports, describeComparison, renderComparisonMarkdown } from './compare.js';
 import { renderCsv } from './csv.js';
 import { describeDigest, makeDigest } from './digest.js';
@@ -57,6 +59,8 @@ export interface CliArgs {
   readonly only: readonly CheckId[];
   /** Switch these checks off. */
   readonly skip: readonly CheckId[];
+  /** Options that work on the finished report. */
+  readonly extras: ExtraArgs;
 }
 
 export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest'];
@@ -75,6 +79,8 @@ export const HELP_TEXT =
   '                    [--manifest FILE ...] [--sw FILE ...] [--scan FILE ...] [--allow-host PATTERN ...]\n' +
   '                    [--budget FILE] [--write-budget FILE] [--history FILE] [--history-max N]\n' +
   '                    [--max-weight-kb N] [--only CHECK,...] [--skip CHECK,...] [--compare REPORT.json]\n' +
+  EXTRA_HELP_EN +
+  '       narrow-audit plan --help   (which routes to audit on a large site, from files)\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
   '\n' +
@@ -87,6 +93,8 @@ export const HELP_TEXT =
   '                    [--manifest FICHIER ...] [--sw FICHIER ...] [--scan FICHIER ...] [--allow-host MOTIF ...]\n' +
   '                    [--budget FICHIER] [--write-budget FICHIER] [--history FICHIER] [--history-max N]\n' +
   '                    [--max-weight-kb N] [--only CONTRÔLE,...] [--skip CONTRÔLE,...] [--compare RAPPORT.json]\n' +
+  EXTRA_HELP_FR +
+  '       narrow-audit plan --help   (quelles routes auditer sur un grand site, à partir de fichiers)\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
 
@@ -119,6 +127,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let maxWeightKb: number | null = null;
   const only: CheckId[] = [];
   const skip: CheckId[] = [];
+  let extras: ExtraArgs = NO_EXTRAS;
   let offline = false;
   let strictUnknown = false;
   let help = false;
@@ -268,23 +277,28 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         keyboardMax = n;
         break;
       }
-      default:
-        return fail(`Unknown option ${a}.`, `Option inconnue ${a}.`);
+      default: {
+        const extra = parseExtraFlag(a, argv[i + 1], extras);
+        if (extra.kind === 'other') return fail(`Unknown option ${a}.`, `Option non reconnue ${a}.`);
+        if (extra.kind === 'error') return fail(extra.error.en, extra.error.fr);
+        extras = extra.extras;
+        if (extra.usedValue) i++;
+      }
     }
   }
   if (!help) {
     const offlineOnly = routes.length === 0 && baseUrl === '';
     if (routes.length > 0 && !baseUrl) return fail('--base-url is required with --route.', '--base-url est obligatoire avec --route.');
     if (baseUrl && routes.length === 0) return fail('Give at least one --route.', 'Indiquez au moins un --route.');
-    if (offlineOnly && htmlFiles.length === 0 && dataFile === null && enFile === null && manifestFiles.length === 0 && swFiles.length === 0 && scanFiles.length === 0) {
-      return fail('Nothing to audit. Give --route, --html, --data, --manifest, --sw, --scan or --en and --fr.', 'Rien à auditer. Indiquez --route, --html, --data, --manifest, --sw, --scan ou --en et --fr.');
+    if (offlineOnly && htmlFiles.length === 0 && dataFile === null && enFile === null && manifestFiles.length === 0 && swFiles.length === 0 && scanFiles.length === 0 && extras.mergeFiles.length === 0) {
+      return fail('Nothing to audit. Give --route, --html, --data, --manifest, --sw, --scan, --merge or --en and --fr.', 'Rien à auditer. Indiquez --route, --html, --data, --manifest, --sw, --scan, --merge ou --en et --fr.');
     }
     if (formats.length > 0 && outDir === null) return fail('--format needs --out.', '--format demande --out.');
     if ((enFile === null) !== (frFile === null)) return fail('Give both --en and --fr, or neither.', 'Indiquez --en et --fr ensemble, ou aucun des deux.');
   }
   return {
     ok: true,
-    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, compareFile, historyMax, maxWeightKb, only, skip },
+    args: { baseUrl, routes, lang, outDir, enFile, frFile, offline, strictUnknown, help, profiles, htmlFiles, dataFile, allowLicences, requireFacts, keyboardMax, formats, baselineFile, writeBaselineFile, waiversFile, manifestFiles, swFiles, scanFiles, allowHosts, budgetFile, writeBudgetFile, historyFile, compareFile, historyMax, maxWeightKb, only, skip, extras },
   };
 }
 
@@ -309,6 +323,7 @@ export function exitCode(report: AuditReport, strictUnknown: boolean): 0 | 1 {
 }
 
 export async function runCli(argv: readonly string[], deps: CliDeps): Promise<number> {
+  if (argv[0] === 'plan') return runPlan(argv.slice(1), deps);
   const parsed = parseArgs(argv);
   if (!parsed.ok) {
     deps.log(`${parsed.error.en} / ${parsed.error.fr}`);
@@ -384,6 +399,12 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       const strings = i18n ? [buildRouteAudit('strings', null, stringChecks(i18n.en, i18n.fr))] : [];
       report = makeReport([...strings, ...extra], deps.now());
     }
+    const joined = await mergeEarlier(report, args.extras, deps, args.lang);
+    if (!joined.ok) {
+      deps.log(`${joined.error.en} / ${joined.error.fr}`);
+      return 2;
+    }
+    report = joined.value;
     if (args.only.length > 0 || args.skip.length > 0) report = selectChecks(report, { only: args.only, skip: args.skip });
     let waivedText = '';
     if (args.waiversFile !== null) {
@@ -403,7 +424,8 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
     }
     const beforeBudget = report;
     if (budget) report = applyBudget(report, budget);
-    deps.log(renderText(report, args.lang));
+    const shown = shownReport(report, args.extras);
+    deps.log(renderText(shown, args.lang));
     if (waivedText) deps.log(waivedText);
     if (report.skipped) deps.log(describeSkipped(report.skipped, args.lang));
     if (budget) deps.log(describeBudget(beforeBudget, budget, args.lang));
@@ -433,15 +455,20 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       deps.log(describeComparison(comparison, args.lang).trimEnd());
       if (args.outDir !== null) await deps.writeText(`${args.outDir.replace(/\/+$/, '')}/narrow-audit.compare.${args.lang}.md`, renderComparisonMarkdown(comparison, args.lang));
     }
+    const extraRun = await runExtras(report, args.extras, deps, args.lang, args.outDir);
+    if (!extraRun.ok) {
+      deps.log(`${extraRun.error.en} / ${extraRun.error.fr}`);
+      return 2;
+    }
     if (args.outDir !== null) {
       const dir = args.outDir.replace(/\/+$/, '');
-      await deps.writeText(`${dir}/narrow-audit.json`, renderJson(report));
-      await deps.writeText(`${dir}/narrow-audit.${args.lang}.html`, renderHtml(report, args.lang));
-      if (args.formats.includes('sarif')) await deps.writeText(`${dir}/narrow-audit.sarif`, renderSarif(report));
-      if (args.formats.includes('junit')) await deps.writeText(`${dir}/narrow-audit.junit.xml`, renderJunit(report, args.lang));
-      if (args.formats.includes('markdown')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.md`, renderMarkdown(report, args.lang));
-      if (args.formats.includes('csv')) await deps.writeText(`${dir}/narrow-audit.csv`, renderCsv(report));
-      if (args.formats.includes('digest')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.txt`, describeDigest(makeDigest(report), args.lang));
+      await deps.writeText(`${dir}/narrow-audit.json`, renderJson(storedReport(report, args.extras)));
+      await deps.writeText(`${dir}/narrow-audit.${args.lang}.html`, renderHtml(shown, args.lang));
+      if (args.formats.includes('sarif')) await deps.writeText(`${dir}/narrow-audit.sarif`, renderSarif(shown));
+      if (args.formats.includes('junit')) await deps.writeText(`${dir}/narrow-audit.junit.xml`, renderJunit(shown, args.lang));
+      if (args.formats.includes('markdown')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.md`, renderMarkdown(shown, args.lang));
+      if (args.formats.includes('csv')) await deps.writeText(`${dir}/narrow-audit.csv`, renderCsv(shown));
+      if (args.formats.includes('digest')) await deps.writeText(`${dir}/narrow-audit.${args.lang}.txt`, describeDigest(makeDigest(shown), args.lang));
     }
     if (args.writeBaselineFile !== null) await deps.writeText(args.writeBaselineFile, JSON.stringify(makeBaseline(report), null, 2) + '\n');
     if (args.baselineFile !== null) {

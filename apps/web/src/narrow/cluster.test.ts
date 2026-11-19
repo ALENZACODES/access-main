@@ -94,7 +94,7 @@ describe('describeShared', () => {
     expect(en).toContain('\n  FAIL contrast/low a#nav-help: 3 routes (/, /help, /map)\n');
     expect(en).toContain('\n  UNKNOWN images/alt-generic img#logo: 2 routes (/, /help)\n');
     expect(fr).toContain('\n  À CORRIGER contrast/low a#nav-help\u00A0: 3 routes (/, /help, /map)\n');
-    expect(fr).toContain('\n  INCONNU images/alt-generic img#logo\u00A0: 2 routes (/, /help)\n');
+    expect(fr).toContain('\n  UNKNOWN images/alt-generic img#logo\u00A0: 2 routes (/, /help)\n');
   });
   it('uses the singular for one repeated finding', () => {
     const report = makeReport(['/a', '/b'].map((r) => routeOf(r, { contrast: { checked: 1, entries: [finding('contrast', 'low', 'fail', 'nav')] } })), at(19));

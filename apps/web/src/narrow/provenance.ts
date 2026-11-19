@@ -96,12 +96,12 @@ export function auditProvenance(data: unknown, opts: ProvenanceOptions): CheckRe
       } else if (value === 'unknown') {
         // stays unknown
       } else if (value === null || value === undefined || (typeof value === 'string' && UNKNOWN_SPELLINGS.has(value.trim().toLowerCase()))) {
-        add(fid, 'fact-unknown-spelling', 'An unknown fact must be written "unknown", not left empty or written another way.', 'Un fait inconnu doit s’écrire «\u202Funknown\u202F», sans valeur vide ni autre formulation.');
+        add(fid, 'fact-unknown-spelling', 'An unknown fact must be written "unknown", not left empty or written another way.', 'Un fait UNKNOWN doit s’écrire «\u202Funknown\u202F», sans valeur vide ni autre formulation.');
       } else {
         add(fid, 'fact-value', 'The value must be "yes", "no" or "unknown".', 'La valeur doit être «\u202Fyes\u202F», «\u202Fno\u202F» ou «\u202Funknown\u202F».');
       }
       if (typeof evidence === 'string' && INFERENCE_WORDS.test(evidence.normalize('NFD').replace(/\p{M}/gu, '')) && value !== 'unknown') {
-        add(fid, 'fact-inferred', 'The evidence reads as a guess. Record the fact as unknown instead.', 'La preuve ressemble à une supposition. Consignez plutôt le fait comme inconnu.');
+        add(fid, 'fact-inferred', 'The evidence reads as a guess. Record the fact as unknown instead.', 'La preuve ressemble à une supposition. Consignez plutôt le fait comme UNKNOWN.');
       }
     }
   });

@@ -130,7 +130,7 @@ export function worksheet(report: AuditReport, review: ReviewFile, now: Date, la
   const { pending } = applyReview(report, review, now, maxAgeDays);
   if (pending.length === 0) {
     return fr
-      ? 'Rien à contrôler à la main\u00A0: chaque point inconnu a une note récente. Cela ne dit rien de ce que les contrôles ne regardent pas.\n'
+      ? 'Rien à contrôler à la main\u00A0: chaque point UNKNOWN a une note récente. Cela ne dit rien de ce que les contrôles ne regardent pas.\n'
       : 'Nothing to check by hand: every unknown item has a recent note. This says nothing about what the checks do not look at.\n';
   }
   const lines: string[] = [];
@@ -163,7 +163,7 @@ export function describeReview(result: ReviewResult, lang: Lang): string {
   const lines: string[] = [];
   lines.push(
     fr
-      ? `Revue à la main${colon} ${pluriel(result.reviewed.length, 'point inconnu a une note récente', 'points inconnus ont une note récente')}, ${result.pending.length} en attente.`
+      ? `Revue à la main${colon} ${pluriel(result.reviewed.length, 'point UNKNOWN a une note récente', 'points UNKNOWN ont une note récente')}, ${result.pending.length} en attente.`
       : `Hand review${colon} ${plural(result.reviewed.length, 'unknown item has a recent note', 'unknown items have a recent note')}, ${result.pending.length} waiting.`,
   );
   if (result.reviewed.length > 0) {
@@ -202,7 +202,7 @@ export function describeReview(result: ReviewResult, lang: Lang): string {
   if (result.unmatched.length > 0) {
     lines.push(
       fr
-        ? `  ${pluriel(result.unmatched.length, 'note ne correspond à aucun point inconnu de ce rapport', 'notes ne correspondent à aucun point inconnu de ce rapport')}${colon} l’anomalie a pu disparaître, changer de statut ou d’élément.`
+        ? `  ${pluriel(result.unmatched.length, 'note ne correspond à aucun point UNKNOWN de ce rapport', 'notes ne correspondent à aucun point UNKNOWN de ce rapport')}${colon} l’anomalie a pu disparaître, changer de statut ou d’élément.`
         : `  ${plural(result.unmatched.length, 'note matches no unknown item of this report', 'notes match no unknown item of this report')}${colon} the finding may be gone, or have changed status or element.`,
     );
   }
