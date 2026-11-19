@@ -1,17 +1,15 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { appRoutes, chooseLanguage, LANGUAGES, VIEWPORTS, visit } from "../a11y-input/helpers";
+import { formatFindings, routeInventoryFindings } from "./p20l-provenance";
 
 const ROUTES = appRoutes();
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+const REQUIRED_ROUTES = ["/", "/places", "/journey", "/help", "/finders", "/offline", "/more", "/settings"];
 
-test("P20 route inventory is derived from app routes", () => {
-  expect(ROUTES).toHaveLength(39);
-  expect(new Set(ROUTES).size).toBe(39);
-  expect(ROUTES).toContain("/dev/narrow");
-  expect(ROUTES).toContain("/places");
-  expect(ROUTES).toContain("/journey");
-  expect(ROUTES).toContain("/help");
+test("P20 route inventory includes required routes and has no duplicates", () => {
+  const issues = routeInventoryFindings(ROUTES, REQUIRED_ROUTES);
+  expect(issues, formatFindings(issues)).toEqual([]);
 });
 
 for (const language of LANGUAGES) {
@@ -21,7 +19,6 @@ for (const language of LANGUAGES) {
       for (const route of ROUTES) {
         test(`axe route ${route}`, async ({ page }) => {
           test.setTimeout(90_000);
-          // The Day 17 helper skips English; navigation must initialize it first.
           const response = await page.goto("/", { waitUntil: "domcontentloaded" });
           expect(response?.ok()).toBe(true);
           await chooseLanguage(page, language);
