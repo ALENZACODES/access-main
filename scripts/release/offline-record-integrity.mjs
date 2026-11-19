@@ -17,7 +17,6 @@ const UNKNOWN = 'unknown';
 const PROVENANCE_FIELDS = ['source', 'licence', 'retrievedOn', 'verificationTier'];
 const VALID_TIERS = new Set([
   'PROTOTYPE-UNVERIFIED', 'SEEDED-OPEN-DATA', 'COMMUNITY-REPORTED',
-  'UNVERIFIED', 'VERIFIED',
 ]);
 const POSITIVE = new Set(['yes', 'true', 'accessible', 'available', 'present']);
 const NEGATIVE = new Set(['no', 'false', 'inaccessible', 'unavailable', 'absent']);
@@ -217,7 +216,9 @@ export function inspectRecord(record, index = 0, { today = null } = {}) {
   checkDeepShape(record, root, issues, 0, new WeakSet());
   // The normalized record is suitable for local rendering; it does not erase
   // issues, and callers must not publish a record with outstanding findings.
-  return { issues, normalized: { ...record, claims: sanitizedClaims } };
+  return { issues, normalized: { ...record,
+    verificationTier: VALID_TIERS.has(record.verificationTier) ? record.verificationTier : null,
+    claims: sanitizedClaims } };
 }
 
 /**
