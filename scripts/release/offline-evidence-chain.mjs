@@ -323,10 +323,10 @@ export function formatEvidenceChainReport(result, language = 'en') {
   if (!result || !Array.isArray(result.issues) || !result.summary) return '';
   const fr = language === 'fr';
   const lines = [fr ? 'Contrôle des références hors ligne' : 'Offline citation review'];
-  lines.push(fr ? `Sources : ${result.summary.sources}` : `Sources: ${result.summary.sources}`);
-  lines.push(fr ? `Observations : ${result.summary.observations}` : `Observations: ${result.summary.observations}`);
-  lines.push(fr ? `Déclarations inconnues : ${result.summary.unknown}` : `Unknown claims: ${result.summary.unknown}`);
-  lines.push(fr ? `Chaînes documentées : ${result.summary.structurallySupported}` :
+  lines.push(fr ? `Sources\u00A0: ${result.summary.sources}` : `Sources: ${result.summary.sources}`);
+  lines.push(fr ? `Observations\u00A0: ${result.summary.observations}` : `Observations: ${result.summary.observations}`);
+  lines.push(fr ? `Déclarations inconnues\u00A0: ${result.summary.unknown}` : `Unknown claims: ${result.summary.unknown}`);
+  lines.push(fr ? `Chaînes documentées\u00A0: ${result.summary.structurallySupported}` :
     `Structurally cited claims: ${result.summary.structurallySupported}`);
   for (const item of result.issues) lines.push(`${item.code} ${item.path}`);
   lines.push(fr ? 'Aucune conclusion sur l’accessibilité réelle.' : 'No conclusion about real-world accessibility.');
