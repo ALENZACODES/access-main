@@ -3,7 +3,7 @@
  * decisions. No returned result upgrades uncertain claims or missing sources.
  */
 import {
-  LANGUAGES, STATES, TIERS, auditCollection, calendarOrdinal, canonicalIdentifier,
+  LANGUAGES, TIERS, auditCollection, calendarOrdinal, canonicalIdentifier,
   diagnostic, findRecordIssues, localCachePath, plainObject, sortDiagnostics,
 } from "./contract.mjs";
 
