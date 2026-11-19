@@ -3,14 +3,15 @@
  * It restates the filter model in words; removing one never touches the others.
  */
 import type { Locale } from './dataStatus';
-import { NO_FILTERS, normaliseQuery, withOptionalFilter, type Filters } from './filters';
+import { DUE_WINDOW_DAYS, NO_FILTERS, normaliseQuery, withOptionalFilter, type DueWindow, type Filters } from './filters';
+import { ageValueLabel } from './ageBands';
 import { t } from './i18n';
 import { kindLabel } from './licenceBreakdown';
 import { factLabel } from './recordFacts';
 import { createTranslator, type Messages } from './localText';
 import { escapeHtml } from './sourceList';
 
-export const ACTIVE_FILTER_KEYS = ['state', 'kind', 'query', 'issues', 'tier', 'licence', 'dataset', 'gap'] as const;
+export const ACTIVE_FILTER_KEYS = ['state', 'kind', 'query', 'issues', 'tier', 'licence', 'dataset', 'gap', 'age', 'due'] as const;
 export type ActiveFilterKey = (typeof ACTIVE_FILTER_KEYS)[number];
 
 export interface ActiveFilter {
@@ -30,6 +31,8 @@ type Key =
   | 'af.licence'
   | 'af.dataset'
   | 'af.gap'
+  | 'af.age'
+  | 'af.due'
   | 'af.remove';
 
 const MESSAGES: Messages<Key> = {
@@ -44,6 +47,8 @@ const MESSAGES: Messages<Key> = {
     'af.licence': 'Licence type: {value}',
     'af.dataset': 'Dataset: {value}',
     'af.gap': 'Unknown: {value}',
+    'af.age': 'Age of retrieved date: {value}',
+    'af.due': 'Review due within {days} days',
     'af.remove': 'Remove filter. {label}',
   },
   fr: {
@@ -57,12 +62,19 @@ const MESSAGES: Messages<Key> = {
     'af.licence': 'Type de licence\u00A0: {value}',
     'af.dataset': 'Jeu de données\u00A0: {value}',
     'af.gap': 'Inconnu\u00A0: {value}',
+    'af.age': 'Âge de la date de récupération\u00A0: {value}',
+    'af.due': 'Révision prévue d’ici {days} jours',
     'af.remove': 'Retirer le filtre. {label}',
   },
 };
 
 export const ACTIVE_FILTER_MESSAGES = MESSAGES;
 const tx = createTranslator(MESSAGES);
+
+/** The words for a review-date window, as used for the filter in force and for the control's options. */
+export function dueWindowLabel(window: DueWindow, locale: Locale): string {
+  return tx(locale, 'af.due', { days: DUE_WINDOW_DAYS[window] });
+}
 
 /** The active filters in a fixed order. `datasetNames` maps a dataset id to its display name. */
 export function listActiveFilters(f: Filters, locale: Locale, datasetNames?: ReadonlyMap<string, string>): ActiveFilter[] {
@@ -76,6 +88,8 @@ export function listActiveFilters(f: Filters, locale: Locale, datasetNames?: Rea
   if (f.licence !== undefined) out.push({ key: 'licence', label: tx(locale, 'af.licence', { value: kindLabel(f.licence, locale) }) });
   if (f.dataset !== undefined) out.push({ key: 'dataset', label: tx(locale, 'af.dataset', { value: datasetNames?.get(f.dataset) ?? f.dataset }) });
   if (f.gap !== undefined) out.push({ key: 'gap', label: tx(locale, 'af.gap', { value: factLabel(f.gap, locale) }) });
+  if (f.age !== undefined) out.push({ key: 'age', label: tx(locale, 'af.age', { value: ageValueLabel(f.age, locale) ?? f.age }) });
+  if (f.due !== undefined) out.push({ key: 'due', label: dueWindowLabel(f.due, locale) });
   return out;
 }
 
@@ -94,6 +108,8 @@ export function withoutFilter(f: Filters, key: ActiveFilterKey): Filters {
     case 'licence':
     case 'dataset':
     case 'gap':
+    case 'age':
+    case 'due':
       return withOptionalFilter(f, key, undefined);
   }
 }
