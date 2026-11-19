@@ -78,3 +78,7 @@ export * from './frames.ts';
 export * from './bypass.ts';
 export * from './links.ts';
 export * from './images.ts';
+export * from './sitepages.ts';
+export * from './sitelinks.ts';
+export * from './langpairs.ts';
+export * from './sitefiles.ts';

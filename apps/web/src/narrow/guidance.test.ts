@@ -13,15 +13,15 @@ const CATALOGUED = [
   'external', 'manifest', 'service-worker', 'parity', 'budget', 'weight', 'forms', 'auth', 'status', 'media', 'fixed-space', 'clipping', 'lang-parts',
   'timing', 'purpose', 'tables', 'frames', 'bypass', 'links', 'images', 'plain', 'locale', 'sensory', 'text-zoom', 'headings', 'handlers', 'typography',
   'order', 'generated', 'lookalike', 'regions', 'aria', 'references', 'hrefs', 'css', 'obsolete', 'states', 'lists', 'sectioning', 'constraints', 'symbols',
-  'document', 'table-markup', 'labels', 'identifiers', 'name-words',
+  'document', 'table-markup', 'labels', 'identifiers', 'name-words', 'site-links', 'lang-pairs',
 ] as const;
 
 const all = Object.entries(GUIDANCE);
 
 describe('the catalogue', () => {
-  it('has an entry for each of the 68 checks it was written for, and no other key', () => {
+  it('has an entry for each of the 70 checks it was written for, and no other key', () => {
     expect(Object.keys(GUIDANCE).sort()).toEqual([...CATALOGUED].sort());
-    expect(CATALOGUED).toHaveLength(68);
+    expect(CATALOGUED).toHaveLength(70);
   });
   it('only names checks that exist', () => {
     for (const id of CATALOGUED) expect(CHECK_ORDER as readonly string[], id).toContain(id);

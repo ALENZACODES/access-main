@@ -55,3 +55,8 @@ export * from "./readinessPanel";
 export * from "./offlineDiagnostics";
 export * from "./offlineDiagnosticsCopy";
 export * from "./offlineDiagnosticsPanel";
+
+export * from "./recoveryBatches";
+export * from "./recoveryBatchesCopy";
+export * from "./recoveryBatchesExport";
+export * from "./recoveryBatchesPanel";

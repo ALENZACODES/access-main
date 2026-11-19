@@ -22,6 +22,11 @@ export * from "./dataCredits.ts";
 export * from "./packAudit.ts";
 export * from "./packExport.ts";
 export * from "./packFreshness.ts";
+export * from "./packIssueText.ts";
+export * from "./packDuplicates.ts";
+export * from "./packReport.ts";
+export * from "./downloadFile.ts";
+export { PackReport } from "./PackReport.tsx";
 export { PackFreshness } from "./PackFreshness.tsx";
 
 export {

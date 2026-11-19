@@ -144,6 +144,18 @@ export const GUIDANCE: Readonly<Partial<Record<CheckId, Guidance>>> = {
     'Open three pages side by side and compare the order of the navigation and the place of the help link.',
     'Ouvrez trois pages côte à côte et comparez l’ordre de la navigation et la place du lien d’aide.',
   ),
+  'site-links': g(
+    'People who learn what a link is called on one page and look for the same name on the next, and people who follow a link to one part of a page.',
+    'Les personnes qui apprennent le nom d’un lien sur une page et le cherchent sur la suivante, et celles qui suivent un lien vers une partie de page.',
+    'Follow each link named in the report, and compare the names of the header and footer links on three pages.',
+    'Suivez chaque lien nommé dans le rapport, et comparez les noms des liens d’en-tête et de pied de page sur trois pages.',
+  ),
+  'lang-pairs': g(
+    'People who read one of the two languages and get less, or nothing, in theirs.',
+    'Les personnes qui lisent l’une des deux langues et reçoivent moins, ou rien, dans la leur.',
+    'Open the English and the French version side by side and read both from top to bottom.',
+    'Ouvrez la version anglaise et la version française côte à côte et lisez les deux de haut en bas.',
+  ),
   waiver: g(
     'The team, because an expired waiver hides nothing and a wrong one hides too much.',
     'L’équipe, car une dérogation expirée ne cache rien et une dérogation erronée cache trop.',
