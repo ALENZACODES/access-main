@@ -58,7 +58,12 @@ export type CheckId =
   | 'order'
   | 'generated'
   | 'lookalike'
-  | 'regions';
+  | 'regions'
+  | 'aria'
+  | 'references'
+  | 'hrefs'
+  | 'css'
+  | 'obsolete';
 
 /** WCAG 2.2 success criterion each check relates to, or null when it is not a WCAG check. */
 export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
@@ -114,6 +119,11 @@ export const CHECK_SC: Readonly<Record<CheckId, string | null>> = {
   order: '1.3.2',
   generated: '1.3.1',
   lookalike: '1.3.1',
+  aria: '4.1.2',
+  references: '1.3.1',
+  hrefs: '2.4.4',
+  css: '2.4.7',
+  obsolete: '1.3.1',
   regions: '1.3.1',
 };
 
@@ -171,6 +181,11 @@ export const CHECK_ORDER: readonly CheckId[] = [
   'generated',
   'lookalike',
   'regions',
+  'aria',
+  'references',
+  'hrefs',
+  'css',
+  'obsolete',
 ];
 
 export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
@@ -227,6 +242,11 @@ export const CHECK_LABELS: Readonly<Record<CheckId, LocalizedText>> = {
   generated: { en: 'Text made by CSS', fr: 'Texte produit par le CSS' },
   lookalike: { en: 'Fake headings and lists', fr: 'Faux titres et fausses listes' },
   regions: { en: 'Content outside landmarks', fr: 'Contenu hors des repères' },
+  aria: { en: 'ARIA roles and states', fr: 'Rôles et états ARIA' },
+  references: { en: 'References between elements', fr: 'Références entre éléments' },
+  hrefs: { en: 'Link destinations', fr: 'Destinations des liens' },
+  css: { en: 'Style rules in the page', fr: 'Règles de style dans la page' },
+  obsolete: { en: 'Old presentational markup', fr: 'Ancien balisage de présentation' },
 };
 
 /** A fail is a measured problem. Unknown means the check could not measure, never a pass. */

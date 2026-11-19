@@ -11,6 +11,8 @@ export interface SourceInput extends Provenance {
   name?: string | null | undefined;
   /** Public page for the source; only http(s) links are kept. */
   url?: string | null | undefined;
+  /** The tier as recorded (0 to 4, or E). Read by tiers.ts; anything else shows as Unknown. */
+  tier?: string | number | null | undefined;
 }
 
 export interface SourceRow {

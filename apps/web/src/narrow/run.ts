@@ -14,6 +14,11 @@ import { auditLinks } from './links.js';
 import { auditPurpose } from './purpose.js';
 import { structureInPage, type StructureFacts } from './structure.js';
 import { auditLookalike } from './lookalike.js';
+import { auditAria } from './aria.js';
+import { auditCss } from './cssrules.js';
+import { auditHrefs } from './hrefs.js';
+import { auditObsolete } from './obsolete.js';
+import { auditReferences } from './references.js';
 import { auditRegions, regionsInPage, type RegionFacts } from './regions.js';
 import { auditGenerated, generatedInPage, type GeneratedFacts } from './generated.js';
 import { auditHandlers } from './handlers.js';
@@ -148,7 +153,7 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
     ...(input.structure ? structureResults(input.structure) : {}),
     ...(input.prose ? proseResults(input.prose) : {}),
     ...(input.layout ? layoutResults(input.layout) : {}),
-    ...(input.html !== undefined ? { handlers: auditHandlers(input.html), lookalike: auditLookalike(input.html) } : {}),
+    ...(input.html !== undefined ? { handlers: auditHandlers(input.html), lookalike: auditLookalike(input.html), ...markupResults(input.html) } : {}),
     ...(input.textZoom ? { 'text-zoom': auditTextZoom(input.textZoom) } : {}),
     ...(input.resources ? { external: auditResources(input.resources, input.allowHosts ? { allow: input.allowHosts } : {}) } : {}),
     ...(kb ? { keyboard: kb.keyboard, 'focus-visible': kb.focusVisible } : {}),
@@ -160,6 +165,11 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
       : {}),
   };
   return buildRouteAudit(route, viewportWidth, results, snapshot.unmeasured, snapshot.truncated);
+}
+
+/** The checks that read roles, references, link destinations, page styles and old markup from the text of the markup. */
+export function markupResults(html: string): Parameters<typeof buildRouteAudit>[2] {
+  return { aria: auditAria(html), references: auditReferences(html), hrefs: auditHrefs(html), css: auditCss(html), obsolete: auditObsolete(html) };
 }
 
 /** The checks that read how the page is laid out. */

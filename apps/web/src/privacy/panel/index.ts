@@ -71,3 +71,5 @@ export { APPROVED_CLAIMS, claimIssues } from "./claims";
 export type { ClaimIssue } from "./claims";
 export { NO_SERVER_POLICY, assertPolicy, checkPolicy } from "./policy";
 export type { AppPolicy, PolicyCode, PolicyInput, PolicyProblem } from "./policy";
+export { gateStorage, removeForPurpose, ruleFor, validateRules } from "./consentGate";
+export type { GateProblem, GateProblemCode, GateRule, GatedStorage, RefusedWrite } from "./consentGate";
