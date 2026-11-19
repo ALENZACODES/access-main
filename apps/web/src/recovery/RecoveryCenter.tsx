@@ -28,10 +28,8 @@ import { RecoveryDryRunPanel } from "./RecoveryDryRunPanel";
 import { RecoveryCaseJournal } from "./RecoveryCaseJournal";
 import { RecoveryTaskBoard } from "./RecoveryTaskBoard";
 import { RecoveryRepairAttempts } from "./RecoveryRepairAttempts";
-import { RecoveryFailureChecklist } from "./RecoveryFailureChecklist";
-import { RecoveryProvenanceLedger } from "./RecoveryProvenanceLedger";
-import { RecoveryHandoffPanel } from "./RecoveryHandoffPanel";
-import { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
+import { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
+import { RecoveryCheckpointPanel } from "./RecoveryCheckpointPanel";
 import { planPackRepairs } from "./recoveryPolicy";
 
 /** This is a complete local shell widget; routes can mount it without a service. */
@@ -205,13 +203,9 @@ export function RecoveryCenter({
       <RecoveryTaskBoard locale={locale} records={inventory} saveFile={saveFile} />
       <RecoveryRepairAttempts locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
-      <RecoveryFailureChecklist locale={locale} records={inventory}
+      <RecoveryTransferPreflight locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
-      <RecoveryProvenanceLedger locale={locale} records={inventory}
-        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
-      <RecoveryHandoffPanel locale={locale} records={inventory}
-        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
-      <RecoveryDecisionMatrix locale={locale} records={inventory}
+      <RecoveryCheckpointPanel locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>

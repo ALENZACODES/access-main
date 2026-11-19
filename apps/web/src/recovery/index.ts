@@ -412,31 +412,66 @@ export type { RecoveryRepairAttemptsProps } from "./RecoveryRepairAttempts";
 export { ATTEMPT_COPY, addRecoveryAttempt, emptyAttemptDocument, exportRecoveryAttempts, isAttemptProvenance, mergeRecoveryAttempts, parseRecoveryAttempts, previewAttemptMerge, replaceRecoveryAttempt, summarizeRecoveryAttempts, validateAttempt, validateAttemptDocument } from "./recoveryRepairReceipt";
 export type { AttemptDocument, AttemptIssue, AttemptKind, AttemptMergePreview, AttemptOutcome, AttemptProvenance, AttemptResult, AttemptSummary, RecoveryAttempt } from "./recoveryRepairReceipt";
 
-// Manual failure checklist and local source reconciliation.
-export { RecoveryFailureChecklist } from "./RecoveryFailureChecklist";
-export type { RecoveryFailureChecklistProps } from "./RecoveryFailureChecklist";
-export { CHECKLIST_STEPS, FAILURE_CHECKLIST_COPY, changeChecklistStep, checklistCounts, defaultChecklist, exportChecklist, importChecklist, previewChecklistReplacement, validChecklistProvenance, validateChecklist } from "./recoveryFailureChecklist";
-export type { ChecklistState, ChecklistItem, ChecklistProvenance, FailureChecklist, FailureCause, FailureKind } from "./recoveryFailureChecklist";
-export { RecoveryProvenanceLedger } from "./RecoveryProvenanceLedger";
-export type { RecoveryProvenanceLedgerProps } from "./RecoveryProvenanceLedger";
-export { provenanceCopy } from "./recoveryProvenanceCopy";
-export { LEDGER_LIMITS, LEDGER_LICENCES, LEDGER_PHASES, LEDGER_TIERS, LEDGER_VALUES, appendLedgerStatement, fieldOverviews, filterLedger, ledgerConflicts, ledgerIds, ledgerSummary, loadLedger, mergeLedgerDocuments, newLedgerDocument, nextLedgerId, previewLedgerMerge, reviewLedgerStatement, saveLedger } from "./recoveryProvenanceLedger";
-export type { LedgerDocument, LedgerFilter, LedgerPhase, LedgerStatement, LedgerTier, LedgerValue } from "./recoveryProvenanceLedger";
+// Manual, offline-only preflight and append-only review timeline.
+export { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
+export type { RecoveryTransferPreflightProps } from "./RecoveryTransferPreflight";
+export {
+  EVIDENCE_TIERS, PREFLIGHT_LIMITS, TRANSFER_CONDITIONS, TRANSFER_KINDS, TRANSFER_STAGES,
+  TRANSFER_LICENCES, appendTransferCandidate, assessTransferCandidate, assessTransferDocument,
+  decodeTransferDocument, encodeTransferDocument, filterTransferCandidates, mergeTransferDocuments,
+  newTransferDocument, summarizeTransferDocument, transferPackSummaries, transferPreviewMerge,
+  transitionTransferCandidate, validTransferProvenance, validateTransferCandidate, validateTransferDocument,
+} from "./recoveryTransferPreflight";
+export type {
+  EvidenceTier, TransferCondition, TransferKind, TransferStage, TransferIssue, TransferDecision,
+  TransferReadiness, TransferProvenance, TransferCandidate, TransferDocument, TransferResult,
+  PreflightFinding, PreflightOverview, PreflightFilter, PreflightMergePreview,
+} from "./recoveryTransferPreflight";
+export { recoveryTransferCopy } from "./recoveryTransferCopy";
+export type { PreflightCopy } from "./recoveryTransferCopy";
+export {
+  HISTORY_LIMIT, HISTORY_BYTE_LIMIT, emptyHistory, validateHistoryEvent, validateHistory,
+  appendHistoryEvent, amendHistoryEvent, historyForCandidate, countHistoryActions,
+  validateTransferBundle, prepareTransferBundle, serializeTransferBundle, parseTransferBundle,
+  previewTransferBundleMerge, mergeTransferBundles, reconcileTransferHistory, candidateLatestCondition,
+  transferBundleHasCandidate,
+} from "./recoveryTransferHistory";
+export type {
+  TransferHistoryAction, TransferHistoryEvent, TransferHistory, HistoryIssue, HistoryResult,
+  TransferBundle, TransferBundleMerge,
+} from "./recoveryTransferHistory";
 
-// Local, manual recovery handoff.
-export { RecoveryHandoffPanel } from "./RecoveryHandoffPanel";
-export type { RecoveryHandoffPanelProps } from "./RecoveryHandoffPanel";
-export { handoffCopy } from "./recoveryHandoffCopy";
-export type { HandoffCopy } from "./recoveryHandoffCopy";
-export { HANDOFF_LIMITS, HANDOFF_LICENCES, HANDOFF_OPERATIONS, HANDOFF_CONDITIONS, HANDOFF_DECISIONS, HANDOFF_TIERS, appendHandoffCase, appendHandoffEvent, currentHandoffDecision, exportHandoffDocument, filterHandoffCases, handoffForPack, handoffSummary, handoffUpdatedAt, mergeHandoffDocuments, newHandoffDocument, nextEventId, nextHandoffId, parseHandoffDocument, previewHandoffMerge, validHandoffSource, validateHandoffCase, validateHandoffDocument, validateHandoffEvent } from "./recoveryHandoff";
-export type { HandoffOperation, HandoffCondition, HandoffDecision, HandoffTier, HandoffIssue, HandoffSource, HandoffEvent, HandoffCase, HandoffDocument, HandoffResult, HandoffMergePreview, HandoffFilter, HandoffSummary, HandoffPackCoverage } from "./recoveryHandoff";
+// Local recovery checkpoints: manual observations, never automatic transfers.
+export { RecoveryCheckpointPanel } from "./RecoveryCheckpointPanel";
+export type { RecoveryCheckpointPanelProps } from "./RecoveryCheckpointPanel";
+export {
+  CHECKPOINT_LIMITS, CHECKPOINT_CONDITIONS, CHECKPOINT_OPERATIONS,
+  CHECKPOINT_TIERS, CHECKPOINT_PHASES, CHECKPOINT_LICENCES,
+  addCheckpoint, reviewCheckpoint, validateCheckpoint, validateCheckpointDocument,
+  parseCheckpointDocument, serializeCheckpointDocument, mergeCheckpointDocuments,
+  previewCheckpointMerge, checkpointSummary, filterCheckpoints, nextCheckpointId,
+} from "./recoveryCheckpoint";
+export type {
+  CheckpointOperation, CheckpointCondition, CheckpointTier, CheckpointPhase,
+  CheckpointIssue, CheckpointSource, FileObservation, CheckpointEntry,
+  CheckpointDocument, CheckpointResult, CheckpointMergePreview, CheckpointFilter,
+} from "./recoveryCheckpoint";
+export { recoveryCheckpointCopy } from "./recoveryCheckpointCopy";
+export type { CheckpointCopy } from "./recoveryCheckpointCopy";
+export {
+  compareCheckpointPair, checkpointPairs, checkpointTrends, checkpointGaps,
+  checkpointGuidance, operationBreakdown, checkpointAnalysisExport,
+  reviewedCheckpointCount, disputedCheckpointCount, checkpointHasUncertainty,
+} from "./recoveryCheckpointAnalysis";
+export type {
+  CheckpointDifference, CheckpointConcern, CheckpointPair, CheckpointTrend,
+  CheckpointGap, CheckpointNextStep, CheckpointGuidance,
+} from "./recoveryCheckpointAnalysis";
+export {
+  buildCheckpointTimelines, filterCheckpointTimelines, summarizeCheckpointTimelines,
+  exportCheckpointTimelines, timelineHasUnknown, timelineHasConflict, timelineLatestDate,
+} from "./recoveryCheckpointTimeline";
+export type { TimelineEvent, PackTimeline, TimelineGroupFilter, TimelineStats } from "./recoveryCheckpointTimeline";
 
-// User-controlled decision matrix and evidence coverage; no automatic operations.
-export { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
-export type { RecoveryDecisionMatrixProps } from "./RecoveryDecisionMatrix";
-export { recoveryDecisionCopy } from "./recoveryDecisionCopy";
-export type { MatrixCopy } from "./recoveryDecisionCopy";
-export { MATRIX_CHOICES, MATRIX_CONDITIONS, MATRIX_LICENCES, MATRIX_LIMITS, MATRIX_OPERATIONS, MATRIX_STATUSES, MATRIX_TIERS, addMatrixCandidate, addMatrixReview, emptyMatrix, exportMatrix, filterMatrix, groupMatrix, importMatrix, matrixId, matrixInstant, matrixSource, matrixStatus, mergeMatrix, nextMatrixId, previewMatrixMerge, summarizeMatrix, validateCandidate, validateMatrix, validateReview } from "./recoveryDecisionMatrix";
-export type { MatrixCandidate, MatrixChoice, MatrixCondition, MatrixDocument, MatrixFilters, MatrixGroup, MatrixImportPreview, MatrixIssue, MatrixOperation, MatrixResult, MatrixReview, MatrixSource, MatrixStatus, MatrixSummary, MatrixTier } from "./recoveryDecisionMatrix";
-export { coverageDetails, coverageWarnings, decisionCoverage } from "./recoveryDecisionCoverage";
-export type { CoverageDetail, CoverageFinding, CoverageLine, CoverageRequest, CoverageResult, CoverageSummary } from "./recoveryDecisionCoverage";
+export { planCheckpointInvestigations, summarizeCheckpointInvestigations, filterCheckpointInvestigations, compareInvestigationPlans, exportInvestigationPlan, investigationPlanIsManual } from "./recoveryCheckpointPlan";
+export type { PlanPriority, PlanReason, PlannedInvestigation, InvestigationSummary, InvestigationFilter, InvestigationComparison } from "./recoveryCheckpointPlan";
