@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { getPlaceDetail, getPackSource } from "../modules/linked.ts";
+import { ROUTE_REPORTS_STORAGE_KEY, liveStorage, saveGated, type SaveResult } from "../privacy/panel/live.ts";
 import { PackageView } from "./PackageView";
 
-export const ROUTE_REPORTS_KEY = "access.routeReports.v1";
+export const ROUTE_REPORTS_KEY = ROUTE_REPORTS_STORAGE_KEY;
 /** Reports made here stay on this device. No sharing licence has been set for them, so it is recorded as unknown. */
 const DEVICE_SOURCE = "this-device";
 const DEVICE_LICENCE = "UNKNOWN";
@@ -48,7 +49,7 @@ function Reports(props: { language?: "en" | "fr" }) {
   const [params] = useSearchParams();
   const placeId = params.get("place")?.trim() ?? "";
   const [reports, setReports] = useState<HubRouteReport[]>(() => readDeviceReports(deviceStorage()));
-  const [kept, setKept] = useState(true);
+  const [kept, setKept] = useState<SaveResult>("saved");
   const [place, setPlace] = useState<Place>({ state: placeId ? "checking" : "none" });
 
   useEffect(() => {
@@ -67,16 +68,15 @@ function Reports(props: { language?: "en" | "fr" }) {
     const next = [...reports, report];
     setReports(next);
     try {
-      deviceStorage()?.setItem(ROUTE_REPORTS_KEY, JSON.stringify(next));
-      setKept(deviceStorage() !== null);
+      setKept(saveGated(liveStorage(deviceStorage()), ROUTE_REPORTS_KEY, JSON.stringify(next)));
     } catch {
-      setKept(false);
+      setKept("no-storage");
     }
   };
 
   return (
     <>
-      {kept ? null : <p role="alert">{t("routeReportsNotKept")}</p>}
+      {kept === "saved" ? null : <p role="alert">{t(kept === "needs-choice" ? "routeReportsNeedsChoice" : kept === "declined" ? "routeReportsDeclined" : "routeReportsNotKept")}</p>}
       <RouteReportsList groups={corroborateReports(reports, new Date())} language={language} />
       {place.state === "found" ? (
         <RouteReportForm
