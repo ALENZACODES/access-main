@@ -56,6 +56,15 @@ test('rejects HTTP, credentials, control characters and scripting sources', () =
   }
 });
 
+test('legacy tier labels are refused even with complete source metadata', () => {
+  for (const value of ['UNVERIFIED', 'VERIFIED']) {
+    const result = inspectRecord({ ...good(), verificationTier: value });
+    assert.ok(codes(result).includes('TIER_UNKNOWN'), value);
+    assert.equal(result.normalized.verificationTier, null);
+    assert.ok(!offlineRecordPolicy.verificationTiers.includes(value));
+  }
+});
+
 test('only allows known tier values', () => {
   const result = inspectRecord({ ...good(), verificationTier: 'FIELD_CONFIRMED' });
   assert.ok(codes(result).includes('TIER_UNKNOWN'));

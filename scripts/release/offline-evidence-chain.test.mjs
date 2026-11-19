@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { CHAIN_VERSION, inspectEvidenceChain, formatEvidenceChainReport } from './offline-evidence-chain.mjs';
 
@@ -199,3 +200,14 @@ test('French report uses nonbreaking-space punctuation', () => {
   assert.match(report, /Aucune conclusion/);
 });
 test('invalid report input yields no misleading text', () => assert.equal(formatEvidenceChainReport(null), ''));
+
+test('French report source uses escapes, never literal irregular whitespace', () => {
+  const source = readFileSync(new URL('./offline-evidence-chain.mjs', import.meta.url), 'utf8');
+  assert.equal(source.includes(String.fromCharCode(160)), false);
+  assert.equal(source.includes(String.fromCharCode(8239)), false);
+  assert.ok(source.includes(String.raw`\u00A0`));
+  const output = formatEvidenceChainReport(run(), 'fr');
+  for (const label of ['Sources', 'Observations', 'Déclarations inconnues', 'Chaînes documentées']) {
+    assert.ok(output.includes(`${label}\u00A0:`), label);
+  }
+});

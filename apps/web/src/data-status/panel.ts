@@ -13,7 +13,7 @@ import { ageLabel } from './age';
 import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
-import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, GAP_FIELDS, hasActiveFilters, isGapField, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
+import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, DUE_WINDOWS, FILTER_AGES, GAP_FIELDS, hasActiveFilters, isAgeFilter, isDueWindow, isGapField, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
 import { isDatasetKind } from './freshnessPolicy';
@@ -38,10 +38,14 @@ import {
   buildRecordFacts,
   addView,
   buildListedSummary,
+  buildDueSummary,
   buildNoMatchHints,
+  renderDueSummaryHtml,
   clampLimit,
   drillColumnHeading,
   drillFilters,
+  dueWindowLabel,
+  ageValueLabel,
   factLabel,
   parseDrillAction,
   renderDrillControl,
@@ -347,6 +351,8 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     FILTER_LICENCE_KINDS.map((k) => option(k, kindLabel(k, locale), f.licence === k)).join('');
   const datasetOpts =
     option('any', t(locale, 'flt.any'), f.dataset === undefined) + datasets.map((d) => option(d.id, d.name, f.dataset === d.id)).join('');
+  const ageOpts = option('any', t(locale, 'flt.any'), f.age === undefined) + FILTER_AGES.map((a) => option(a, ageValueLabel(a, locale) ?? a, f.age === a)).join('');
+  const dueOpts = option('any', t(locale, 'flt.any'), f.due === undefined) + DUE_WINDOWS.map((d) => option(d, dueWindowLabel(d, locale), f.due === d)).join('');
   const gapOpts = option('any', t(locale, 'flt.any'), f.gap === undefined) + GAP_FIELDS.map((g) => option(g, factLabel(g, locale), f.gap === g)).join('');
   const field = (id: string, key: MessageKey, control: string) =>
     `<div><label for="${id}">${esc(t(locale, key))}</label> ${control}</div>`;
@@ -357,6 +363,8 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     field('ds-f-tier', 'flt.tier', `<select id="ds-f-tier" name="tier" data-filter="tier" style="${FIELD_STYLE}">${tierOpts}</select>`) +
     field('ds-f-licence', 'flt.licence', `<select id="ds-f-licence" name="lic" data-filter="licence" style="${FIELD_STYLE}">${licenceOpts}</select>`) +
     field('ds-f-gap', 'flt.gap', `<select id="ds-f-gap" name="gap" data-filter="gap" style="${FIELD_STYLE}">${gapOpts}</select>`) +
+    field('ds-f-age', 'flt.age', `<select id="ds-f-age" name="age" data-filter="age" style="${FIELD_STYLE}">${ageOpts}</select>`) +
+    field('ds-f-due', 'flt.due', `<select id="ds-f-due" name="due" data-filter="due" style="${FIELD_STYLE}">${dueOpts}</select>`) +
     (datasets.length > 1
       ? field('ds-f-dataset', 'flt.dataset', `<select id="ds-f-dataset" name="ds" data-filter="dataset" style="${FIELD_STYLE}">${datasetOpts}</select>`)
       : '') +
@@ -460,6 +468,10 @@ export function renderDataStatusPanel(state: PanelState): string {
     datasetTable(audit, locale, drill) +
     renderReviewHtml(buildReviewQueue(audit, state.now), locale) +
     renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
+    renderDueSummaryHtml(buildDueSummary(audit), locale, {
+      heading: drillColumnHeading(locale),
+      cell: (id) => drill(id === 'past' ? { kind: 'state', value: 'stale' } : id === 'unscheduled' ? { kind: 'state', value: 'unknown' } : { kind: 'due', value: id }),
+    }) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
     `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
@@ -473,7 +485,7 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderTierBreakdownHtml(buildTierBreakdown(state.records), locale, { heading: drillColumnHeading(locale), cell: (tier) => drill({ kind: 'tier', value: tier ?? 'unknown' }) }) +
     renderStatusByTierHtml(buildStatusByTier(audit), locale, { heading: drillColumnHeading(locale), cell: (s) => drill({ kind: 'state', value: s }) }) +
     renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale, { heading: drillColumnHeading(locale), cell: (field) => drill({ kind: 'gap', value: field }) }) +
-    renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale) +
+    renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale, { heading: drillColumnHeading(locale), cell: (id) => drill({ kind: 'age', value: id }) }) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
     renderGlossaryHtml(locale) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale));
@@ -703,6 +715,10 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       filters = withOptionalFilter(filters, 'tier', isTierFilter(value) ? value : undefined);
     } else if (key === 'licence') {
       filters = withOptionalFilter(filters, 'licence', isLicenceKind(value) ? value : undefined);
+    } else if (key === 'age') {
+      filters = withOptionalFilter(filters, 'age', isAgeFilter(value) ? value : undefined);
+    } else if (key === 'due') {
+      filters = withOptionalFilter(filters, 'due', isDueWindow(value) ? value : undefined);
     } else if (key === 'gap') {
       filters = withOptionalFilter(filters, 'gap', isGapField(value) ? value : undefined);
     } else if (key === 'dataset') {

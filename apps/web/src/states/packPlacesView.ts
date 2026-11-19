@@ -11,6 +11,7 @@ import { message, type MessageId } from "./messages";
 import { type PackPlaceRecord, type WheelchairTag, WHEELCHAIR_TAGS, countByTag } from "./packPlaces";
 import { type Point, type PointInput, distanceMetres, formatPackDistance } from "./packGeo";
 import { tierLine } from "./recordTier";
+import { type FacetGroup, type FacetSelection, EMPTY_FACETS, applyFacets, facetGroups, facetSummary } from "./packFacets";
 import { attributionLine, ageLabel, isStale } from "./provenance";
 import { type RouteStateView, getRouteEmpty } from "./routeStates";
 
@@ -21,6 +22,8 @@ export interface PackQuery {
   readonly text: string;
   readonly tag: TagFilter;
   readonly near: PointInput;
+  /** Source, licence, tier and age filters. Left out means no facet filter. */
+  readonly facets?: FacetSelection;
 }
 
 export const EMPTY_PACK_QUERY: PackQuery = { text: "", tag: "any", near: { status: "none" } };
@@ -64,6 +67,8 @@ export interface PackListView {
   readonly droppedNotice: string | null;
   readonly nearError: string | null;
   readonly tagOptions: readonly TagOption[];
+  readonly facetGroups: readonly FacetGroup[];
+  readonly facetSummary: string | null;
   readonly minTargetPx: number;
 }
 
@@ -130,8 +135,10 @@ export function packPlacesView(places: readonly PackPlaceRecord[], dropped: numb
   const words = normalizeText(query.text).split(" ").filter(Boolean);
   const from = query.near.status === "ok" ? query.near.point : null;
 
+  const facets = query.facets ?? EMPTY_FACETS;
   const byText = places.filter((p) => matchesText(p, words));
-  const shown = byText.filter((p) => query.tag === "any" || p.tag === query.tag);
+  const byTag = byText.filter((p) => query.tag === "any" || p.tag === query.tag);
+  const shown = applyFacets(byTag, facets, ctx.today);
   const hiddenUnknown = query.tag !== "any" && query.tag !== "unknown" ? byText.filter((p) => p.tag === "unknown").length : 0;
 
   const ordered = [...shown].sort((a, b) => {
@@ -150,6 +157,8 @@ export function packPlacesView(places: readonly PackPlaceRecord[], dropped: numb
     droppedNotice: dropped > 0 ? message("pack.dropped", locale, { n: dropped }) : null,
     nearError: query.near.status === "invalid" ? message("pack.nearError", locale) : null,
     tagOptions: tagOptions(places, locale),
+    facetGroups: facetGroups(byTag, facets, locale, ctx.today),
+    facetSummary: facetSummary(facets, locale),
     minTargetPx: MIN_TOUCH_TARGET_PX,
   };
 

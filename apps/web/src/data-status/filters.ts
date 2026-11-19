@@ -1,4 +1,5 @@
 /** Filter model for the source list. Deep-linkable via the query string; invalid values are ignored. */
+import { AGE_BANDS, bandFor } from './ageBands';
 import { isFieldKnown } from './completeness';
 import type { AuditedSource } from './datasetRegistry';
 import { licenceKind, type FreshnessState, type LicenceKind } from './dataStatus';
@@ -27,6 +28,45 @@ export interface Filters {
   dataset?: string;
   /** Keeps sources where this fact is unknown. Present only when the filter is active. */
   gap?: GapField;
+  /** An age band of the retrieved date, or 'unknown' for no usable date. Present only when the filter is active. */
+  age?: AgeFilter;
+  /** Keeps sources whose review date is within this many days and has not passed. Present only when the filter is active. */
+  due?: DueWindow;
+}
+
+/** An age band id from ageBands.ts, or 'unknown' for sources with no usable retrieved date. */
+export type AgeFilter = string;
+export const FILTER_AGES: readonly AgeFilter[] = [...AGE_BANDS.map((b) => b.id), 'unknown'];
+
+export function isAgeFilter(v: unknown): v is AgeFilter {
+  return typeof v === 'string' && FILTER_AGES.includes(v);
+}
+
+/** The age filter value a source falls under: its band, or 'unknown'. Every source has exactly one. */
+export function ageFilterOf(s: AuditedSource): AgeFilter {
+  return (s.ageDays === null ? null : bandFor(s.ageDays))?.id ?? 'unknown';
+}
+
+export const DUE_WINDOWS = ['d7', 'd30', 'd90'] as const;
+export type DueWindow = (typeof DUE_WINDOWS)[number];
+export const DUE_WINDOW_DAYS: Readonly<Record<DueWindow, number>> = { d7: 7, d30: 30, d90: 90 };
+
+export function isDueWindow(v: unknown): v is DueWindow {
+  return typeof v === 'string' && (DUE_WINDOWS as readonly string[]).includes(v);
+}
+
+/**
+ * Whole days until a source reaches its review limit, counted the way the review schedule counts
+ * them; negative when the date has passed, null when there is no usable retrieved date.
+ */
+export function daysUntilReview(s: AuditedSource): number | null {
+  return s.ageDays === null || s.state === 'unknown' ? null : s.limitDays - s.ageDays;
+}
+
+/** Whether the review date is within the window and has not passed. */
+export function isDueWithin(s: AuditedSource, window: DueWindow): boolean {
+  const days = daysUntilReview(s);
+  return days !== null && days >= 0 && days <= DUE_WINDOW_DAYS[window];
 }
 
 /** The four facts every record should carry; the gap filter keeps sources where one of them is unknown. */
@@ -58,7 +98,7 @@ export function isDatasetFilter(v: unknown): v is string {
   return typeof v === 'string' && v.trim() !== '' && v !== 'any' && v.length <= MAX_DATASET_ID_LENGTH;
 }
 
-export const OPTIONAL_FILTER_KEYS = ['tier', 'licence', 'dataset', 'gap'] as const;
+export const OPTIONAL_FILTER_KEYS = ['tier', 'licence', 'dataset', 'gap', 'age', 'due'] as const;
 export type OptionalFilterKey = (typeof OPTIONAL_FILTER_KEYS)[number];
 
 /** A copy with one optional filter set, or removed when the value is undefined. The input is not changed. */
@@ -87,6 +127,8 @@ export function parseFilters(search: string): Filters {
   const licence = p.get('lic');
   const dataset = p.get('ds');
   const gap = p.get('gap');
+  const age = p.get('age');
+  const due = p.get('due');
   return {
     state: STATES.includes(state as FreshnessState) ? (state as FreshnessState) : 'any',
     kind: isDatasetKind(kind) ? kind : 'any',
@@ -96,6 +138,8 @@ export function parseFilters(search: string): Filters {
     ...(isLicenceKind(licence) ? { licence } : {}),
     ...(isDatasetFilter(dataset) ? { dataset } : {}),
     ...(isGapField(gap) ? { gap } : {}),
+    ...(isAgeFilter(age) ? { age } : {}),
+    ...(isDueWindow(due) ? { due } : {}),
   };
 }
 
@@ -111,12 +155,14 @@ export function serializeFilters(f: Filters): string {
   if (f.licence !== undefined) p.set('lic', f.licence);
   if (f.dataset !== undefined) p.set('ds', f.dataset);
   if (f.gap !== undefined) p.set('gap', f.gap);
+  if (f.age !== undefined) p.set('age', f.age);
+  if (f.due !== undefined) p.set('due', f.due);
   const s = p.toString();
   return s === '' ? '' : `?${s}`;
 }
 
 export function hasActiveFilters(f: Filters): boolean {
-  return f.state !== 'any' || f.kind !== 'any' || normaliseQuery(f.query) !== '' || f.onlyIssues || f.tier !== undefined || f.licence !== undefined || f.dataset !== undefined || f.gap !== undefined;
+  return f.state !== 'any' || f.kind !== 'any' || normaliseQuery(f.query) !== '' || f.onlyIssues || f.tier !== undefined || f.licence !== undefined || f.dataset !== undefined || f.gap !== undefined || f.age !== undefined || f.due !== undefined;
 }
 
 export function needsReview(s: AuditedSource): boolean {
@@ -133,6 +179,8 @@ export function applyFilters(sources: readonly AuditedSource[], f: Filters): Aud
     if (f.licence !== undefined && licenceKind(s.licence) !== f.licence) return false;
     if (f.dataset !== undefined && s.datasetId !== f.dataset) return false;
     if (f.gap !== undefined && !hasGap(s, f.gap)) return false;
+    if (f.age !== undefined && ageFilterOf(s) !== f.age) return false;
+    if (f.due !== undefined && !isDueWithin(s, f.due)) return false;
     if (q === '') return true;
     return matchesQuery([s.datasetName, s.name ?? '', s.sourceId, s.licence ?? ''].join(' '), q);
   });
