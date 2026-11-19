@@ -123,17 +123,23 @@ export function checkRegister(register: readonly RegisterRow[]): string[] {
 }
 
 export interface Coverage {
+  /** Rows Download, Erase and Restore cover */
   covered: RegisterRow[];
-  /** Keys outside the panel prefix, which the panel's export and erase do not reach */
+  /** Rows they do not cover; the panel says so in its "also kept" section */
   outside: RegisterRow[];
 }
 
-/** Splits the register by whether the panel's export and erase reach the key (it starts with the panel prefix). */
-export function panelCoverage(register: readonly RegisterRow[], prefix: string): Coverage {
+/** Splits the register by its "reach" mark. */
+export function panelCoverage(register: readonly RegisterRow[]): Coverage {
   return {
-    covered: register.filter((r) => r.key.startsWith(prefix)),
-    outside: register.filter((r) => !r.key.startsWith(prefix)),
+    covered: register.filter((r) => r.reach === "panel"),
+    outside: register.filter((r) => r.reach === "elsewhere"),
   };
+}
+
+/** A key under the panel prefix is always covered, so it cannot be marked "elsewhere". */
+export function checkReach(register: readonly RegisterRow[], prefix: string): string[] {
+  return register.filter((r) => r.key.startsWith(prefix) && r.reach !== "panel").map((r) => `${r.key}: starts with the panel prefix but is marked elsewhere`);
 }
 
 export function formatComparison(c: RegisterComparison): string {

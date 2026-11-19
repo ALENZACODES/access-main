@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { lintCopy } from "./copyLint";
-import { OUTSIDE_STRINGS, outsideItems, renderOutsideHtml } from "./outsideSection";
+import { OUTSIDE_STRINGS, outsideItems, outsideItemsForScope, renderOutsideHtml } from "./outsideSection";
 import { STORAGE_REGISTER, UNSCANNED } from "./storageRegister";
 import { PRIVACY_STORAGE_PREFIX } from "./live";
 
@@ -20,6 +20,25 @@ describe("outsideItems", () => {
   });
   it("is empty for a register fully inside the prefix", () => {
     expect(outsideItems(STORAGE_REGISTER.filter((r) => r.key.startsWith("access.")), [], "access.")).toEqual([]);
+  });
+});
+
+describe("outsideItemsForScope", () => {
+  const scope = { prefix: PRIVACY_STORAGE_PREFIX, keys: ["app.preferences.v1", "app.corrections.v1"] };
+  it("leaves out the extra names the scope covers and keeps the rest", () => {
+    const texts = outsideItemsForScope(STORAGE_REGISTER, UNSCANNED, scope).map((i) => i.holds.en);
+    expect(texts).not.toContain("Your display preferences");
+    expect(texts).not.toContain("Corrections you wrote and have not sent");
+    expect(texts).toContain("A history of data status checks");
+    expect(texts).toContain("The list of map tiles kept for offline use");
+  });
+  it("lists only the map tile list and unconfirmed storage when the scope covers every panel key", () => {
+    const keys = STORAGE_REGISTER.filter((r) => r.reach === "panel" && !r.key.startsWith(PRIVACY_STORAGE_PREFIX)).map((r) => r.key);
+    const out = outsideItemsForScope(STORAGE_REGISTER, UNSCANNED, { prefix: PRIVACY_STORAGE_PREFIX, keys });
+    expect(out.map((i) => i.holds.en)).toEqual(["The list of map tiles kept for offline use", ...UNSCANNED.map((u) => u.holds.en)]);
+  });
+  it("is the same as the prefix-only call when the scope has no extra names", () => {
+    expect(outsideItemsForScope(STORAGE_REGISTER, UNSCANNED, { prefix: PRIVACY_STORAGE_PREFIX, keys: [] })).toEqual(items);
   });
 });
 
