@@ -212,12 +212,19 @@ export function unrecognisedNote(b: TierBreakdown, locale: Locale): string | nul
   return tx.count(locale, 'tr.unrecognised', b.unrecognised, { list: b.unrecognisedTexts.join(tx(locale, 'tr.list.join')) });
 }
 
-export function renderTierBreakdownHtml(b: TierBreakdown, locale: Locale): string {
+/** An extra last column on the tier table: a heading and one cell of ready-made HTML for each tier row. */
+export interface TierRowExtra {
+  heading: string;
+  /** HTML for the row of a tier; null is the Unknown row. */
+  cell: (tier: TierId | null) => string;
+}
+
+export function renderTierBreakdownHtml(b: TierBreakdown, locale: Locale, extra?: TierRowExtra): string {
   const heading = `<h2 id="ds-tiers-title">${escapeHtml(tx(locale, 'tr.title'))}</h2>`;
   if (b.total === 0) return `<section aria-labelledby="ds-tiers-title">${heading}<p>${escapeHtml(tx(locale, 'tr.none'))}</p></section>`;
   const used = tiersInUse(b);
   const row = (tier: TierId | null, count: number) =>
-    `<tr><th scope="row">${escapeHtml(tierLabel(tier, locale))}</th><td>${escapeHtml(tierMeaning(tier, locale))}</td><td>${count}</td></tr>`;
+    `<tr><th scope="row">${escapeHtml(tierLabel(tier, locale))}</th><td>${escapeHtml(tierMeaning(tier, locale))}</td><td>${count}</td>${extra ? `<td>${extra.cell(tier)}</td>` : ''}</tr>`;
   const rows = used.map((id) => row(id, b.counts[id])).join('') + (b.unknown > 0 ? row(null, b.unknown) : '');
   const note = unrecognisedNote(b, locale);
   const dsHead = used.map((id) => `<th scope="col">${escapeHtml(tierLabel(id, locale))}</th>`).join('');
@@ -231,7 +238,7 @@ export function renderTierBreakdownHtml(b: TierBreakdown, locale: Locale): strin
     `<section aria-labelledby="ds-tiers-title">${heading}<p>${escapeHtml(tx(locale, 'tr.intro'))}</p>` +
     `<table><caption>${escapeHtml(tx(locale, 'tr.caption'))}</caption><thead><tr>` +
     `<th scope="col">${escapeHtml(tx(locale, 'tr.colTier'))}</th><th scope="col">${escapeHtml(tx(locale, 'tr.colMeaning'))}</th>` +
-    `<th scope="col">${escapeHtml(tx(locale, 'tr.colCount'))}</th></tr></thead><tbody>${rows}</tbody></table>` +
+    `<th scope="col">${escapeHtml(tx(locale, 'tr.colCount'))}</th>${extra ? `<th scope="col">${escapeHtml(extra.heading)}</th>` : ''}</tr></thead><tbody>${rows}</tbody></table>` +
     `<p>${escapeHtml(tierSummary(b, locale))}</p>` +
     (note === null ? '' : `<p>${escapeHtml(note)}</p>`) +
     `<table><caption>${escapeHtml(tx(locale, 'tr.dsCaption'))}</caption><thead><tr>` +
