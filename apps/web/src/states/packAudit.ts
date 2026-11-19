@@ -217,21 +217,21 @@ export function packCoverageLines(c: PackCoverage, locale: Locale): string[] {
   const tags = (Object.keys(TAG_WORD) as (keyof typeof TAG_WORD)[]).map((k) => `${TAG_WORD[k][locale]}: ${c.byTag[k]}`);
   const lines = [
     t(locale, `${c.total} places in the pack.`, `${c.total} lieux dans le pack.`),
-    t(locale, `Wheelchair tag reported with a source: ${share(c.reported, c.total, locale)}.`, `Indication pour fauteuil roulant avec source : ${share(c.reported, c.total, locale)}.`),
+    t(locale, `Wheelchair tag reported with a source: ${share(c.reported, c.total, locale)}.`, `Indication pour fauteuil roulant avec source\u00a0: ${share(c.reported, c.total, locale)}.`),
     t(locale, `By tag, ${tags.join(", ")}.`, `Par indication, ${tags.join(", ")}.`),
     t(
       locale,
       `UNKNOWN because not recorded: ${c.unknownNotRecorded}; unrecognised value: ${c.unknownUnrecognised}; no usable source: ${c.unknownNoSource}.`,
-      `UNKNOWN faute d’indication : ${c.unknownNotRecorded} ; valeur non reconnue : ${c.unknownUnrecognised} ; aucune source utilisable : ${c.unknownNoSource}.`,
+      `UNKNOWN faute d’indication\u00a0: ${c.unknownNotRecorded}\u202f; valeur non reconnue\u00a0: ${c.unknownUnrecognised}\u202f; aucune source utilisable\u00a0: ${c.unknownNoSource}.`,
     ),
     t(
       locale,
       `With a name: ${share(c.withName, c.total, locale)}. With an address: ${share(c.withAddress, c.total, locale)}. With a kind: ${share(c.withCategory, c.total, locale)}. With a position: ${share(c.withLocation, c.total, locale)}.`,
-      `Avec un nom : ${share(c.withName, c.total, locale)}. Avec une adresse : ${share(c.withAddress, c.total, locale)}. Avec un type : ${share(c.withCategory, c.total, locale)}. Avec une position : ${share(c.withLocation, c.total, locale)}.`,
+      `Avec un nom\u00a0: ${share(c.withName, c.total, locale)}. Avec une adresse\u00a0: ${share(c.withAddress, c.total, locale)}. Avec un type\u00a0: ${share(c.withCategory, c.total, locale)}. Avec une position\u00a0: ${share(c.withLocation, c.total, locale)}.`,
     ),
-    t(locale, `With a usable source: ${share(c.withSource, c.total, locale)}, from ${c.sources} source${c.sources === 1 ? "" : "s"}.`, `Avec une source utilisable : ${share(c.withSource, c.total, locale)}, de ${c.sources} source${c.sources === 1 ? "" : "s"}.`),
+    t(locale, `With a usable source: ${share(c.withSource, c.total, locale)}, from ${c.sources} source${c.sources === 1 ? "" : "s"}.`, `Avec une source utilisable\u00a0: ${share(c.withSource, c.total, locale)}, de ${c.sources} source${c.sources === 1 ? "" : "s"}.`),
   ];
-  if (c.latestRetrieval) lines.push(t(locale, `Most recent retrieval: ${formatDate(c.latestRetrieval, locale)}.`, `Consultation la plus récente : ${formatDate(c.latestRetrieval, locale)}.`));
+  if (c.latestRetrieval) lines.push(t(locale, `Most recent retrieval: ${formatDate(c.latestRetrieval, locale)}.`, `Consultation la plus récente\u00a0: ${formatDate(c.latestRetrieval, locale)}.`));
   if (c.staleRecords > 0) lines.push(t(locale, `${c.staleRecords} may be out of date.`, `${c.staleRecords} peuvent être périmés.`));
   return lines;
 }

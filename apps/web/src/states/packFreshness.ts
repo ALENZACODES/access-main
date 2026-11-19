@@ -99,7 +99,7 @@ export function freshnessSummary(f: Freshness, locale: Locale): string {
     case "empty":
       return t(locale, "No places in the pack on this device.", "Aucun lieu dans le pack sur cet appareil.");
     case "no-dates":
-      return t(locale, "None of the places in the pack has a usable retrieval date, so their age is UNKNOWN.", "Aucun lieu du pack n’a de date de consultation utilisable : leur ancienneté est UNKNOWN.");
+      return t(locale, "None of the places in the pack has a usable retrieval date, so their age is UNKNOWN.", "Aucun lieu du pack n’a de date de consultation utilisable\u00a0: leur ancienneté est UNKNOWN.");
     case "recent":
       return t(locale, `Every dated place was retrieved within the last ${STALE_AFTER_DAYS} days. That says when it was retrieved, not that it is still right.`, `Chaque lieu daté a été consulté au cours des ${STALE_AFTER_DAYS} derniers jours. Cela indique quand il a été consulté, pas qu’il est toujours exact.`);
     case "aging":
