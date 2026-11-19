@@ -240,9 +240,11 @@ test("Data status: a view can be saved for this page, shown again and deleted, a
 
   await panel.getByLabel("Tier", { exact: true }).selectOption("E");
   await expect(list).toContainText("In this list: 1 possibly out of date.");
+  await panel.getByLabel("Name for the view (optional)").fill("Desk checks");
   await panel.getByRole("button", { name: "Save the current filters as a view" }).click();
   await expect(panel.locator('[data-region="announce"]')).toHaveText("View saved.");
-  const show = panel.getByRole("button", { name: "Show view. Tier: E" });
+  await expect(panel).toContainText("Lists 1 source now.");
+  const show = panel.getByRole("button", { name: "Show view. Desk checks (Tier: E)" });
   await expect(show).toHaveAttribute("aria-pressed", "true");
 
   await list.getByRole("button", { name: "Remove filter. Tier: E", exact: true }).click();
@@ -251,7 +253,7 @@ test("Data status: a view can be saved for this page, shown again and deleted, a
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
   await expect(list.getByRole("row")).toHaveCount(2);
 
-  await panel.getByRole("button", { name: "Delete view. Tier: E" }).click();
+  await panel.getByRole("button", { name: "Delete view. Desk checks (Tier: E)" }).click();
   await expect(panel).toContainText("No view is saved yet.");
   expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual(keysBefore);
 });
