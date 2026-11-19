@@ -1,6 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, ReactElement } from "react";
 import type { RecoveryLocale } from "./index";
+import { StateNotice } from "../states/StateNotice";
 import type { LocalPackRecord } from "./packInventory";
 import type { SaveTextFile } from "./recoveryExport";
 import { provenanceCopy } from "./recoveryProvenanceCopy";
@@ -212,7 +213,7 @@ export function RecoveryProvenanceLedger({
         <p>{copy.collisions}{locale === "fr" ? "\u00a0: " : ": "}{preview.value.collisions.length}</p>
         <button type="button" style={controls} onClick={applyPreview}
           disabled={preview.value.collisions.length !== 0}>{copy.apply}</button>
-      </> : <p role="alert">{preview ? copy.issues[preview.issue] : copy.failed}</p>}
+      </> : <StateNotice view={{ title: copy.stage, description: preview ? copy.issues[preview.issue] : copy.failed, actions: [], role: "alert" }} lang={locale} />}
       <button type="button" style={controls} onClick={() => { setStaged(null); setMessage(""); }}>
         {copy.cancel}
       </button>

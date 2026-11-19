@@ -412,19 +412,13 @@ export type { RecoveryRepairAttemptsProps } from "./RecoveryRepairAttempts";
 export { ATTEMPT_COPY, addRecoveryAttempt, emptyAttemptDocument, exportRecoveryAttempts, isAttemptProvenance, mergeRecoveryAttempts, parseRecoveryAttempts, previewAttemptMerge, replaceRecoveryAttempt, summarizeRecoveryAttempts, validateAttempt, validateAttemptDocument } from "./recoveryRepairReceipt";
 export type { AttemptDocument, AttemptIssue, AttemptKind, AttemptMergePreview, AttemptOutcome, AttemptProvenance, AttemptResult, AttemptSummary, RecoveryAttempt } from "./recoveryRepairReceipt";
 
-// Local, manual provenance reconciliation. The model does not change pack state.
+// Manual failure checklist and local source reconciliation.
+export { RecoveryFailureChecklist } from "./RecoveryFailureChecklist";
+export type { RecoveryFailureChecklistProps } from "./RecoveryFailureChecklist";
+export { CHECKLIST_STEPS, FAILURE_CHECKLIST_COPY, changeChecklistStep, checklistCounts, defaultChecklist, exportChecklist, importChecklist, previewChecklistReplacement, validChecklistProvenance, validateChecklist } from "./recoveryFailureChecklist";
+export type { ChecklistState, ChecklistItem, ChecklistProvenance, FailureChecklist, FailureCause, FailureKind } from "./recoveryFailureChecklist";
 export { RecoveryProvenanceLedger } from "./RecoveryProvenanceLedger";
 export type { RecoveryProvenanceLedgerProps } from "./RecoveryProvenanceLedger";
 export { provenanceCopy } from "./recoveryProvenanceCopy";
-export {
-  LEDGER_LIMITS, LEDGER_LICENCES, LEDGER_PHASES, LEDGER_TIERS, LEDGER_VALUES,
-  appendLedgerStatement, compareLedgers, filterLedger, ledgerConflicts, ledgerIds,
-  ledgerSummary, loadLedger, mergeLedgerDocuments, newLedgerDocument, nextLedgerId,
-  parseLedgerDocument, previewLedgerMerge, reviewLedgerStatement, saveLedger,
-  sourceIssue, statementIssue, fieldOverviews, requestedFieldCoverage,
-} from "./recoveryProvenanceLedger";
-export type {
-  LedgerChange, LedgerConflict, LedgerDocument, LedgerFilter, LedgerIssue,
-  LedgerPhase, LedgerPreview, LedgerResult, LedgerSource, LedgerStatement,
-  LedgerSummary, LedgerTier, LedgerValue, LedgerFieldOverview, RequestedLedgerField, LedgerCoverageRow,
-} from "./recoveryProvenanceLedger";
+export { LEDGER_LIMITS, LEDGER_LICENCES, LEDGER_PHASES, LEDGER_TIERS, LEDGER_VALUES, appendLedgerStatement, fieldOverviews, filterLedger, ledgerConflicts, ledgerIds, ledgerSummary, loadLedger, mergeLedgerDocuments, newLedgerDocument, nextLedgerId, previewLedgerMerge, reviewLedgerStatement, saveLedger } from "./recoveryProvenanceLedger";
+export type { LedgerDocument, LedgerFilter, LedgerPhase, LedgerStatement, LedgerTier, LedgerValue } from "./recoveryProvenanceLedger";

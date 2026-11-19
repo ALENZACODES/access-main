@@ -49,7 +49,8 @@ describe("reconciliation workspace integration audit", () => {
   it("shows errors and changes in accessible status regions", () => {
     expect(ui).toContain('role="status"');
     expect(ui).toContain('aria-live="polite"');
-    expect(ui).toContain('role="alert"');
+    expect(ui).toContain("<StateNotice view=");
+    expect(ui).not.toContain('<p role="alert">');
   });
   it("links every displayed section to a heading", () => {
     expect(ui).toContain("aria-labelledby={headingId}");
