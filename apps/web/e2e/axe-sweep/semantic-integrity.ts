@@ -31,6 +31,9 @@ export interface LangFragment {
   readonly parentLanguage: string;
   readonly text: string;
   readonly visible: boolean;
+  /** False only for a visible text-bearing element inheriting its language. */
+  readonly explicit?: boolean;
+  readonly tag?: string;
 }
 
 export interface FocusNode {
@@ -123,6 +126,42 @@ export function hashIssues(hashes: readonly HashLink[], route: string): Issue[] 
   });
 }
 
+/**
+ * A deliberately bounded, high-confidence detector for English UI copy under
+ * an inherited French language. This is not a language classifier: unknown
+ * wording stays unclassified instead of being assigned a language.
+ *
+ * A language-labelled quotation or brand name is not tested here. The
+ * browser collector supplies only the element's own unlabelled text nodes,
+ * so an explicitly marked English child does not contaminate its parent.
+ */
+export function unmarkedEnglishUi(text: string, tag = "", route = ""): boolean {
+  const normalized = normalizeText(text).toLocaleLowerCase("en");
+  if (!normalized || normalized.length > 800) return false;
+  if (tag === "h1") {
+    const knownHeading: Readonly<Record<string, RegExp>> = {
+      "/more/housing": /^(?:housing|housing finder|housing access finder)\b/,
+      "/more/diary": /^(?:coverage diary|coverage notes)\b/,
+      "/more/auditors": /^(?:auditor capture|audit capture|auditor)\b/,
+    };
+    if (knownHeading[route]?.test(normalized)) return true;
+  }
+  // Multiple distinctive words are required. Proper nouns, numbers, names,
+  // and lone English words in Canadian place names remain unclassified.
+  const phrases = [
+    /\bplease (?:choose|select|enter|provide|review)\b/,
+    /\b(?:choose|select|enter) (?:a|the|your)\b/,
+    /\b(?:search|show|clear|save|delete) (?:results|all|changes|entries|records)\b/,
+    /\bno (?:results|records|entries|matches) (?:found|available|yet)\b/,
+    /\b(?:this|that) (?:page|tool|record|information|result)\b/,
+    /\byour (?:search|results|data|records|settings|language)\b/,
+    /\bback to more\b/,
+    /\b(?:coverage diary|housing finder|auditor capture)\b/,
+    /\b(?:source|licence|date) (?:is|was|not)\b/,
+  ];
+  return phrases.some((pattern) => pattern.test(normalized));
+}
+
 export function languageIssues(
   actual: string,
   requested: Locale,
@@ -142,6 +181,14 @@ export function languageIssues(
     // Unknown or unsupported language tags are not silently rewritten to English.
     if (!/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(fragment.language)) {
       problems.push(issue("fragment-language-invalid", route, fragment.language));
+      continue;
+    }
+    if (
+      requested === "fr" && fragment.explicit === false &&
+      localePart(fragment.parentLanguage) === "fr" &&
+      unmarkedEnglishUi(fragment.text, fragment.tag, route)
+    ) {
+      problems.push(issue("unmarked-english", route, normalizeText(fragment.text).slice(0, 100)));
     }
   }
   return problems;
