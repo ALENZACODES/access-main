@@ -113,18 +113,26 @@ for (const locale of ["en", "fr"] as const) {
 }
 
 test.describe("P20L evidence state and route inventory", () => {
-  test.each(["", "  ", "UNKNOWN", "Unknown", "Inconnu", "Inconnue", "—", "n/a", "Not provided"])(
-    "absence stays unknown: %s", (value) => expect(isUnknown(value)).toBe(true),
-  );
-  test.each(["CC0-1.0", "CC-BY-4.0", "ODbL-1.0", "Open Government Licence - Ontario", "Licence du gouvernement ouvert"])(
-    "recognizes an open licence: %s", (value) => expect(isOpenLicence(value)).toBe(true),
-  );
-  test.each(["Proprietary", "Exclusive licence", "All rights reserved", "", "UNKNOWN"])(
-    "does not mark unsupported licences open: %s", (value) => expect(isOpenLicence(value)).toBe(false),
-  );
-  test.each(["2025-02-29", "2026-02-30", "2026-00-01", "2026-11-31", "0000-01-01", "2026/11/15"])(
-    "rejects invalid calendar dates: %s", (value) => expect(parseCalendarDate(value)).toBe(false),
-  );
+  for (const value of ["", "  ", "UNKNOWN", "Unknown", "Inconnu", "Inconnue", "—", "n/a", "Not provided"]) {
+    test(`absence stays unknown: ${JSON.stringify(value)}`, () => {
+      expect(isUnknown(value)).toBe(true);
+    });
+  }
+  for (const value of ["CC0-1.0", "CC-BY-4.0", "ODbL-1.0", "Open Government Licence - Ontario", "Licence du gouvernement ouvert"]) {
+    test(`recognizes an open licence: ${value}`, () => {
+      expect(isOpenLicence(value)).toBe(true);
+    });
+  }
+  for (const value of ["Proprietary", "Exclusive licence", "All rights reserved", "", "UNKNOWN"]) {
+    test(`does not mark unsupported licences open: ${JSON.stringify(value)}`, () => {
+      expect(isOpenLicence(value)).toBe(false);
+    });
+  }
+  for (const value of ["2025-02-29", "2026-02-30", "2026-00-01", "2026-11-31", "0000-01-01", "2026/11/15"]) {
+    test(`rejects invalid calendar dates: ${value}`, () => {
+      expect(parseCalendarDate(value)).toBe(false);
+    });
+  }
   test("supports leap day", () => expect(parseCalendarDate("2024-02-29")).toBe(true));
   test("does not assign age to future records", () => expect(evidenceAge("2027-01-01", "2026-11-19")).toBe("UNKNOWN"));
   test("a dated observation can be recognized without claiming freshness", () => expect(evidenceAge("2026-11-01", "2026-11-19")).toBe("KNOWN"));
