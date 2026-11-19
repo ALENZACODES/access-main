@@ -223,7 +223,7 @@ export const ATTEMPT_COPY: Record<RecoveryLocale, {
 }> = {
   en: {
     heading: "Manual repair attempts", introduction: "Add local notes about an attempt. Notes cannot change pack status.",
-    pack: "Pack", kind: "Operation", outcome: "Reported outcome", note: "Note", source: "Source",
+    pack: "Pack", kind: "Operation", outcome: "Reported outcome (UNKNOWN until selected)", note: "Note", source: "Source",
     licence: "Licence", date: "Source date", tier: "Evidence tier", add: "Add attempt",
     importFile: "Choose a local attempts file", exportFile: "Save attempts file", apply: "Add non-conflicting attempts",
     empty: "No attempt notes yet", error: "The attempt could not be saved.", saved: "Attempts saved locally.",
@@ -231,7 +231,7 @@ export const ATTEMPT_COPY: Record<RecoveryLocale, {
   },
   fr: {
     heading: "Tentatives de récupération", introduction: "Ajoutez une note locale. Les notes ne changent pas l’état de l’ensemble.",
-    pack: "Ensemble", kind: "Opération", outcome: "Résultat déclaré", note: "Note", source: "Source",
+    pack: "Ensemble", kind: "Opération", outcome: "Résultat déclaré (UNKNOWN avant sélection)", note: "Note", source: "Source",
     licence: "Licence", date: "Date de la source", tier: "Niveau de preuve", add: "Ajouter une tentative",
     importFile: "Choisir un fichier local", exportFile: "Enregistrer le fichier", apply: "Ajouter les tentatives sans conflit",
     empty: "Aucune tentative consignée", error: "La tentative n’a pas pu être enregistrée.",
