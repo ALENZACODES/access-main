@@ -42,7 +42,7 @@ describe('listActiveFilters', () => {
   it('is written in French with the right spacing', () => {
     const labels = listActiveFilters(ALL, 'fr').map((a) => a.label);
     expect(labels).toContain('Niveau : Inconnu');
-    expect(labels).toContain('Le nom contient « alpha »');
+    expect(labels).toContain('Le nom contient «\u202Falpha\u202F»');
     for (const l of labels) expect(lintFrench(l)).toEqual([]);
   });
   it('has one entry for each key when everything is set', () => {

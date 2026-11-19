@@ -56,7 +56,7 @@ const MESSAGES: Messages<Key> = {
     'af.title.other': '{n} filtres appliqués',
     'af.state': 'État\u00A0: {value}',
     'af.kind': 'Type de jeu de données\u00A0: {value}',
-    'af.query': 'Le nom contient «\u00A0{value}\u00A0»',
+    'af.query': 'Le nom contient «\u202F{value}\u202F»',
     'af.issues': 'À examiner seulement',
     'af.tier': 'Niveau\u00A0: {value}',
     'af.licence': 'Type de licence\u00A0: {value}',

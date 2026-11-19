@@ -27,7 +27,7 @@ describe('filterParts', () => {
   });
   it('uses French quotation marks with no-break spaces', () => {
     const [part] = filterParts(f({ query: 'parc' }), 'fr');
-    expect(part).toBe('le nom contient « parc »');
+    expect(part).toBe('le nom contient «\u202Fparc\u202F»');
   });
   it('ignores a query that is only spaces', () => {
     expect(filterParts(f({ query: '   ' }), 'en')).toEqual([]);

@@ -30,6 +30,9 @@ import { LISTED_SUMMARY_MESSAGES } from './listedSummary';
 import { LIVE_LIST_MESSAGES } from './liveList';
 import { DRILL_DOWN_MESSAGES } from './drillDown';
 import { DUE_SUMMARY_MESSAGES } from './dueSummary';
+import { GROUPED_LIST_MESSAGES } from './groupedList';
+import { ROW_DETAIL_MESSAGES } from './rowDetail';
+import { CHECKLIST_MESSAGES } from './reviewChecklist';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -60,6 +63,9 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['liveList', LIVE_LIST_MESSAGES],
   ['drillDown', DRILL_DOWN_MESSAGES],
   ['dueSummary', DUE_SUMMARY_MESSAGES],
+  ['groupedList', GROUPED_LIST_MESSAGES],
+  ['rowDetail', ROW_DETAIL_MESSAGES],
+  ['reviewChecklist', CHECKLIST_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {

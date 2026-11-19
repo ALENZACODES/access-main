@@ -99,7 +99,7 @@ const MESSAGES: Messages<Key> = {
     'an.filterAge': 'âge de la date de récupération {value}',
     'an.filterDue': 'révision prévue d’ici {days} jours',
     'an.col.tier': 'niveau',
-    'an.filterQuery': 'le nom contient « {value} »',
+    'an.filterQuery': 'le nom contient «\u202F{value}\u202F»',
     'an.filterIssues': 'seulement les éléments à examiner',
     'an.filtersCleared': 'Filtres effacés.',
     'an.sorted': 'Tri par {column}, {direction}.',

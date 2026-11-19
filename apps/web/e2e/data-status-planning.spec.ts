@@ -356,3 +356,46 @@ test("Data status: the list can be narrowed by age of the retrieved date and by 
   await expect(panel.locator('[data-region="announce"]')).toContainText("age of retrieved date unknown date");
 });
 
+test("Data status: the list can be grouped, show details under each source, and give a review checklist", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+
+  await panel.getByLabel("Group by").selectOption("status");
+  await expect(said).toHaveText("Grouped by status, in 3 groups.");
+  await expect(list.getByRole("heading", { level: 3 })).toHaveText(["May be out of date (1 source)", "Within its review period (1 source)", "Update date unknown (1 source)"]);
+  await expect(list.getByRole("table", { name: "Sources: May be out of date" }).getByRole("row")).toHaveCount(2);
+
+  await panel.getByLabel("Tier", { exact: true }).selectOption("E");
+  await expect(list.getByRole("heading", { level: 3 })).toHaveText(["May be out of date (1 source)"]);
+  await panel.getByLabel("Tier", { exact: true }).selectOption("any");
+
+  await panel.getByLabel("Show details under each source").check();
+  await expect(said).toHaveText("Details are shown under each source.");
+  await expect(list.getByRole("table", { name: "Sources: Update date unknown" })).toContainText("Not scheduled, because the retrieved date is unknown.");
+  await expect(list.getByRole("table", { name: "Sources: May be out of date" })).toContainText("days ago)");
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    panel.getByRole("button", { name: "Download a review checklist for the listed sources (CSV)" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("review-checklist.csv");
+  await expect(said).toHaveText(/^Checklist saved with \d+ steps\.$/);
+
+  await panel.getByLabel("Group by").selectOption("none");
+  await expect(said).toHaveText("Grouping removed.");
+  await expect(list.getByRole("table", { name: "Sources", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await fr.getByLabel("Regrouper par").selectOption("tier");
+  await expect(fr.locator('[data-region="announce"]')).toHaveText("Regroupement par niveau, en 3 groupes.");
+});
+

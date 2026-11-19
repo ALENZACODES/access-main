@@ -554,4 +554,40 @@ describe("planning sections and extra downloads on the live panel", () => {
     expect(document.activeElement).toBe(within(panel).getByRole("button", { name: /Clear filters/ }));
     expect(panel.querySelectorAll("[tabindex]")).toHaveLength(0);
   });
+
+  it("groups the list, shows details under each source, and saves a review checklist for what is listed", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "Desk source", retrieved: daysAgo(400), tier: "E" },
+      { id: "c", title: "No tier stop", source: "Other source", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+    const group = within(panel).getByLabelText("Group by") as HTMLSelectElement;
+    group.value = "tier";
+    group.dispatchEvent(new Event("change", { bubbles: true }));
+    hasText(panel, "Grouped by tier, in 3 groups.");
+    expect(within(panel).getByRole("heading", { level: 3, name: "Tier E (1 source)" })).toBeTruthy();
+    expect(within(panel).getByRole("table", { name: "Sources: Tier: Unknown" })).toBeTruthy();
+    expect(within(panel).queryByRole("table", { name: "Sources" })).toBeNull();
+
+    const details = within(panel).getByLabelText("Show details under each source") as HTMLInputElement;
+    details.click();
+    hasText(panel, "Details are shown under each source.");
+    const unknownTier = within(panel).getByRole("table", { name: "Sources: Tier: Unknown" });
+    hasText(unknownTier, "Not scheduled, because the retrieved date is unknown.");
+    hasText(unknownTier, "Unknown facts");
+
+    user.click(within(panel).getByRole("button", { name: "Download a review checklist for the listed sources (Markdown)" }));
+    expect(saved).toHaveLength(1);
+    expect(saved[0]!.type).toBe("text/markdown;charset=utf-8");
+    const text = await readBlob(saved[0]!);
+    expect(text.startsWith("# Review checklist\n")).toBe(true);
+    expect(text).toContain("- [ ] Tier not recorded.");
+    expect(text).toContain("- [ ] Possibly out of date.");
+    hasText(panel, /Checklist saved with \d+ steps\./);
+    const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
 });
