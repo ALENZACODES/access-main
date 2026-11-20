@@ -20,8 +20,8 @@ function read(file: string): string {
 /** Child paths of a route table, from `path: "name"` entries. Parameter and splat paths are skipped. */
 function tablePaths(source: string): string[] {
   return [...source.matchAll(/path:\s*"([^"]+)"/g)]
-    .map((match) => match[1])
-    .filter((path) => !path.includes(":") && !path.includes("*"));
+    .map((match) => match[1] ?? "")
+    .filter((path) => path.length > 0 && !path.includes(":") && !path.includes("*"));
 }
 
 /**
@@ -34,12 +34,15 @@ export function appRoutes(): string[] {
   const router = read("router.tsx");
   for (const match of router.matchAll(/path:\s*"([^"]+)"/g)) {
     const path = match[1];
+    if (!path) continue;
     if (path === "/" || path === "*" || path.includes(":")) continue;
     found.add(`/${path.replace(/^\//, "").replace(/\/\*$/, "")}`);
   }
   const features = read("features/routes.tsx");
   const entries = /const entries = \[([^\]]*)\]/.exec(features)?.[1] ?? "";
-  for (const match of entries.matchAll(/"([a-z0-9-]+)"/g)) found.add(`/settings/${match[1]}`);
+  for (const match of entries.matchAll(/"([a-z0-9-]+)"/g)) {
+    if (match[1]) found.add(`/settings/${match[1]}`);
+  }
   for (const path of tablePaths(features)) found.add(`/settings/${path}`);
   for (const path of tablePaths(read("hub/routes.tsx"))) found.add(`/more/${path}`);
   return [...found];
