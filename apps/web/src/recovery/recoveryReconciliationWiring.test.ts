@@ -22,7 +22,7 @@ const earlier = [
 
 describe("reconciliation live mounts and public APIs", () => {
   it("imports the reconciliation UI from the real shell", () => {
-    expect(shell).toContain('import { RecoveryReconciliationPanel } from "./RecoveryReconciliationPanel";');
+    expect(shell).toContain('await import("./RecoveryReconciliationPanel")');
   });
   it("mounts with current inventory data", () => {
     expect(shell).toContain('<RecoveryReconciliationPanel locale={locale} records={inventory}');
