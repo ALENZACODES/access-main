@@ -7,7 +7,9 @@ import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { routePage } from "./perf/routeChunks.ts";
 import { AppShell } from "./shell/AppShell.tsx";
 import { lazy, Suspense } from "react";
-const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
+// The narrow-screen audit page is a development tool. It is only registered when `import.meta.env.DEV`
+// is true (the dev server and the unit tests), so the production build neither ships nor precaches its chunk.
+const NarrowAuditPage = import.meta.env.DEV ? lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage }))) : null;
 const AccessRehearsalPage = lazy(() => import("./input/rehearsal/AccessRehearsalPage.tsx").then((module) => ({ default: module.AccessRehearsalPage })));
 
 // Every route in the integration contract is lazy, so none is on the first-install path.
@@ -53,7 +55,7 @@ export const routes: RouteObject[] = [
       { path: "contribute", element: <Section><ContributePage /></Section> },
       { path: "settings/*", element: <Section><SettingsRoutes /></Section> },
       { path: "more/*", element: <Section><MoreRoutes /></Section> },
-      { path: "dev/narrow", element: <Section><NarrowAuditPage /></Section> },
+      ...(NarrowAuditPage ? [{ path: "dev/narrow", element: <Section><NarrowAuditPage /></Section> }] : []),
       { path: "*", element: <NotFoundPage /> },
     ],
   },
