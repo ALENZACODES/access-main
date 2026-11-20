@@ -108,7 +108,7 @@ for (const [changes, expected] of [
   [{ trigger: widget({ expanded: "true" }), panelVisible: true }, "disclosure-open-inert"],
   [{ panelVisible: true, panelInert: false }, "disclosure-closed-visible"],
 ] as const) {
-  test(`disclosure catches ${expected}`, () => {
+  test(`disclosure catches ${expected}: ${JSON.stringify(changes)}`,  () => {
     expect(codes(disclosureIssues(disclosure(changes)))).toContain(expected);
   });
 }
@@ -142,7 +142,7 @@ for (const [changes, expected] of [
   [{ interrupted: true }, "widget-event-interrupted"],
   [{ after: widget({ id: "different", expanded: "true" }) }, "widget-identity-shift"],
 ] as const) {
-  test(`widget transition catches ${expected}`, () => {
+  test(`widget transition catches ${expected}: ${JSON.stringify(changes)}`,  () => {
     expect(codes(transitionIssues(event(changes as Partial<WidgetEvent>)))).toContain(expected);
   });
 }
@@ -166,7 +166,7 @@ for (const [changes, code] of [
   [{ children: [item("first", 0, { role: "button" })] }, "composite-child-role"],
   [{ children: [item("first", 0, { selected: "false" })] }, "composite-selected-state"],
 ] as const) {
-  test(`composite reports ${code}`, () => {
+  test(`composite reports ${code}: ${JSON.stringify(changes)}`,  () => {
     expect(codes(compositeIssues(composite(changes as Partial<CompositeObservation>)))).toContain(code);
   });
 }
