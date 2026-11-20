@@ -231,3 +231,9 @@ UNKNOWN.
   controller shows it when given `features`; `liveControllerDeps()` supplies the register and the page's browser.
 - Not covered: whether the site a person uses really sends the header settings (not checked); features reached
   by a name built at run time; `packages/`; Playwright e2e was not run.
+
+## Addresses, network requests and counts (P10S)
+
+`addressRegister.ts` lists the web hosts the App's own code names (each marked as a page a person can open or a name inside a data format that is never contacted) and the files that make network requests, with where each request goes. A destination chosen by data, such as the offline map pack's file addresses, is `UNKNOWN`. `audit/addressScan.ts` reads the source and `audit/address.repo.audit.test.ts` fails when a host or a request appears, goes or moves without a row. Calls made through a name the code passes around are not found by the scan. Test scripts (`*.node.mjs`), the privacy folder's own code and the network guard in `egress.ts` are not scanned.
+
+`addressSection.ts` and `addressExport.ts` show and download those rows. `glance.ts` and `glanceSection.ts` count the rows of the storage, offline storage, browser feature and address lists into one short summary; a figure for things the App has not confirmed is shown as unknown, never as a yes or a no. Both sections are switched on by the controller options `addresses` and `glance`, and the live controller sets them.
