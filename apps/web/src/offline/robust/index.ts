@@ -65,12 +65,12 @@ export * from "./sourceAgeReview";
 export * from "./sourceAgeCopy";
 export * from "./sourceAgeExport";
 export * from "./sourceAgePanel";
-export * from "./handoffRehearsal";
-export * from "./handoffRehearsalCopy";
-export * from "./handoffRehearsalPanel";
-export { handoffReviewText, pageHandoffReview, reviewHandoff } from "./handoffReview";
 
 export * from "./continuityDrill";
 export * from "./continuityDrillCopy";
 export * from "./continuityDrillExport";
 export * from "./continuityDrillPanel";
+export * from "./handoffRehearsal";
+export * from "./handoffRehearsalCopy";
+export * from "./handoffRehearsalPanel";
+export { handoffReviewText, pageHandoffReview, reviewHandoff } from "./handoffReview";
