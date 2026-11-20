@@ -60,3 +60,8 @@ export * from "./recoveryBatches";
 export * from "./recoveryBatchesCopy";
 export * from "./recoveryBatchesExport";
 export * from "./recoveryBatchesPanel";
+
+export * from "./sourceAgeReview";
+export * from "./sourceAgeCopy";
+export * from "./sourceAgeExport";
+export * from "./sourceAgePanel";

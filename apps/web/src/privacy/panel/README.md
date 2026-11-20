@@ -210,3 +210,24 @@ both languages, a source and a date.
   button does. A cache or database line never claims a consent check: it says "Not confirmed". The controller
   offers the two download buttons when it is given `kept`; `liveControllerDeps()` supplies it.
 - Not covered: cookies and the browser's own storage are still only listed by name; Playwright e2e was not run.
+
+## Browser features (P10R)
+
+`featureRegister.ts` lists what the App asks of the browser: the features its code uses (a background page for
+offline copies, space checks, a request to keep offline data, copying text you chose, saving and reading files,
+printing, reading the language and display settings) and the powerful ones it does not use (location, camera and
+microphone, notifications, reading the clipboard, background sends, cookies, device connections, sensors, stored
+sign-in details). Each row says whether the browser asks the person first; what the App has not confirmed is
+UNKNOWN.
+
+- `../audit/featureScan.ts` holds the patterns that show each feature in the source. `feature.repo.audit.test.ts`
+  fails when a feature the register says is unused appears in the source, when a used row is no longer backed by
+  the source, when a row names the wrong file, and when a header claim is not in the header file. Tests, comments,
+  the audit folder and the network guard's own wrapping of the background send are skipped.
+- `permissions.ts` asks the browser what it has allowed, only when the person presses the check button, and only
+  reads. A browser that has no permission query, rejects the name or gives an answer the App does not know is shown
+  as unknown, never as a guess.
+- `featureSection.ts` shows two tables, "Used by the App" and "Not used by the App", and the check button. The
+  controller shows it when given `features`; `liveControllerDeps()` supplies the register and the page's browser.
+- Not covered: whether the site a person uses really sends the header settings (not checked); features reached
+  by a name built at run time; `packages/`; Playwright e2e was not run.

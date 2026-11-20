@@ -12,3 +12,5 @@ export { checkRegister, checkReach, compareToRegister, formatComparison, isScann
 export type { Coverage, FoundKey, RegisterComparison } from "./storageKeys";
 export { compareDevice, formatDeviceComparison, scanDeviceNames } from "./deviceStorageScan";
 export type { DeviceComparison, FoundDevice } from "./deviceStorageScan";
+export { FEATURE_CATALOGUE, compareFeatures, formatFeatureComparison, scanFeatures } from "./featureScan";
+export type { FeatureComparison, FeaturePattern, FoundFeature } from "./featureScan";
