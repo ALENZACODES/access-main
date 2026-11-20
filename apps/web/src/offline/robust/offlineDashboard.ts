@@ -322,7 +322,18 @@ export function mountOfflineDashboard(
     if (inquiryDisposed) return;
     unmountInquiry = mountAccessInquiry(inquiryHost, manifest, model, language);
   }).catch(() => {
-    // Existing offline controls remain usable when the optional module cannot load.
+    // An optional personal notebook must not prevent use of saved offline copies.
+  });
+
+  const contingencyHost = element("div");
+  section.append(contingencyHost);
+  let contingencyDisposed = false;
+  let unmountContingency: () => void = () => undefined;
+  void import("./contingencyPanel").then(({ mountOfflineContingency }) => {
+    if (contingencyDisposed) return;
+    unmountContingency = mountOfflineContingency(contingencyHost, manifest, model, language);
+  }).catch(() => {
+    // The original offline controls remain available when this optional view fails.
   });
 
   const renderDetails = (state: DashboardState): void => {
@@ -455,6 +466,8 @@ export function mountOfflineDashboard(
     unmountPreparation();
     inquiryDisposed = true;
     unmountInquiry();
+    contingencyDisposed = true;
+    unmountContingency();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);

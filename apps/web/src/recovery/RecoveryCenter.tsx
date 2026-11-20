@@ -36,6 +36,14 @@ const RecoveryHandoffChainPanel = lazy(async () => ({
   default: (await import("./RecoveryHandoffChainPanel")).RecoveryHandoffChainPanel,
 }));
 
+const RecoveryReconciliationPanel = lazy(async () => ({
+  default: (await import("./RecoveryReconciliationPanel")).RecoveryReconciliationPanel,
+}));
+
+const RecoveryDrillPanel = lazy(async () => ({
+  default: (await import("./RecoveryDrillPanel")).RecoveryDrillPanel,
+}));
+
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
   readonly locale: RecoveryLocale;
@@ -187,6 +195,15 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
       </Suspense>
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de la chaîne…" : "Loading handoff chain…"}</p>}>
         <RecoveryHandoffChainPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du rapprochement…" : "Loading reconciliation…"}</p>}>
+        <RecoveryReconciliationPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure}
+          onInspect={() => { void refresh(); }} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’exercice…" : "Loading practice drill…"}</p>}>
+        <RecoveryDrillPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (

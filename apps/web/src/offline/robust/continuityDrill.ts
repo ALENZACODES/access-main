@@ -12,7 +12,7 @@ export const DEFAULT_DRILL_SETTINGS: DrillSettings = { scenario: "baseline", aff
 const scenarios: readonly DrillScenario[] = ["baseline", "evict-largest", "evict-oldest", "source-change", "quota-reduction"];
 function validNumber(n: number): boolean { return Number.isSafeInteger(n) && n >= 0; }
 /** Runs a local hypothetical scenario; does not touch saved bytes. */
-export function runContinuityDrill(manifest: RegionManifest, inventory: RegionInventory | null, settings: DrillSettings, estimate: StorageEstimate = {}): DrillResult {
+export function runContinuityDrill(manifest: RegionManifest, inventory: RegionInventory | null, settings: DrillSettings = DEFAULT_DRILL_SETTINGS, estimate: StorageEstimate = {}): DrillResult {
   if (!manifest.regionId.trim() || !scenarios.includes(settings.scenario) ||
     !validNumber(settings.affectedCount) || !validNumber(settings.reductionBytes) ||
     !validNumber(settings.preserveReserveBytes)) throw new TypeError("Invalid drill settings");
