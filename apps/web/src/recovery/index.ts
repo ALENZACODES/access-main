@@ -217,6 +217,24 @@ export * from "./recoveryDecisionMatrix";
 export * from "./recoveryDecisionCoverage";
 export * from "./recoveryDecisionCopy";
 
+
+
+// User-controlled recovery transfer witness records, with no readiness inference.
+export { RecoveryTransferWitnessPanel } from "./RecoveryTransferWitnessPanel";
+export type { RecoveryTransferWitnessPanelProps } from "./RecoveryTransferWitnessPanel";
+export * from "./recoveryTransferWitness";
+export * from "./recoveryTransferWitnessAnalysis";
+export { recoveryTransferWitnessCopy } from "./recoveryTransferWitnessCopy";
+export type { WitnessCopy } from "./recoveryTransferWitnessCopy";
+
+// Manual recovery evidence packets: never change installed pack readiness.
+export { RecoveryEvidencePacketPanel } from "./RecoveryEvidencePacketPanel";
+export type { RecoveryEvidencePacketPanelProps } from "./RecoveryEvidencePacketPanel";
+export * from "./recoveryEvidencePacket";
+export * from "./recoveryEvidenceAnalysis";
+export { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
+export type { PacketCopy } from "./recoveryEvidencePacketCopy";
+
 // Manual offline recovery rehearsal: records never authorize pack use.
 export { RecoveryDrillPanel } from "./RecoveryDrillPanel";
 export type { RecoveryDrillPanelProps } from "./RecoveryDrillPanel";

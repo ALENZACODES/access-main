@@ -185,3 +185,40 @@ describe("saving the details as text", () => {
     expect(screen.getByRole("button", { name: "Enregistrer les détails comme texte (.txt)" })).toBeTruthy();
   });
 });
+
+describe("saving a large-print page for one place", () => {
+  it("saves a page for just this place, at the default size", () => {
+    const onSave = vi.fn<(f: SavedFile) => boolean>(() => true);
+    const { toggle } = show(place("a", { name: "Solo Hall" }), "en", onSave);
+    fireEvent.click(toggle());
+    fireEvent.click(screen.getByRole("button", { name: "Save a large-print page (.html)" }));
+    const file = onSave.mock.calls[0]![0];
+    expect(file.name).toBe("large-print-list.html");
+    expect(file.mime).toBe("text/html;charset=utf-8");
+    expect(file.content).toContain("<title>My place</title>");
+    expect(file.content).toContain("1. Solo Hall");
+    expect(file.content).toContain("font-size: 18pt");
+    expect(file.content.match(/<article>/g)).toHaveLength(1);
+  });
+  it("is offered for a place with no map point, and says UNKNOWN in the page", () => {
+    const onSave = vi.fn<(f: SavedFile) => boolean>(() => true);
+    const { toggle } = show(bare("z"), "en", onSave);
+    fireEvent.click(toggle());
+    fireEvent.click(screen.getByRole("button", { name: "Save a large-print page (.html)" }));
+    expect(onSave.mock.calls[0]![0].content).toContain("<dd>UNKNOWN</dd>");
+  });
+  it("is in French in French, with the French file name", () => {
+    const onSave = vi.fn<(f: SavedFile) => boolean>(() => true);
+    const { toggle } = show(place("a"), "fr", onSave);
+    fireEvent.click(toggle());
+    fireEvent.click(screen.getByRole("button", { name: "Enregistrer une page en gros caractères (.html)" }));
+    expect(onSave.mock.calls[0]![0].name).toBe("liste-en-gros-caracteres.html");
+    expect(onSave.mock.calls[0]![0].content).toContain('<html lang="fr">');
+  });
+  it("reports a failed save", () => {
+    const { toggle } = show(place("a"), "en", () => false);
+    fireEvent.click(toggle());
+    fireEvent.click(screen.getByRole("button", { name: "Save a large-print page (.html)" }));
+    expect(document.querySelector("[data-sheet-status]")?.textContent).toBe("This browser cannot save a file here.");
+  });
+});
