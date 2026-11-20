@@ -7,6 +7,8 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { StreetIndex } from "./StreetIndex.tsx";
+import { ListTransfer } from "./ListTransfer.tsx";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
@@ -166,6 +168,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
       <PackBands places={view.beforeBand} shown={view.shownPlaces} from={from} locale={locale} today={day} selected={activeBand} onSelect={setBand} />
+      <StreetIndex places={view.shownPlaces} locale={locale} onAdd={shortlist.add} />
       <p role="status">{view.announcement}</p>
       {view.facetSummary ? <p>{view.facetSummary}</p> : null}
       {view.unknownHiddenNotice ? <p>{view.unknownHiddenNotice}</p> : null}
@@ -193,6 +196,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onRemove={shortlist.remove}
         onClear={shortlist.clear}
       />
+      <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
