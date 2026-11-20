@@ -14,6 +14,7 @@ describe("the states barrel exposes the pack tools", () => {
     "DataCredits", "buildCredits", "creditRecordsFromPack",
     "VisitPlan", "buildVisitPlan", "questionsFor", "visitPlanToText", "visitPlanToCsv", "toggleDone", "QUESTION_TOPICS", "filterPlan", "VISIT_FILTERS", "draftMessage", "mailtoHref",
     "PlaceSheet", "ShortlistFiles", "GapMatrix", "placeSheetToText", "buildGapMatrix", "gapSentence", "cellWord", "gapMatrixToCsv", "buildPlaceSheet", "sheetSummary", "placeToVcard", "placesToVcards", "placesToGpx", "foldVcardLine", "escapeXml",
+    "StreetIndex", "buildStreetIndex", "parseAddress", "parityOf", "foldAddressText", "streetSummary", "streetCaveat", "streetGroupLine", "orderGroups", "orderLabel", "compareNames", "STREET_ORDERS", "DEFAULT_STREET_ORDER", "filterStreets", "keyWord", "addMany", "addManySentence", "streetIndexToText", "streetIndexToCsv", "STREET_TEXT_FILENAMES", "STREET_CSV_FILENAMES",
     "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",

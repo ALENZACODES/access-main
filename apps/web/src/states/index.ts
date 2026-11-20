@@ -160,3 +160,7 @@ export * from "./visitFilter.ts";
 export * from "./visitMessage.ts";
 export { VisitPlan } from "./VisitPlan.tsx";
 export { Shortlist } from "./Shortlist.tsx";
+export * from "./streetAddress.ts";
+export * from "./streetIndex.ts";
+export * from "./streetIndexExport.ts";
+export { StreetIndex } from "./StreetIndex.tsx";
