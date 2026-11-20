@@ -131,7 +131,7 @@ describe("copy rules", () => {
       }
     }
   });
-  it("never says a place is right, verified or suitable: it describes the search only", () => {
+  it("never says a place is right, checked or suitable: it describes the search only", () => {
     const claims = /\b(correct|accurate|confirmed|best|recommend\w*|suitable|safe|usable|real-time|guarantee)\b/i;
     for (const q of samples) {
       const e = explainPackSearch(parsePackSearch(q), "en")!;
