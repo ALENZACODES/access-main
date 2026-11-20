@@ -1,0 +1,185 @@
+import { type Control, type Finding, type Language, type Project, finding, sortFindings } from './model.ts';
+import { type Machine, eligibleIds, groups } from './engine.ts';
+
+/** Read-only DOM capture from a browser, not a simulation of assistive technology. */
+export interface NodeView {
+  readonly id:string;
+  readonly tag:string;
+  readonly role:string|null;
+  readonly name:string;
+  readonly description:string;
+  readonly ariaLabelledBy:readonly string[];
+  readonly ariaDescribedBy:readonly string[];
+  readonly ariaControls:readonly string[];
+  readonly focusable:boolean;
+  readonly tabIndex:number;
+  readonly visible:boolean;
+  readonly disabled:boolean;
+  readonly width:number;
+  readonly height:number;
+  readonly parent:string|null;
+}
+export interface LiveEvent {
+  readonly id:string;
+  readonly sequence:number;
+  readonly locale:Language;
+  readonly text:string;
+  readonly politeness:'polite'|'assertive'|'off';
+  readonly evidence:'UNKNOWN'|'OBSERVED'|'DOCUMENTED';
+  readonly role:string;
+}
+export interface BrowserSnapshot {
+  readonly lang:Language;
+  readonly title:string;
+  readonly nodes:readonly NodeView[];
+  readonly actualFocusOrder:readonly string[];
+  readonly live:readonly LiveEvent[];
+  readonly mainCount:number;
+  readonly h1Count:number;
+}
+const ROLE_CONTROL=new Set(['button','checkbox','radio','link','menuitem','switch','tab','textbox','combobox']);
+const NATIVE_CONTROL=new Set(['button','input','select','textarea','a','summary']);
+function isNamed(node:NodeView):boolean{return node.name.trim().length>0;}
+function isOperable(node:NodeView):boolean{return ROLE_CONTROL.has(node.role??'')||NATIVE_CONTROL.has(node.tag);}
+function inside(node:NodeView,ancestor:string,nodes:readonly NodeView[]):boolean {
+  let parent=node.parent;const visited=new Set<string>();
+  while(parent!==null&&!visited.has(parent)){
+    if(parent===ancestor)return true;
+    visited.add(parent);
+    parent=nodes.find(n=>n.id===parent)?.parent??null;
+  }
+  return false;
+}
+export function nodeIndex(nodes:readonly NodeView[]):Map<string,NodeView[]>{
+  const index=new Map<string,NodeView[]>();
+  for(const node of nodes){const values=index.get(node.id)??[];values.push(node);index.set(node.id,values);}
+  return index;
+}
+export function auditDocument(snapshot:BrowserSnapshot):Finding[]{
+  const issues:Finding[]=[];
+  if(!['en','fr'].includes(snapshot.lang))issues.push(finding('document.language','document.lang'));
+  if(!snapshot.title.trim())issues.push(finding('document.title','document.title'));
+  if(snapshot.mainCount!==1)issues.push(finding('document.main','document.main'));
+  if(snapshot.h1Count!==1)issues.push(finding('document.heading','document.h1'));
+  return issues;
+}
+export function auditNodes(nodes:readonly NodeView[]):Finding[]{
+  const issues:Finding[]=[];const ids=nodeIndex(nodes);
+  nodes.forEach((node,index)=>{
+    const path=`nodes[${index}]`;
+    if(!node.id)issues.push(finding('node.missing-id',`${path}.id`,'review'));
+    else if((ids.get(node.id)?.length??0)>1)issues.push(finding('node.duplicate-id',`${path}.id`));
+    for(const [key,refs] of [['ariaLabelledBy',node.ariaLabelledBy],['ariaDescribedBy',node.ariaDescribedBy],['ariaControls',node.ariaControls]] as const){
+      for(const ref of refs){
+        const found=ids.get(ref)??[];
+        if(!found.length)issues.push(finding('node.missing-reference',`${path}.${key}`));
+        else if(found.length>1)issues.push(finding('node.ambiguous-reference',`${path}.${key}`));
+      }
+    }
+    if(!isOperable(node))return;
+    if(!isNamed(node))issues.push(finding('node.unnamed',path));
+    if(node.visible&&!node.disabled&&(node.width<44||node.height<44||!Number.isFinite(node.width)||!Number.isFinite(node.height)))issues.push(finding('node.small-target',path));
+    if(node.focusable&&node.tabIndex>0)issues.push(finding('node.positive-tabindex',path));
+    if(node.focusable&&!node.visible)issues.push(finding('node.hidden-focus',path));
+    if(node.focusable&&node.disabled)issues.push(finding('node.disabled-focus',path));
+    if(node.role==='tab'&&node.ariaControls.length!==1)issues.push(finding('node.tab-panel-reference',path));
+    if(node.role==='switch'&&node.tag==='div'&&node.tabIndex<0)issues.push(finding('node.switch-unreachable',path));
+  });
+  return sortFindings(issues);
+}
+export function auditFocus(snapshot:BrowserSnapshot):Finding[]{
+  const issues:Finding[]=[];const ids=nodeIndex(snapshot.nodes);const seen=new Set<string>();
+  snapshot.actualFocusOrder.forEach((id,index)=>{
+    const path=`actualFocusOrder[${index}]`;
+    if(seen.has(id))issues.push(finding('focus.repeat',path));
+    seen.add(id);
+    const matches=ids.get(id)??[];
+    if(matches.length!==1){issues.push(finding('focus.missing-target',path));return;}
+    const target=matches[0];
+    if(!target)return;
+    if(!target.visible||target.disabled||!target.focusable)issues.push(finding('focus.inactive',path));
+    if(target.tabIndex<0)issues.push(finding('focus.programmatic-only',path));
+  });
+  for(const [index,node] of snapshot.nodes.entries()){
+    if(node.focusable&&node.visible&&!node.disabled&&node.tabIndex===0&&!seen.has(node.id))issues.push(finding('focus.unvisited',`nodes[${index}]`,'review'));
+  }
+  return sortFindings(issues);
+}
+export function auditLive(events:readonly LiveEvent[]):Finding[]{
+  const issues:Finding[]=[];const ids=new Set<string>();let previous=-1;
+  events.forEach((event,index)=>{
+    const path=`live[${index}]`;
+    if(ids.has(event.id))issues.push(finding('live.duplicate-id',path));
+    ids.add(event.id);
+    if(!Number.isInteger(event.sequence)||event.sequence<=previous)issues.push(finding('live.out-of-order',path));
+    previous=event.sequence;
+    if(!event.text.trim())issues.push(finding('live.empty',path));
+    if(event.text.length>800)issues.push(finding('live.long',path));
+    if(!['en','fr'].includes(event.locale))issues.push(finding('live.language',path));
+    if(event.politeness==='off')issues.push(finding('live.silent',path,'review'));
+    if(event.role==='alert'&&event.politeness!=='assertive')issues.push(finding('live.alert-priority',path,'review'));
+    if(event.evidence==='UNKNOWN'&&/\bREADY\b/.test(event.text))issues.push(finding('live.unknown-promoted',path));
+    if(index>0){const earlier=events[index-1];if(earlier&&earlier.text===event.text&&earlier.locale===event.locale)issues.push(finding('live.duplicate-message',path,'review'));}
+  });
+  return sortFindings(issues);
+}
+export function auditDialog(snapshot:BrowserSnapshot,dialogId:string):Finding[]{
+  const issues:Finding[]=[];const ids=nodeIndex(snapshot.nodes);
+  const dialog=ids.get(dialogId)?.[0];
+  if(!dialog)return [finding('dialog.missing','dialog')];
+  if(dialog.role!=='dialog'&&dialog.role!=='alertdialog')issues.push(finding('dialog.invalid-role','dialog.role'));
+  if(!dialog.name.trim())issues.push(finding('dialog.unnamed','dialog.name'));
+  for(const [index,id] of snapshot.actualFocusOrder.entries()){
+    const node=ids.get(id)?.[0];
+    if(!node)continue;
+    if(node.id!==dialogId&&!inside(node,dialogId,snapshot.nodes))issues.push(finding('dialog.background-focus',`actualFocusOrder[${index}]`));
+  }
+  return sortFindings(issues);
+}
+export function auditProjectAgainstBrowser(project:Project,snapshot:BrowserSnapshot):Finding[]{
+  const issues=[...auditDocument(snapshot),...auditNodes(snapshot.nodes),...auditFocus(snapshot),...auditLive(snapshot.live)];
+  const ids=nodeIndex(snapshot.nodes);
+  for(const [index,control] of project.controls.entries()){
+    const matches=ids.get(control.id)??[];
+    if(matches.length!==1){issues.push(finding('mapping.missing-control',`controls[${index}]`));continue;}
+    const node=matches[0];
+    if(!node)continue;
+    if(node.name!==control.name[snapshot.lang])issues.push(finding('mapping.name-mismatch',`controls[${index}]`,'review'));
+    if(node.width<control.width||node.height<control.height)issues.push(finding('mapping.smaller-target',`controls[${index}]`,'review'));
+    if(node.disabled!==control.disabled)issues.push(finding('mapping.disabled-changed',`controls[${index}]`,'review'));
+    if(node.visible!==control.visible)issues.push(finding('mapping.visibility-changed',`controls[${index}]`,'review'));
+  }
+  for(const id of eligibleIds(project))if(!snapshot.actualFocusOrder.includes(id))issues.push(finding('mapping.unreached',`controls.${id}`,'review'));
+  return sortFindings(issues);
+}
+export function auditScanMapping(project:Project,machine:Machine,snapshot:BrowserSnapshot):Finding[]{
+  const issues:Finding[]=[];
+  const ids=nodeIndex(snapshot.nodes);
+  if(machine.focus!==null&&!(ids.get(machine.focus)?.length))issues.push(finding('scan.target-not-in-dom','machine.focus'));
+  if(machine.selected!==null){
+    const node=ids.get(machine.selected)?.[0];
+    if(!node||!node.visible||node.disabled)issues.push(finding('scan.selection-not-operable','machine.selected'));
+  }
+  if(machine.mode==='GROUPED'&&machine.group!==null&&!groups(project).some(group=>group.id===machine.group))issues.push(finding('scan.unknown-group','machine.group'));
+  return issues;
+}
+export function snapshotDifference(before:BrowserSnapshot,after:BrowserSnapshot):Finding[]{
+  const issues:Finding[]=[];const a=nodeIndex(before.nodes);const b=nodeIndex(after.nodes);
+  for(const [id,entries] of a){
+    const first=entries[0];const second=b.get(id)?.[0];
+    if(!second){issues.push(finding('diff.removed',`nodes.${id}`,'review'));continue;}
+    if(!first)continue;
+    if(first.name!==second.name)issues.push(finding('diff.name',`nodes.${id}`,'review'));
+    if(first.role!==second.role)issues.push(finding('diff.role',`nodes.${id}`,'review'));
+    if(first.disabled!==second.disabled)issues.push(finding('diff.disabled',`nodes.${id}`,'review'));
+    if(first.visible!==second.visible)issues.push(finding('diff.visible',`nodes.${id}`,'review'));
+    if(first.tabIndex!==second.tabIndex)issues.push(finding('diff.tabindex',`nodes.${id}`,'review'));
+    if(first.width>second.width||first.height>second.height)issues.push(finding('diff.target-shrink',`nodes.${id}`,'review'));
+  }
+  for(const id of b.keys())if(!a.has(id))issues.push(finding('diff.added',`nodes.${id}`,'review'));
+  if(before.lang!==after.lang)issues.push(finding('diff.language','document.lang','review'));
+  return sortFindings(issues);
+}
+export function auditSummary(issues:readonly Finding[]):{errors:number;reviews:number;codes:string[]}{
+  return {errors:issues.filter(i=>i.severity==='error').length,reviews:issues.filter(i=>i.severity==='review').length,codes:[...new Set(issues.map(i=>i.code))].sort()};
+}
