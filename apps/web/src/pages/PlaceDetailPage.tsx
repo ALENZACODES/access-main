@@ -8,7 +8,9 @@ import { SectionLoading } from "../modules/Section.tsx";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
-import { StateNotice, initialConnectivity, offlineBanner, placeRouteView } from "../states/index.ts";
+import { StateNotice } from "../states/StateNotice.tsx";
+import { initialConnectivity, offlineBanner } from "../states/offline.ts";
+import { placeRouteView } from "../states/placeRoute.ts";
 
 const PackPlaceView = lazy(() => import("@access-tools/place").then((module) => ({ default: module.PackPlaceView })));
 
