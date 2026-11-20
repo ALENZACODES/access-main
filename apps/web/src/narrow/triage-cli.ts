@@ -1,10 +1,12 @@
+import { coverageForReport } from './coverage.js';
 import { parseLedger, type Ledger } from './ledger.js';
+import { applyManualLog, describeManualLog, parseManualLog, type ManualRow } from './manual-log.js';
 import { parseOwners, type Owners } from './owners.js';
 import { describePolicy, evaluatePolicy, parsePolicy, policyMet, type Policy } from './policy.js';
 import { describePriorities, prioritise, renderPrioritiesMarkdown } from './priority.js';
 import { totals } from './report.js';
 import { parseReport } from './reportio.js';
-import { draftTickets, renderTicketFile, renderTicketIndex, ticketFileName } from './tickets.js';
+import { draftManualTickets, draftTickets, renderTicketFile, renderTicketIndex, ticketFileName } from './tickets.js';
 import type { Lang } from './types.js';
 
 /**
@@ -22,6 +24,8 @@ export interface TriageArgs {
   readonly ledgerFile: string | null;
   readonly ownersFile: string | null;
   readonly policyFile: string | null;
+  /** The log of by-hand looks. Problems in it get a ticket draft too. */
+  readonly manualLogFile: string | null;
   /** Folder to write ticket drafts into. */
   readonly ticketsDir: string | null;
   /** `fail` drafts tickets for failures only. */
@@ -37,19 +41,19 @@ type Text = { readonly en: string; readonly fr: string };
 export type ParsedTriageArgs = { readonly ok: true; readonly args: TriageArgs } | { readonly ok: false; readonly error: Text };
 
 export const TRIAGE_HELP_TEXT =
-  'Usage: narrow-audit triage REPORT.json [--ledger FILE] [--owners FILE] [--policy FILE]\n' +
+  'Usage: narrow-audit triage REPORT.json [--ledger FILE] [--owners FILE] [--policy FILE] [--manual-log FILE]\n' +
   '                           [--tickets DIR] [--tickets-for fail|all] [--out FILE.md] [--max N] [--lang en|fr]\n' +
   'Reads a report that was already written. Prints where to start, compares the report with a policy,\n' +
   'and writes ticket drafts as Markdown files. It audits nothing and sends nothing anywhere.\n' +
   'Exit code 0 when any policy given is kept, 1 when it is not, 2 on a usage or read error.\n' +
   '\n' +
-  'Utilisation\u00A0: narrow-audit triage RAPPORT.json [--ledger FICHIER] [--owners FICHIER] [--policy FICHIER]\n' +
+  'Utilisation\u00A0: narrow-audit triage RAPPORT.json [--ledger FICHIER] [--owners FICHIER] [--policy FICHIER] [--manual-log FICHIER]\n' +
   '                           [--tickets DOSSIER] [--tickets-for fail|all] [--out FICHIER.md] [--max N] [--lang en|fr]\n' +
   'Lit un rapport déjà écrit. Affiche par où commencer, compare le rapport à une politique\n' +
   'et écrit des brouillons de tickets en Markdown. N’audite rien et n’envoie rien nulle part.\n' +
   'Code de sortie 0 quand la politique indiquée est tenue, 1 sinon, 2 en cas d’erreur d’utilisation ou de lecture.\n';
 
-const VALUE_FLAGS: readonly string[] = ['--ledger', '--owners', '--policy', '--tickets', '--tickets-for', '--out', '--max', '--lang'];
+const VALUE_FLAGS: readonly string[] = ['--ledger', '--owners', '--policy', '--manual-log', '--tickets', '--tickets-for', '--out', '--max', '--lang'];
 
 export function parseTriageArgs(argv: readonly string[]): ParsedTriageArgs {
   const fail = (en: string, fr: string): ParsedTriageArgs => ({ ok: false, error: { en, fr } });
@@ -57,6 +61,7 @@ export function parseTriageArgs(argv: readonly string[]): ParsedTriageArgs {
   let ledgerFile: string | null = null;
   let ownersFile: string | null = null;
   let policyFile: string | null = null;
+  let manualLogFile: string | null = null;
   let ticketsDir: string | null = null;
   let ticketsFor: 'fail' | 'all' = 'all';
   let outFile: string | null = null;
@@ -87,6 +92,9 @@ export function parseTriageArgs(argv: readonly string[]): ParsedTriageArgs {
       case '--policy':
         policyFile = v;
         break;
+      case '--manual-log':
+        manualLogFile = v;
+        break;
       case '--tickets':
         ticketsDir = v;
         break;
@@ -109,7 +117,7 @@ export function parseTriageArgs(argv: readonly string[]): ParsedTriageArgs {
     }
   }
   if (!help && reportFile === '') return fail('Give the report to read, such as audit/narrow-audit.json.', 'Indiquez le rapport à lire, par exemple audit/narrow-audit.json.');
-  return { ok: true, args: { reportFile, ledgerFile, ownersFile, policyFile, ticketsDir, ticketsFor, outFile, max, lang, help } };
+  return { ok: true, args: { reportFile, ledgerFile, ownersFile, policyFile, manualLogFile, ticketsDir, ticketsFor, outFile, max, lang, help } };
 }
 
 export interface TriageDeps {
@@ -160,6 +168,12 @@ export async function runTriage(argv: readonly string[], deps: TriageDeps): Prom
     }
 
     const now = deps.now();
+    let looks: ManualRow[] | undefined;
+    if (args.manualLogFile !== null) {
+      const p = parseManualLog(await deps.readText(args.manualLogFile), now);
+      if (!p.ok) return stop(args.manualLogFile, p.error);
+      looks = applyManualLog(coverageForReport(report.value), p.value, now);
+    }
     const t = totals(report.value.routes);
     deps.log(
       fr
@@ -169,16 +183,18 @@ export async function runTriage(argv: readonly string[], deps: TriageDeps): Prom
     const items = prioritise(report.value, { now, ...(ledger ? { ledger } : {}), ...(owners ? { owners } : {}) });
     deps.log(describePriorities(items, args.lang, args.max ?? 10).trimEnd());
     if (args.outFile !== null) await deps.writeText(args.outFile, renderPrioritiesMarkdown(items, args.lang));
+    if (looks) deps.log(describeManualLog(looks, args.lang).trimEnd());
 
     if (args.ticketsDir !== null) {
       const dir = args.ticketsDir.replace(/\/+$/, '');
       const candidates = args.ticketsFor === 'fail' ? items.filter((i) => i.cluster.entry.status === 'fail') : items;
-      const tickets = draftTickets(items, args.lang, { only: args.ticketsFor, ...(args.max !== null ? { max: args.max } : {}) });
+      // Problems seen by hand come first: the audit cannot count them, so nothing else will bring them up.
+      const tickets = [...(looks ? draftManualTickets(looks, args.lang) : []), ...draftTickets(items, args.lang, { only: args.ticketsFor, ...(args.max !== null ? { max: args.max } : {}) })];
       for (let i = 0; i < tickets.length; i++) {
         const ticket = tickets[i];
         if (ticket) await deps.writeText(`${dir}/${ticketFileName(ticket, i)}`, renderTicketFile(ticket, args.lang));
       }
-      await deps.writeText(`${dir}/README.md`, renderTicketIndex(tickets, args.lang, candidates.length - tickets.length));
+      await deps.writeText(`${dir}/README.md`, renderTicketIndex(tickets, args.lang, Math.max(0, candidates.length - tickets.filter((x) => !x.key.startsWith('by-hand|')).length)));
       deps.log(
         fr
           ? `${tickets.length} brouillon(s) de ticket écrit(s) dans ${dir}. Rien n’a été envoyé à un outil de suivi.`

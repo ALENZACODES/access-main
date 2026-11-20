@@ -49,7 +49,7 @@ import { auditTextZoom, TEXT_ZOOM_CSS } from './textzoom.js';
 import { auditTypography, typographyInPage, type TypographyFacts } from './typography.js';
 import { auditTables } from './tables.js';
 import { auditTiming } from './timing.js';
-import { auditContrast } from './contrast.js';
+import { auditContrastWithFixes } from './contrast-fix.js';
 import { auditCopy, auditCopyDict } from './copylint.js';
 import { auditFocusObscured } from './focus.js';
 import { lintHtml } from './htmllint.js';
@@ -155,7 +155,7 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
     reflow: { checked: boxes.length + 1, entries: mapped.reflow },
     'target-size': { checked: boxes.length, entries: mapped.targets },
     'target-spacing': auditTargetSpacing(snapshot.interactive.map((e) => ({ id: e.id, ...e.rect }))),
-    ...(input.skipContrast ? {} : { contrast: auditContrast(snapshot.texts) }),
+    ...(input.skipContrast ? {} : { contrast: auditContrastWithFixes(snapshot.texts) }),
     name: names,
     'label-in-name': labels,
     language: auditLanguage(snapshot.doc),
