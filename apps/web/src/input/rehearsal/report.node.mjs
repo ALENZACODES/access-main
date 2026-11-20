@@ -42,7 +42,7 @@ test('hidden focus holds status', () => assert.equal(makeReport({keyboard:[obser
 test('missing announcement text holds status', () => assert.equal(makeReport({announcements:[announcements({text:''})]}).status,'HOLD'));
 test('duplicate announcement identifier holds status', () => assert.equal(makeReport({announcements:[announcements(),announcements({sequence:1})]}).status,'HOLD'));
 test('report collects source evidence findings', () => {
-  const j=journey({steps:[step({source:source({url:'http://example.org'})})]});
+  const j=journey({steps:[step({source:source({url:'data:text/plain,example'})})]});
   has(inspectSession(makeSession({journey:j}),DEFAULT_OPTIONS).findings,'source.url');
 });
 test('report preserves unknown evidence', () => {
