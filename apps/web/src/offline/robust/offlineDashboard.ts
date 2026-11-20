@@ -24,7 +24,7 @@ import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
-import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
+import { mountOfflineCasebook } from "./offlineCasebookPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -260,9 +260,9 @@ export function mountOfflineDashboard(
   const sourceAgeHost = element("div");
   section.append(sourceAgeHost);
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
-  const continuityHost = element("div");
-  section.append(continuityHost);
-  const unmountContinuity = mountOfflineContinuityDrill(continuityHost, manifest, model, language, dependencies.estimateStorage);
+  const casebookHost = element("div");
+  section.append(casebookHost);
+  const unmountCasebook = mountOfflineCasebook(casebookHost, manifest, model, language);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -382,7 +382,7 @@ export function mountOfflineDashboard(
     unmountDiagnostics();
     unmountRecovery();
     unmountSourceAge();
-    unmountContinuity();
+    unmountCasebook();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);

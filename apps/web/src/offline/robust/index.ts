@@ -66,7 +66,7 @@ export * from "./sourceAgeCopy";
 export * from "./sourceAgeExport";
 export * from "./sourceAgePanel";
 
-export * from "./continuityDrill";
-export * from "./continuityDrillCopy";
-export * from "./continuityDrillExport";
-export * from "./continuityDrillPanel";
+export * from "./offlineCasebook";
+export * from "./offlineCasebookCopy";
+export * from "./offlineCasebookExport";
+export * from "./offlineCasebookPanel";
