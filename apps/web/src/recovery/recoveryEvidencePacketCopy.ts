@@ -57,7 +57,7 @@ export interface PacketCopy {
 const en: PacketCopy = {
   heading: "Local recovery evidence packet",
   description: "Document local observations manually, review changes, and export a portable packet.",
-  caution: "UNKNOWN means unknown. Recorded observations do not establish that a pack is usable.",
+  caution: "UNKNOWN: There is not enough information to establish the pack’s condition. These observations do not show that the pack is usable.",
   unknown: "UNKNOWN",
   inspect: "Inspect local packs before recording an observation.",
   add: "Add observation",

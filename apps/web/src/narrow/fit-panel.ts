@@ -40,6 +40,8 @@ export interface FitOptions {
   readonly headingLevel?: 2 | 3;
   /** Answers to start from, so a panel mounted again in another language keeps what the person wrote. */
   readonly draft?: BarrierDraft;
+  /** More lines for the settings part of the text, asked for when the text is prepared. */
+  readonly extraFacts?: () => readonly string[];
 }
 
 export interface FitState {
@@ -297,7 +299,7 @@ export function mountFitPanel(opts: FitOptions): { getState(): FitState; getDraf
       }
       void (async (): Promise<void> => {
         const report = state.draft.includeFindings ? await audit() : null;
-        const text = renderBarrierText(state.draft, { location: where(), facts: state.facts, report, now: now() }, lang);
+        const text = renderBarrierText(state.draft, { location: where(), facts: state.facts, report, now: now(), extra: opts.extraFacts ? opts.extraFacts() : [] }, lang);
         state = { ...state, errors: [], text, notice: T.ready[lang] };
         render('#fit-text');
       })();
