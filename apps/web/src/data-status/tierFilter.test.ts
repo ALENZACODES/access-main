@@ -105,8 +105,8 @@ describe('tier column and sort', () => {
     const html = renderSourcesRegion(audit, 'en', NO_FILTERS, NOW);
     expect(html).toMatch(/<th scope="col"[^>]*>Tier<\/th><\/tr>/);
     expect(html.match(/<td>E<\/td><\/tr>/g)).toHaveLength(1);
-    expect(html.match(/<td>Unknown<\/td><\/tr>/g)).toHaveLength(2);
-    expect(renderSourcesRegion(audit, 'fr', NO_FILTERS, NOW).match(/<td>Inconnu<\/td><\/tr>/g)).toHaveLength(2);
+    expect(html.match(/<td>UNKNOWN<\/td><\/tr>/g)).toHaveLength(2);
+    expect(renderSourcesRegion(audit, 'fr', NO_FILTERS, NOW).match(/<td>UNKNOWN<\/td><\/tr>/g)).toHaveLength(2);
   });
   it('shows only the matching rows when a tier is chosen', () => {
     const html = renderSourcesRegion(audit, 'en', { ...NO_FILTERS, tier: 'E' }, NOW);
@@ -121,7 +121,7 @@ describe('tier control on the panel', () => {
       const html = renderFilterControls(locale, { ...NO_FILTERS, tier: 'E' });
       expect(html).toContain(`<label for="ds-f-tier">${locale === 'en' ? 'Tier' : 'Niveau'}</label>`);
       expect(html).toContain('<option value="E" selected>E</option>');
-      expect(html).toContain(`<option value="unknown">${locale === 'en' ? 'Unknown' : 'Inconnu'}</option>`);
+      expect(html).toContain(`<option value="unknown">${locale === 'en' ? 'UNKNOWN' : 'UNKNOWN'}</option>`);
       expect(html.match(/<select id="ds-f-tier"[\s\S]*?<\/select>/)?.[0].match(/<option/g)).toHaveLength(FILTER_TIERS.length + 1);
     }
     expect(renderFilterControls('en', NO_FILTERS)).toMatch(/<select id="ds-f-tier"[^>]*><option value="any" selected>/);
@@ -159,7 +159,7 @@ describe('tier control on the panel', () => {
     expect(host.announce.innerHTML).toContain('tier E');
     host.filter('change', 'tier', 'unknown');
     expect(host.region.innerHTML.match(/<tr><th scope="row">/g)).toHaveLength(2);
-    expect(host.announce.innerHTML).toContain('tier unknown');
+    expect(host.announce.innerHTML).toContain('tier UNKNOWN');
     host.filter('change', 'tier', 'any');
     expect(host.region.innerHTML.match(/<tr><th scope="row">/g)).toHaveLength(5);
     expect(seen.at(-1)).not.toContain('tier=');
@@ -180,9 +180,9 @@ describe('tier control on the panel', () => {
 describe('spoken description of a tier filter', () => {
   it('names the tier, or says it is unknown, in both languages', () => {
     expect(filterParts({ ...NO_FILTERS, tier: '2' }, 'en')).toEqual(['tier 2']);
-    expect(filterParts({ ...NO_FILTERS, tier: 'unknown' }, 'en')).toEqual(['tier unknown']);
+    expect(filterParts({ ...NO_FILTERS, tier: 'unknown' }, 'en')).toEqual(['tier UNKNOWN']);
     expect(filterParts({ ...NO_FILTERS, tier: 'E' }, 'fr')).toEqual(['niveau E']);
-    expect(filterParts({ ...NO_FILTERS, tier: 'unknown' }, 'fr')).toEqual(['niveau inconnu']);
+    expect(filterParts({ ...NO_FILTERS, tier: 'unknown' }, 'fr')).toEqual(['niveau UNKNOWN']);
     expect(filterParts(NO_FILTERS, 'en')).toEqual([]);
   });
   it('includes the tier in the full description of the list', () => {

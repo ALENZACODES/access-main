@@ -19,7 +19,7 @@ describe('filterParts', () => {
   });
   it('lists them in a fixed order', () => {
     expect(filterParts(f({ onlyIssues: true, query: 'x', kind: 'routes', state: 'unknown' }), 'en')).toEqual([
-      'status update date unknown',
+      'status update date UNKNOWN',
       'dataset type routes',
       'name contains “x”',
       'only items to review',
@@ -27,7 +27,7 @@ describe('filterParts', () => {
   });
   it('uses French quotation marks with no-break spaces', () => {
     const [part] = filterParts(f({ query: 'parc' }), 'fr');
-    expect(part).toBe('le nom contient « parc »');
+    expect(part).toBe('le nom contient «\u202Fparc\u202F»');
   });
   it('ignores a query that is only spaces', () => {
     expect(filterParts(f({ query: '   ' }), 'en')).toEqual([]);

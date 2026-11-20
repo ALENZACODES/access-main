@@ -141,7 +141,7 @@ type Key =
 const MESSAGES: Messages<Key> = {
   en: {
     'tr.title': 'Tier of each record',
-    'tr.intro': 'Each record is counted once under the tier written on it. A record with no tier, or with text that is not a tier, is counted as Unknown.',
+    'tr.intro': 'Each record is counted once under the tier written on it. A record with no tier, or with text that is not a tier, is counted as UNKNOWN.',
     'tr.none': 'There are no records to count.',
     'tr.caption': 'Records by tier',
     'tr.colTier': 'Tier',
@@ -164,7 +164,7 @@ const MESSAGES: Messages<Key> = {
   },
   fr: {
     'tr.title': 'Niveau de chaque enregistrement',
-    'tr.intro': 'Chaque enregistrement est compté une seule fois sous le niveau qui y est inscrit. Un enregistrement sans niveau, ou dont le texte n’est pas un niveau, est compté comme inconnu.',
+    'tr.intro': 'Chaque enregistrement est compté une seule fois sous le niveau qui y est inscrit. Un enregistrement sans niveau, ou dont le texte n’est pas un niveau, est compté comme UNKNOWN.',
     'tr.none': 'Il n’y a aucun enregistrement à compter.',
     'tr.caption': 'Enregistrements selon le niveau',
     'tr.colTier': 'Niveau',

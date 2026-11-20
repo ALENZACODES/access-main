@@ -32,7 +32,8 @@ describe('table of contents', () => {
     for (const locale of ['en', 'fr'] as const) {
       const html = renderDataStatusPanel({ records: RECORDS, locale, now: NOW });
       const nav = /<nav aria-labelledby="ds-toc-title"[\s\S]*?<\/nav>/.exec(html)?.[0] ?? '';
-      const hrefs = [...nav.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+      // The live panel offers the sections as a jump menu: one option per section.
+      const hrefs = [...nav.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]);
       expect(hrefs.length).toBeGreaterThanOrEqual(MIN_TOC_ENTRIES);
       for (const id of hrefs) expect(html).toContain(`id="${id}"`);
       expect(scanHtml(html)).toEqual([]);
