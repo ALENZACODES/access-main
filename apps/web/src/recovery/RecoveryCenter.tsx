@@ -22,10 +22,19 @@ import { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
 import { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
 import { planPackRepairs } from "./recoveryPolicy";
 
+const RecoveryEvidencePacketPanel = lazy(async () => ({
+  default: (await import("./RecoveryEvidencePacketPanel")).RecoveryEvidencePacketPanel,
+}));
+
+const RecoveryTransferWitnessPanel = lazy(async () => ({
+  default: (await import("./RecoveryTransferWitnessPanel")).RecoveryTransferWitnessPanel,
+}));
+
+
+
 const RecoveryHandoffChainPanel = lazy(async () => ({
   default: (await import("./RecoveryHandoffChainPanel")).RecoveryHandoffChainPanel,
 }));
-
 
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
@@ -168,6 +177,14 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       <RecoveryDecisionMatrix locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du dossier…" : "Loading local packet…"}</p>}>
+        <RecoveryEvidencePacketPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du transfert…" : "Loading transfer record…"}</p>}>
+        <RecoveryTransferWitnessPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de la chaîne…" : "Loading handoff chain…"}</p>}>
         <RecoveryHandoffChainPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />

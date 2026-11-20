@@ -2,6 +2,8 @@ import { useId, useState } from "react";
 import { Button } from "../design/Button.tsx";
 import { saveTextFile, type SavedFile } from "./downloadFile.ts";
 import { buildPlaceSheet, sheetSummary } from "./placeSheet.ts";
+import { DEFAULT_HANDOUT, HANDOUT_FILENAMES, buildHandout } from "./handout.ts";
+import { handoutToHtml } from "./handoutHtml.ts";
 import { TEXT_FILENAMES, placeSheetToText } from "./placeSheetText.ts";
 import { GPX_FILENAMES, VCARD_FILENAMES, placeToVcard, placesToGpx } from "./placeSheetExport.ts";
 import type { PackPlaceRecord } from "./packPlaces.ts";
@@ -80,6 +82,9 @@ export function PlaceSheet({ place, locale, today, onSave = saveTextFile }: Prop
               </Button>
               <Button variant="secondary" onPress={() => save({ name: TEXT_FILENAMES[locale], mime: "text/plain;charset=utf-8", content: placeSheetToText(sheet, locale) })}>
                 {t(locale, "Save the details as text (.txt)", "Enregistrer les détails comme texte (.txt)")}
+              </Button>
+              <Button variant="secondary" onPress={() => save({ name: HANDOUT_FILENAMES[locale], mime: "text/html;charset=utf-8", content: handoutToHtml(buildHandout([place], locale, today, DEFAULT_HANDOUT)) })}>
+                {t(locale, "Save a large-print page (.html)", "Enregistrer une page en gros caractères (.html)")}
               </Button>
               {sheet.geoHref ? (
                 <Button variant="secondary" onPress={() => save({ name: GPX_FILENAMES[locale], mime: "application/gpx+xml;charset=utf-8", content: placesToGpx([place], locale) })}>
