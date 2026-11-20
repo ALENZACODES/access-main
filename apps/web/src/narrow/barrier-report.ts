@@ -109,6 +109,8 @@ export interface BarrierContext {
   /** The audit of the page, when the person asked for it. */
   readonly report: AuditReport | null;
   readonly now: Date;
+  /** More lines about the screen, from other tools of the page, such as the tap size the person found. They go with the settings. */
+  readonly extra?: readonly string[];
 }
 
 /** The report as plain text, in the language of the page. */
@@ -124,6 +126,7 @@ export function renderBarrierText(draft: BarrierDraft, context: BarrierContext, 
   lines.push('', fr ? `Ce qui s’est passé${colon}` : `What happened${colon}`, draft.what.trim());
   if (draft.includeSettings) {
     lines.push('', fr ? `Mon écran et mes réglages, tels que le navigateur les indique${colon}` : `My screen and settings, as the browser reports them${colon}`, factsAsText(context.facts, lang));
+    for (const line of context.extra ?? []) if (line.trim() !== '') lines.push(line.trim());
   }
   if (draft.includeFindings) {
     lines.push('', fr ? `Ce que les contrôles de l’App ont trouvé sur cette page${colon}` : `What the checks of the App found on this page${colon}`);

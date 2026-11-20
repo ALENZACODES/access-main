@@ -234,3 +234,50 @@ export * from "./recoveryEvidencePacket";
 export * from "./recoveryEvidenceAnalysis";
 export { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
 export type { PacketCopy } from "./recoveryEvidencePacketCopy";
+
+// Manual local recovery handoff chain; no inferred pack readiness.
+export { RecoveryHandoffChainPanel } from "./RecoveryHandoffChainPanel";
+export type { RecoveryHandoffChainPanelProps } from "./RecoveryHandoffChainPanel";
+export * from "./recoveryHandoffChain";
+export * from "./recoveryHandoffChainAnalysis";
+export * from "./recoveryHandoffChainPlan";
+export { recoveryHandoffChainCopy } from "./recoveryHandoffChainCopy";
+export type { ChainCopy } from "./recoveryHandoffChainCopy";
+
+// Manual offline recovery rehearsal: records never authorize pack use.
+export { RecoveryDrillPanel } from "./RecoveryDrillPanel";
+export type { RecoveryDrillPanelProps } from "./RecoveryDrillPanel";
+export {
+  DRILL_CONDITIONS, DRILL_EVENTS, DRILL_KINDS, DRILL_LIMITS, DRILL_OUTCOMES,
+  DRILL_PHASES, DRILL_TIERS, addDrillRun, appendDrillEvent, changeDrillPhase,
+  checkDrillDocument, checkDrillEvent, checkDrillProvenance, checkDrillRun,
+  checkDrillStep, drillContentReady, emptyDrillDocument, eventsForDrill,
+  filterDrillRuns, mergeDrillDocuments, nextDrillId, parseDrills,
+  previewDrillMerge, recordDrillStep, serializeDrills, stepsForDrill,
+  summarizeDrills,
+} from "./recoveryDrillRun";
+export type {
+  DrillCondition, DrillDocument, DrillEvent, DrillEventKind, DrillFilter,
+  DrillIssue, DrillKind, DrillLocale, DrillMergePreview, DrillOutcome, DrillPhase,
+  DrillProvenance, DrillResult, DrillRun, DrillStep, DrillSummary, DrillTier,
+} from "./recoveryDrillRun";
+export {
+  compareDrillPacks, createDrillReport, drillDailyRollups, drillFindings,
+  drillNarrative, drillOperationRollups, drillPackRollups, drillSourceRollups,
+  drillSuggestedReviews, reviewDrill,
+} from "./recoveryDrillAnalysis";
+export type {
+  DrillComparison, DrillDailyRollup, DrillFinding, DrillFindingCode,
+  DrillNextAction, DrillOperationRollup, DrillPackRollup, DrillReport,
+  DrillReview, DrillSourceRollup,
+} from "./recoveryDrillAnalysis";
+export { recoveryDrillCopy } from "./recoveryDrillCopy";
+export type { DrillCopy } from "./recoveryDrillCopy";
+
+// Manual recovery reconciliation; observations never authorize pack use.
+export { RecoveryReconciliationPanel } from "./RecoveryReconciliationPanel";
+export type { RecoveryReconciliationPanelProps } from "./RecoveryReconciliationPanel";
+export * from "./recoveryReconciliation";
+export * from "./recoveryReconciliationAnalysis";
+export { reconciliationCopy } from "./recoveryReconciliationCopy";
+export type { ReconciliationCopy } from "./recoveryReconciliationCopy";
