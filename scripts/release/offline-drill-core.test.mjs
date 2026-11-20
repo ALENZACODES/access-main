@@ -6,7 +6,7 @@ import {
   STORAGE_STATES, INTERACTION_STATES, CAPTURE_LOCALES, CONTROL_ROLES,
   GATE_RULES, object, pointer, goodId, goodText, safeHttps, localPath,
   deepPrivateKeys, goodFrenchCopy, goodPair, provenanceIssues,
-  captureIssues, inspectDrill, parseDrill, canonicalDrill, serializeDrill,
+  inspectDrill, parseDrill, canonicalDrill, serializeDrill,
 } from './offline-drill-core.mjs';
 import { DAY, source, control, asset, claim, capture, document, provenance, pair, mutate } from './offline-drill-fixtures.mjs';
 

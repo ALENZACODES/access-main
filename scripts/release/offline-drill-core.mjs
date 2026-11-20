@@ -31,7 +31,14 @@ const LOCALES = new Set(CAPTURE_LOCALES);
 const ROLES = new Set(CONTROL_ROLES);
 const ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const SHA = /^[a-f0-9]{64}$/i;
-const ASCII_CONTROL = /[\u0000-\u001f\u007f]/u;
+const ASCII_CONTROL = {
+  test(value) {
+    return [...value].some((character) => {
+      const code = character.codePointAt(0);
+      return code !== undefined && (code < 32 || code === 127);
+    });
+  },
+};
 const PRIVATE = new Set([
   'email', 'phone', 'phonenumber', 'personname', 'fullname', 'firstname',
   'lastname', 'streetaddress', 'postaladdress', 'dateofbirth', 'birthdate',
