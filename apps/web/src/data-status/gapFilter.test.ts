@@ -75,8 +75,8 @@ describe('gap filter', () => {
   it('counts as active, is listed in words, and can be removed alone', () => {
     const f: Filters = { ...NO_FILTERS, gap: 'date', tier: 'E' };
     expect(hasActiveFilters({ ...NO_FILTERS, gap: 'date' })).toBe(true);
-    expect(listActiveFilters(f, 'en').map((a) => a.label)).toEqual(['Tier: E', 'Unknown: Retrieved date']);
-    expect(listActiveFilters(f, 'fr').map((a) => a.label)).toEqual(['Niveau : E', 'Inconnu : Date de récupération']);
+    expect(listActiveFilters(f, 'en').map((a) => a.label)).toEqual(['Tier: E', 'UNKNOWN: Retrieved date']);
+    expect(listActiveFilters(f, 'fr').map((a) => a.label)).toEqual(['Niveau : E', 'UNKNOWN : Date de récupération']);
     expect(withoutFilter(f, 'gap')).toEqual({ ...NO_FILTERS, tier: 'E' });
   });
   it('is spoken as "no ..." in both languages', () => {
@@ -90,16 +90,16 @@ describe('gap filter', () => {
 describe('gap control and drill-down', () => {
   it('has a labelled select with the four facts in both languages', () => {
     const en = renderFilterControls('en', { ...NO_FILTERS, gap: 'tier' });
-    expect(en).toContain('<label for="ds-f-gap">Unknown fact</label>');
+    expect(en).toContain('<label for="ds-f-gap">Fact that is UNKNOWN</label>');
     expect(en).toContain('<option value="tier" selected>Tier</option>');
     expect(en.match(/<select id="ds-f-gap"[\s\S]*?<\/select>/)?.[0].match(/<option/g)).toHaveLength(GAP_FIELDS.length + 1);
-    expect(renderFilterControls('fr', NO_FILTERS)).toContain('<label for="ds-f-gap">Élément inconnu</label>');
+    expect(renderFilterControls('fr', NO_FILTERS)).toContain('<label for="ds-f-gap">Élément UNKNOWN</label>');
   });
   it('round-trips as a drill-down target and is named in words', () => {
     for (const value of GAP_FIELDS) expect(parseDrillAction(drillAction({ kind: 'gap', value }))).toEqual({ kind: 'gap', value });
     expect(parseDrillAction('show:gap:name')).toBeNull();
     expect(drillFilters({ kind: 'gap', value: 'licence' })).toEqual({ ...NO_FILTERS, gap: 'licence' });
-    expect(drillLabel({ kind: 'gap', value: 'licence' }, 'en')).toBe('List these sources. Unknown: Licence');
+    expect(drillLabel({ kind: 'gap', value: 'licence' }, 'en')).toBe('List these sources. UNKNOWN: Licence');
   });
   it('the facts section offers a control beside each fact that is unknown somewhere, and none beside a zero', () => {
     const records: DatasetRecord[] = [{ id: 'd', name: 'Set', kind: 'places', sources: [{ id: 'a', ...FULL, tier: null }] }];
@@ -133,7 +133,7 @@ describe('gap control and drill-down', () => {
     mountDataStatusPanel(host, { getRecords: () => MIXED, getLocale: () => 'en', now: () => NOW });
     host.filter('change', 'gap', 'source');
     expect((host.region.innerHTML.match(/<tr><th scope="row">/g) ?? []).length).toBe(2);
-    expect(host.region.innerHTML).toContain('Remove filter. Unknown: Source');
+    expect(host.region.innerHTML).toContain('Remove filter. UNKNOWN: Source');
     host.filter('change', 'gap', 'bogus');
     expect((host.region.innerHTML.match(/<tr><th scope="row">/g) ?? []).length).toBe(7);
   });

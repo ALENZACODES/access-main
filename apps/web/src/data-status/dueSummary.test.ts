@@ -63,7 +63,7 @@ describe('buildDueSummary', () => {
 
 describe('renderDueSummaryHtml', () => {
   it('labels every row in both languages', () => {
-    expect(DUE_ROW_IDS.map((id) => dueRowLabel(id, 'en'))).toEqual(['Already passed', 'Within 7 days', 'Within 30 days', 'Within 90 days', 'Not scheduled (retrieved date unknown)']);
+    expect(DUE_ROW_IDS.map((id) => dueRowLabel(id, 'en'))).toEqual(['Already passed', 'Within 7 days', 'Within 30 days', 'Within 90 days', 'Not scheduled (retrieved date UNKNOWN)']);
     for (const id of DUE_ROW_IDS) expect(dueRowLabel(id, 'fr')).not.toBe(dueRowLabel(id, 'en'));
   });
   it('shows the counts, explains the overlap, and mentions later reviews with the right plural', () => {
@@ -107,7 +107,7 @@ describe('reviews coming up on the panel', () => {
     const html = renderDataStatusPanel({ records: MIXED, locale: 'en', now: NOW });
     expect(html.match(/id="ds-duesoon-title"/g)).toHaveLength(1);
     expect(html.indexOf('id="ds-duesoon-title"')).toBeGreaterThan(html.indexOf('id="ds-workload-title"'));
-    expect(html).toContain('href="#ds-duesoon-title"');
+    expect(html).toContain('<option value="ds-duesoon-title">');
     expect(structureProblems(html)).toEqual([]);
     expect(targetsBelow44(html)).toEqual([]);
   });

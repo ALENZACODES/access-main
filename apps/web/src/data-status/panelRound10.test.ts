@@ -27,8 +27,8 @@ describe('panel: contents list, source details, self-check, tables export', () =
   }
   it('the contents list links to the new sections', () => {
     const html = renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW });
-    expect(html).toContain('href="#ds-detail-title"');
-    expect(html).toContain('href="#ds-selfcheck-title"');
+    expect(html).toContain('<option value="ds-detail-title">');
+    expect(html).toContain('<option value="ds-selfcheck-title">');
   });
   it('shows the tables button only in the interactive panel', () => {
     const live = renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW });
