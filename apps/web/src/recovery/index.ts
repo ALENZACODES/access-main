@@ -470,3 +470,17 @@ export { assessTrace, assessTraceDocument, compareTraceDocuments, findingsByCode
 export type { TraceFinding, TraceAssessmentStatus, TraceNextStep, TraceFindingItem, TraceAssessment, TraceSequencePoint, TracePackOverview, TraceComparison, TraceReport } from "./recoverySessionAnalysis";
 export { sessionCopy } from "./recoverySessionCopy";
 export type { SessionCopy } from "./recoverySessionCopy";
+
+// Manual local recovery checkpoint and decision review.
+export { RecoveryCheckpointPanel } from "./RecoveryCheckpointPanel";
+export type { RecoveryCheckpointPanelProps } from "./RecoveryCheckpointPanel";
+export * from "./recoveryCheckpoint";
+export * from "./recoveryCheckpointAnalysis";
+export * from "./recoveryCheckpointTimeline";
+export * from "./recoveryCheckpointCopy";
+export * from "./recoveryCheckpointPlan";
+export { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
+export type { RecoveryDecisionMatrixProps } from "./RecoveryDecisionMatrix";
+export * from "./recoveryDecisionMatrix";
+export * from "./recoveryDecisionCoverage";
+export * from "./recoveryDecisionCopy";
