@@ -586,3 +586,116 @@ describe("NarrowAuditPage: the tap size in the barrier text", () => {
     expect(await prepare(container)).toContain("Taille de bouton où mes appuis atteignent leur cible\u00A0: UNKNOWN");
   });
 });
+
+/** "Reaching controls by keyboard or switch" comes last, with a real DOM under it. jsdom lays nothing out, so each element is given a box. */
+describe("NarrowAuditPage: reaching controls by keyboard or switch", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    Element.prototype.getBoundingClientRect = function box(): DOMRect {
+      return { x: 0, y: 0, top: 0, left: 0, right: 50, bottom: 20, width: 50, height: 20, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, after Look by hand, and the page keeps one h1", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".reach")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#reach-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Reaching controls by keyboard or switch");
+    expect((container.querySelector("#hand-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("counts the stops of the other panels, leaves its own out, and puts focus on the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    const outside = [...container.querySelectorAll("a[href],button,input,select,textarea,summary")].filter(
+      (e) => !e.closest(".reach") && !(e as HTMLButtonElement).disabled && (e as HTMLElement).tabIndex >= 0 && !(e instanceof HTMLInputElement && e.type === "hidden"),
+    );
+    await press(container, '.reach [data-action="reach-count"]');
+    expect(document.activeElement).toBe(container.querySelector("#reach-result-h"));
+    const summary = container.querySelector("#reach-result-h + p")?.textContent ?? "";
+    const n = Number(/has (\d+) keyboard/.exec(summary)?.[1]);
+    expect(n).toBeGreaterThan(10);
+    // Radio groups are one stop, so there are no more stops than tabbable elements outside the panel.
+    expect(n).toBeLessThanOrEqual(outside.length);
+    expect(container.querySelector(".reach [role=status]")?.textContent).toBe("The stops were counted.");
+    expect(container.querySelector(".reach")?.textContent).not.toContain("Count the stops on this page");
+  });
+
+  it("has a label for each field, takes an interval with a comma in French, and gives times", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("fr"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    for (const id of ["reach-interval", "reach-find"]) expect(container.querySelectorAll(`label[for="${id}"]`)).toHaveLength(1);
+    (container.querySelector("#reach-interval") as HTMLInputElement).value = "1,5";
+    await press(container, '.reach [data-action="reach-apply"]');
+    expect(document.activeElement).toBe(container.querySelector('.reach [data-action="reach-apply"]'));
+    expect(container.querySelector("#reach-result-h + p")?.textContent).toMatch(/balayage d’un pas toutes les 1,5\u00A0s\.$/);
+    expect(container.querySelector(".reach tbody td:last-child")?.textContent).toBe("1,5\u00A0s");
+  });
+
+  it("marks a wrong interval by the field and puts focus on it", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    (container.querySelector("#reach-interval") as HTMLInputElement).value = "soon";
+    await press(container, '.reach [data-action="reach-apply"]');
+    const field = container.querySelector("#reach-interval") as HTMLInputElement;
+    expect(document.activeElement).toBe(field);
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+    for (const id of (field.getAttribute("aria-describedby") ?? "").split(" ")) expect(container.querySelector(`#${id}`), id).not.toBeNull();
+    expect(container.querySelector("#reach-interval-error")?.textContent).toBe("Write a number of seconds from 0.2 to 10, such as 1.5.");
+  });
+
+  it("finds a control of another panel by part of its name", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    (container.querySelector("#reach-find") as HTMLInputElement).value = "start the test";
+    await press(container, '.reach [data-action="reach-apply"]');
+    const rows = [...container.querySelectorAll(".reach table:last-of-type tbody tr")];
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.querySelector("th")?.textContent).toBe(container.querySelector('.tap [data-action="tap-start"]')?.textContent);
+  });
+
+  it("follows the language of the audit panel and keeps the counts", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".reach")).toHaveLength(1);
+    expect(container.querySelector("#reach-h")?.textContent).toBe("Atteindre les commandes au clavier ou au contacteur");
+    expect(container.querySelector(".reach")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#reach-result-h")?.textContent).toBe("Ce qui a été compté");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const tapBefore = container.querySelector(".tap")?.innerHTML;
+    const handBefore = container.querySelector(".hand")?.innerHTML;
+    await press(container, '.reach [data-action="reach-count"]');
+    expect(container.querySelector(".tap")?.innerHTML).toBe(tapBefore);
+    expect(container.querySelector(".hand")?.innerHTML).toBe(handBefore);
+    unmount();
+    expect(document.querySelector(".reach")).toBeNull();
+  });
+});

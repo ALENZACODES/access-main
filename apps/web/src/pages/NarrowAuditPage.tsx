@@ -4,6 +4,7 @@ import type { BarrierDraft } from "../narrow/barrier-report.ts";
 import { mountFitPanel } from "../narrow/fit-panel.ts";
 import { mountHandPanel, type HandState } from "../narrow/hand-panel.ts";
 import { mountNarrowPanel, narrowRoute } from "../narrow/panel.ts";
+import { mountReachPanel, type ReachPanelState } from "../narrow/reach-panel.ts";
 import { mountTapPanel, type TapPanelState } from "../narrow/tap-panel.ts";
 import { tapNote } from "../narrow/tap-trial.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
@@ -26,6 +27,11 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
  * the size at which the person's taps land on this screen, and says which
  * zoom brings the controls of the App to it. Its result goes into the
  * barrier text of the fit panel, with the screen settings, once there is one.
+ *
+ * At the end, "Reaching controls by keyboard or switch" counts the presses
+ * it takes to reach each control of this page by Tab or by a switch, and how
+ * long a scan takes at the interval the person gives. It counts the whole
+ * page, the other panels included, and leaves itself out.
  */
 export function NarrowAuditPage() {
   const { i18n } = useTranslation();
@@ -39,6 +45,8 @@ export function NarrowAuditPage() {
   const tapRef = useRef<HTMLDivElement>(null);
   const tapStateRef = useRef<TapPanelState | undefined>(undefined);
   const tapMountedRef = useRef<{ getState(): TapPanelState } | null>(null);
+  const reachRef = useRef<HTMLDivElement>(null);
+  const reachStateRef = useRef<ReachPanelState | undefined>(undefined);
   const title = narrowRoute.title[panelLang];
   useDocumentTitle(title);
 
@@ -98,6 +106,18 @@ export function NarrowAuditPage() {
     };
   }, [panelLang]);
 
+  useEffect(() => {
+    const host = reachRef.current;
+    if (!host) return;
+    const root = document.createElement("div");
+    host.appendChild(root);
+    const mounted = mountReachPanel({ root, lang: panelLang, ...(reachStateRef.current ? { state: reachStateRef.current } : {}) });
+    return () => {
+      reachStateRef.current = mounted.getState();
+      root.remove();
+    };
+  }, [panelLang]);
+
   return (
     <>
       <h1 lang={panelLang}>{title}</h1>
@@ -105,6 +125,7 @@ export function NarrowAuditPage() {
       <div ref={fitRef} />
       <div ref={tapRef} />
       <div ref={handRef} />
+      <div ref={reachRef} />
     </>
   );
 }
