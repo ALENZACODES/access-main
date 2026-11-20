@@ -34,6 +34,9 @@ export * from "./packEarlier.ts";
 export * from "./packDiff.ts";
 export * from "./packDiffText.ts";
 export { PackCompare } from "./PackCompare.tsx";
+export * from "./packTagMoves.ts";
+export * from "./packTagMovesExport.ts";
+export { PackTagMoves } from "./PackTagMoves.tsx";
 export { PackReport } from "./PackReport.tsx";
 export { PackFreshness } from "./PackFreshness.tsx";
 
