@@ -1006,3 +1006,161 @@ describe("NarrowAuditPage: scroll effort", () => {
     expect(document.querySelector(".scroll-effort")).toBeNull();
   });
 });
+
+/** "Say it to press it" sits after "How I press". jsdom lays nothing out, so every element is given a box. */
+describe("NarrowAuditPage: say it to press it", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    Element.prototype.getBoundingClientRect = function box(): DOMRect {
+      return { x: 0, y: 0, top: 0, left: 0, right: 80, bottom: 30, width: 80, height: 30, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, between How I press and Look by hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".voice")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#voice-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Say it to press it");
+    expect((container.querySelector("#press-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#hand-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("reads the controls of the other panels, leaves its own out, and puts focus on the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.voice [data-action="voice-count"]');
+    expect(document.activeElement).toBe(container.querySelector("#voice-result-h"));
+    expect(container.querySelector("#voice-result-h + p")?.textContent).toMatch(/^Of \d+ controls, \d+ can be reached in one step by saying what they show\.$/);
+    expect(container.querySelector(".voice [role=status]")?.textContent).toBe("The controls were read.");
+  });
+
+  it("finds a control of another panel by what a person would say, and leaves its own button out", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.voice [data-action="voice-count"]');
+    (container.querySelector("#voice-say") as HTMLInputElement).value = "click Start the press test";
+    await press(container, '.voice [data-action="voice-try"]');
+    expect(container.querySelector("#voice-said")?.textContent).toBe("One control answers to “start the press test”: button “Start the press test”.");
+    expect(document.activeElement).toBe(container.querySelector('.voice [data-action="voice-try"]'));
+    (container.querySelector("#voice-say") as HTMLInputElement).value = "See what it reaches";
+    await press(container, '.voice [data-action="voice-try"]');
+    expect(container.querySelector("#voice-said")?.textContent).toMatch(/^No control of this page has/);
+  });
+
+  it("follows the language of the audit panel and keeps what was read and typed", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.voice [data-action="voice-count"]');
+    (container.querySelector("#voice-say") as HTMLInputElement).value = "Send";
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".voice")).toHaveLength(1);
+    expect(container.querySelector("#voice-h")?.textContent).toBe("Le dire pour appuyer");
+    expect(container.querySelector(".voice")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect((container.querySelector("#voice-say") as HTMLInputElement).value).toBe("Send");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const pressBefore = container.querySelector(".press")?.innerHTML;
+    await press(container, '.voice [data-action="voice-count"]');
+    expect(container.querySelector(".press")?.innerHTML).toBe(pressBefore);
+    unmount();
+    expect(document.querySelector(".voice")).toBeNull();
+  });
+});
+
+/** "My access summary" gathers the tap, zones and press results of this page. */
+describe("NarrowAuditPage: my access summary", () => {
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const keyPress = async (container: HTMLElement) => {
+    await act(async () => {
+      const pad = container.querySelector("#press-pad") as HTMLElement;
+      pad.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+      pad.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", bubbles: true, cancelable: true }));
+    });
+  };
+
+  it("is on the page once, under an h2, after the three tests and before Look by hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".summary")).toHaveLength(1);
+    const h2 = container.querySelector("#summary-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("My access summary");
+    for (const id of ["#tap-h", "#zones-h", "#press-h"]) expect((container.querySelector(id) as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#hand-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("says UNKNOWN for each test not done, and a go button takes focus to that test", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.summary [data-action="summary-make"]');
+    expect(document.activeElement).toBe(container.querySelector("#summary-result-h"));
+    expect([...container.querySelectorAll(".summary dd")].map((dd) => dd.firstChild?.textContent?.trim())).toEqual(["UNKNOWN, not done yet.", "UNKNOWN, not done yet.", "UNKNOWN, not done yet."]);
+    await press(container, '.summary [data-action="summary-go-zones"]');
+    expect(document.activeElement).toBe(container.querySelector("#zones-h"));
+    expect(container.querySelector("#zones-h")?.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("gathers what was measured since: the zones and the presses", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.zones [data-action="zone-9"]');
+    await press(container, '.press [data-action="press-start"]');
+    await keyPress(container);
+    await keyPress(container);
+    await press(container, '.press [data-action="press-stop"]');
+    await press(container, '.summary [data-action="summary-make"]');
+    const text = (container.querySelector("#summary-text") as HTMLTextAreaElement).value;
+    expect(text).toContain("\nScreen zones I can reach: Bottom, left (1 of 12).\n");
+    expect(text).toMatch(/\nMy presses \(key\): held from \d+ ms to \d+ ms; at least \d+ ms between presses\./);
+    expect(text).toContain("Button size for my taps: UNKNOWN, not done yet.");
+    expect((container.querySelector("#summary-request") as HTMLTextAreaElement).value).toContain("controls within the screen zones I can reach and controls that allow for the way I press");
+    expect(container.querySelector('.summary [data-action="summary-go-zones"]')).toBeNull();
+  });
+
+  it("follows the language of the audit panel and keeps the last summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.summary [data-action="summary-make"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".summary")).toHaveLength(1);
+    expect(container.querySelector("#summary-h")?.textContent).toBe("Mon résumé d’accès");
+    expect(container.querySelector(".summary")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#summary-result-h")?.textContent).toBe("Votre résumé");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const zonesBefore = container.querySelector(".zones")?.innerHTML;
+    await press(container, '.summary [data-action="summary-make"]');
+    expect(container.querySelector(".zones")?.innerHTML).toBe(zonesBefore);
+    unmount();
+    expect(document.querySelector(".summary")).toBeNull();
+  });
+});
