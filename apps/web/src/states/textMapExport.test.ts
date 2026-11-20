@@ -44,6 +44,17 @@ describe("textMapToText", () => {
     expect(fr).toContain("Aucun point de carte\u00a0: z");
     expect(fr).not.toMatch(/INCONN/i);
   });
+  it("joins several places of one cell, and several with no map point, with a semicolon spaced for the language", () => {
+    const many = [at("a", 43.7, -79.4, { name: "One" }), at("b", 43.7, -79.4, { name: "Two" }), bare("x"), bare("y")];
+    const en = textMapToText(buildTextMap(many, 2, "en"), "en");
+    const fr = textMapToText(buildTextMap(many, 2, "fr"), "fr");
+    expect(en).toContain("One; Two");
+    expect(en).toContain("x; y");
+    expect(fr).toContain("One\u202f; Two");
+    expect(fr).toContain("x\u202f; y");
+    expect(fr).not.toMatch(/[^\u202f\n]; /);
+    expect(en).not.toContain("\u202f");
+  });
   it("names a place with no name as UNKNOWN", () => {
     expect(textMapToText(buildTextMap([at("a", 43.7, -79.4, { name: null })], 2, "en"), "en")).toContain("North, West: UNKNOWN");
   });

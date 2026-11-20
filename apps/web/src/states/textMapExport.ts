@@ -12,6 +12,8 @@ export const TEXT_MAP_CSV_FILENAMES: Readonly<Record<Locale, string>> = { en: "t
 
 const UNKNOWN = "UNKNOWN";
 const name = (n: string | null): string => n ?? UNKNOWN;
+/** Between the items of a list: a narrow no-break space before the semicolon in French, as French typography has it. */
+const semicolon = (locale: Locale): string => (locale === "fr" ? "\u202f; " : "; ");
 
 /** The grid as text: one block for each cell that holds places, in reading order, then the places with no map point. */
 export function textMapToText(map: TextMap, locale: Locale): string {
@@ -20,10 +22,10 @@ export function textMapToText(map: TextMap, locale: Locale): string {
   for (const row of map.cells) {
     for (const cell of row) {
       if (cell.placeIds.length === 0) continue;
-      out.push(`${cell.label}${colon} ${cell.names.map(name).join("; ")}`);
+      out.push(`${cell.label}${colon} ${cell.names.map(name).join(semicolon(locale))}`);
     }
   }
-  if (map.unlocatedIds.length > 0) out.push(`${t(locale, "No map point", "Aucun point de carte")}${colon} ${map.unlocatedIds.join("; ")}`);
+  if (map.unlocatedIds.length > 0) out.push(`${t(locale, "No map point", "Aucun point de carte")}${colon} ${map.unlocatedIds.join(semicolon(locale))}`);
   return `${out.join("\n")}\n`;
 }
 
@@ -40,7 +42,7 @@ export function aroundToText(around: Around, locale: Locale): string {
     out.push(`${s.name.charAt(0).toUpperCase()}${s.name.slice(1)}${colon}`);
     for (const l of s.places) out.push(`- ${directionLine(l, locale)}`);
   }
-  if (around.unlocatedIds.length > 0) out.push(`${t(locale, "No map point", "Aucun point de carte")}${colon} ${around.unlocatedIds.join("; ")}`);
+  if (around.unlocatedIds.length > 0) out.push(`${t(locale, "No map point", "Aucun point de carte")}${colon} ${around.unlocatedIds.join(semicolon(locale))}`);
   return `${out.join("\n")}\n`;
 }
 
