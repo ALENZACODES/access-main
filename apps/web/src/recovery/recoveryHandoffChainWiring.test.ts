@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { forbiddenOrgNeedles } from "../../../../packages/shared/test/forbiddenOrg";
 import { CHAIN_LIMITS } from "./recoveryHandoffChain";
 import { recoveryHandoffChainCopy } from "./recoveryHandoffChainCopy";
 const read = (path: string): string => readFileSync(new URL(path, import.meta.url), "utf8");
@@ -71,7 +72,14 @@ describe("local handoff chain live integration", () => {
   it("does not fetch remote data", () => { for (const item of source) expect(item).not.toContain("fetch("); });
   it("does not write hidden local storage", () => { for (const item of source) expect(item).not.toContain("localStorage.setItem("); });
   it("does not create hidden IndexedDB", () => { for (const item of source) expect(item).not.toContain("indexedDB.open("); });
-  it("does not include prohibited labels", () => { for (const item of source) expect(item).not.toMatch(/\bSCIO\b|\bverified\b|\bguarantee\b|\bpartnership\b/i); });
+  it("does not include restricted organisation identifiers or prohibited assurances", () => {
+    for (const item of source) {
+      for (const needle of forbiddenOrgNeedles()) {
+        expect(item.toLowerCase()).not.toContain(needle.toLowerCase());
+      }
+      expect(item).not.toMatch(/\\bverified\\b|\\bguarantee\\b|\\bpartnership\\b/i);
+    }
+  });
   it("never invents pack readiness", () => { expect(analysis).toContain("contentReady: false"); expect(plan).toContain("contentReady: false"); });
   it("preserves UNKNOWN in both languages", () => { expect(recoveryHandoffChainCopy("en").unknown).toBe("UNKNOWN"); expect(recoveryHandoffChainCopy("fr").unknown).toBe("UNKNOWN"); });
   it("uses bilingual source metadata", () => { expect(copy).toContain("retrievedOn"); expect(copy).toContain("licence"); });
