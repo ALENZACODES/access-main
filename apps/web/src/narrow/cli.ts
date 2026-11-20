@@ -7,14 +7,19 @@ import { applyManualLog, describeLook } from './manual-log.js';
 import { renderDetail } from './detail.js';
 import { auditSitePages, siteFromFiles } from './sitefiles.js';
 import { renderWorksheet } from './worksheet.js';
+import { runCheck } from './doctor.js';
+import { runInit } from './init.js';
+import { INDEX_FILE, renderIndexPage } from './outputs-index.js';
 import { runPlan } from './plan-cli.js';
+import { renderTrendPage } from './trend-page.js';
+import { runTriage } from './triage-cli.js';
 import { compareReports, describeComparison, renderComparisonMarkdown } from './compare.js';
 import { renderCsv } from './csv.js';
 import { describeDigest, makeDigest } from './digest.js';
 import { renderMarkdown } from './markdown.js';
 import { parseReport } from './reportio.js';
 import { auditCopy, auditCopyDict } from './copylint.js';
-import { appendRun, DEFAULT_HISTORY_MAX, describeTrend, EMPTY_HISTORY, parseHistory, trend } from './history.js';
+import { appendRun, DEFAULT_HISTORY_MAX, describeTrend, EMPTY_HISTORY, parseHistory, trend, type History } from './history.js';
 import { scanHosts } from './hostlint.js';
 import { htmlTextItems, lintHtml } from './htmllint.js';
 import { auditI18n, flattenDict } from './i18n.js';
@@ -75,7 +80,7 @@ export interface CliArgs {
   readonly siteComplete: boolean;
 }
 
-export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest', 'detail', 'coverage', 'worksheet'];
+export const OUTPUT_FORMATS: readonly string[] = ['sarif', 'junit', 'markdown', 'csv', 'digest', 'detail', 'coverage', 'worksheet', 'trend', 'index'];
 
 export type ParsedArgs =
   | { readonly ok: true; readonly args: CliArgs }
@@ -86,7 +91,7 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FILE ...] [--data FILE]\n' +
   '                    [--allow-licence ID ...] [--require-fact KEY ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit,markdown,csv,digest,detail,coverage,worksheet]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest,detail,coverage,worksheet,trend,index]\n' +
   '                    [--baseline FILE] [--write-baseline FILE] [--waivers FILE]\n' +
   '                    [--manifest FILE ...] [--sw FILE ...] [--scan FILE ...] [--allow-host PATTERN ...]\n' +
   '                    [--budget FILE] [--write-budget FILE] [--history FILE] [--history-max N]\n' +
@@ -95,6 +100,9 @@ export const HELP_TEXT =
   INPUT_HELP_EN +
   '                    [--markup-checks] [--site-root DIR] [--site-complete]\n' +
   '       narrow-audit plan --help   (which routes to audit on a large site, from files)\n' +
+  '       narrow-audit triage --help (where to start, policy limits and ticket drafts, from a saved report)\n' +
+  '       narrow-audit check --help  (whether the files a run reads can be used)\n' +
+  '       narrow-audit init --help   (starter files for a new audit folder)\n' +
   `Profiles: ${PROFILES.map((p) => p.id).join(', ')}. A browser is only needed when routes are given.\n` +
   'Exit code 0 when no check failed, 1 when a check failed, 2 on a usage or run error.\n' +
   '\n' +
@@ -102,7 +110,7 @@ export const HELP_TEXT =
   '                    [--profiles all|narrow,dark,...] [--offline] [--keyboard-max N]\n' +
   '                    [--en en.json --fr fr.json] [--html FICHIER ...] [--data FICHIER]\n' +
   '                    [--allow-licence ID ...] [--require-fact CLÉ ...] [--strict-unknown]\n' +
-  '                    [--format sarif,junit,markdown,csv,digest,detail,coverage,worksheet]\n' +
+  '                    [--format sarif,junit,markdown,csv,digest,detail,coverage,worksheet,trend,index]\n' +
   '                    [--baseline FICHIER] [--write-baseline FICHIER] [--waivers FICHIER]\n' +
   '                    [--manifest FICHIER ...] [--sw FICHIER ...] [--scan FICHIER ...] [--allow-host MOTIF ...]\n' +
   '                    [--budget FICHIER] [--write-budget FICHIER] [--history FICHIER] [--history-max N]\n' +
@@ -111,6 +119,9 @@ export const HELP_TEXT =
   INPUT_HELP_FR +
   '                    [--markup-checks] [--site-root DOSSIER] [--site-complete]\n' +
   '       narrow-audit plan --help   (quelles routes auditer sur un grand site, à partir de fichiers)\n' +
+  '       narrow-audit triage --help (par où commencer, limites de politique et brouillons de tickets, à partir d’un rapport enregistré)\n' +
+  '       narrow-audit check --help  (les fichiers lus par une exécution sont-ils utilisables)\n' +
+  '       narrow-audit init --help   (fichiers de départ pour un nouveau dossier d’audit)\n' +
   'Un navigateur n’est nécessaire que lorsque des routes sont indiquées.\n' +
   'Code de sortie 0 sans anomalie, 1 si un contrôle échoue, 2 en cas d’erreur d’utilisation ou d’exécution.\n';
 
@@ -324,6 +335,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       return fail('Nothing to audit. Give --route, --html, --data, --manifest, --sw, --scan, --merge or --en and --fr.', 'Rien à auditer. Indiquez --route, --html, --data, --manifest, --sw, --scan, --merge ou --en et --fr.');
     }
     if (formats.length > 0 && outDir === null) return fail('--format needs --out.', '--format demande --out.');
+    if (formats.includes('trend') && historyFile === null) return fail('--format trend draws the history, so it needs --history.', '--format trend dessine l’historique et demande donc --history.');
     if (markupChecks && htmlFiles.length === 0) return fail('--markup-checks needs at least one --html file.', '--markup-checks demande au moins un fichier --html.');
     if (siteRoot !== null && htmlFiles.length < 2) return fail('--site-root compares pages, so it needs at least two --html files.', '--site-root compare des pages et demande donc au moins deux fichiers --html.');
     if (siteComplete && siteRoot === null) return fail('--site-complete needs --site-root.', '--site-complete demande --site-root.');
@@ -355,8 +367,20 @@ export function exitCode(report: AuditReport, strictUnknown: boolean): 0 | 1 {
   return t.failed > 0 || (strictUnknown && t.unknown > 0) ? 1 : 0;
 }
 
-export async function runCli(argv: readonly string[], deps: CliDeps): Promise<number> {
-  if (argv[0] === 'plan') return runPlan(argv.slice(1), deps);
+export async function runCli(argv: readonly string[], outer: CliDeps): Promise<number> {
+  if (argv[0] === 'plan') return runPlan(argv.slice(1), outer);
+  if (argv[0] === 'triage') return runTriage(argv.slice(1), outer);
+  if (argv[0] === 'check') return runCheck(argv.slice(1), outer);
+  if (argv[0] === 'init') return runInit(argv.slice(1), outer);
+  // Every file the run writes is noted, so the index page can list what is really there.
+  const written: string[] = [];
+  const deps: CliDeps = {
+    ...outer,
+    async writeText(path, text) {
+      await outer.writeText(path, text);
+      written.push(path);
+    },
+  };
   let expandedArgv: readonly string[];
   try {
     const expanded = await expandInputs(argv, deps);
@@ -498,6 +522,7 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
     if (report.skipped) deps.log(describeSkipped(report.skipped, args.lang));
     if (budget) deps.log(describeBudget(beforeBudget, budget, args.lang));
     if (args.writeBudgetFile !== null) await deps.writeText(args.writeBudgetFile, JSON.stringify(ratchet(beforeBudget, budget), null, 2) + '\n');
+    let historyNow: History | null = null;
     if (args.historyFile !== null) {
       const existing = await readOptional(deps, args.historyFile);
       let history = EMPTY_HISTORY;
@@ -511,6 +536,7 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
       }
       history = appendRun(history, report, args.historyMax ?? DEFAULT_HISTORY_MAX);
       await deps.writeText(args.historyFile, JSON.stringify(history, null, 2) + '\n');
+      historyNow = history;
       deps.log(describeTrend(trend(history), args.lang));
     }
     if (args.compareFile !== null) {
@@ -544,6 +570,15 @@ export async function runCli(argv: readonly string[], deps: CliDeps): Promise<nu
         : undefined;
       if (args.formats.includes('coverage')) await deps.writeText(`${dir}/narrow-audit.coverage.${args.lang}.md`, renderCoverageMarkdown(args.lang, report, byHand));
       if (args.formats.includes('worksheet')) await deps.writeText(`${dir}/narrow-audit.worksheet.${args.lang}.html`, renderWorksheet(report, args.lang, extraRun.value.manualLog ? { manual: { log: extraRun.value.manualLog, now: deps.now() } } : {}));
+    }
+    if (args.outDir !== null) {
+      const dir = args.outDir.replace(/\/+$/, '');
+      if (args.formats.includes('trend') && historyNow) await deps.writeText(`${dir}/narrow-audit.trend.${args.lang}.html`, renderTrendPage(historyNow, args.lang));
+      // Last, so it lists every file written into the folder, whichever option wrote it.
+      if (args.formats.includes('index')) {
+        const inDir = written.filter((p) => p.startsWith(`${dir}/`)).map((p) => p.slice(dir.length + 1));
+        await deps.writeText(`${dir}/${INDEX_FILE(args.lang)}`, renderIndexPage(shown, inDir, args.lang));
+      }
     }
     if (args.writeBaselineFile !== null) await deps.writeText(args.writeBaselineFile, JSON.stringify(makeBaseline(report), null, 2) + '\n');
     if (args.baselineFile !== null) {

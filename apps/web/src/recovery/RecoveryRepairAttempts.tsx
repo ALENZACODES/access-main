@@ -177,7 +177,7 @@ export function RecoveryRepairAttempts({
       </label>
     </div>
     {preview?.ok && <div style={row}>
-      <p>{preview.value.append.length} {locale === "fr" ? "nouveaux éléments" : "new entries"}; {preview.value.conflicts.length} {locale === "fr" ? "conflits" : "conflicts"}</p>
+      <p>{preview.value.append.length} {locale === "fr" ? "nouveaux éléments" : "new entries"}{locale === "fr" ? "\u202F; " : "; "}{preview.value.conflicts.length} {locale === "fr" ? "conflits" : "conflicts"}</p>
       <button style={control} type="button" disabled={preview.value.conflicts.length > 0} onClick={importStaged}>{copy.apply}</button>
     </div>}
     {document.entries.length === 0 ? <p>{copy.empty}</p> : <ol>

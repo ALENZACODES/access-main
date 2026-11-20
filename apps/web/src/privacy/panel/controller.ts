@@ -10,6 +10,9 @@ import { inventoryAsCsv, inventoryAsText } from "./inventoryExport";
 import { ownEntries } from "./ownEntries";
 import { reconcile } from "./reconcile";
 import { describeDevice, type DeviceRow } from "./deviceRegister";
+import type { FeatureRow } from "./featureRegister";
+import { featuresAsCsv, featuresAsText } from "./featureExport";
+import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
 import { clearDevice, removable, scanDevice, type ClearOptions, type DeviceHost, type DeviceScan } from "./deviceStorage";
 import { protect, unprotect, passphraseProblem, type CryptoLike } from "./protectedBackup";
@@ -51,6 +54,8 @@ export interface ControllerDeps {
   outside?: readonly OutsideItem[];
   /** The App's own list of caches and databases. With `device`, the panel says what each name found on the device is. */
   deviceRegister?: readonly DeviceRow[];
+  /** The App's list of browser features and the browser to ask. With it, the panel shows what the App asks of the browser. */
+  features?: { register: readonly FeatureRow[]; host: FeatureHost };
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -92,6 +97,8 @@ export interface PrivacyState {
   /** null until read, or when the section is off */
   signals: Signals | null;
   scan: DeviceScan | null;
+  /** The browser's answers about features, or null before the check */
+  featureStates: FeatureStates | null;
   confirmingClearDevice: boolean;
 }
 
@@ -106,6 +113,8 @@ export type PrivacyAction =
   | { type: "export-list-text" }
   | { type: "export-kept-csv" }
   | { type: "export-kept-text" }
+  | { type: "export-features-csv" }
+  | { type: "export-features-text" }
   | { type: "mark-seen" }
   | { type: "import-load"; text: string }
   | { type: "import-confirm" }
@@ -118,12 +127,14 @@ export type PrivacyAction =
   | { type: "report"; status: Status }
   | { type: "publish"; file: ExportFile; status: Status }
   | { type: "signals-read"; signals: Signals }
-  | { type: "device-scanned"; scan: DeviceScan };
+  | { type: "device-scanned"; scan: DeviceScan }
+  | { type: "features-read"; states: FeatureStates };
 
 /** Actions that wait for the browser. Passphrases are used once and never kept. */
 export type PrivacyAsyncAction =
   | { type: "read-signals" }
   | { type: "scan-device" }
+  | { type: "check-features" }
   | { type: "clear-device-confirm" }
   | { type: "protected-export"; passphrase: string; confirm: string }
   | { type: "protected-import"; text: string; passphrase: string };
@@ -179,6 +190,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     importPending: false,
     signals: null,
     scan: null,
+    featureStates: null,
     confirmingClearDevice: false,
   };
   let plan: ImportPlan | null = null;
@@ -273,6 +285,18 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const file = csv ? keptAsCsv(loc, src, deps.now(), loc === "fr" ? ";" : ",") : keptAsText(loc, src, deps.now());
         log({ kind: "kept-export", format: csv ? "csv" : "text" });
         state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "kept-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-features-csv":
+      case "export-features-text": {
+        if (deps.features === undefined) break;
+        const csv = action.type === "export-features-csv";
+        const loc = state.prefs.locale;
+        const file = csv
+          ? featuresAsCsv(loc, deps.features.register, state.featureStates, deps.now(), loc === "fr" ? ";" : ",")
+          : featuresAsText(loc, deps.features.register, state.featureStates, deps.now());
+        log({ kind: "features-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "features-exported", format: csv ? "csv" : "text" } };
         break;
       }
       case "mark-seen": {
@@ -399,6 +423,10 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         if (deps.device === undefined) break;
         state = { ...state, scan: action.scan, confirmingClearDevice: false, lastExport: null, status: { kind: "scan-done" } };
         break;
+      case "features-read":
+        if (deps.features === undefined) break;
+        state = { ...state, featureStates: action.states, confirmingErase: false, lastExport: null, status: { kind: "features-checked" } };
+        break;
       case "clear-device-ask": {
         const r = deps.device === undefined || state.scan === null ? null : removable(state.scan, deps.device);
         if (r === null || r.caches.length + r.databases.length === 0) {
@@ -459,6 +487,10 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       case "read-signals": {
         if (deps.signals === undefined) return state;
         return dispatch({ type: "signals-read", signals: await readSignals(deps.signals) });
+      }
+      case "check-features": {
+        if (deps.features === undefined) return state;
+        return dispatch({ type: "features-read", states: await readFeatureStates(deps.features.host, deps.features.register, deps.now()) });
       }
       case "scan-device": {
         if (deps.device === undefined) return state;
@@ -538,6 +570,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         ...(deps.device !== undefined && deps.deviceRegister !== undefined
           ? { deviceNames: state.scan === null ? null : describeDevice(state.scan, deps.deviceRegister, deps.device) }
           : {}),
+        ...(deps.features !== undefined ? { features: { register: deps.features.register, states: state.featureStates } } : {}),
         ...(deps.kept !== undefined ? { keptList: true } : {}),
         ...(deps.crypto !== undefined ? { protectedCopy: true } : {}),
         ...(deps.logActivity === true ? { activity: loadActivity(deps.storage, deps.prefix, deps.now()) } : {}),

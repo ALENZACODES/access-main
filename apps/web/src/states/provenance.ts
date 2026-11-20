@@ -100,7 +100,7 @@ export function attributionLine(p: Provenance, locale: Locale): string {
 export function ageLabel(retrievedOn: string, today: string, locale: Locale): string {
   const n = daysBetween(retrievedOn, today);
   if (n < 0) return t(locale, "Date in the future", "Date située dans le futur");
-  if (n === 0) return t(locale, "Retrieved today", "Consulté aujourd'hui");
+  if (n === 0) return t(locale, "Retrieved today", "Consulté aujourd’hui");
   const en = n === 1 ? "Retrieved 1 day ago" : `Retrieved ${n} days ago`;
   const fr = n === 1 ? "Consulté il y a 1 jour" : `Consulté il y a ${n} jours`;
   return t(locale, en, fr);
