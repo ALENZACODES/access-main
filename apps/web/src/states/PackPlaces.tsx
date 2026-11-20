@@ -10,8 +10,10 @@ import { PackCategories } from "./PackCategories.tsx";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
+import { OutingPlanner } from "./OutingPlanner.tsx";
+import { inputsFromPlaces } from "./outingPlan.ts";
 import { Shortlist } from "./Shortlist.tsx";
-import { MAX_SHORTLIST, type AddResult } from "./shortlist.ts";
+import { MAX_SHORTLIST, type AddResult, resolveShortlist } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
 import { useShortlist } from "./useShortlist.ts";
 import type { Locale } from "./stateCopy.ts";
@@ -78,6 +80,7 @@ export function PackPlaces({ places, locale, today }: Props) {
 
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
+  const stops = useMemo(() => inputsFromPlaces(resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place)), [shortlist.list, parsed.places]);
   const view = useMemo(
     () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets, kind }, { locale, today: day }),
     [parsed, text, tag, near, facets, kind, locale, day],
@@ -179,6 +182,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onRemove={shortlist.remove}
         onClear={shortlist.clear}
       />
+      <OutingPlanner places={stops} locale={locale} today={day} start={near.status === "ok" ? near.point : null} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
