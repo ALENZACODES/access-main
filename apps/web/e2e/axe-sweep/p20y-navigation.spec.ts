@@ -143,7 +143,7 @@ for (const [change, code] of [
   [{ order: 1.5 }, "focus-order-invalid"],
   [{ withinInertRegion: true }, "inert-focusable"],
 ] as const) {
-  test(`focus audit catches ${code}`, () => {
+  test(`focus audit catches ${code}: ${JSON.stringify(change)}`,  () => {
     expect(codes(focusOrderIssues([focus(change)], "/"))).toContain(code);
   });
 }
@@ -176,7 +176,7 @@ for (const [change, code] of [
   [{ activeAfterActivation: null }, "skip-focus-lost"],
   [{ visibleOnFocus: false }, "skip-invisible"],
 ] as const) {
-  test(`skip navigation rejects ${code}`, () => {
+  test(`skip navigation rejects ${code}: ${JSON.stringify(change)}`,  () => {
     expect(codes(skipLinkIssues([skip(change)], "/"))).toContain(code);
   });
 }
