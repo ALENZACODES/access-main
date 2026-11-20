@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test --experimental-strip-types *.test.mjs",
-    "drill": "node offline-drill-cli.mjs",
-    "verify": "npm run test && node --experimental-strip-types check.mjs --dir ../../apps/web/dist && node audit.mjs --dir ../../apps/web/dist && node deep-audit.mjs --dir ../../apps/web/dist && node preflight.mjs --root ../.. --dist ../../apps/web/dist"
+    "verify": "npm run test && node --experimental-strip-types check.mjs --dir ../../apps/web/dist && node audit.mjs --dir ../../apps/web/dist && node deep-audit.mjs --dir ../../apps/web/dist && node preflight.mjs --root ../.. --dist ../../apps/web/dist",
+    "audit:custody": "node --experimental-strip-types artifact-custody-cli.mjs",
+    "audit:precache": "node --experimental-strip-types precache-cli.mjs"
   }
 }
