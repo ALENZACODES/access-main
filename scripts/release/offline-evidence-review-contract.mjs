@@ -1,5 +1,5 @@
 /** Offline, read-only evidence inventory contract. No network access or inferred site facts. */
-export const UNKNOWN = 'Unknown';
+export const UNKNOWN = 'UNKNOWN';
 export const TIERS = Object.freeze(['unknown', 'self-reported', 'documented', 'field-observed']);
 export const MAX_RECORDS = 10000;
 export const MAX_STRING = 2000;
@@ -18,7 +18,7 @@ export function day(value) {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 export function string(value, max = MAX_STRING) {
-  return typeof value === 'string' && value.length > 0 && value.length <= max && value.trim() === value && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(value);
+  return typeof value === 'string' && value.length > 0 && value.length <= max && value.trim() === value && !Array.from(value).some(character => { const code = character.charCodeAt(0); return code <= 31 && code !== 9 && code !== 10 && code !== 13; });
 }
 export function issue(code, path) { return { code, path }; }
 export function validateRecord(value, index, today) {

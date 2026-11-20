@@ -102,7 +102,7 @@ test('HTML escapes attacker-controlled strings', () => {
 test('French output has explicit language and honest caution', () => {
   const x = render(inventory(record()), { language: 'fr', today: TODAY }).text;
   assert.match(x, /lang="fr"/);
-  assert.match(x, /Inconnu reste inconnu/);
+  assert.match(x, /UNKNOWN reste UNKNOWN/);
   assert.match(x, /Confirmez les détails/);
 });
 test('all export formats contain provenance', () => {
@@ -168,4 +168,25 @@ test('CLI can compare two valid inventories and print a French report', async ()
     assert.equal(await run(['--before', before, '--after', after, '--language', 'fr', '--today', TODAY], x.streams), 0);
     assert.match(x.printed.out, /Modifications depuis/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('visible UNKNOWN token is consistent across HTML and text in both languages', () => {
+  for (const language of ['en', 'fr']) {
+    for (const format of ['html', 'text']) {
+      const result = render(inventory(record()), { language, format, today: TODAY });
+      assert.equal(result.ok, true);
+      assert.match(result.text, /UNKNOWN/);
+      assert.doesNotMatch(result.text, /\b(?:Unknown|Inconnu|inconnu)\b/u);
+    }
+  }
+});
+test('control character check rejects C0 controls while permitting tab newline and carriage return', () => {
+  for (const code of [0, 1, 8, 11, 12, 14, 31]) {
+    const item = record({ label: `label${String.fromCharCode(code)}` });
+    assert.ok(validateRecord(item, 0, TODAY).issues.some(issue => issue.code === 'INVALID_LABEL'));
+  }
+  for (const code of [9, 10, 13]) {
+    const item = record({ label: `label${String.fromCharCode(code)}more` });
+    assert.equal(validateRecord(item, 0, TODAY).issues.length, 0);
+  }
 });
