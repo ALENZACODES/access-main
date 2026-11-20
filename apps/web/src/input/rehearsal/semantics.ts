@@ -52,7 +52,10 @@ export function resolveName(node: SemanticNode, all: readonly SemanticNode[]): N
     for (const id of node.labelledBy) {
       const matches = map.get(id) ?? [];
       if (matches.length !== 1) findings.push(issue(matches.length ? 'semantics.ambiguous-label' : 'semantics.missing-label', `${node.id}.labelledBy`));
-      else if (validText(matches[0].text)) words.push(matches[0].text.trim());
+      else {
+        const match = matches[0];
+        if (match && validText(match.text)) words.push(match.text.trim());
+      }
     }
     name = words.join(' ');
   }
@@ -61,7 +64,10 @@ export function resolveName(node: SemanticNode, all: readonly SemanticNode[]): N
   for (const id of node.describedBy) {
     const matches = map.get(id) ?? [];
     if (matches.length !== 1) findings.push(issue(matches.length ? 'semantics.ambiguous-description' : 'semantics.missing-description', `${node.id}.describedBy`));
-    else if (validText(matches[0].text)) described.push(matches[0].text.trim());
+    else {
+      const match = matches[0];
+      if (match && validText(match.text)) described.push(match.text.trim());
+    }
   }
   return { id: node.id, name, described: described.join(' '), issues: findings };
 }
@@ -122,6 +128,7 @@ export function auditFocusOrder(snapshot: SemanticSnapshot): Finding[] {
     const matches = map.get(id) ?? [];
     if (matches.length !== 1) { issues.push(issue('focus.missing-stop', path)); return; }
     const node = matches[0];
+    if (!node) return;
     if (node.hidden || node.inert || node.disabled) issues.push(issue('focus.unavailable-stop', path));
     if (node.tabIndex < 0) issues.push(issue('focus.negative-tabindex', path));
   });
@@ -152,6 +159,7 @@ export function compareSemantics(before: SemanticSnapshot, after: SemanticSnapsh
     if (!next) { findings.push(issue('semantics.removed', `nodes.${id}`, 'review')); continue; }
     if (nodes.length !== 1 || next.length !== 1) continue;
     const first = nodes[0]; const second = next[0];
+    if (!first || !second) continue;
     if (first.role !== second.role) findings.push(issue('semantics.role-changed', `nodes.${id}`, 'review'));
     if (first.label !== second.label) findings.push(issue('semantics.name-changed', `nodes.${id}`, 'review'));
     if (!first.disabled && second.disabled) findings.push(issue('semantics.new-disabled', `nodes.${id}`, 'review'));
