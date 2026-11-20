@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  MAX_PRECACHE_FILE_BYTES, MAX_PRECACHE_TOTAL_BYTES, safeRoute, normalizeRoute,
+  MAX_PRECACHE_FILE_BYTES, safeRoute, normalizeRoute,
   resourceFindings, statusFindings, snapshotFindings, actionFindings,
   sameIdentity, traceFindings, coverageMatrix, coverageKey,
   coverageFindings, inventoryFindings,
