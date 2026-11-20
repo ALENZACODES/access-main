@@ -114,7 +114,7 @@ describe("manual offline rehearsal integration", () => {
     expect(panel).toContain("aria-labelledby={heading}");
   });
   it("labels the recorded cases with another heading", () => {
-    expect(panel).toContain("aria-labelledby={listHeading}");
+    expect(panel).toContain("aria-labelledby={`${heading} ${listHeading}`}");
   });
   it("requires at least 44px tap targets", () => {
     expect(panel).toContain("minHeight: 44");
