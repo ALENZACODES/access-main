@@ -39,6 +39,7 @@ import { parseViewState } from './thresholds';
 import { PAGE_CSS } from './page';
 import { buildFactsCsv } from './factsCsv';
 import { parseColumns } from './columns';
+import { OUTLOOK_FILENAME, outlookToCsv } from './outlookFile';
 import { buildNotesMarkdown, NOTES_FILENAME, PUBLISHERS_CSV_FILENAME, publishersToCsv } from './notesFile';
 import { listedJsonSchemaText } from './listedJsonSchema';
 import { buildBatchFile, buildReviewBatches, parseBatchSize } from './reviewBatches';
@@ -82,7 +83,7 @@ const BASE_HEADERS = {
   'cross-origin-opener-policy': 'same-origin',
 } as const;
 
-type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue' | 'completeness' | 'consistency' | 'checklistMd' | 'checklistCsv' | 'facts' | 'tables' | 'textSummary' | 'listedJson' | 'listedMd' | 'listedTxt' | 'pivotCsv' | 'batchesMd' | 'listedSchema' | 'publishersCsv' | 'notesMd';
+type Kind = 'html' | 'csv' | 'credits' | 'summary' | 'ics' | 'catalogue' | 'completeness' | 'consistency' | 'checklistMd' | 'checklistCsv' | 'facts' | 'tables' | 'textSummary' | 'listedJson' | 'listedMd' | 'listedTxt' | 'pivotCsv' | 'batchesMd' | 'listedSchema' | 'publishersCsv' | 'notesMd' | 'outlookCsv';
 const SUFFIX: Readonly<Record<string, Kind>> = {
   '': 'html',
   '/sources.csv': 'csv',
@@ -105,6 +106,7 @@ const SUFFIX: Readonly<Record<string, Kind>> = {
   '/listed-sources.schema.json': 'listedSchema',
   '/publishers.csv': 'publishersCsv',
   '/second-look.md': 'notesMd',
+  '/outlook.csv': 'outlookCsv',
 };
 
 function header(req: DsRequest, name: string): string | undefined {
@@ -134,7 +136,7 @@ export function matchRoute(url: string, basePath: string = DEFAULT_BASE_PATH): R
   }
   let path = parsed.pathname;
   if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json|\/completeness\.json|\/consistency\.json|\/review-checklist\.md|\/review-checklist\.csv|\/record-facts\.csv|\/planning-tables\.csv|\/summary\.txt|\/listed-sources\.json|\/listed-sources\.md|\/listed-sources\.txt|\/list-counts\.csv|\/review-sessions\.md|\/listed-sources\.schema\.json|\/publishers\.csv|\/second-look\.md)?$/.exec(path);
+  const m = /^(?:\/(en|fr))?(.*?)(\/sources\.csv|\/credits\.txt|\/summary\.json|\/review\.ics|\/catalogue\.json|\/completeness\.json|\/consistency\.json|\/review-checklist\.md|\/review-checklist\.csv|\/record-facts\.csv|\/planning-tables\.csv|\/summary\.txt|\/listed-sources\.json|\/listed-sources\.md|\/listed-sources\.txt|\/list-counts\.csv|\/review-sessions\.md|\/listed-sources\.schema\.json|\/publishers\.csv|\/second-look\.md|\/outlook\.csv)?$/.exec(path);
   if (!m || (m[2] ?? '') !== basePath) return null;
   return { locale: (m[1] as Locale | undefined) ?? null, kind: SUFFIX[m[3] ?? ''] as Kind, pathname: path, search: parsed.search };
 }
@@ -238,6 +240,8 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
       const file = buildChecklistFile(checklist, format, view.filters, now, locale, { datasetNames: names });
       return respond(req, 200, { ...common, 'content-type': file.mime.replace(';charset=', '; charset='), 'content-disposition': `attachment; filename="${file.filename}"` }, file.text);
     }
+    case 'outlookCsv':
+      return respond(req, 200, { ...common, 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${OUTLOOK_FILENAME}"` }, outlookToCsv(audit, now, view.thresholds, locale));
     case 'publishersCsv':
       return respond(req, 200, { ...common, 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${PUBLISHERS_CSV_FILENAME}"` }, publishersToCsv(records, audit, locale));
     case 'notesMd':
@@ -316,6 +320,7 @@ export async function handleDataStatus(req: DsRequest, ctx: HandlerContext): Pro
             listedTxtHref: `${prefix}/listed-sources.txt`,
             publishersHref: `${prefix}/publishers.csv`,
             notesHref: `${prefix}/second-look.md`,
+            outlookHref: `${prefix}/outlook.csv`,
           },
         }),
       );

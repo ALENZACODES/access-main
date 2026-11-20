@@ -16,7 +16,7 @@ import { auditedSourcesToCsv } from './csv';
 import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, DUE_WINDOWS, FILTER_AGES, GAP_FIELDS, hasActiveFilters, isAgeFilter, isDueWindow, isGapField, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
-import { isDatasetKind } from './freshnessPolicy';
+import { isDatasetKind, staleAfterFor, type DatasetKind } from './freshnessPolicy';
 import { t, type MessageKey } from './i18n';
 import { formatDisplayDate } from './locale';
 import { buildQaReport, renderQaReportHtml } from './qaReport';
@@ -44,6 +44,25 @@ import {
   buildNoMatchHints,
   renderDueSummaryHtml,
   clampLimit,
+  outlookLabel,
+  buildPeriodDiff,
+  buildRecency,
+  renderPeriodDiffHtml,
+  renderRecencyHtml,
+  buildForecast,
+  buildPageHosts,
+  renderForecastHtml,
+  renderPageHostsHtml,
+  buildPeriodWhatIf,
+  describePeriodChange,
+  describePeriodKind,
+  parsePeriodKind,
+  parsePeriodValue,
+  renderPeriodEditor,
+  renderPeriodFields,
+  renderPeriodWhatIfHtml,
+  staleUnder,
+  withPeriod,
   notesFileLabel,
   renderFileChecksHtml,
   runFileChecks,
@@ -275,6 +294,8 @@ export interface StaticView {
   /** Every publisher (CSV), and the notes on the saved records (Markdown). Both cover every source. */
   publishersHref?: string;
   notesHref?: string;
+  /** The later-days, review-period and web-site tables in one sheet (CSV). */
+  outlookHref?: string;
 }
 
 const esc = escapeHtml;
@@ -367,6 +388,8 @@ export interface LiveList {
   pivot?: PivotSpec | null | undefined;
   /** The review split into sessions of this many sources; null or left out for no split. */
   batch?: BatchSize | null | undefined;
+  /** The kind of data the review-period editor is showing. */
+  periodKind?: DatasetKind | undefined;
 }
 
 export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, live?: LiveList): string {
@@ -595,7 +618,8 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
   const sort = form.table?.sort ?? null;
   const size = form.table?.paging.size ?? DEFAULT_PAGE_SIZE;
   const hidden =
-    Object.entries(form.thresholds ?? {})
+    // With the table settings in the form, the review periods are fields of their own and need no hidden copy.
+    Object.entries(form.table ? {} : (form.thresholds ?? {}))
       .map(([k, v]) => `<input type="hidden" name="stale_${esc(k)}" value="${esc(String(v))}">`)
       .join('') +
     (sort ? `<input type="hidden" name="sort" value="${esc(sort.key)}">` + (sort.dir === 'desc' ? '<input type="hidden" name="dir" value="desc">' : '') : '');
@@ -606,7 +630,8 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
       renderDetailsToggle(form.table.details === true, locale) +
       renderColumnChooser(form.table.columns ?? [], locale) +
       renderPivotControl(form.table.pivot ?? null, locale) +
-      renderBatchControl(form.table.batch ?? null, locale)
+      renderBatchControl(form.table.batch ?? null, locale) +
+      renderPeriodFields(form.thresholds ?? {}, locale)
     : '';
   return (
     `<form method="get" action="${esc(form.action)}">${controls}${sizeField}${hidden}` +
@@ -699,6 +724,7 @@ export function renderDataStatusPanel(state: PanelState): string {
       (sv.listedTxtHref ? ` ${downloadLink(sv.listedTxtHref + tableQuery, listedTableLabel('txt', locale))}` : '') +
       (sv.publishersHref ? ` ${downloadLink(sv.publishersHref + thrQuery, notesFileLabel('publishers', locale))}` : '') +
       (sv.notesHref ? ` ${downloadLink(sv.notesHref + thrQuery, notesFileLabel('notes', locale))}` : '') +
+      (sv.outlookHref ? ` ${downloadLink(sv.outlookHref + thrQuery, outlookLabel(locale))}` : '') +
       `</div>`
     : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')} ${btn(LISTED_JSON_ACTION, listedJsonLabel(locale))} ${LISTED_TABLE_FORMATS.map((f) => btn(listedTableAction(f), listedTableLabel(f, locale))).join(' ')}</div>`;
   const drillNames = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
@@ -725,9 +751,18 @@ export function renderDataStatusPanel(state: PanelState): string {
     }) +
     renderReviewCalendarHtml(buildReviewCalendar(audit, state.now), locale) +
     renderSharedPagesHtml(buildSharedPages(audit), locale) +
+    renderForecastHtml(buildForecast(audit, state.now), locale) +
+    renderRecencyHtml(buildRecency(audit), locale) +
     renderPublishersHtml(buildPublishers(state.records, audit), locale) +
+    renderPageHostsHtml(buildPageHosts(audit), locale) +
     renderOdditiesHtml(buildOddities(audit), locale) +
     renderThresholdsHtml(thresholds, locale) +
+    // The live panel can try another review period; a page without scripts sets them in its form.
+    renderPeriodWhatIfHtml(
+      buildPeriodWhatIf(audit, thresholds),
+      locale,
+      (sv ? '' : renderPeriodEditor(state.live?.periodKind ?? 'places', thresholds, locale)) + renderPeriodDiffHtml(buildPeriodDiff(state.records, state.now, thresholds), locale),
+    ) +
     renderBasisHtml(audit, locale) +
     `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
     renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort, sv || !state.live ? undefined : { group: state.live.group ?? 'none', details: state.live.details === true, columns: state.live.columns ?? [], pivot: state.live.pivot ?? null, batch: state.live.batch ?? null }) +
@@ -813,6 +848,7 @@ export interface MountedPanel {
   getColumns(): ColumnId[];
   getPivot(): PivotSpec | null;
   getBatch(): BatchSize | null;
+  getThresholds(): Thresholds;
   destroy(): void;
 }
 
@@ -826,6 +862,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   let pivot: PivotSpec | null = opts.initialPivot ?? null;
   let batch: BatchSize | null = opts.initialBatch ?? null;
   let tocTarget: string | null = null;
+  let periodKind: DatasetKind = 'places';
   let details = false;
   // What has been typed as a name for the next saved view. Kept here so redraws do not lose it.
   let viewName = '';
@@ -920,7 +957,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       changes,
       notices: opts.getNotices?.(locale),
       plainTables: opts.plainTables,
-      live: { sort, limit, group, details, columns, pivot, batch },
+      live: { sort, limit, group, details, columns, pivot, batch, periodKind },
       savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable, draftName: viewName } : undefined,
     });
   };
@@ -991,6 +1028,32 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     if (key === 'query' && value.slice(0, MAX_QUERY_LENGTH) === filters.query) return;
     // Any change to what is listed, or its order, starts again from the first rows.
     limit = LIVE_STEP;
+    if (key === 'periodKind') {
+      // Another kind in the editor: nothing is changed, the second list now shows that kind's period.
+      const kind = parsePeriodKind(value);
+      if (kind === null) return;
+      periodKind = kind;
+      refresh();
+      announcer.say(describePeriodKind(kind, staleAfterFor(kind, thresholds), opts.getLocale()));
+      focusFirst(['#ds-rp-kind', FORM_START]);
+      return;
+    }
+    if (key === 'periodDays') {
+      // Another review period for one kind: every status of that kind is worked out again.
+      const kind = periodKind;
+      const ofKind = (): AuditedSource[] => auditRegistry(lastRecords, nowFn(), thresholds).sources.filter((s) => s.kind === kind);
+      const before = staleUnder(ofKind(), staleAfterFor(kind, thresholds));
+      const next = withPeriod(thresholds, kind, parsePeriodValue(value));
+      if (next[kind] === undefined) delete thresholds[kind];
+      else thresholds[kind] = next[kind];
+      limit = LIVE_STEP;
+      refresh();
+      const days = staleAfterFor(kind, thresholds);
+      announcer.say(describePeriodChange(kind, days, staleUnder(ofKind(), days), before, opts.getLocale()));
+      focusFirst(['#ds-rp-days', FORM_START]);
+      opts.onFiltersChange?.(view());
+      return;
+    }
     if (key === 'tocTarget') {
       // Choosing a section changes nothing by itself: the button next to the list goes there.
       tocTarget = value;
@@ -1283,6 +1346,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     getColumns: () => [...columns],
     getPivot: () => (pivot === null ? null : { ...pivot }),
     getBatch: () => batch,
+    getThresholds: () => ({ ...thresholds }),
     destroy: () => {
       host.removeEventListener('click', onClick);
       host.removeEventListener('change', onFilterEvent);

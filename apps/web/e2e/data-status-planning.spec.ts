@@ -582,13 +582,17 @@ test("Data status: the list can be counted two ways, the review split into sessi
 });
 
 test("Data status: the page stays short to cross with the Tab key, and the jump menu goes to a section", async ({ page }) => {
-  await page.goto("/data-status");
+  // Arrive the way a person does, through the app's own navigation: the page then puts focus on its
+  // heading, and Tab starts from there. (Going to the address directly leaves focus at the top of
+  // the document, which would make this count far too small.)
+  await page.goto("/");
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Data status" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Data status" })).toBeFocused();
   const panel = page.getByRole("region", { name: "Data status panel" });
   await expect(panel).toBeVisible();
 
-  // From the top of the page content, the app's own navigation is within reach: the release check
-  // allows 60 presses of Tab to get to its Help link, so this holds the page to 56.
-  await page.getByRole("heading", { level: 1 }).focus();
+  // The release check allows 60 presses of Tab to get from here to the Help link of the app's
+  // navigation, so this holds the page to 56. The count has to be a real crossing of the panel.
   const help = page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Help" });
   let presses = 0;
   while (presses < 56 && !(await help.evaluate((el) => el === document.activeElement))) {
@@ -596,6 +600,7 @@ test("Data status: the page stays short to cross with the Tab key, and the jump 
     presses += 1;
   }
   await expect(help).toBeFocused();
+  expect(presses).toBeGreaterThan(30);
 
   // No control is tucked away where a keyboard cannot reach it.
   await expect(panel.locator("details:not([open]) a, details:not([open]) button, details:not([open]) input, details:not([open]) select")).toHaveCount(0);
@@ -642,4 +647,46 @@ test("Data status: publishers, things worth a second look and the files read bac
   const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
   await expect(fr.getByRole("region", { name: "Sources par diffuseur" })).toBeVisible();
   await expect(fr.getByRole("region", { name: "Fichiers relus et comptés" })).toContainText("Les 10 fichiers concordent avec la liste.");
+});
+
+test("Data status: another review period can be tried, and the later-days and web-site tables read the saved records", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-mid", kind: "place", title: "Mid place", retrieved_at: daysAgo(100) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const said = panel.locator('[data-region="announce"]');
+
+  const periods = panel.getByRole("region", { name: "Review periods, and what another one would change" });
+  await expect(periods).toContainText("Trying another period changes no record.");
+  const kind = periods.getByLabel("Review period for");
+  const days = periods.getByLabel("Marked possibly out of date after");
+  await expect(kind).toHaveValue("places");
+  await expect(days).toHaveValue("default");
+
+  await days.selectOption("90");
+  await expect(said).toHaveText(/^Review period for Places set to 90 days\. \d+ sources? of that kind (is|are) now marked possibly out of date \(it was \d+\)\.$/);
+  await expect(panel.getByLabel("Marked possibly out of date after")).toBeFocused();
+  await expect(panel.getByLabel("Marked possibly out of date after")).toHaveValue("90");
+  await expect(panel.getByRole("region", { name: "Review periods, and what another one would change" })).toContainText("90 days, chosen here:");
+
+  await panel.getByLabel("Marked possibly out of date after").selectOption("default");
+  await expect(said).toHaveText(/back to the default, 180 days\./);
+
+  const later = panel.getByRole("region", { name: "If no source is retrieved again" });
+  await expect(later).toContainText("It does not say what any publisher will do.");
+  await expect(later.getByRole("table").getByRole("row")).toHaveCount(7);
+  await expect(later.getByRole("row", { name: /^Today/ })).toBeVisible();
+
+  const sites = panel.getByRole("region", { name: "Sources by web site" });
+  await expect(sites).toContainText("No page is opened to make this table");
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("region", { name: "Si aucune source n’est récupérée de nouveau" })).toBeVisible();
+  await expect(fr.getByLabel("Période de révision pour")).toHaveValue("places");
 });

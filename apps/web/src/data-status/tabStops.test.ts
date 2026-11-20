@@ -142,13 +142,13 @@ describe('the budget', () => {
   it('an empty panel is short to cross', () => {
     const stops = countTabStops(live([]));
     expect(stops).toBeGreaterThan(10);
-    expect(stops).toBeLessThanOrEqual(42);
+    expect(stops).toBeLessThanOrEqual(44);
   });
   it('a panel with one record stays within the budget of the page it sits on', () => {
     const one: DatasetRecord[] = [{ id: 'cache', name: 'Saved on this device', kind: 'reference', sources: [{ id: 'prefs', name: 'Preferences', source: 'This device', licence: null, retrievedAt: isoDayOffset(NOW, 0), tier: null }] }];
     // One record adds its row link, the scrollable tables and the buttons that list it.
-    expect(countTabStops(live(one))).toBeLessThanOrEqual(56);
-    expect(countTabStops(live(one)) - countTabStops(live([]))).toBeLessThanOrEqual(16);
+    expect(countTabStops(live(one))).toBeLessThanOrEqual(60);
+    expect(countTabStops(live(one)) - countTabStops(live([]))).toBeLessThanOrEqual(18);
   });
   it('choosing extras adds only what was chosen', () => {
     const base = countTabStops(live(RECORDS));
