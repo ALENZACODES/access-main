@@ -486,7 +486,7 @@ describe("boundary and source-integrity regression cases", () => {
   });
   it("does not accept a missing source on imported events", () => {
     const unsafe = { ...event(), provenance: null };
-    expect(parseDrills(JSON.stringify(document([run()], [], [unsafe as DrillEvent]))).ok).toBe(false);
+    expect(parseDrills(JSON.stringify(document([run()], [], [unsafe as unknown as DrillEvent]))).ok).toBe(false);
   });
   it("does not accept a missing licence on imported steps", () => {
     const unsafe = { ...step(), provenance: { ...provenance, licence: "" } };
