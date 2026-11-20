@@ -12,10 +12,12 @@ import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
+import { OutingPlanner } from "./OutingPlanner.tsx";
+import { inputsFromPlaces } from "./outingPlan.ts";
 import { PlaceSheet } from "./PlaceSheet.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
 import { Shortlist } from "./Shortlist.tsx";
-import { MAX_SHORTLIST, type AddResult } from "./shortlist.ts";
+import { MAX_SHORTLIST, type AddResult, resolveShortlist } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
 import { useShortlist } from "./useShortlist.ts";
 import type { Locale } from "./stateCopy.ts";
@@ -85,6 +87,7 @@ export function PackPlaces({ places, locale, today }: Props) {
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
   const byId = useMemo(() => new Map(parsed.places.map((p) => [p.id, p] as const)), [parsed.places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
+  const stops = useMemo(() => inputsFromPlaces(resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place)), [shortlist.list, parsed.places]);
   const from = near.status === "ok" ? near.point : null;
   // A distance band means nothing without a point, so it is ignored (not forgotten) until a point is typed again.
   const activeBand = from === null ? null : band;
@@ -192,6 +195,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onClear={shortlist.clear}
       />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
+      <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );

@@ -151,6 +151,10 @@ export function activityText(
         return `Liste des données téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "kept-export":
         return `Liste de tout ce qui est conservé téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "glance-export":
+        return `Chiffres sur la vie privée téléchargés (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "addresses-export":
+        return `Liste des adresses et requêtes réseau téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "features-export":
         return `Liste des fonctions du navigateur téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "consent-granted":
@@ -182,6 +186,10 @@ export function activityText(
       return `Downloaded the data list (${e.format === "csv" ? "CSV" : "text"})`;
     case "kept-export":
       return `Downloaded the list of everything kept (${e.format === "csv" ? "CSV" : "text"})`;
+    case "glance-export":
+      return `Downloaded the privacy counts (${e.format === "csv" ? "CSV" : "text"})`;
+    case "addresses-export":
+      return `Downloaded the list of addresses and network requests (${e.format === "csv" ? "CSV" : "text"})`;
     case "features-export":
       return `Downloaded the list of browser features (${e.format === "csv" ? "CSV" : "text"})`;
     case "consent-granted":
