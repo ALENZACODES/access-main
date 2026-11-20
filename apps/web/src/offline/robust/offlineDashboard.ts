@@ -24,6 +24,7 @@ import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
+import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -259,6 +260,9 @@ export function mountOfflineDashboard(
   const sourceAgeHost = element("div");
   section.append(sourceAgeHost);
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
+  const continuityHost = element("div");
+  section.append(continuityHost);
+  const unmountContinuity = mountOfflineContinuityDrill(continuityHost, manifest, model, language, dependencies.estimateStorage);
   const handoffHost = element("div");
   section.append(handoffHost);
   let disposedHandoff = false;
@@ -390,6 +394,7 @@ export function mountOfflineDashboard(
     unmountDiagnostics();
     unmountRecovery();
     unmountSourceAge();
+    unmountContinuity();
     disposedHandoff = true;
     unmountHandoff();
     model.dispose();

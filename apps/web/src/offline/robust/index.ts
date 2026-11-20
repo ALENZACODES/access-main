@@ -69,3 +69,8 @@ export * from "./handoffRehearsal";
 export * from "./handoffRehearsalCopy";
 export * from "./handoffRehearsalPanel";
 export { handoffReviewText, pageHandoffReview, reviewHandoff } from "./handoffReview";
+
+export * from "./continuityDrill";
+export * from "./continuityDrillCopy";
+export * from "./continuityDrillExport";
+export * from "./continuityDrillPanel";
