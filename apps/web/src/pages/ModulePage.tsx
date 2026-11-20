@@ -12,7 +12,16 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
 import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm.tsx";
-import { DataCredits, PackCompare, PackFreshness, PackPlaces, PackReport, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { DataCredits } from "../states/DataCredits.tsx";
+import { PackCompare } from "../states/PackCompare.tsx";
+import { PackFreshness } from "../states/PackFreshness.tsx";
+import { PackPlaces } from "../states/PackPlaces.tsx";
+import { PackReport } from "../states/PackReport.tsx";
+import { StateNotice } from "../states/StateNotice.tsx";
+import { creditRecordsFromPack } from "../states/dataCredits.ts";
+import { escalateView } from "../states/retryPolicy.ts";
+import { moduleStateFor, moduleStateView, type ModuleAvailability } from "../states/moduleStates.ts";
+import { useFailureStreak } from "../states/useFailureStreak.ts";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
