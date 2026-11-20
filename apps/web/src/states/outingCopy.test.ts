@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { lintCopy } from "./copyLint";
 import { onLine, START_WEST } from "./outingFixtures";
-import { UNKNOWN, cannotMoveLine, legText, legTimeText, modeHint, modeLabel, movedLine, paceNote, planTitle, startLine, outingStraightLineNote, summaryLine, tagText } from "./outingCopy";
+import { OUTING_UNKNOWN, cannotMoveLine, legText, legTimeText, modeHint, modeLabel, movedLine, paceNote, planTitle, startLine, outingStraightLineNote, summaryLine, tagText } from "./outingCopy";
 import { OUTING_MODES, buildOuting } from "./outingPlan";
 import { lintFrench } from "./typography";
 
@@ -36,7 +36,7 @@ describe("tagText", () => {
     expect((["yes", "limited", "no", "designated"] as const).map((t) => tagText(t, "fr"))).toEqual(["Oui", "Limité", "Non", "Réservé"]);
   });
   it("keeps the token UNKNOWN in both languages", () => {
-    expect(UNKNOWN).toBe("UNKNOWN");
+    expect(OUTING_UNKNOWN).toBe("UNKNOWN");
     expect(tagText("unknown", "en")).toBe("UNKNOWN");
     expect(tagText("unknown", "fr")).toBe("UNKNOWN");
   });

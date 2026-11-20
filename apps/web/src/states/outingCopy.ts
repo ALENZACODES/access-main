@@ -11,11 +11,11 @@ import { formatMinutes, minutesAt } from "./outingPace";
 import type { Locale } from "./stateCopy";
 import { t } from "./typography";
 
-export const UNKNOWN = "UNKNOWN";
+export const OUTING_UNKNOWN = "UNKNOWN";
 
 /** A tag as shown: the pack's words, and the token UNKNOWN (never a translation of it) for none. */
 export function tagText(tag: WheelchairTag, locale: Locale): string {
-  return tag === "unknown" ? UNKNOWN : message(`pack.tag.${tag}` as MessageId, locale);
+  return tag === "unknown" ? OUTING_UNKNOWN : message(`pack.tag.${tag}` as MessageId, locale);
 }
 
 export function modeLabel(mode: OutingMode, locale: Locale): string {
@@ -85,12 +85,12 @@ export function summaryLine(outing: Outing, locale: Locale, kmh: number | null):
 
 /** "350 m", or UNKNOWN when the leg has no distance. */
 export function legText(metres: number | null, locale: Locale): string {
-  return metres === null ? UNKNOWN : formatPackDistance(metres, locale);
+  return metres === null ? OUTING_UNKNOWN : formatPackDistance(metres, locale);
 }
 
 export function legTimeText(metres: number | null, kmh: number | null): string {
   if (kmh === null) return "";
-  return metres === null ? UNKNOWN : formatMinutes(minutesAt(metres, kmh));
+  return metres === null ? OUTING_UNKNOWN : formatMinutes(minutesAt(metres, kmh));
 }
 
 export function movedLine(name: string, position: number, total: number, locale: Locale): string {

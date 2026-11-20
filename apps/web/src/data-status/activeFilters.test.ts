@@ -28,10 +28,10 @@ describe('listActiveFilters', () => {
       { key: 'kind', label: 'Dataset type: Places' },
       { key: 'query', label: 'Name contains “alpha”' },
       { key: 'issues', label: 'Needs review only' },
-      { key: 'tier', label: 'Tier: Unknown' },
+      { key: 'tier', label: 'Tier: UNKNOWN' },
       { key: 'licence', label: 'Licence type: Open licence' },
       { key: 'dataset', label: 'Dataset: Places' },
-      { key: 'gap', label: 'Unknown: Source' },
+      { key: 'gap', label: 'UNKNOWN: Source' },
       { key: 'age', label: 'Age of retrieved date: 0 to 30 days' },
       { key: 'due', label: 'Review due within 30 days' },
     ]);
@@ -41,8 +41,8 @@ describe('listActiveFilters', () => {
   });
   it('is written in French with the right spacing', () => {
     const labels = listActiveFilters(ALL, 'fr').map((a) => a.label);
-    expect(labels).toContain('Niveau : Inconnu');
-    expect(labels).toContain('Le nom contient « alpha »');
+    expect(labels).toContain('Niveau : UNKNOWN');
+    expect(labels).toContain('Le nom contient «\u202Falpha\u202F»');
     for (const l of labels) expect(lintFrench(l)).toEqual([]);
   });
   it('has one entry for each key when everything is set', () => {
@@ -170,7 +170,7 @@ describe('tier in the per-source details', () => {
   it('shows the tier, or Unknown, for each source with a finding', () => {
     const en = renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW });
     expect(en).toContain('<dt>Tier</dt><dd>E</dd>');
-    expect(en).toContain('<dt>Tier</dt><dd>Unknown</dd>');
-    expect(renderDataStatusPanel({ records: RECORDS, locale: 'fr', now: NOW })).toContain('<dt>Niveau</dt><dd>Inconnu</dd>');
+    expect(en).toContain('<dt>Tier</dt><dd>UNKNOWN</dd>');
+    expect(renderDataStatusPanel({ records: RECORDS, locale: 'fr', now: NOW })).toContain('<dt>Niveau</dt><dd>UNKNOWN</dd>');
   });
 });

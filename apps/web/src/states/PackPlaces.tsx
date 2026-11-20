@@ -5,7 +5,7 @@ import { StateNotice } from "./StateNotice.tsx";
 import { message } from "./messages.ts";
 import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
-import { parsePackPlaces } from "./packPlaces.ts";
+import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
@@ -14,6 +14,7 @@ import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, pack
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
+import { PlaceSheet } from "./PlaceSheet.tsx";
 import { Shortlist } from "./Shortlist.tsx";
 import { MAX_SHORTLIST, type AddResult, resolveShortlist } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
@@ -29,7 +30,7 @@ interface Props {
   today?: string;
 }
 
-function Card({ card, locale, listed, onToggle }: { card: PackPlaceCard; locale: Locale; listed: boolean; onToggle: () => void }) {
+function Card({ card, locale, listed, onToggle, place, today }: { card: PackPlaceCard; locale: Locale; listed: boolean; onToggle: () => void; place?: PackPlaceRecord; today: string }) {
   const titleId = useId();
   const buttonId = useId();
   return (
@@ -52,6 +53,7 @@ function Card({ card, locale, listed, onToggle }: { card: PackPlaceCard; locale:
           {listed ? t(locale, "Remove from list", "Retirer de la liste") : t(locale, "Add to list", "Ajouter à la liste")}
         </Button>
       </p>
+      {place ? <PlaceSheet place={place} locale={locale} today={today} /> : null}
       {card.sourceUrl && card.sourceLinkLabel ? (
         <p>
           <a className="text-link" href={card.sourceUrl} rel="noreferrer noopener" lang={locale}>
@@ -82,6 +84,7 @@ export function PackPlaces({ places, locale, today }: Props) {
   const [listNote, setListNote] = useState("");
 
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
+  const byId = useMemo(() => new Map(parsed.places.map((p) => [p.id, p] as const)), [parsed.places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
   const stops = useMemo(() => inputsFromPlaces(resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place)), [shortlist.list, parsed.places]);
   const from = near.status === "ok" ? near.point : null;
@@ -175,7 +178,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       ) : (
         <ul className="record-list">
           {view.cards.map((card) => (
-            <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} />
+            <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} place={byId.get(card.id)} today={day} />
           ))}
         </ul>
       )}

@@ -18,10 +18,10 @@ describe('planning tables CSV', () => {
   });
   it('ends with records by tier, each with its meaning, and the counts add up', () => {
     const rows = buildTablesRows(audit, NOW, 'en').filter((r) => r[0] === 'Records by tier');
-    expect(rows.map((r) => [r[1], r[2]])).toEqual([['Tier 0', '1'], ['Tier E', '1'], ['Unknown', '1']]);
+    expect(rows.map((r) => [r[1], r[2]])).toEqual([['Tier 0', '1'], ['Tier E', '1'], ['UNKNOWN', '1']]);
     expect(rows.reduce((n, r) => n + Number(r[2]), 0)).toBe(audit.sources.length);
     for (const r of rows) expect((r[3] ?? '').length).toBeGreaterThan(5);
-    expect(buildTablesRows(audit, NOW, 'fr').at(-1)?.[1]).toBe('Inconnu');
+    expect(buildTablesRows(audit, NOW, 'fr').at(-1)?.[1]).toBe('UNKNOWN');
   });
   it('counts are whole numbers', () => {
     for (const r of buildTablesRows(audit, NOW, 'en').slice(1)) expect(r[2]).toMatch(/^\d+$/);

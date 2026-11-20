@@ -87,7 +87,7 @@ describe('describeChange / countChanges', () => {
 
   it('shows Unknown for a missing side instead of leaving it blank', () => {
     const c = { code: 'licence-changed', datasetId: 'a', datasetName: 'A', sourceId: null } as const;
-    expect(describeChange(c, 'en')).toBe('A: licence changed from Unknown to Unknown');
+    expect(describeChange(c, 'en')).toBe('A: licence changed from UNKNOWN to UNKNOWN');
     expect(describeChange({ ...c, code: 'dataset-added' }, 'fr')).toBe('A\u00A0: jeu de données ajouté');
   });
 
