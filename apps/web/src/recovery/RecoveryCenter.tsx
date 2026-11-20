@@ -30,6 +30,12 @@ const RecoveryTransferWitnessPanel = lazy(async () => ({
   default: (await import("./RecoveryTransferWitnessPanel")).RecoveryTransferWitnessPanel,
 }));
 
+
+
+const RecoveryHandoffChainPanel = lazy(async () => ({
+  default: (await import("./RecoveryHandoffChainPanel")).RecoveryHandoffChainPanel,
+}));
+
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
   readonly locale: RecoveryLocale;
@@ -171,13 +177,17 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       <RecoveryDecisionMatrix locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
-      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du registre local…" : "Loading local register…"}</p>}>
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du dossier…" : "Loading local packet…"}</p>}>
-      <RecoveryEvidencePacketPanel locale={locale} records={inventory}
-        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+        <RecoveryEvidencePacketPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
-      <RecoveryTransferWitnessPanel locale={locale} records={inventory}
-        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du transfert…" : "Loading transfer record…"}</p>}>
+        <RecoveryTransferWitnessPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de la chaîne…" : "Loading handoff chain…"}</p>}>
+        <RecoveryHandoffChainPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>

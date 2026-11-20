@@ -1,4 +1,3 @@
-import { mountOfflineDashboard } from "./offlineDashboard";
 import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload";
 
 /** User-facing download state. Cells not downloaded are named as such, never as available and never as UNKNOWN. */
@@ -119,8 +118,9 @@ export function createPressureController(
 }
 
 /**
- * Explicit opt-in UI: hosts mount this panel beside their offline download control.
- * The host is responsible for first-party fetching and open-licence data selection.
+ * The full offline dashboard owns several substantial optional subpanels.
+ * Load them as a separate chunk only when this view is mounted, keeping the
+ * public synchronous teardown contract and preventing a late mount after exit.
  */
 export function mountStoragePressurePanel(
   root: HTMLElement,
@@ -128,5 +128,26 @@ export function mountStoragePressurePanel(
   dependencies: DownloadDependencies,
   language: Language,
 ): () => void {
-  return mountOfflineDashboard(root, manifest, dependencies, language);
+  let disposed = false;
+  let unmount: (() => void) | null = null;
+  const status = root.ownerDocument.createElement("p");
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  status.textContent = language === "fr" ? "Chargement des renseignements hors ligne…" : "Loading offline details…";
+  root.append(status);
+  void import("./offlineDashboard").then(({ mountOfflineDashboard }) => {
+    if (disposed) return;
+    unmount = mountOfflineDashboard(root, manifest, dependencies, language);
+    status.remove();
+  }).catch(() => {
+    if (disposed) return;
+    status.textContent = language === "fr"
+      ? "Les renseignements hors ligne sont indisponibles. État UNKNOWN."
+      : "Offline details are unavailable. Status UNKNOWN.";
+  });
+  return () => {
+    disposed = true;
+    unmount?.();
+    status.remove();
+  };
 }
