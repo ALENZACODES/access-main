@@ -48,7 +48,7 @@ export function AccessRehearsalPage() {
   const [notes, setNotes] = useState('');
   const [showErrors, setShowErrors] = useState(false);
   const journey: Journey = useMemo(() => ({ id: 'local-rehearsal', name: { en: name || rehearsalCopy('en').title, fr: name || rehearsalCopy('fr').title },
-    createdOn: stamp(), steps }), [name, steps, copy.title]);
+    createdOn: stamp(), steps }), [name, steps]);
   const options = useMemo(() => ({ ...DEFAULT_OPTIONS, today: stamp() }), []);
   const assessment = useMemo(() => assessJourney(journey, options), [journey, options]);
   const targets = useMemo(() => targetsForJourney(journey, locale), [journey, locale]);
