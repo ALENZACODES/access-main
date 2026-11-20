@@ -24,7 +24,6 @@ import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
-import { mountOfflineHandoffRehearsal } from "./handoffRehearsalPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -262,7 +261,16 @@ export function mountOfflineDashboard(
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
   const handoffHost = element("div");
   section.append(handoffHost);
-  const unmountHandoff = mountOfflineHandoffRehearsal(handoffHost, manifest, model, language);
+  let disposedHandoff = false;
+  let unmountHandoff: () => void = () => undefined;
+  // The handoff panel is optional and loaded outside the initial page bundle.
+  // A delayed module must not mount after dashboard disposal.
+  void import("./handoffRehearsalPanel").then(({ mountOfflineHandoffRehearsal }) => {
+    if (disposedHandoff) return;
+    unmountHandoff = mountOfflineHandoffRehearsal(handoffHost, manifest, model, language);
+  }).catch(() => {
+    // The main dashboard remains usable when this optional view cannot load.
+  });
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -382,6 +390,7 @@ export function mountOfflineDashboard(
     unmountDiagnostics();
     unmountRecovery();
     unmountSourceAge();
+    disposedHandoff = true;
     unmountHandoff();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);

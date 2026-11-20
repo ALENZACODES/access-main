@@ -7,8 +7,10 @@ const source = (name: string): string => readFileSync(new URL(name, import.meta.
 describe("offline handoff integration", () => {
   it("keeps the new panel mounted on the existing offline dashboard", () => {
     const dashboard = source("offlineDashboard.ts");
-    expect(dashboard).toContain('import { mountOfflineHandoffRehearsal } from "./handoffRehearsalPanel";');
-    expect(dashboard).toContain("const unmountHandoff = mountOfflineHandoffRehearsal(");
+    expect(dashboard).toContain('import("./handoffRehearsalPanel")');
+    expect(dashboard).toContain("unmountHandoff = mountOfflineHandoffRehearsal(");
+    expect(dashboard).toContain("if (disposedHandoff) return;");
+    expect(dashboard).toContain("disposedHandoff = true;");
     expect(dashboard).toContain("unmountHandoff();");
   });
   it("keeps the robust entry point available", () => {
