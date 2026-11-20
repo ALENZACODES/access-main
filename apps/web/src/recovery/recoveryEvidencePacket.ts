@@ -90,7 +90,15 @@ export const emptyPacket = (): PacketDocument => ({ schema: "the-app.recovery-ev
 const ok = <T>(value: T): PacketResult<T> => ({ ok: true, value });
 const bad = <T>(issue: PacketIssue): PacketResult<T> => ({ ok: false, issue });
 const object = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
-const string = (v: unknown, max: number): v is string => typeof v === "string" && v.length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(v);
+const hasForbiddenControl = (value: string): boolean => {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (code <= 8 || code === 11 || code === 12 || (code >= 14 && code <= 31)) return true;
+  }
+  return false;
+};
+const string = (v: unknown, max: number): v is string =>
+  typeof v === "string" && v.length <= max && !hasForbiddenControl(v);
 const id = (v: unknown): v is string => string(v, PACKET_LIMITS.id) && v.length > 0 && /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/u.test(v);
 const isoDay = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
 const isoTime = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/u.test(v) && !Number.isNaN(Date.parse(v));
@@ -301,4 +309,7 @@ export function packetFindings(document: PacketDocument, asOf: string, staleDays
   return findings.sort((a, b) => a.entryId.localeCompare(b.entryId) || a.code.localeCompare(b.code));
 }
 /** The packet cannot determine whether a regional pack is complete or usable. */
-export function packetContentReady(_document: PacketDocument): false { return false; }
+export function packetContentReady(document: PacketDocument): false {
+  void document;
+  return false;
+}
