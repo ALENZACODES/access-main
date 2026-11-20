@@ -18,7 +18,6 @@ const components = [
   "RecoverySessionTracePanel",
   "RecoveryCheckpointPanel",
   "RecoveryDecisionMatrix",
-  "RecoveryEvidencePacketPanel",
 ] as const;
 
 describe("recovery shell preservation and evidence packet integration", () => {
@@ -27,6 +26,11 @@ describe("recovery shell preservation and evidence packet integration", () => {
       expect(shell).toContain(`import { ${name} } from "./${name}";`);
       expect(shell).toContain(`<${name} locale={locale}`);
     }
+  });
+  it("loads the packet panel in a separate chunk without dropping its mount", () => {
+    expect(shell).toContain('await import("./RecoveryEvidencePacketPanel")');
+    expect(shell).toContain("<Suspense fallback=");
+    expect(shell).toContain("<RecoveryEvidencePacketPanel locale={locale}");
   });
   it("keeps all inspection-sensitive panels fail-closed", () => {
     for (const name of [
