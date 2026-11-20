@@ -25,7 +25,7 @@ const MESSAGES: Messages<Key> = {
     'ts.facts': 'Source, licence, date and tier',
     'ts.line': '- {label}: {n}',
     'ts.lineDetail': '- {label}: {n} ({detail})',
-    'ts.unknownOn': '- {label}: unknown on {n}',
+    'ts.unknownOn': '- {label}: UNKNOWN on {n}',
     'ts.none': 'There are no records.',
   },
   fr: {
@@ -37,7 +37,7 @@ const MESSAGES: Messages<Key> = {
     'ts.facts': 'Source, licence, date et niveau',
     'ts.line': '- {label}\u00A0: {n}',
     'ts.lineDetail': '- {label}\u00A0: {n} ({detail})',
-    'ts.unknownOn': '- {label}\u00A0: inconnu pour {n}',
+    'ts.unknownOn': '- {label}\u00A0: UNKNOWN pour {n}',
     'ts.none': 'Il n’y a aucun enregistrement.',
   },
 };

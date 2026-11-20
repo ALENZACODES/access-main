@@ -46,8 +46,8 @@ describe('ageLabel', () => {
   });
 
   it('shows Unknown instead of "in N days" for future dates, and for bad input', () => {
-    expect(ageLabel('2026-12-01', NOW, 'en')).toBe('Unknown');
-    expect(ageLabel(null, NOW, 'fr')).toBe('Inconnu');
-    expect(ageLabel('junk', NOW, 'en')).toBe('Unknown');
+    expect(ageLabel('2026-12-01', NOW, 'en')).toBe('UNKNOWN');
+    expect(ageLabel(null, NOW, 'fr')).toBe('UNKNOWN');
+    expect(ageLabel('junk', NOW, 'en')).toBe('UNKNOWN');
   });
 });

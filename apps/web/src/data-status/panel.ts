@@ -10,13 +10,13 @@ import { coverageTable, type AttributeDef } from './coverage';
 import { buildCompleteness, renderCompletenessHtml } from './completeness';
 import { renderBasisHtml } from './statusBasis';
 import { ageLabel } from './age';
-import { auditRegistry, type AuditResult, type DatasetRecord } from './datasetRegistry';
+import { auditRegistry, type AuditedSource, type AuditResult, type DatasetRecord } from './datasetRegistry';
 import type { FreshnessState, Locale } from './dataStatus';
 import { auditedSourcesToCsv } from './csv';
 import { applyFilters, parseFilters, FILTER_KINDS, FILTER_LICENCE_KINDS, FILTER_STATES, FILTER_TIERS, DUE_WINDOWS, FILTER_AGES, GAP_FIELDS, hasActiveFilters, isAgeFilter, isDueWindow, isGapField, isDatasetFilter, isLicenceKind, isTierFilter, withOptionalFilter, normaliseQuery, MAX_QUERY_LENGTH, NO_FILTERS, type Filters } from './filters';
 import { entryFromAudit, renderHistoryHtml, type HistoryEntry, type HistoryStore } from './history';
 import { tCount } from './plural';
-import { isDatasetKind } from './freshnessPolicy';
+import { isDatasetKind, staleAfterFor, type DatasetKind } from './freshnessPolicy';
 import { t, type MessageKey } from './i18n';
 import { formatDisplayDate } from './locale';
 import { buildQaReport, renderQaReportHtml } from './qaReport';
@@ -38,10 +38,132 @@ import {
   buildRecordFacts,
   addView,
   buildListedSummary,
+  buildDatasetCards,
   buildDueSummary,
+  renderDatasetCardsHtml,
   buildNoMatchHints,
   renderDueSummaryHtml,
   clampLimit,
+  outlookLabel,
+  buildPeriodDiff,
+  buildRecency,
+  renderPeriodDiffHtml,
+  renderRecencyHtml,
+  buildForecast,
+  buildPageHosts,
+  renderForecastHtml,
+  renderPageHostsHtml,
+  buildPeriodWhatIf,
+  describePeriodChange,
+  describePeriodKind,
+  parsePeriodKind,
+  parsePeriodValue,
+  renderPeriodEditor,
+  renderPeriodFields,
+  renderPeriodWhatIfHtml,
+  staleUnder,
+  withPeriod,
+  notesFileLabel,
+  renderFileChecksHtml,
+  runFileChecks,
+  buildOddities,
+  buildPublishers,
+  renderOdditiesHtml,
+  renderPublishersHtml,
+  TOC_GO_ACTION,
+  renderFileGuideHtml,
+  BATCH_EXPORT_ACTION,
+  BATCH_FILENAME,
+  batchExportLabel,
+  batchParams,
+  buildBatchFile,
+  buildReviewBatches,
+  describeBatches,
+  describeBatchesSaved,
+  isBatchSize,
+  renderBatchControl,
+  renderReviewBatchesHtml,
+  type BatchSize,
+  buildPivot,
+  describePivot,
+  describePivotPicked,
+  isPivotDim,
+  parsePivotAction,
+  PIVOT_ACTION_PREFIX,
+  PIVOT_EXPORT_ACTION,
+  PIVOT_FILENAME,
+  pivotCellFilters,
+  pivotExportLabel,
+  pivotParams,
+  pivotToCsv,
+  renderPivotControl,
+  renderPivotHtml,
+  type PivotCell,
+  type PivotSpec,
+  buildSharedPages,
+  renderSharedPagesHtml,
+  buildListedTable,
+  buildListedTableFile,
+  columnCellsHtml,
+  columnHeadsHtml,
+  columnParams,
+  describeColumns,
+  describeListedTableSaved,
+  isColumnId,
+  LISTED_TABLE_FORMATS,
+  listedTableAction,
+  listedTableFormatFromAction,
+  listedTableLabel,
+  normaliseColumns,
+  renderColumnChooser,
+  toggleColumn,
+  type ColumnId,
+  buildFacets,
+  buildListedJsonFile,
+  buildNameSuggestions,
+  describeListedJsonSaved,
+  describeNarrowed,
+  describeSuggestionApplied,
+  FACET_ACTION_PREFIX,
+  LISTED_JSON_ACTION,
+  listedJsonLabel,
+  narrowFilters,
+  parseFacetAction,
+  parseSuggestAction,
+  renderFacetsHtml,
+  renderNameSuggestionsHtml,
+  type FacetTarget,
+  type NameSuggestion,
+  applyQueryTokens,
+  buildReviewCalendar,
+  describeTokensApplied,
+  parseQueryTokens,
+  renderQueryTokensHtml,
+  renderReviewCalendarHtml,
+  TOKENS_APPLY_ACTION,
+  buildChecklist,
+  buildChecklistFile,
+  buildRowDetail,
+  CHECKLIST_FORMATS,
+  checklistAction,
+  checklistFormatFromAction,
+  checklistLabel,
+  describeChecklistSaved,
+  describeDetails,
+  describeGrouping,
+  drawGroups,
+  groupCaption,
+  groupHeading,
+  groupPageText,
+  groupPartialText,
+  groupsOnPage,
+  groupSources,
+  isGroupKey,
+  listedSummaryText,
+  renderDetailsToggle,
+  renderGroupControl,
+  renderRowDetailHtml,
+  type GroupKey,
   drillColumnHeading,
   drillFilters,
   dueWindowLabel,
@@ -133,7 +255,7 @@ export interface PanelState {
    * Server-rendered mode: filters become a GET form and downloads become links,
    * so the page works without scripts. Hrefs are paths without a query string.
    */
-  staticView?: { action: string; csvHref: string; creditsHref: string; summaryHref: string; icsHref?: string; catalogueHref?: string };
+  staticView?: StaticView;
   /** Sort and page of the sources table; used in server-rendered mode, where headings and pager are links. */
   table?: TableView | undefined;
   /**
@@ -145,6 +267,35 @@ export interface PanelState {
   live?: LiveList | undefined;
   /** Saved views to offer (query texts). Leave undefined to leave the section out; it is never shown in the static view. */
   savedViews?: { views: readonly SavedView[]; durable: boolean; draftName?: string } | undefined;
+}
+
+/** Where the server-rendered page sends its form and finds its downloads. Hrefs are paths without a query string. */
+export interface StaticView {
+  action: string;
+  csvHref: string;
+  creditsHref: string;
+  summaryHref: string;
+  icsHref?: string;
+  catalogueHref?: string;
+  /** Review checklist for the listed sources, as Markdown and as CSV. */
+  checklistMdHref?: string;
+  checklistCsvHref?: string;
+  /** Source, licence, date and tier for each record (CSV). */
+  factsHref?: string;
+  /** The planning tables (CSV). */
+  tablesHref?: string;
+  /** The short plain-text summary. */
+  textSummaryHref?: string;
+  /** The listed sources, in the order of the list (JSON). */
+  listedJsonHref?: string;
+  /** The listed sources as a Markdown table and as plain text, with the extra columns of the list. */
+  listedMdHref?: string;
+  listedTxtHref?: string;
+  /** Every publisher (CSV), and the notes on the saved records (Markdown). Both cover every source. */
+  publishersHref?: string;
+  notesHref?: string;
+  /** The later-days, review-period and web-site tables in one sheet (CSV). */
+  outlookHref?: string;
 }
 
 const esc = escapeHtml;
@@ -203,7 +354,7 @@ function sortHeading(locale: Locale, key: SortKey, label: MessageKey, nav: Regio
   }
   const current = nav.table.sort;
   const next = nextSort(current, key);
-  const href = nav.action + buildQuery({ filters, thresholds: nav.thresholds }, { sort: next, paging: { ...nav.table.paging, page: 1 } });
+  const href = nav.action + buildQuery({ filters, thresholds: nav.thresholds }, { ...nav.table, sort: next, paging: { ...nav.table.paging, page: 1 } });
   const dir = ariaSort(current, key);
   const arrow = dir === null ? '' : `<span aria-hidden="true">${dir === 'ascending' ? ' \u25B2' : ' \u25BC'}</span>`;
   return `<th scope="col"${dir === null ? '' : ` aria-sort="${dir}"`}><a href="${esc(href)}" style="${LINK_STYLE}">${text}${arrow}</a></th>`;
@@ -223,10 +374,22 @@ function pager(locale: Locale, nav: RegionNav, filters: Filters, page: number, p
   return `<nav aria-label="${esc(t(locale, 'pg.nav'))}">${prev} <span>${esc(t(locale, 'pg.status', { page, pages }))}</span> ${next}</nav>`;
 }
 
-/** Live-panel list state: the chosen order and how many rows to draw. */
+/** Live-panel list state: the chosen order, how many rows to draw, and how the rows are set out. */
 export interface LiveList {
   sort: SortSpec | null;
   limit: number;
+  /** Set the rows out under a heading for each group. Leave out, or 'none', for one table. */
+  group?: GroupKey | undefined;
+  /** Put the facts behind each row under its name. */
+  details?: boolean | undefined;
+  /** Extra columns after the five fixed ones. */
+  columns?: readonly ColumnId[] | undefined;
+  /** The count table under the list; null or left out for none. */
+  pivot?: PivotSpec | null | undefined;
+  /** The review split into sessions of this many sources; null or left out for no split. */
+  batch?: BatchSize | null | undefined;
+  /** The kind of data the review-period editor is showing. */
+  periodKind?: DatasetKind | undefined;
 }
 
 export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters: Filters, now?: Date, nav?: RegionNav, live?: LiveList): string {
@@ -242,35 +405,59 @@ export function renderSourcesRegion(audit: AuditResult, locale: Locale, filters:
   const slice = nav ? paginate(sorted, nav.table.paging) : null;
   const liveCount = !nav && live ? clampLimit(live.limit, sorted.length) : sorted.length;
   const shown = slice ? slice.items : sorted.slice(0, liveCount);
-  const rows = shown
-    .map((s) => {
-      const label = esc(`${s.datasetName} / ${s.name ?? t(locale, 'unknownName')}`);
-      const name =
-        s.url === null
-          ? label
-          : `<a href="${esc(s.url)}" rel="noopener noreferrer" style="display:inline-block;min-width:44px;min-height:44px;line-height:44px">${label}</a>`;
-      const date =
-        s.retrievedIso === null
-          ? esc(unknown)
-          : `<time datetime="${esc(s.retrievedIso)}">${esc(formatDisplayDate(s.retrievedIso, locale))}</time>` +
-            (now ? ` (${esc(ageLabel(s.retrievedIso, now, locale))})` : '');
-      return (
-        `<tr><th scope="row">${name}</th><td>${esc(s.licence ?? unknown)}</td><td>${date}</td>` +
-        `<td>${statusBadge(s.state, locale)}</td><td>${esc(s.tier ?? unknown)}</td></tr>`
-      );
-    })
-    .join('');
+  const withDetails = nav ? nav.table.details === true : live?.details === true;
+  const columns = normaliseColumns(nav ? (nav.table.columns ?? []) : (live?.columns ?? []));
+  const row = (s: AuditedSource): string => {
+    const label = esc(`${s.datasetName} / ${s.name ?? t(locale, 'unknownName')}`);
+    const name =
+      s.url === null
+        ? label
+        : `<a href="${esc(s.url)}" rel="noopener noreferrer" style="display:inline-block;min-width:44px;min-height:44px;line-height:44px">${label}</a>`;
+    const date =
+      s.retrievedIso === null
+        ? esc(unknown)
+        : `<time datetime="${esc(s.retrievedIso)}">${esc(formatDisplayDate(s.retrievedIso, locale))}</time>` +
+          (now ? ` (${esc(ageLabel(s.retrievedIso, now, locale))})` : '');
+    // The details sit in the row's own header cell, so a screen reader meets them with the name they belong to.
+    const detail = withDetails ? renderRowDetailHtml(buildRowDetail(s, audit.findings, locale)) : '';
+    return (
+      `<tr><th scope="row">${name}${detail}</th><td>${esc(s.licence ?? unknown)}</td><td>${date}</td>` +
+      `<td>${statusBadge(s.state, locale)}</td><td>${esc(s.tier ?? unknown)}</td>${columnCellsHtml(columns, s, locale)}</tr>`
+    );
+  };
   const heads =
     sortHeading(locale, 'source', 'tbl.source', nav, filters, liveSort) +
     sortHeading(locale, 'licence', 'tbl.licence', nav, filters, liveSort) +
     sortHeading(locale, 'retrieved', 'tbl.retrieved', nav, filters, liveSort) +
     sortHeading(locale, 'status', 'tbl.status', nav, filters, liveSort) +
-    sortHeading(locale, 'tier', 'tbl.tier', nav, filters, liveSort);
-  const table =
-    `<table><caption>${esc(t(locale, 'tbl.sources'))}</caption><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table>`;
+    sortHeading(locale, 'tier', 'tbl.tier', nav, filters, liveSort) +
+    // Extra columns are not sortable: the five fixed ones are.
+    columnHeadsHtml(columns, locale);
+  const tableOf = (caption: string, sources: readonly AuditedSource[]): string =>
+    scrollable(caption, `<table><caption>${esc(caption)}</caption><thead><tr>${heads}</tr></thead><tbody>${sources.map(row).join('')}</tbody></table>`);
   const help = nav ? `<p>${esc(t(locale, 'sort.help'))}</p>` : '';
   const more = !nav && live ? renderShowMoreHtml(liveCount, sorted.length, locale, buttonInlineStyle()) : '';
-  return count + help + scrollable(t(locale, 'tbl.sources'), table) + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '') + more;
+  const groupKey: GroupKey = nav ? (nav.table.group ?? 'none') : (live?.group ?? 'none');
+  if (groupKey !== 'none') {
+    // Groups are made from every listed source, so the counts in the headings do not depend on how many rows are drawn.
+    const groups = groupSources(sorted, groupKey, locale);
+    // Live list: the first rows, group by group. Paged list: the rows of this page, under their groups.
+    const body = (slice ? groupsOnPage(groups, slice.items) : drawGroups(groups, liveCount))
+      .map(({ group, drawn }, i) => {
+        const id = `ds-group-${i + 1}`;
+        const partial =
+          drawn.length < group.sources.length
+            ? `<p>${esc(slice ? groupPageText(drawn.length, group.sources.length, locale) : groupPartialText(drawn.length, group.sources.length, locale))}</p>`
+            : '';
+        return (
+          `<section aria-labelledby="${id}" data-group="${esc(group.id)}"><h3 id="${id}">${esc(groupHeading(group, locale))}</h3>` +
+          `<p>${esc(listedSummaryText(buildListedSummary(group.sources), locale) ?? '')}</p>${partial}${tableOf(groupCaption(group, locale), drawn)}</section>`
+        );
+      })
+      .join('');
+    return count + help + body + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '') + more;
+  }
+  return count + help + tableOf(t(locale, 'tbl.sources'), shown) + (nav && slice ? pager(locale, nav, filters, slice.page, slice.pages) : '') + more;
 }
 
 const FIELD_STYLE = 'min-height:44px;min-width:44px;font:inherit';
@@ -333,10 +520,59 @@ export function renderResultsHtml(audit: AuditResult, locale: Locale, filters: F
     ? renderNoMatchHintsHtml(buildNoMatchHints(audit.sources, filters, locale, names), locale, { buttonStyle: buttonInlineStyle(), activeCount: activeList.length, ...links })
     : '';
   // The summary describes every source the filters list, not only the page of rows on screen.
-  return active + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + hints;
+  // Search words that are really filters: offered here, applied only when asked.
+  const parsed = parseQueryTokens(filters.query);
+  const tokens = renderQueryTokensHtml(parsed, locale, {
+    buttonStyle: buttonInlineStyle(),
+    ...(hrefWithout && parsed.recognised.length > 0 ? { href: hrefWithout(applyQueryTokens(filters, parsed)) } : {}),
+  });
+  // A slip in the search text: offer the close spelling, but only one that lists something.
+  const suggestions = noMatch
+    ? renderNameSuggestionsHtml(buildNameSuggestions(audit.sources, filters), locale, {
+        buttonStyle: buttonInlineStyle(),
+        ...(hrefWithout ? { hrefFor: (s: NameSuggestion) => hrefWithout({ ...filters, query: s.query }) } : {}),
+      })
+    : '';
+  const facets = renderFacetsHtml(buildFacets(listed, filters), locale, {
+    buttonStyle: buttonInlineStyle(),
+    ...(hrefWithout ? { hrefFor: (target: FacetTarget) => hrefWithout(narrowFilters(filters, target)) } : {}),
+  });
+  // The count table follows the list as filtered, so it lives with the results.
+  const pivotSpec = nav ? (nav.table.pivot ?? null) : (live?.pivot ?? null);
+  let pivot = '';
+  if (pivotSpec !== null) {
+    const table = buildPivot(listed, pivotSpec);
+    const csv = nav
+      ? `<p><a href="${esc(`${nav.action}/${PIVOT_FILENAME}${buildQuery({ filters, thresholds: nav.thresholds }, nav.table, { withPage: false })}`)}" style="${LINK_STYLE}">${esc(pivotExportLabel(locale))}</a></p>`
+      : `<p><button type="button" data-action="${PIVOT_EXPORT_ACTION}" style="${buttonInlineStyle()}">${esc(pivotExportLabel(locale))}</button></p>`;
+    pivot =
+      renderPivotHtml(table, locale, {
+        datasetNames: names,
+        buttonStyle: buttonInlineStyle(),
+        ...(hrefWithout
+          ? {
+              hrefFor: (cell: PivotCell) => {
+                const f = pivotCellFilters(filters, cell);
+                return f === null ? null : hrefWithout(f);
+              },
+            }
+          : {}),
+      }) + (table.total > 0 ? csv : '');
+  }
+  // Review sessions are cut from the list as filtered and ordered, so they live with the results too.
+  const batchSize = nav ? (nav.table.batch ?? null) : (live?.batch ?? null);
+  let sessions = '';
+  if (batchSize !== null) {
+    const d = buildReviewBatches(audit, filters, locale, batchSize, nav ? nav.table.sort : (live?.sort ?? null));
+    const file = nav
+      ? `<p><a href="${esc(`${nav.action}/${BATCH_FILENAME}${buildQuery({ filters, thresholds: nav.thresholds }, nav.table, { withPage: false })}`)}" style="${LINK_STYLE}">${esc(batchExportLabel(locale))}</a></p>`
+      : `<p><button type="button" data-action="${BATCH_EXPORT_ACTION}" style="${buttonInlineStyle()}">${esc(batchExportLabel(locale))}</button></p>`;
+    sessions = renderReviewBatchesHtml(d, locale) + (d.batches.length > 0 ? file : '');
+  }
+  return active + tokens + renderListedSummaryHtml(buildListedSummary(listed), locale) + renderSourcesRegion(audit, locale, filters, now, nav, live) + facets + pivot + sessions + suggestions + hints;
 }
 
-export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null): string {
+export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFormOptions, datasets: readonly DatasetOption[] = [], liveSort?: SortSpec | null, liveLayout?: { group: GroupKey; details: boolean; columns?: readonly ColumnId[]; pivot?: PivotSpec | null; batch?: BatchSize | null }): string {
   const stateOpts =
     option('any', t(locale, 'flt.any'), f.state === 'any') +
     FILTER_STATES.map((s) => option(s, t(locale, `state.${s}`), f.state === s)).join('');
@@ -377,17 +613,25 @@ export function renderFilterControls(locale: Locale, f: Filters, form?: FilterFo
     `<input type="checkbox" id="ds-f-issues" name="issues" value="1" data-filter="onlyIssues" style="width:24px;height:24px"${f.onlyIssues ? ' checked' : ''}>` +
     `${esc(t(locale, 'flt.onlyIssues'))}</label></div>`;
   if (!form) {
-    return controls + (liveSort === undefined ? '' : renderSortControl(liveSort, locale)) + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
+    return controls + (liveSort === undefined ? '' : renderSortControl(liveSort, locale)) + (liveLayout === undefined ? '' : renderGroupControl(liveLayout.group, locale) + renderDetailsToggle(liveLayout.details, locale) + renderColumnChooser(liveLayout.columns ?? [], locale) + renderPivotControl(liveLayout.pivot ?? null, locale, true) + renderBatchControl(liveLayout.batch ?? null, locale)) + `<button type="button" data-action="reset-filters" style="${buttonInlineStyle()}">${esc(t(locale, 'flt.reset'))}</button></fieldset>`;
   }
   const sort = form.table?.sort ?? null;
   const size = form.table?.paging.size ?? DEFAULT_PAGE_SIZE;
   const hidden =
-    Object.entries(form.thresholds ?? {})
+    // With the table settings in the form, the review periods are fields of their own and need no hidden copy.
+    Object.entries(form.table ? {} : (form.thresholds ?? {}))
       .map(([k, v]) => `<input type="hidden" name="stale_${esc(k)}" value="${esc(String(v))}">`)
       .join('') +
     (sort ? `<input type="hidden" name="sort" value="${esc(sort.key)}">` + (sort.dir === 'desc' ? '<input type="hidden" name="dir" value="desc">' : '') : '');
   const sizeField = form.table
-    ? field('ds-f-size', 'pg.size', `<select id="ds-f-size" name="size" style="${FIELD_STYLE}">${PAGE_SIZES.map((n) => option(String(n), String(n), n === size)).join('')}</select>`)
+    ? field('ds-f-size', 'pg.size', `<select id="ds-f-size" name="size" style="${FIELD_STYLE}">${PAGE_SIZES.map((n) => option(String(n), String(n), n === size)).join('')}</select>`) +
+      // Grouping and row details are part of the form, so they work without scripts and survive every submit.
+      renderGroupControl(form.table.group ?? 'none', locale) +
+      renderDetailsToggle(form.table.details === true, locale) +
+      renderColumnChooser(form.table.columns ?? [], locale) +
+      renderPivotControl(form.table.pivot ?? null, locale) +
+      renderBatchControl(form.table.batch ?? null, locale) +
+      renderPeriodFields(form.thresholds ?? {}, locale)
     : '';
   return (
     `<form method="get" action="${esc(form.action)}">${controls}${sizeField}${hidden}` +
@@ -430,6 +674,23 @@ function snapshotLine(state: PanelState): string {
   return '';
 }
 
+/** A query string with the order of the list added to it. */
+export function withSort(query: string, sort: SortSpec | null): string {
+  if (sort === null) return query;
+  const p = new URLSearchParams(query.replace(/^\?/, ''));
+  for (const [k, v] of sortParams(sort)) p.set(k, v);
+  return `?${p.toString()}`;
+}
+
+/** The query with the extra columns added; unchanged when none is chosen. */
+export function withColumns(query: string, columns: readonly ColumnId[] | undefined): string {
+  const pairs = columnParams(columns);
+  if (pairs.length === 0) return query;
+  const p = new URLSearchParams(query.replace(/^\?/, ''));
+  for (const [k, v] of pairs) p.set(k, v);
+  return `?${p.toString()}`;
+}
+
 function downloadLink(href: string, label: string): string {
   return `<a href="${esc(href)}" style="display:inline-flex;align-items:center;min-width:44px;min-height:44px">${esc(label)}</a>`;
 }
@@ -445,12 +706,27 @@ export function renderDataStatusPanel(state: PanelState): string {
   const sv = state.staticView;
   const query = serializeViewState({ filters, thresholds });
   const thrQuery = serializeViewState({ filters: NO_FILTERS, thresholds });
+  const listQuery = withSort(query, state.table?.sort ?? null);
+  // The table files also follow the extra columns of the list.
+  const tableQuery = withColumns(listQuery, state.table?.columns);
   const actions = sv
     ? `<div>${downloadLink(sv.csvHref + query, t(locale, 'act.exportCsv'))} ${downloadLink(sv.creditsHref, t(locale, 'dl.credits'))} ${downloadLink(sv.summaryHref + thrQuery, t(locale, 'dl.summary'))}` +
       (sv.icsHref ? ` ${downloadLink(sv.icsHref + thrQuery, t(locale, 'dl.ics'))}` : '') +
       (sv.catalogueHref ? ` ${downloadLink(sv.catalogueHref + thrQuery, t(locale, 'dl.catalogue'))}` : '') +
+      (sv.factsHref ? ` ${downloadLink(sv.factsHref + thrQuery, extraLabel('facts', locale))}` : '') +
+      (sv.tablesHref ? ` ${downloadLink(sv.tablesHref + thrQuery, extraLabel('tables', locale))}` : '') +
+      (sv.textSummaryHref ? ` ${downloadLink(sv.textSummaryHref + thrQuery, extraLabel('summary', locale))}` : '') +
+      // The checklist follows the filters and the order of the list, so its links carry both.
+      (sv.checklistMdHref ? ` ${downloadLink(sv.checklistMdHref + listQuery, checklistLabel('md', locale))}` : '') +
+      (sv.checklistCsvHref ? ` ${downloadLink(sv.checklistCsvHref + listQuery, checklistLabel('csv', locale))}` : '') +
+      (sv.listedJsonHref ? ` ${downloadLink(sv.listedJsonHref + listQuery, listedJsonLabel(locale))}` : '') +
+      (sv.listedMdHref ? ` ${downloadLink(sv.listedMdHref + tableQuery, listedTableLabel('md', locale))}` : '') +
+      (sv.listedTxtHref ? ` ${downloadLink(sv.listedTxtHref + tableQuery, listedTableLabel('txt', locale))}` : '') +
+      (sv.publishersHref ? ` ${downloadLink(sv.publishersHref + thrQuery, notesFileLabel('publishers', locale))}` : '') +
+      (sv.notesHref ? ` ${downloadLink(sv.notesHref + thrQuery, notesFileLabel('notes', locale))}` : '') +
+      (sv.outlookHref ? ` ${downloadLink(sv.outlookHref + thrQuery, outlookLabel(locale))}` : '') +
       `</div>`
-    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))}</div>`;
+    : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')} ${btn(LISTED_JSON_ACTION, listedJsonLabel(locale))} ${LISTED_TABLE_FORMATS.map((f) => btn(listedTableAction(f), listedTableLabel(f, locale))).join(' ')}</div>`;
   const drillNames = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
   const drill = (target: DrillTarget): string =>
     renderDrillControl(target, locale, {
@@ -466,16 +742,30 @@ export function renderDataStatusPanel(state: PanelState): string {
     (state.changes ? renderChangesHtml(state.changes, locale) : '') +
     (state.history ? renderHistoryHtml(state.history, locale) : '') +
     datasetTable(audit, locale, drill) +
+    renderDatasetCardsHtml(buildDatasetCards(audit), locale, { foot: (c) => (isDatasetFilter(c.id) ? drill({ kind: 'dataset', value: c.id }) : '') }) +
     renderReviewHtml(buildReviewQueue(audit, state.now), locale) +
     renderWorkloadHtml(buildWorkload(audit, state.now), locale) +
     renderDueSummaryHtml(buildDueSummary(audit), locale, {
       heading: drillColumnHeading(locale),
       cell: (id) => drill(id === 'past' ? { kind: 'state', value: 'stale' } : id === 'unscheduled' ? { kind: 'state', value: 'unknown' } : { kind: 'due', value: id }),
     }) +
+    renderReviewCalendarHtml(buildReviewCalendar(audit, state.now), locale) +
+    renderSharedPagesHtml(buildSharedPages(audit), locale) +
+    renderForecastHtml(buildForecast(audit, state.now), locale) +
+    renderRecencyHtml(buildRecency(audit), locale) +
+    renderPublishersHtml(buildPublishers(state.records, audit), locale) +
+    renderPageHostsHtml(buildPageHosts(audit), locale) +
+    renderOdditiesHtml(buildOddities(audit), locale) +
     renderThresholdsHtml(thresholds, locale) +
+    // The live panel can try another review period; a page without scripts sets them in its form.
+    renderPeriodWhatIfHtml(
+      buildPeriodWhatIf(audit, thresholds),
+      locale,
+      (sv ? '' : renderPeriodEditor(state.live?.periodKind ?? 'places', thresholds, locale)) + renderPeriodDiffHtml(buildPeriodDiff(state.records, state.now, thresholds), locale),
+    ) +
     renderBasisHtml(audit, locale) +
     `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
-    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort) +
+    renderFilterControls(locale, filters, sv ? { action: sv.action, thresholds, ...(state.table ? { table: state.table } : {}) } : undefined, datasetOptions(audit), sv || !state.live ? undefined : state.live.sort, sv || !state.live ? undefined : { group: state.live.group ?? 'none', details: state.live.details === true, columns: state.live.columns ?? [], pivot: state.live.pivot ?? null, batch: state.live.batch ?? null }) +
     (sv || !state.savedViews ? '' : `<div data-region="views">${renderViewsRegion(audit, locale, filters, state.savedViews)}</div>`) +
     (sv ? '' : `<div data-region="announce" role="status" aria-live="polite" aria-atomic="true" style="${HIDDEN_STYLE}"></div>`) +
     `<div data-region="sources">${renderResultsHtml(audit, locale, filters, state.now, sv && state.table ? { action: sv.action, thresholds, table: state.table } : undefined, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined, sv ? undefined : state.live)}</div>` +
@@ -487,9 +777,12 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale, { heading: drillColumnHeading(locale), cell: (field) => drill({ kind: 'gap', value: field }) }) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale, { heading: drillColumnHeading(locale), cell: (id) => drill({ kind: 'age', value: id }) }) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
+    renderFileChecksHtml(runFileChecks(state.records, audit, NO_FILTERS, state.now, locale), locale) +
+    renderFileGuideHtml(sv ? 'static' : 'live', locale) +
     renderGlossaryHtml(locale) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale));
-  const html = head + renderTocHtml(buildToc(body), locale) + body;
+  // The live panel gets a jump menu (two stops for the Tab key); a page without scripts gets one link per section.
+  const html = head + renderTocHtml(buildToc(body), locale, sv ? 'links' : 'jump') + body;
   return state.plainTables === true ? plainTables(html) : html;
 }
 
@@ -525,6 +818,14 @@ export interface MountOptions {
   initialFilters?: Filters | undefined;
   /** The order the list starts in; none means the order of the registry. */
   initialSort?: SortSpec | null | undefined;
+  /** How the list is grouped to start with; none means one table. */
+  initialGroup?: GroupKey | undefined;
+  /** Extra columns to start with, e.g. from the address. */
+  initialColumns?: readonly ColumnId[] | undefined;
+  /** The count table to start with, e.g. from the address. */
+  initialPivot?: PivotSpec | null | undefined;
+  /** The session size to start with, e.g. from the address. */
+  initialBatch?: BatchSize | null | undefined;
   /** Staleness thresholds in days per dataset type (for example parsed from the URL). */
   thresholds?: Thresholds | undefined;
   /** On-device history of totals; today's totals are recorded when live data loads. */
@@ -543,6 +844,11 @@ export interface MountedPanel {
   refresh(): void;
   getFilters(): Filters;
   getSort(): SortSpec | null;
+  getGroup(): GroupKey;
+  getColumns(): ColumnId[];
+  getPivot(): PivotSpec | null;
+  getBatch(): BatchSize | null;
+  getThresholds(): Thresholds;
   destroy(): void;
 }
 
@@ -551,15 +857,26 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
   let filters: Filters = { ...(opts.initialFilters ?? NO_FILTERS) };
   let sort: SortSpec | null = opts.initialSort ?? null;
   let limit = LIVE_STEP;
+  let group: GroupKey = opts.initialGroup ?? 'none';
+  let columns: ColumnId[] = normaliseColumns(opts.initialColumns ?? []);
+  let pivot: PivotSpec | null = opts.initialPivot ?? null;
+  let batch: BatchSize | null = opts.initialBatch ?? null;
+  let tocTarget: string | null = null;
+  let periodKind: DatasetKind = 'places';
+  let details = false;
   // What has been typed as a name for the next saved view. Kept here so redraws do not lose it.
   let viewName = '';
   let baseline: Snapshot | null | undefined; // undefined until the first refresh
   const thresholds: Thresholds = { ...(opts.thresholds ?? {}) };
   const view = (): string => {
     const base = serializeViewState({ filters: { ...filters, query: normaliseQuery(filters.query) }, thresholds });
-    if (sort === null) return base;
+    if (sort === null && group === 'none' && columns.length === 0 && pivot === null && batch === null) return base;
     const p = new URLSearchParams(base.replace(/^\?/, ''));
     for (const [k, v] of sortParams(sort)) p.set(k, v);
+    if (group !== 'none') p.set('group', group);
+    for (const [k, v] of columnParams(columns)) p.set(k, v);
+    for (const [k, v] of pivotParams(pivot)) p.set(k, v);
+    for (const [k, v] of batchParams(batch)) p.set(k, v);
     return `?${p.toString()}`;
   };
 
@@ -640,7 +957,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       changes,
       notices: opts.getNotices?.(locale),
       plainTables: opts.plainTables,
-      live: { sort, limit },
+      live: { sort, limit, group, details, columns, pivot, batch, periodKind },
       savedViews: opts.savedViews ? { views: opts.savedViews.load(), durable: opts.savedViews.durable, draftName: viewName } : undefined,
     });
   };
@@ -682,7 +999,7 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     }
     const now = nowFn();
     const audit = auditRegistry(lastRecords, now, thresholds);
-    const results = renderResultsHtml(audit, opts.getLocale(), filters, now, undefined, undefined, { sort, limit });
+    const results = renderResultsHtml(audit, opts.getLocale(), filters, now, undefined, undefined, { sort, limit, group, details, columns, pivot, batch });
     region.innerHTML = opts.plainTables === true ? plainTables(results) : results;
     // Keep the controls that describe the filters in step with them, without touching the form fields.
     const quick = host.querySelector?.('[data-region="quick"]') ?? null;
@@ -706,8 +1023,85 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       viewName = value.slice(0, MAX_VIEW_NAME_LENGTH);
       return;
     }
+    // Leaving the search box fires a change event with the text already listed. Redrawing the results then
+    // would replace a control in them between the press and the release of a click, and the click would be lost.
+    if (key === 'query' && value.slice(0, MAX_QUERY_LENGTH) === filters.query) return;
     // Any change to what is listed, or its order, starts again from the first rows.
     limit = LIVE_STEP;
+    if (key === 'periodKind') {
+      // Another kind in the editor: nothing is changed, the second list now shows that kind's period.
+      const kind = parsePeriodKind(value);
+      if (kind === null) return;
+      periodKind = kind;
+      refresh();
+      announcer.say(describePeriodKind(kind, staleAfterFor(kind, thresholds), opts.getLocale()));
+      focusFirst(['#ds-rp-kind', FORM_START]);
+      return;
+    }
+    if (key === 'periodDays') {
+      // Another review period for one kind: every status of that kind is worked out again.
+      const kind = periodKind;
+      const ofKind = (): AuditedSource[] => auditRegistry(lastRecords, nowFn(), thresholds).sources.filter((s) => s.kind === kind);
+      const before = staleUnder(ofKind(), staleAfterFor(kind, thresholds));
+      const next = withPeriod(thresholds, kind, parsePeriodValue(value));
+      if (next[kind] === undefined) delete thresholds[kind];
+      else thresholds[kind] = next[kind];
+      limit = LIVE_STEP;
+      refresh();
+      const days = staleAfterFor(kind, thresholds);
+      announcer.say(describePeriodChange(kind, days, staleUnder(ofKind(), days), before, opts.getLocale()));
+      focusFirst(['#ds-rp-days', FORM_START]);
+      opts.onFiltersChange?.(view());
+      return;
+    }
+    if (key === 'tocTarget') {
+      // Choosing a section changes nothing by itself: the button next to the list goes there.
+      tocTarget = value;
+      return;
+    }
+    if (key === 'pivotRows' || key === 'pivotCols') {
+      // The count table changed, not which sources are listed. The two selects depend on each other,
+      // so the whole panel is drawn again and focus goes back to the one that was used.
+      if (key === 'pivotRows') pivot = isPivotDim(value) ? { rows: value, cols: pivot !== null && pivot.cols !== value ? pivot.cols : null } : null;
+      else if (pivot !== null) pivot = { rows: pivot.rows, cols: isPivotDim(value) && value !== pivot.rows ? value : null };
+      refresh();
+      announcer.say(describePivot(pivot, opts.getLocale()));
+      focusFirst([key === 'pivotRows' ? '#ds-pv-rows' : '#ds-pv-cols', FORM_START]);
+      opts.onFiltersChange?.(view());
+      return;
+    }
+    if (key === 'batch') {
+      // How the review work is cut up changed, not which sources are listed.
+      const n = Number(value);
+      batch = isBatchSize(n) ? n : null;
+      updateResults();
+      const locale = opts.getLocale();
+      announcer.say(describeBatches(batch === null ? null : buildReviewBatches(auditRegistry(lastRecords, nowFn(), thresholds), filters, locale, batch, sort), locale));
+      opts.onFiltersChange?.(view());
+      return;
+    }
+    if (key === 'col') {
+      // Which facts are shown beside each source changed, not which sources are listed.
+      if (!isColumnId(value)) return;
+      columns = toggleColumn(columns, value, el.checked === true);
+      updateResults();
+      announcer.say(describeColumns(columns, opts.getLocale()));
+      opts.onFiltersChange?.(view());
+      return;
+    }
+    if (key === 'group' || key === 'details') {
+      // How the rows are set out changed, not which sources are listed, so only that is said.
+      if (key === 'group') group = isGroupKey(value) ? value : 'none';
+      else details = el.checked === true;
+      updateResults();
+      const locale = opts.getLocale();
+      if (key === 'group') {
+        const listed = applyFilters(auditRegistry(lastRecords, nowFn(), thresholds).sources, filters);
+        announcer.say(describeGrouping(group, groupSources(listed, group, locale).length, locale));
+      } else announcer.say(describeDetails(details, locale));
+      opts.onFiltersChange?.(view());
+      return;
+    }
     if (key === 'sort') sort = parseSortValue(value);
     else if (key === 'state') filters = { ...filters, state: (FILTER_STATES as readonly string[]).includes(value) ? (value as Filters['state']) : 'any' };
     else if (key === 'kind') filters = { ...filters, kind: isDatasetKind(value) ? value : 'any' };
@@ -752,6 +1146,15 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
       limit = Math.min(total, limit + LIVE_STEP);
       updateResults();
       announcer.say(showingText(clampLimit(limit, total), total, opts.getLocale()));
+    } else if (checklistFormatFromAction(action) !== null && opts.onExportFile) {
+      const format = checklistFormatFromAction(action);
+      if (format === null) return;
+      const locale = opts.getLocale();
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
+      const checklist = buildChecklist(audit, filters, locale, sort);
+      const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
+      opts.onExportFile(buildChecklistFile(checklist, format, filters, nowFn(), locale, { datasetNames: names }));
+      announcer.say(describeChecklistSaved(checklist, locale));
     } else if (action === 'recalculate') refresh();
     else if (action === 'reset-filters') {
       if (!hasActiveFilters(filters) && filters.query === '') return;
@@ -803,6 +1206,90 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
         focusFirst([byAction(action ?? ''), FORM_START]);
         opts.onFiltersChange?.(view());
       }
+    } else if (action === TOC_GO_ACTION) {
+      // Go to the section chosen in the list, or to the first one when nothing was chosen. Only an id
+      // that is a section of this panel is accepted.
+      const ids = buildToc(host.innerHTML).map((e) => e.id);
+      const id = tocTarget !== null && ids.includes(tocTarget) ? tocTarget : ids[0];
+      if (id === undefined) return;
+      const heading = (host.querySelector?.(`#${id}`) ?? null) as { setAttribute?: (n: string, v: string) => void; scrollIntoView?: () => void; focus?: () => void } | null;
+      if (heading === null) return;
+      try {
+        // A heading takes focus only when it is told it may: -1 keeps it out of the Tab order.
+        heading.setAttribute?.('tabindex', '-1');
+        heading.scrollIntoView?.();
+        heading.focus?.();
+      } catch {
+        // Nothing to do: the list and the button are still there.
+      }
+    } else if (action === BATCH_EXPORT_ACTION && opts.onExportFile) {
+      if (batch === null) return;
+      const locale = opts.getLocale();
+      const d = buildReviewBatches(auditRegistry(lastRecords, nowFn(), thresholds), filters, locale, batch, sort);
+      opts.onExportFile(buildBatchFile(d, nowFn(), locale));
+      announcer.say(describeBatchesSaved(d, locale));
+    } else if (action === PIVOT_EXPORT_ACTION && opts.onExportFile) {
+      if (pivot === null) return;
+      const locale = opts.getLocale();
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
+      const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
+      opts.onExportFile({ text: pivotToCsv(buildPivot(applyFilters(audit.sources, filters), pivot), locale, names), filename: PIVOT_FILENAME, mime: 'text/csv;charset=utf-8' });
+    } else if (parsePivotAction(action) !== null) {
+      const cell = parsePivotAction(action);
+      const next = cell === null ? null : pivotCellFilters(filters, cell);
+      if (cell === null || next === null) return;
+      filters = next;
+      limit = LIVE_STEP;
+      refresh();
+      const locale = opts.getLocale();
+      const names = new Map(datasetOptions(auditRegistry(lastRecords, nowFn(), thresholds)).map((d) => [d.id, d.name]));
+      announcer.say(describePivotPicked(cell, lastList?.shown ?? 0, locale, names));
+      // The cell that was used may be gone now: go to another cell, or to the select that draws the table.
+      focusFirst([`[data-action^="${PIVOT_ACTION_PREFIX}"]`, '#ds-pv-rows', FORM_START]);
+      opts.onFiltersChange?.(view());
+    } else if (listedTableFormatFromAction(action) !== null && opts.onExportFile) {
+      const format = listedTableFormatFromAction(action);
+      if (format === null) return;
+      const locale = opts.getLocale();
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
+      const table = buildListedTable(audit, filters, locale, { sort, columns });
+      const names = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
+      opts.onExportFile(buildListedTableFile(table, format, filters, nowFn(), locale, { datasetNames: names }));
+      announcer.say(describeListedTableSaved(table, locale));
+    } else if (action === LISTED_JSON_ACTION && opts.onExportFile) {
+      const locale = opts.getLocale();
+      const audit = auditRegistry(lastRecords, nowFn(), thresholds);
+      opts.onExportFile(buildListedJsonFile(audit, filters, nowFn(), locale, sort));
+      announcer.say(describeListedJsonSaved(applyFilters(audit.sources, filters).length, locale));
+    } else if (parseFacetAction(action) !== null) {
+      const target = parseFacetAction(action);
+      if (target === null) return;
+      filters = narrowFilters(filters, target);
+      limit = LIVE_STEP;
+      refresh();
+      announcer.say(describeNarrowed(target, lastList?.shown ?? 0, opts.getLocale()));
+      // The control that was used is gone, since its filter is now set: go to the next way to narrow, or the form.
+      focusFirst([`[data-action^="${FACET_ACTION_PREFIX}"]`, FORM_START]);
+      opts.onFiltersChange?.(view());
+    } else if (parseSuggestAction(action) !== null) {
+      const index = parseSuggestAction(action);
+      const pick = index === null ? undefined : buildNameSuggestions(auditRegistry(lastRecords, nowFn(), thresholds).sources, filters)[index];
+      if (pick === undefined) return;
+      filters = { ...filters, query: pick.query };
+      limit = LIVE_STEP;
+      refresh();
+      announcer.say(describeSuggestionApplied(pick, opts.getLocale()));
+      focusFirst(['#ds-f-q', FORM_START]);
+      opts.onFiltersChange?.(view());
+    } else if (action === TOKENS_APPLY_ACTION) {
+      const parsed = parseQueryTokens(filters.query);
+      if (parsed.recognised.length === 0) return;
+      filters = applyQueryTokens(filters, parsed);
+      limit = LIVE_STEP;
+      refresh();
+      announcer.say(describeTokensApplied(parsed, opts.getLocale()));
+      focusFirst(['#ds-f-q', FORM_START]);
+      opts.onFiltersChange?.(view());
     } else if (parseDrillAction(action) !== null) {
       const target = parseDrillAction(action);
       if (target === null) return;
@@ -855,6 +1342,11 @@ export function mountDataStatusPanel(host: PanelHost, opts: MountOptions): Mount
     refresh,
     getFilters: () => ({ ...filters }),
     getSort: () => (sort === null ? null : { ...sort }),
+    getGroup: () => group,
+    getColumns: () => [...columns],
+    getPivot: () => (pivot === null ? null : { ...pivot }),
+    getBatch: () => batch,
+    getThresholds: () => ({ ...thresholds }),
     destroy: () => {
       host.removeEventListener('click', onClick);
       host.removeEventListener('change', onFilterEvent);

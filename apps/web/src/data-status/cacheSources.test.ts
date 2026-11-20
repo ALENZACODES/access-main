@@ -43,7 +43,7 @@ describe('groupCachedSources: a row never looks better than its worst record', (
 
   it('shows Unknown in the source list, not a date borrowed from another record', () => {
     const r = row([rec('a', '2026-11-10'), rec('b', 'N/A')]);
-    expect(r.retrieved).toBe('Unknown');
+    expect(r.retrieved).toBe('UNKNOWN');
     expect(r.state).toBe('unknown');
     expect(r.issues).toContain('missing-date');
   });

@@ -20,7 +20,7 @@ describe('panel: tier of each record, the four facts, and the glossary', () => {
       expect(at('ds-glossary-title')).toBeGreaterThan(at('ds-selfcheck-title'));
     });
     it(`${locale}: links to the new sections from the contents list`, () => {
-      for (const id of ['ds-tiers-title', 'ds-facts-title', 'ds-glossary-title']) expect(html).toContain(`href="#${id}"`);
+      for (const id of ['ds-tiers-title', 'ds-facts-title', 'ds-glossary-title']) expect(html).toContain(`<option value="${id}">`);
     });
     it(`${locale}: passes the audits, with unique ids and large targets`, () => {
       expect(scanHtml(html)).toEqual([]);
