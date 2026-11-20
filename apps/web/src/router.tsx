@@ -6,8 +6,9 @@ import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { routePage } from "./perf/routeChunks.ts";
 import { AppShell } from "./shell/AppShell.tsx";
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
+const AccessRehearsalPage = lazy(() => import("./input/rehearsal/AccessRehearsalPage.tsx").then((module) => ({ default: module.AccessRehearsalPage })));
 
 // Every route in the integration contract is lazy, so none is on the first-install path.
 // Home and onboarding stay in the entry chunk: they are the first screens. The rest
@@ -39,6 +40,7 @@ export const routes: RouteObject[] = [
       { path: "data-status", element: <Section><DataStatusPage /></Section> },
       { path: "build-card", element: <Section><BuildCardPage /></Section> },
       { path: "offline", element: <Section><OfflinePackPage /></Section> },
+      { path: "access-rehearsal", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><AccessRehearsalPage /></Suspense></Section> },
       { path: "places", element: <Section><ModulePage id="places" /></Section> },
       { path: "places/:id", element: <Section><PlaceDetailPage /></Section> },
       { path: "map", element: <Section><MapPage /></Section> },
