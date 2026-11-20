@@ -223,5 +223,5 @@ export { RecoveryEvidencePacketPanel } from "./RecoveryEvidencePacketPanel";
 export type { RecoveryEvidencePacketPanelProps } from "./RecoveryEvidencePacketPanel";
 export * from "./recoveryEvidencePacket";
 export * from "./recoveryEvidenceAnalysis";
-export { recoveryEvidenceCopy as recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
+export { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
 export type { PacketCopy } from "./recoveryEvidencePacketCopy";
