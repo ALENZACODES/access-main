@@ -197,6 +197,10 @@ export default defineConfig({
     ],
   },
   build: {
+    // Keep every production asset in the install accounting. Stronger minification
+    // reduces actual downloaded bytes; lazy route chunks remain independently loaded.
+    minify: "terser",
+    terserOptions: { compress: { passes: 3 }, format: { comments: false } },
     rollupOptions: {
       output: {
         manualChunks(id) {
