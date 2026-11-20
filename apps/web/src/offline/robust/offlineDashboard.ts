@@ -303,6 +303,19 @@ export function mountOfflineDashboard(
     // The core offline dashboard remains usable if this optional panel fails.
   });
 
+  const contingencyHost = element("div");
+  section.append(contingencyHost);
+  let contingencyDisposed = false;
+  let unmountContingency: () => void = () => undefined;
+  // Keep the personal checklist separate from the initial offline page bundle.
+  // An import arriving after navigation must not recreate its form or listeners.
+  void import("./contingencyPanel").then(({ mountOfflineContingency }) => {
+    if (contingencyDisposed) return;
+    unmountContingency = mountOfflineContingency(contingencyHost, manifest, model, language);
+  }).catch(() => {
+    // A missing optional chunk does not interrupt existing offline controls.
+  });
+
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
     details.hidden = !state.expanded || state.inventory === null;
@@ -429,6 +442,8 @@ export function mountOfflineDashboard(
     unmountTimeline();
     disposedWorkbook = true;
     unmountWorkbook();
+    contingencyDisposed = true;
+    unmountContingency();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
