@@ -149,6 +149,36 @@ export class FakeEl {
     const [left, top, right, bottom] = this.spec.rect ?? [0, 0, 100, 20];
     return { left, top, right, bottom, width: right - left, height: bottom - top };
   }
+  /** Descendants in document order. */
+  private below(): FakeEl[] {
+    return this.kids.flatMap((k) => [k, ...k.below()]);
+  }
+  /** True for a list of simple selectors: a tag, `[attr]`, `[attr="value"]`, and one `:not([attr="value"])`. Enough for the probes that look inside an element. */
+  matches(selector: string): boolean {
+    return selector.split(',').some((one) => {
+      const m = /^([a-z0-9*]*)((?:\[[^\]]+\])*)(?::not\((\[[^\]]+\])\))?$/i.exec(one.trim());
+      if (!m) return false;
+      const attr = (cond: string): boolean => {
+        const a = /^\[([a-z-]+)(?:="([^"]*)")?\]$/i.exec(cond);
+        if (!a) return false;
+        const value = this.getAttribute(a[1] ?? '');
+        return a[2] === undefined ? value !== null : value === a[2];
+      };
+      if (m[1] && m[1] !== '*' && this.tagName.toLowerCase() !== m[1].toLowerCase()) return false;
+      for (const cond of (m[2] ?? '').match(/\[[^\]]+\]/g) ?? []) if (!attr(cond)) return false;
+      return m[3] ? !attr(m[3]) : true;
+    });
+  }
+  querySelectorAll(selector: string): FakeEl[] {
+    return this.below().filter((e) => e.matches(selector));
+  }
+  querySelector(selector: string): FakeEl | null {
+    return this.querySelectorAll(selector)[0] ?? null;
+  }
+  closest(selector: string): FakeEl | null {
+    if (this.matches(selector)) return this;
+    return this.parentElement ? this.parentElement.closest(selector) : null;
+  }
   contains(o: FakeEl): boolean {
     for (let p: FakeEl | null = o; p; p = p.parentElement) if (p === this) return true;
     return false;
@@ -238,11 +268,14 @@ export function installDom(roots: Spec[], opts: DomOptions = {}): Installed {
     querySelectorAll: () => all.filter((e) => e.spec.interactive),
     querySelector: (sel: string) => (sel.includes('manifest') && opts.manifest ? {} : null),
     getElementById: (id: string) => byId.get(id) ?? null,
-    body: { querySelectorAll: () => all },
+    // The body has a box as wide as the page and the style every element starts from. Root elements keep no parent, as before.
+    body: Object.assign(new FakeEl({ tag: 'body', rect: [0, 0, opts.clientWidth ?? 320, opts.innerHeight ?? 640] }, world), { querySelectorAll: () => all }),
     get activeElement() {
       return world.active;
     },
     documentElement: {
+      tagName: 'HTML',
+      style: () => ({ ...DEFAULT_STYLE }),
       scrollWidth: opts.scrollWidth ?? 320,
       clientWidth: opts.clientWidth ?? 320,
       getAttribute: (n: string) => (n === 'lang' ? (opts.lang ?? 'en') : null),
