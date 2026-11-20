@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 /** Accessible and offline reports of release-check evidence, not certifications. */
 import {
   acceptanceSummary, canonicalAcceptanceLedger, acceptanceFingerprint,

@@ -4,9 +4,9 @@ import {
   INCIDENT_VERSION, INCIDENT_STATUSES, INCIDENT_SEVERITIES,
   INCIDENT_AREAS, INCIDENT_ACTIONS, INCIDENT_LIMITS, TRANSITIONS,
   plain, pointer, validId, safeUrl, unicodeIssues, textIssues,
-  findPrivateKeys, sourceIssues, eventIssues, incidentIssues,
+  findPrivateKeys, sourceIssues, eventIssues, 
   inspectIncidentRegister, newIncidentRegister, canonicalIncident,
-  canonicalRegister, incidentFingerprint, parseIncidents,
+  incidentFingerprint, parseIncidents,
   serializeIncidents, appendIncident, transitionIncident, incidentSummary,
 } from './offline-release-incidents.mjs';
 import { TODAY, fixtureSource, fixtureIncident, fixtureRegister, clone } from './offline-release-incident-fixtures.mjs';

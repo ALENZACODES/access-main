@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 /**
  * Offline release acceptance ledger: a deterministic index of test observations.
  * No status here asserts accessibility of a physical venue or confirms a claim.
@@ -5,7 +6,7 @@
  * No clock, network, persistence, or user profile is accessed by this module.
  */
 import { createHash } from 'node:crypto';
-import { validDate, validId, safeUrl, privateKeyIssues } from './offline-review-queue.mjs';
+import { validDate, validId, safeUrl, privateKeyIssues } from '../../../scripts/release/offline-review-queue.mjs';
 
 export const LEDGER_VERSION = 1;
 export const ACCEPTANCE_KINDS = Object.freeze([

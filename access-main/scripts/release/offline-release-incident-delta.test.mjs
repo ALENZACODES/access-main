@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  DELTA_KINDS, changesForIncident, compareIncidentRegisters,
+  DELTA_KINDS, compareIncidentRegisters,
   filterIncidentChanges, compareIncidentHistories, assessIncidentRegression,
 } from './offline-release-incident-delta.mjs';
 import {

@@ -1,10 +1,12 @@
+import { URL } from 'node:url';
+import { Buffer } from 'node:buffer';
 /**
  * Fail-closed incident register for reviewing offline release evidence.
  * Incidents describe inspection work, not whether a real place is accessible.
  * A closed incident is not proof that the underlying concern has been fixed.
  */
 import { createHash } from 'node:crypto';
-import { isOpenLicence, isValidDate } from './site-audit.mjs';
+import { isOpenLicence, isValidDate } from '../../../scripts/release/site-audit.mjs';
 
 export const INCIDENT_VERSION = 1;
 export const INCIDENT_STATUSES = Object.freeze(['open', 'triaged', 'blocked', 'resolved', 'closed']);
@@ -284,7 +286,7 @@ export function appendIncident(value, candidate, options = {}) {
   const checked = inspectIncidentRegister(value, options);
   if (!checked.ok) return { ok: false, register: value, problems: checked.problems };
   if (!plain(candidate)) return { ok: false, register: value, problems: [issue('INCIDENT_INVALID', '/candidate')] };
-  const next = { version: INCIDENT_VERSION, incidents: [...value.incidents, structuredClone(candidate)] };
+  const next = { version: INCIDENT_VERSION, incidents: [...value.incidents, globalThis.structuredClone(candidate)] };
   const result = inspectIncidentRegister(next, options);
   return { ok: result.ok, register: result.ok ? next : value, problems: result.problems };
 }
@@ -298,7 +300,7 @@ export function transitionIncident(value, id, action, on, sourceRefs, options = 
   if (!nextStatus || !actionSet.has(action)) {
     return { ok: false, register: value, problems: [issue('ILLEGAL_TRANSITION', '/action')] };
   }
-  const next = structuredClone(value);
+  const next = globalThis.structuredClone(value);
   const updated = next.incidents[index];
   updated.history.push({ action, on, from: entry.status, to: nextStatus, sourceRefs });
   updated.status = nextStatus;

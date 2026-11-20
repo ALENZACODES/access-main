@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  LEDGER_VERSION, ACCEPTANCE_KINDS, ACCEPTANCE_STATES,
+  ACCEPTANCE_KINDS, ACCEPTANCE_STATES,
   ACCEPTANCE_LIMITS, validateAcceptanceText, validateAcceptanceLedger,
   acceptanceSummary, canonicalAcceptanceLedger, acceptanceFingerprint,
   readAcceptanceLedger, serializeAcceptanceLedger,

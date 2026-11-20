@@ -18,4 +18,4 @@ export function fixtureIncident(id = 'incident-1', change = {}) {
 export function fixtureRegister(...incidents) {
   return { version: INCIDENT_VERSION, incidents };
 }
-export function clone(value) { return structuredClone(value); }
+export function clone(value) { return globalThis.structuredClone(value); }
