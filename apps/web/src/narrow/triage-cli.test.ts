@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { frTypographyIssues } from './i18n.js';
+import { sampleManualLog } from './manual-log.js';
 import { samplePolicy } from './policy.js';
 import { renderJson } from './report.js';
 import { nov } from './report-fixtures.js';
@@ -32,9 +33,9 @@ const LOOSE = JSON.stringify({ version: 1, rules: [{ id: 'cap', when: {}, max: 1
 
 describe('parseTriageArgs', () => {
   it('reads the report file and every option', () => {
-    expect(parseTriageArgs(['r.json', '--ledger', 'l.json', '--owners', 'o.txt', '--policy', 'p.json', '--tickets', 'out/tickets', '--tickets-for', 'fail', '--out', 'order.md', '--max', '5', '--lang', 'fr'])).toEqual({
+    expect(parseTriageArgs(['r.json', '--ledger', 'l.json', '--owners', 'o.txt', '--policy', 'p.json', '--manual-log', 'm.json', '--tickets', 'out/tickets', '--tickets-for', 'fail', '--out', 'order.md', '--max', '5', '--lang', 'fr'])).toEqual({
       ok: true,
-      args: { reportFile: 'r.json', ledgerFile: 'l.json', ownersFile: 'o.txt', policyFile: 'p.json', ticketsDir: 'out/tickets', ticketsFor: 'fail', outFile: 'order.md', max: 5, lang: 'fr', help: false },
+      args: { reportFile: 'r.json', ledgerFile: 'l.json', ownersFile: 'o.txt', policyFile: 'p.json', manualLogFile: 'm.json', ticketsDir: 'out/tickets', ticketsFor: 'fail', outFile: 'order.md', max: 5, lang: 'fr', help: false },
     });
   });
 
@@ -178,5 +179,50 @@ describe('runTriage', () => {
     const w = world();
     expect(await runTriage(['missing.json'], w.deps)).toBe(2);
     expect(w.text()).toContain('Triage failed / Échec du tri: ENOENT: no such file: missing.json');
+  });
+});
+
+describe('triage with a by-hand log', () => {
+  it('prints what people saw, and drafts a ticket for each problem, before the others', async () => {
+    const w = world({ 'm.json': sampleManualLog() });
+    expect(await runTriage(['r.json', '--manual-log', 'm.json', '--tickets', 't', '--max', '1'], w.deps)).toBe(0);
+    expect(w.text()).toContain('By-hand looks: 3 of 55 criteria have a recent note, 0 an old note, 52 no note.');
+    const names = [...w.files.keys()].filter((f) => f.startsWith('t/')).sort();
+    expect(names).toEqual(['t/001-by-hand-1-2-2.md', 't/002-name-missing-button-menu.md', 't/README.md']);
+    const draft = w.files.get('t/001-by-hand-1-2-2.md') ?? '';
+    expect(draft.startsWith('# [BY HAND] 1.2.2 Captions (Prerecorded): The intro video has no captions.')).toBe(true);
+    expect(draft).toContain('Key: `by-hand|1.2.2`');
+    expect(draft).toContain('- Looked on: 2026-11-12');
+    expect(draft).toContain('- By: @name');
+    expect(draft).toContain('The automated audit may not see it, and an audit with no finding says nothing about it.');
+    expect(draft).toContain('- [ ] A person has looked again, and a new note is in the by-hand log.');
+    expect(draft).not.toContain('The audit no longer reports');
+    expect(w.files.get('t/README.md')).toContain('4 more distinct findings have no draft.');
+  });
+
+  it('drafts nothing for notes that are not a problem, or that are old', async () => {
+    const log = JSON.stringify({ version: 1, notes: [{ sc: '2.4.7', result: 'no-problem-found', on: '2026-11-12', by: '@sam' }, { sc: '1.2.2', result: 'problem', on: '2025-01-01', by: '@sam', note: 'Old.' }] });
+    const w = world({ 'm.json': log });
+    await runTriage(['r.json', '--manual-log', 'm.json', '--tickets', 't', '--max', '1'], w.deps);
+    expect([...w.files.keys()].filter((f) => f.includes('by-hand'))).toEqual([]);
+  });
+
+  it('writes the by-hand draft in French', async () => {
+    const w = world({ 'm.json': sampleManualLog() });
+    await runTriage(['r.json', '--manual-log', 'm.json', '--tickets', 't', '--lang', 'fr'], w.deps);
+    const draft = w.files.get('t/001-by-hand-1-2-2.md') ?? '';
+    expect(draft).toContain('# [À LA MAIN] 1.2.2 Sous-titres (pré-enregistrés)\u00A0: The intro video has no captions.');
+    expect(draft).toContain('## Ce qu’une personne a vu');
+    expect(draft).toContain('- [ ] Une personne a regardé de nouveau, et une nouvelle note est dans le journal des contrôles à la main.');
+    for (const l of draft.split('\n').filter((x) => !x.includes('intro video'))) expect(frTypographyIssues(l), l).toEqual([]);
+  });
+
+  it('does not change the exit code, and stops with code 2 on a log it cannot use', async () => {
+    const ok = world({ 'm.json': sampleManualLog() });
+    expect(await runTriage(['r.json', '--manual-log', 'm.json'], ok.deps)).toBe(0);
+    const bad = world({ 'm.json': '{"version":1,"notes":[{"sc":"9.9.9","result":"problem","on":"2026-11-12","by":"@sam","note":"x"}]}' });
+    expect(await runTriage(['r.json', '--manual-log', 'm.json', '--tickets', 't'], bad.deps)).toBe(2);
+    expect(bad.logs[0]).toContain('m.json: By-hand log, note 1: "sc" must be the number of a Level A or AA criterion');
+    expect([...bad.files.keys()].some((f) => f.startsWith('t/'))).toBe(false);
   });
 });

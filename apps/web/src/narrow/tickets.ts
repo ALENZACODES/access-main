@@ -1,6 +1,7 @@
 import { ruleIdOf } from './ci.js';
 import { criterionLabel } from './criteria.js';
 import { guidanceFor } from './guidance.js';
+import type { ManualRow } from './manual-log.js';
 import { manualStep } from './manual-steps.js';
 import { describeWhy, type PriorityItem } from './priority.js';
 import { CHECK_LABELS, NBSP, type Lang } from './types.js';
@@ -139,6 +140,53 @@ export function draftTickets(items: readonly PriorityItem[], lang: Lang, options
     .filter((item) => options.only !== 'fail' || item.cluster.entry.status === 'fail')
     .slice(0, max)
     .map((item) => draft(item, lang, maxRoutes));
+}
+
+/**
+ * Drafts for the problems people saw when they looked by hand: one per
+ * criterion whose newest recent note in the by-hand log has the result
+ * `problem`. The audit cannot see these, so the draft closes on a person
+ * looking again, and on nothing else.
+ */
+export function draftManualTickets(rows: readonly ManualRow[], lang: Lang): Ticket[] {
+  const fr = lang === 'fr';
+  const out: Ticket[] = [];
+  for (const m of rows) {
+    if (m.state !== 'looked' || !m.note || m.note.result !== 'problem') continue;
+    const c = m.row.criterion;
+    const step = manualStep(c.sc);
+    const seen = line(m.note.note ?? '');
+    const body: string[] = [];
+    body.push(fr ? '## Ce qu’une personne a vu' : '## What a person saw', '', seen, '');
+    body.push(`- ${fr ? 'Critère' : 'Criterion'}${colon(lang)} ${c.sc} ${c[lang]} (${c.level})`);
+    body.push(`- ${fr ? 'Regardé le' : 'Looked on'}${colon(lang)} ${m.note.on}`);
+    body.push(`- ${fr ? 'Par' : 'By'}${colon(lang)} ${m.note.by}`);
+    body.push(
+      `- ${fr ? 'Contrôles automatisés liés' : 'Related automated checks'}${colon(lang)} ${m.row.checks.length > 0 ? m.row.checks.map((x) => code(x)).join(', ') : fr ? 'aucun' : 'none'}`,
+    );
+    body.push(
+      '',
+      fr
+        ? 'Ce problème vient du journal des contrôles à la main. L’audit automatisé ne le voit pas forcément, et un audit sans anomalie ne dit rien à son sujet.'
+        : 'This problem comes from the by-hand log. The automated audit may not see it, and an audit with no finding says nothing about it.',
+    );
+    if (step) body.push('', fr ? '## Regarder de nouveau' : '## Looking again', '', `${step.action[lang]} ${step.look[lang]}`);
+    body.push('', fr ? '## Quand fermer' : '## When to close', '');
+    body.push(
+      fr
+        ? '- [ ] Une personne a regardé de nouveau, et une nouvelle note est dans le journal des contrôles à la main.'
+        : '- [ ] A person has looked again, and a new note is in the by-hand log.',
+    );
+    out.push({
+      key: `by-hand|${c.sc}`,
+      title: `[${fr ? 'À LA MAIN' : 'BY HAND'}] ${c.sc} ${c[lang]}${colon(lang)} ${seen}`.slice(0, 140),
+      body: `${body.join('\n')}\n`,
+      labels: ['accessibility', 'a11y-by-hand', `wcag-${c.level.toLowerCase()}`],
+      owner: null,
+      score: 0,
+    });
+  }
+  return out;
 }
 
 /** One draft as a file: the title as a heading, the key and labels, then the body. */
