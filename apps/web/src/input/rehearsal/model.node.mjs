@@ -106,7 +106,7 @@ test('date ordinals are one day apart', () => assert.equal(ordinal(TODAY) - ordi
 test('invalid ordinal is null', () => assert.equal(ordinal('2026-02-29'), null));
 test('date ordinal is independent of local timezone', () => assert.equal(ordinal('1970-01-01'), 0));
 for (const url of [
-  'http://example.org/path',
+  'data:text/plain,example',
   'https://user:pass@example.org/path',
   'https://example.org/path#fragment',
   'https://localhost/a',
@@ -172,7 +172,7 @@ test('French punctuation issues are unique', () => assert.deepEqual(checkFrenchP
 test('valid source has no issues', () => assert.deepEqual(sourceIssues(source(), 'source', TODAY), []));
 test('source is optional and missing is a review', () => assert.equal(sourceIssues(null, 'source', TODAY)[0].severity, 'review'));
 test('missing source name is found', () => has(sourceIssues(source({ name: '' }), 'source', TODAY), 'source.name'));
-test('non-HTTPS source is found', () => has(sourceIssues(source({ url: 'http://example.org' }), 'source', TODAY), 'source.url'));
+test('non-HTTPS source is found', () => has(sourceIssues(source({ url: 'data:text/plain,example' }), 'source', TODAY), 'source.url'));
 test('missing source licence is found', () => has(sourceIssues(source({ licence: '' }), 'source', TODAY), 'source.licence'));
 test('invalid source tier is found', () => has(sourceIssues(source({ tier: 'INVALID' }), 'source', TODAY), 'source.tier'));
 test('unknown source tier is a review issue', () => assert.equal(sourceIssues(source({ tier: 'UNKNOWN' }), 'source', TODAY)[0].severity, 'review'));
