@@ -16,6 +16,10 @@ import { renderOutsideHtml, type OutsideItem } from "./outsideSection";
 import type { DescribedDevice } from "./deviceRegister";
 import { renderDeviceKnownHtml } from "./deviceKnown";
 import { renderFeaturesHtml, type FeatureView } from "./featureSection";
+import { renderAddressesHtml } from "./addressSection";
+import { renderGlanceHtml } from "./glanceSection";
+import type { GlanceSources } from "./glance";
+import type { AddressRegisterView } from "./addressView";
 import { renderRefusedHtml } from "./refusedSection";
 import { renderOnDeviceNoticeHtml } from "../onDeviceNotice";
 
@@ -49,6 +53,10 @@ export interface PanelView {
   deviceNames?: DescribedDevice | null;
   /** What the App asks of the browser. Leave undefined to hide the section. */
   features?: FeatureView;
+  /** The web addresses and network requests in the App. Leave undefined to hide the section. */
+  addresses?: AddressRegisterView;
+  /** The counts behind the lists. Leave undefined to hide the section. */
+  glance?: GlanceSources;
   /** Show the buttons that download everything the App keeps on this device. */
   keptList?: boolean;
   /** Show the protected copy section. */
@@ -130,6 +138,8 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.device === undefined ? "" : renderDeviceHtml(view.locale, view.device)}` +
     `${view.deviceNames === undefined ? "" : renderDeviceKnownHtml(view.locale, view.deviceNames)}` +
     `${view.features === undefined ? "" : renderFeaturesHtml(view.locale, view.features)}` +
+    `${view.glance === undefined ? "" : renderGlanceHtml(view.locale, view.glance)}` +
+    `${view.addresses === undefined ? "" : renderAddressesHtml(view.locale, view.addresses)}` +
     `${renderConsentHtml(view)}` +
     `${view.outside === undefined ? "" : renderOutsideHtml(view.locale, view.outside)}` +
     `${view.refused === undefined ? "" : renderRefusedHtml(view.locale, view.refused, view.purposes ?? [])}` +
