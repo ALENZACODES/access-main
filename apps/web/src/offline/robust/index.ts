@@ -65,3 +65,8 @@ export * from "./sourceAgeReview";
 export * from "./sourceAgeCopy";
 export * from "./sourceAgeExport";
 export * from "./sourceAgePanel";
+
+export * from "./accessPreparation";
+export * from "./accessPreparationCopy";
+export * from "./accessPreparationExport";
+export * from "./accessPreparationPanel";

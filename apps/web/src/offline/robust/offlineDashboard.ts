@@ -259,6 +259,17 @@ export function mountOfflineDashboard(
   const sourceAgeHost = element("div");
   section.append(sourceAgeHost);
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
+  const preparationHost = element("div");
+  section.append(preparationHost);
+  let disposedPreparation = false;
+  let unmountPreparation: () => void = () => undefined;
+  // Load personal planning notes separately from the initial offline page chunk.
+  void import("./accessPreparationPanel").then(({ mountAccessPreparation }) => {
+    if (disposedPreparation) return;
+    unmountPreparation = mountAccessPreparation(preparationHost, manifest, model, language);
+  }).catch(() => {
+    // The existing offline controls remain usable without this optional view.
+  });
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -378,6 +389,8 @@ export function mountOfflineDashboard(
     unmountDiagnostics();
     unmountRecovery();
     unmountSourceAge();
+    disposedPreparation = true;
+    unmountPreparation();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
