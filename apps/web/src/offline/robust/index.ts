@@ -65,8 +65,7 @@ export * from "./sourceAgeReview";
 export * from "./sourceAgeCopy";
 export * from "./sourceAgeExport";
 export * from "./sourceAgePanel";
-
-export * from "./offlineCasebook";
-export * from "./offlineCasebookCopy";
-export * from "./offlineCasebookExport";
-export * from "./offlineCasebookPanel";
+export * from "./handoffRehearsal";
+export * from "./handoffRehearsalCopy";
+export * from "./handoffRehearsalPanel";
+export { handoffReviewText, pageHandoffReview, reviewHandoff } from "./handoffReview";
