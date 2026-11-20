@@ -24,7 +24,6 @@ import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
-import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -260,20 +259,16 @@ export function mountOfflineDashboard(
   const sourceAgeHost = element("div");
   section.append(sourceAgeHost);
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
-  const continuityHost = element("div");
-  section.append(continuityHost);
-  const unmountContinuity = mountOfflineContinuityDrill(continuityHost, manifest, model, language, dependencies.estimateStorage);
-  const handoffHost = element("div");
-  section.append(handoffHost);
-  let disposedHandoff = false;
-  let unmountHandoff: () => void = () => undefined;
-  // The handoff panel is optional and loaded outside the initial page bundle.
-  // A delayed module must not mount after dashboard disposal.
-  void import("./handoffRehearsalPanel").then(({ mountOfflineHandoffRehearsal }) => {
-    if (disposedHandoff) return;
-    unmountHandoff = mountOfflineHandoffRehearsal(handoffHost, manifest, model, language);
+  const workbookHost = element("div");
+  section.append(workbookHost);
+  let disposedWorkbook = false;
+  let unmountWorkbook: () => void = () => undefined;
+  // Keep the substantial local workbook out of the initial offline page chunk.
+  void import("./reconciliationWorkbookPanel").then(({ mountOfflineReconciliationWorkbook }) => {
+    if (disposedWorkbook) return;
+    unmountWorkbook = mountOfflineReconciliationWorkbook(workbookHost, manifest, model, language);
   }).catch(() => {
-    // The main dashboard remains usable when this optional view cannot load.
+    // The core offline dashboard remains usable if this optional panel fails.
   });
 
   const renderDetails = (state: DashboardState): void => {
@@ -394,9 +389,8 @@ export function mountOfflineDashboard(
     unmountDiagnostics();
     unmountRecovery();
     unmountSourceAge();
-    unmountContinuity();
-    disposedHandoff = true;
-    unmountHandoff();
+    disposedWorkbook = true;
+    unmountWorkbook();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
