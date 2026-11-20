@@ -289,3 +289,36 @@ export * from "./recoveryReceiptLedger";
 export * from "./recoveryReceiptAnalysis";
 export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
 export type { ReceiptCopy } from "./recoveryReceiptCopy";
+
+// User-initiated offline source-date review; never infers pack readiness.
+export { RecoverySourceRefreshPanel } from "./RecoverySourceRefreshPanel";
+export type { RecoverySourceRefreshPanelProps } from "./RecoverySourceRefreshPanel";
+export {
+  REFRESH_SCHEMA, REFRESH_LIMITS, REFRESH_TOPICS, REFRESH_CONDITIONS,
+  REFRESH_TIERS, REFRESH_DECISIONS, emptyRefreshDocument, checkRefreshSource,
+  checkRefreshSubject, checkRefreshObservation, checkRefreshReview,
+  checkRefreshDocument, refreshCalendarDay, refreshInstant,
+  appendRefreshSubject, appendRefreshObservation, appendRefreshReview,
+  nextRefreshId, exportRefreshDocument, parseRefreshDocument,
+  previewRefreshMerge, mergeRefreshDocuments, filterRefreshSubjects,
+  latestRefreshObservation, latestRefreshReview, refreshReviewCurrent, refreshObservationsFor,
+  refreshReviewsFor, summarizeRefresh, refreshContentReady,
+} from "./recoverySourceRefresh";
+export type {
+  RefreshTopic, RefreshCondition, RefreshTier, RefreshDecision,
+  RefreshIssue, RefreshResult, RefreshProvenance, RefreshSubject,
+  RefreshObservation, RefreshReview, RefreshDocument, RefreshFilter,
+  RefreshMergePreview, RefreshSummary,
+} from "./recoverySourceRefresh";
+export {
+  sourceAgeDays, refreshConflictPairs, refreshFindings, refreshReviewQueue,
+  refreshPackOverviews, refreshTopicOverviews, refreshAgeBuckets,
+  refreshTimeline, compareRefreshSubject, refreshReport, refreshNarrative,
+} from "./recoverySourceRefreshAnalysis";
+export type {
+  RefreshFindingCode, RefreshFinding, RefreshReviewRow, RefreshAgeBucket,
+  RefreshPackOverview, RefreshTopicOverview, RefreshTimelinePoint,
+  RefreshWindowOptions, RefreshReviewReport, RefreshSubjectComparison,
+} from "./recoverySourceRefreshAnalysis";
+export { recoverySourceRefreshCopy } from "./recoverySourceRefreshCopy";
+export type { RefreshCopy } from "./recoverySourceRefreshCopy";

@@ -48,6 +48,10 @@ const RecoveryReceiptLedgerPanel = lazy(async () => ({
   default: (await import("./RecoveryReceiptLedgerPanel")).RecoveryReceiptLedgerPanel,
 }));
 
+const RecoverySourceRefreshPanel = lazy(async () => ({
+  default: (await import("./RecoverySourceRefreshPanel")).RecoverySourceRefreshPanel,
+}));
+
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
   readonly locale: RecoveryLocale;
@@ -213,6 +217,11 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement des reçus…" : "Loading handoff receipts…"}</p>}>
         <RecoveryReceiptLedgerPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen des sources…" : "Loading source review…"}</p>}>
+        <RecoverySourceRefreshPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure}
+          onInspect={() => { void refresh(); }} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
