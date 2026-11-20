@@ -45,12 +45,16 @@ export function mountPrivacyPanel(
       case "export-kept-text":
       case "export-features-csv":
       case "export-features-text":
+      case "export-addresses-csv":
+      case "export-addresses-text":
+      case "export-glance-csv":
+      case "export-glance-text":
       case "export-support":
       case "export-printable": {
         const action = t.getAttribute("data-action");
         const before = controller.getState().lastExport;
         const type =
-          action === "export-list-csv" || action === "export-list-text" || action === "export-kept-csv" || action === "export-kept-text" || action === "export-features-csv" || action === "export-features-text" || action === "export-support" || action === "export-printable"
+          action === "export-list-csv" || action === "export-list-text" || action === "export-kept-csv" || action === "export-kept-text" || action === "export-features-csv" || action === "export-features-text" || action === "export-addresses-csv" || action === "export-addresses-text" || action === "export-glance-csv" || action === "export-glance-text" || action === "export-support" || action === "export-printable"
             ? action
             : "export";
         const after = controller.dispatch({ type }).lastExport;

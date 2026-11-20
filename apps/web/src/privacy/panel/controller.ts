@@ -10,8 +10,12 @@ import { inventoryAsCsv, inventoryAsText } from "./inventoryExport";
 import { ownEntries } from "./ownEntries";
 import { reconcile } from "./reconcile";
 import { describeDevice, type DeviceRow } from "./deviceRegister";
+import type { AddressRegisterView } from "./addressView";
 import type { FeatureRow } from "./featureRegister";
 import { featuresAsCsv, featuresAsText } from "./featureExport";
+import { addressesAsCsv, addressesAsText } from "./addressExport";
+import { glanceAsCsv, glanceAsText } from "./glanceSection";
+import { glanceFigures, type GlanceSources } from "./glance";
 import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
 import { clearDevice, removable, scanDevice, type ClearOptions, type DeviceHost, type DeviceScan } from "./deviceStorage";
@@ -56,6 +60,10 @@ export interface ControllerDeps {
   deviceRegister?: readonly DeviceRow[];
   /** The App's list of browser features and the browser to ask. With it, the panel shows what the App asks of the browser. */
   features?: { register: readonly FeatureRow[]; host: FeatureHost };
+  /** The web addresses and network requests in the App. With it, the panel shows them and offers a download. */
+  addresses?: AddressRegisterView;
+  /** Show a short count of each list above. Needs at least one of the lists above to have something to count. */
+  glance?: boolean;
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -115,6 +123,10 @@ export type PrivacyAction =
   | { type: "export-kept-text" }
   | { type: "export-features-csv" }
   | { type: "export-features-text" }
+  | { type: "export-addresses-csv" }
+  | { type: "export-addresses-text" }
+  | { type: "export-glance-csv" }
+  | { type: "export-glance-text" }
   | { type: "mark-seen" }
   | { type: "import-load"; text: string }
   | { type: "import-confirm" }
@@ -152,6 +164,18 @@ export interface PrivacyController {
  * Throws at start-up if the inventory or the purposes break the wording or data
  * rules. On start it also removes expired local items (see expiry.ts).
  */
+/** What the counts are made from: only the lists the controller was given. Null when there is nothing to count. */
+function glanceSources(deps: ControllerDeps): GlanceSources | null {
+  if (deps.glance !== true) return null;
+  const src: GlanceSources = {
+    ...(deps.kept !== undefined ? { kept: deps.kept } : {}),
+    ...(deps.deviceRegister !== undefined ? { device: deps.deviceRegister } : {}),
+    ...(deps.features !== undefined ? { features: deps.features.register } : {}),
+    ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
+  };
+  return glanceFigures(src).length === 0 ? null : src;
+}
+
 export function createPrivacyController(deps: ControllerDeps): PrivacyController {
   assertValidInventory(deps.inventory);
   const purposes = deps.purposes ?? [];
@@ -297,6 +321,27 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           : featuresAsText(loc, deps.features.register, state.featureStates, deps.now());
         log({ kind: "features-export", format: csv ? "csv" : "text" });
         state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "features-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-addresses-csv":
+      case "export-addresses-text": {
+        if (deps.addresses === undefined) break;
+        const csv = action.type === "export-addresses-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? addressesAsCsv(loc, deps.addresses, deps.now(), loc === "fr" ? ";" : ",") : addressesAsText(loc, deps.addresses, deps.now());
+        log({ kind: "addresses-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "addresses-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-glance-csv":
+      case "export-glance-text": {
+        const src = glanceSources(deps);
+        if (src === null) break;
+        const csv = action.type === "export-glance-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? glanceAsCsv(loc, src, deps.now(), loc === "fr" ? ";" : ",") : glanceAsText(loc, src, deps.now());
+        log({ kind: "glance-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "glance-exported", format: csv ? "csv" : "text" } };
         break;
       }
       case "mark-seen": {
@@ -571,6 +616,8 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           ? { deviceNames: state.scan === null ? null : describeDevice(state.scan, deps.deviceRegister, deps.device) }
           : {}),
         ...(deps.features !== undefined ? { features: { register: deps.features.register, states: state.featureStates } } : {}),
+        ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
+        ...(glanceSources(deps) !== null ? { glance: glanceSources(deps) as GlanceSources } : {}),
         ...(deps.kept !== undefined ? { keptList: true } : {}),
         ...(deps.crypto !== undefined ? { protectedCopy: true } : {}),
         ...(deps.logActivity === true ? { activity: loadActivity(deps.storage, deps.prefix, deps.now()) } : {}),
