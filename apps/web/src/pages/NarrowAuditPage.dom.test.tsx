@@ -218,3 +218,606 @@ describe("NarrowAuditPage: this page on your screen", () => {
     expect(document.querySelector(".fit")).toBeNull();
   });
 });
+
+/** "Look by hand" sits last on the page, in the same language, with a real DOM under it. */
+describe("NarrowAuditPage: look by hand", () => {
+  const press = async (container: HTMLElement, action: string) => {
+    await act(async () => {
+      (container.querySelector(`.hand [data-action="${action}"]`) as HTMLElement).click();
+    });
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+  };
+  const choose = (container: HTMLElement, result: string, note = "") => {
+    (container.querySelector(`#hand-result-${result}`) as HTMLInputElement).checked = true;
+    (container.querySelector("#hand-note") as HTMLTextAreaElement).value = note;
+  };
+  const stepHeading = (container: HTMLElement) => container.querySelector("#hand-step-h") as HTMLElement;
+
+  it("is on the page once, under an h2, after the other two panels, and the page keeps one h1", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    expect(container.querySelectorAll(".hand")).toHaveLength(1);
+    const h2 = container.querySelector("#hand-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Look by hand");
+    expect((container.querySelector("#fit-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("every field has one label, and the choices are a named group", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    for (const id of ["hand-who", "hand-earlier", "hand-note", "hand-need-keyboard", "hand-need-media", "hand-result-problem", "hand-result-not-sure"]) {
+      const field = container.querySelector(`#${id}`) as HTMLInputElement;
+      expect(field.labels?.length, id).toBe(1);
+      expect(field.labels?.[0]?.textContent?.trim(), id).not.toBe("");
+    }
+    const group = container.querySelector("#hand-result") as HTMLElement;
+    expect(group.getAttribute("role")).toBe("radiogroup");
+    expect(container.querySelector(`#${group.getAttribute("aria-labelledby")}`)?.textContent).toBe("What I found");
+    expect(container.querySelectorAll('input[name="hand-result"]')).toHaveLength(3);
+  });
+
+  it("does not save without a choice: the group is marked, the message is by it, focus is on the first choice", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    const before = stepHeading(container).textContent;
+    await press(container, "hand-save-next");
+    const group = container.querySelector("#hand-result") as HTMLElement;
+    expect(group.getAttribute("aria-invalid")).toBe("true");
+    expect(container.querySelector(`#${group.getAttribute("aria-describedby")}`)?.textContent).toBe("Choose what you found.");
+    expect(document.activeElement).toBe(container.querySelector("#hand-result-problem"));
+    expect(stepHeading(container).textContent).toBe(before);
+    expect(container.querySelector(".hand [role=status]")?.textContent).toBe("The answer was not saved. Choose what you found.");
+  });
+
+  it("asks what was seen for a problem, and keeps the choice", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    choose(container, "problem");
+    await press(container, "hand-save");
+    const note = container.querySelector("#hand-note") as HTMLTextAreaElement;
+    expect(note.getAttribute("aria-invalid")).toBe("true");
+    expect(document.activeElement).toBe(note);
+    expect(container.querySelector("#hand-note-error")?.textContent).toBe("Say what you saw, and on which page.");
+    expect((container.querySelector("#hand-result-problem") as HTMLInputElement).checked).toBe(true);
+  });
+
+  it("saves an answer, moves to the next step and puts focus on its heading", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(stepHeading(container).textContent).toMatch(/^Step 1 of \d+: /);
+    choose(container, "no-problem-found");
+    await press(container, "hand-save-next");
+    expect(stepHeading(container).textContent).toMatch(/^Step 2 of \d+: /);
+    expect(document.activeElement).toBe(stepHeading(container));
+    expect(stepHeading(container).tabIndex).toBe(-1);
+    expect(container.querySelector('input[name="hand-result"]:checked')).toBeNull();
+    expect((container.querySelector("#hand-note") as HTMLTextAreaElement).value).toBe("");
+    expect(container.querySelector('.hand [data-action="hand-list"]')?.textContent).toMatch(/^Show all steps \(1 of \d+ looked at\)$/);
+  });
+
+  it("goes back to a saved step and shows the answer in the form and in words", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    choose(container, "problem", "The form says to press the green button.");
+    await press(container, "hand-save-next");
+    await press(container, "hand-previous");
+    expect((container.querySelector("#hand-result-problem") as HTMLInputElement).checked).toBe(true);
+    expect((container.querySelector("#hand-note") as HTMLTextAreaElement).value).toBe("The form says to press the green button.");
+    expect(container.querySelector(".hand")?.textContent).toContain("Saved answer: I saw a problem. The form says to press the green button.");
+    expect(container.querySelector('.hand [data-action="hand-clear"]')).not.toBeNull();
+  });
+
+  it("shows the list of all steps from its button, jumps to a step, and the list stays shown", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    const toggle = () => container.querySelector('.hand [data-action="hand-list"]') as HTMLButtonElement;
+    expect(toggle().getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector("#hand-all")).toBeNull();
+    await press(container, "hand-list");
+    expect(toggle().getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector(`#${toggle().getAttribute("aria-controls")}`)?.tagName).toBe("OL");
+    expect(document.activeElement).toBe(toggle());
+    await press(container, "hand-go-1-4-10");
+    expect(stepHeading(container).textContent).toContain("1.4.10 Reflow (AA)");
+    expect(container.querySelector("#hand-all")).not.toBeNull();
+    expect(container.querySelector('.hand [aria-current="step"]')?.textContent).toContain("1.4.10 Reflow (AA)");
+  });
+
+  it("shows more steps when the person has more at hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, "hand-list");
+    const count = () => container.querySelectorAll('.hand [data-action^="hand-go-"]').length;
+    const before = count();
+    (container.querySelector("#hand-need-screen-reader") as HTMLInputElement).checked = true;
+    await press(container, "hand-needs");
+    expect(count()).toBeGreaterThan(before);
+    expect((container.querySelector("#hand-need-screen-reader") as HTMLInputElement).checked).toBe(true);
+    expect(container.querySelector(".hand [role=status]")?.textContent).toBe("The steps were updated.");
+  });
+
+  it("asks who looked before it prepares the log, then gives a log the tool reads and a file to save", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    choose(container, "not-sure", "Ask the design lead.");
+    await press(container, "hand-save");
+    await press(container, "hand-export");
+    const who = container.querySelector("#hand-who") as HTMLInputElement;
+    expect(who.getAttribute("aria-invalid")).toBe("true");
+    expect(document.activeElement).toBe(who);
+    expect(container.querySelector("#hand-log")).toBeNull();
+    who.value = "@sam";
+    await press(container, "hand-export");
+    const log = container.querySelector("#hand-log") as HTMLTextAreaElement;
+    expect(document.activeElement).toBe(log);
+    expect(log.readOnly).toBe(true);
+    const data = JSON.parse(log.value) as { version: number; notes: Array<Record<string, string>> };
+    expect(data.version).toBe(1);
+    expect(data.notes).toHaveLength(1);
+    expect(data.notes[0]).toMatchObject({ result: "not-sure", by: "@sam", note: "Ask the design lead." });
+    expect(data.notes[0]?.["on"]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const save = container.querySelector('.hand [data-action="hand-save-file"]') as HTMLAnchorElement;
+    expect(save.getAttribute("download")).toMatch(/^narrow-audit\.manual-log\.\d{4}-\d{2}-\d{2}\.json$/);
+    expect(decodeURIComponent((save.getAttribute("href") ?? "").split(",")[1] ?? "")).toBe(log.value);
+    expect((container.querySelector("#hand-summary") as HTMLTextAreaElement).value).toContain("I am not sure. Ask the design lead.");
+  });
+
+  it("reads an earlier log that was pasted, and shows the last look at a step", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    (container.querySelector("#hand-earlier") as HTMLTextAreaElement).value = JSON.stringify({
+      version: 1,
+      notes: [{ sc: "1.4.10", result: "problem", on: "2026-01-15", by: "@lee", note: "The table is cut off." }],
+    });
+    await press(container, "hand-read");
+    expect(container.querySelector(".hand [role=status]")?.textContent).toBe("1 note read from the earlier log.");
+    expect((container.querySelector("#hand-earlier") as HTMLTextAreaElement).value).toBe("");
+    await press(container, "hand-list");
+    await press(container, "hand-go-1-4-10");
+    expect(container.querySelector(".hand")?.textContent).toContain("Looked on 2026-01-15 by @lee");
+    expect(container.querySelector(".hand")?.textContent).toContain("a problem was seen. The table is cut off.");
+  });
+
+  it("says why a pasted log cannot be read, by the field, and keeps what was pasted", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    (container.querySelector("#hand-earlier") as HTMLTextAreaElement).value = "not a log";
+    await press(container, "hand-read");
+    const field = container.querySelector("#hand-earlier") as HTMLTextAreaElement;
+    expect(field.value).toBe("not a log");
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+    expect(container.querySelector("#hand-earlier-error")?.textContent).toBe("The by-hand log is not valid JSON.");
+    expect(document.activeElement).toBe(field);
+  });
+
+  it("follows the language of the audit panel and keeps the session", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    (container.querySelector("#hand-who") as HTMLInputElement).value = "@sam";
+    choose(container, "problem", "The menu cannot be opened.");
+    await press(container, "hand-save-next");
+    choose(container, "not-sure", "Half written");
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".hand")).toHaveLength(1);
+    expect(container.querySelector("#hand-h")?.textContent).toBe("Regarder à la main");
+    expect(container.querySelector(".hand")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect((container.querySelector("#hand-who") as HTMLInputElement).value).toBe("@sam");
+    expect(stepHeading(container).textContent).toMatch(/^Étape 2 sur \d+/);
+    expect((container.querySelector("#hand-result-not-sure") as HTMLInputElement).checked).toBe(true);
+    expect((container.querySelector("#hand-note") as HTMLTextAreaElement).value).toBe("Half written");
+    expect(container.querySelector('.hand [data-action="hand-list"]')?.textContent).toMatch(/^Afficher toutes les étapes \(1 sur \d+ regardée\)$/);
+    await press(container, "hand-export");
+    expect((container.querySelector("#hand-summary") as HTMLTextAreaElement).value).toContain("J’ai vu un problème. The menu cannot be opened.");
+  });
+
+  it("erases every answer when asked, and keeps the name", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    (container.querySelector("#hand-who") as HTMLInputElement).value = "@sam";
+    choose(container, "no-problem-found");
+    await press(container, "hand-save-next");
+    await press(container, "hand-reset");
+    expect(stepHeading(container).textContent).toMatch(/^Step 1 of /);
+    expect(container.querySelector('.hand [data-action="hand-list"]')?.textContent).toMatch(/^Show all steps \(0 of /);
+    expect((container.querySelector("#hand-who") as HTMLInputElement).value).toBe("@sam");
+    expect(container.querySelector(".hand [role=status]")?.textContent).toBe("All answers were erased.");
+  });
+
+  it("leaves the other two panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const fitBefore = container.querySelector(".fit")?.innerHTML;
+    const auditBefore = container.querySelector('[data-action="run"]')?.parentElement?.innerHTML;
+    choose(container, "no-problem-found");
+    await press(container, "hand-save-next");
+    expect(container.querySelector(".fit")?.innerHTML).toBe(fitBefore);
+    expect(container.querySelector('[data-action="run"]')?.parentElement?.innerHTML).toBe(auditBefore);
+    unmount();
+    expect(document.querySelector(".hand")).toBeNull();
+  });
+});
+
+/** "Button size for my taps" sits between the fit panel and "Look by hand", with a real DOM under it. */
+describe("NarrowAuditPage: button size for my taps", () => {
+  const TOTAL = 16;
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const area = (container: HTMLElement) => container.querySelector(".tap-area") as HTMLElement;
+
+  it("is on the page once, under an h2, between the fit panel and Look by hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".tap")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#tap-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Button size for my taps");
+    expect((container.querySelector("#fit-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#hand-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("starts the test with a target named by its visible text, inside a named area, with focus on it", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    const target = container.querySelector("#tap-target") as HTMLButtonElement;
+    expect(document.activeElement).toBe(target);
+    expect(target.textContent).toBe("Tap here");
+    expect(target.getAttribute("aria-label")).toBe(`Tap here, target 1 of ${TOTAL}`);
+    expect(area(container).getAttribute("role")).toBe("group");
+    expect(area(container).getAttribute("aria-label")).toBe("Area of the test");
+    expect(area(container).contains(target)).toBe(true);
+    expect(container.querySelector("#tap-run-h")?.textContent).toBe(`Target 1 of ${TOTAL}, 96 CSS pixels`);
+  });
+
+  it("counts a tap on the target as landed and a tap on the area as missed", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    await press(container, "#tap-target");
+    expect(container.querySelector("#tap-run-h")?.textContent).toMatch(/^Target 2 of /);
+    await act(async () => {
+      area(container).click();
+    });
+    expect(container.querySelector("#tap-run-h")?.textContent).toMatch(/^Target 3 of /);
+    await press(container, '.tap [data-action="tap-stop"]');
+    const rows = [...container.querySelectorAll(".tap tbody tr")].map((tr) => [...tr.children].map((c) => c.textContent));
+    expect(rows[0]).toEqual(["96 CSS pixels", "2 of 4", "1"]);
+    expect(rows[3]).toEqual(["44 CSS pixels", "0 of 4", "UNKNOWN"]);
+    expect(document.activeElement).toBe(container.querySelector("#tap-result-h"));
+    expect(container.querySelector(".tap [role=status]")?.textContent).toBe("The test was stopped.");
+  });
+
+  it("gives a size, the zoom for the App and the controls of this page that are smaller", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    for (let i = 0; i < TOTAL; i += 1) {
+      if (i === 9) {
+        await act(async () => {
+          area(container).click();
+        });
+      } else await press(container, "#tap-target");
+    }
+    const tap = container.querySelector(".tap") as HTMLElement;
+    expect(tap.textContent).toContain("On this screen, today, every tap landed from 72 CSS pixels up.");
+    expect(tap.textContent).toContain("A browser zoom of 175% brings them to 77 CSS pixels or more.");
+    expect(container.querySelector("#tap-page-h")?.textContent).toBe("Controls of this page");
+    expect(container.querySelector("#tap-target")).toBeNull();
+  });
+
+  it("follows the language of the audit panel and keeps a finished result", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    await press(container, '.tap [data-action="tap-stop"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".tap")).toHaveLength(1);
+    expect(container.querySelector("#tap-h")?.textContent).toBe("Taille de bouton pour mes appuis");
+    expect(container.querySelector(".tap")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector(".tap")?.textContent).toContain("Taille UNKNOWN.");
+    expect(container.querySelector('.tap [data-action="tap-again"]')?.textContent).toBe("Refaire le test");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const handBefore = container.querySelector(".hand")?.innerHTML;
+    await press(container, '.tap [data-action="tap-start"]');
+    await press(container, "#tap-target");
+    expect(container.querySelector(".hand")?.innerHTML).toBe(handBefore);
+    unmount();
+    expect(document.querySelector(".tap")).toBeNull();
+  });
+});
+
+/** The tap size goes into the barrier text of the fit panel once the test is over. */
+describe("NarrowAuditPage: the tap size in the barrier text", () => {
+  const prepare = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The close button is too small to press.";
+    await act(async () => {
+      (container.querySelector('[data-action="fit-make"]') as HTMLElement).click();
+    });
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+
+  it("has no tap line before the test, and one after it, in the language of the page", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(await prepare(container)).not.toContain("Button size");
+    await act(async () => {
+      (container.querySelector('.tap [data-action="tap-start"]') as HTMLElement).click();
+    });
+    for (let i = 0; i < 16; i += 1) {
+      await act(async () => {
+        (container.querySelector("#tap-target") as HTMLElement).click();
+      });
+    }
+    expect(await prepare(container)).toContain("Button size at which my taps land: 44 CSS pixels");
+  });
+
+  it("keeps the tap line after a language switch", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await act(async () => {
+      (container.querySelector('.tap [data-action="tap-start"]') as HTMLElement).click();
+    });
+    await act(async () => {
+      (container.querySelector('.tap [data-action="tap-stop"]') as HTMLElement).click();
+    });
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(await prepare(container)).toContain("Taille de bouton où mes appuis atteignent leur cible\u00A0: UNKNOWN");
+  });
+});
+
+/** "Reaching controls by keyboard or switch" comes last, with a real DOM under it. jsdom lays nothing out, so each element is given a box. */
+describe("NarrowAuditPage: reaching controls by keyboard or switch", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    Element.prototype.getBoundingClientRect = function box(): DOMRect {
+      return { x: 0, y: 0, top: 0, left: 0, right: 50, bottom: 20, width: 50, height: 20, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, after Look by hand, and the page keeps one h1", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".reach")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#reach-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Reaching controls by keyboard or switch");
+    expect((container.querySelector("#hand-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("counts the stops of the other panels, leaves its own out, and puts focus on the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    const outside = [...container.querySelectorAll("a[href],button,input,select,textarea,summary")].filter(
+      (e) => !e.closest(".reach") && !(e as HTMLButtonElement).disabled && (e as HTMLElement).tabIndex >= 0 && !(e instanceof HTMLInputElement && e.type === "hidden"),
+    );
+    await press(container, '.reach [data-action="reach-count"]');
+    expect(document.activeElement).toBe(container.querySelector("#reach-result-h"));
+    const summary = container.querySelector("#reach-result-h + p")?.textContent ?? "";
+    const n = Number(/has (\d+) keyboard/.exec(summary)?.[1]);
+    expect(n).toBeGreaterThan(10);
+    // Radio groups are one stop, so there are no more stops than tabbable elements outside the panel.
+    expect(n).toBeLessThanOrEqual(outside.length);
+    expect(container.querySelector(".reach [role=status]")?.textContent).toBe("The stops were counted.");
+    expect(container.querySelector(".reach")?.textContent).not.toContain("Count the stops on this page");
+  });
+
+  it("has a label for each field, takes an interval with a comma in French, and gives times", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("fr"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    for (const id of ["reach-interval", "reach-find"]) expect(container.querySelectorAll(`label[for="${id}"]`)).toHaveLength(1);
+    (container.querySelector("#reach-interval") as HTMLInputElement).value = "1,5";
+    await press(container, '.reach [data-action="reach-apply"]');
+    expect(document.activeElement).toBe(container.querySelector('.reach [data-action="reach-apply"]'));
+    expect(container.querySelector("#reach-result-h + p")?.textContent).toMatch(/balayage d’un pas toutes les 1,5\u00A0s\.$/);
+    expect(container.querySelector(".reach tbody td:last-child")?.textContent).toBe("1,5\u00A0s");
+  });
+
+  it("marks a wrong interval by the field and puts focus on it", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    (container.querySelector("#reach-interval") as HTMLInputElement).value = "soon";
+    await press(container, '.reach [data-action="reach-apply"]');
+    const field = container.querySelector("#reach-interval") as HTMLInputElement;
+    expect(document.activeElement).toBe(field);
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+    for (const id of (field.getAttribute("aria-describedby") ?? "").split(" ")) expect(container.querySelector(`#${id}`), id).not.toBeNull();
+    expect(container.querySelector("#reach-interval-error")?.textContent).toBe("Write a number of seconds from 0.2 to 10, such as 1.5.");
+  });
+
+  it("finds a control of another panel by part of its name", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    (container.querySelector("#reach-find") as HTMLInputElement).value = "start the test";
+    await press(container, '.reach [data-action="reach-apply"]');
+    const rows = [...container.querySelectorAll(".reach table:last-of-type tbody tr")];
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.querySelector("th")?.textContent).toBe(container.querySelector('.tap [data-action="tap-start"]')?.textContent);
+  });
+
+  it("follows the language of the audit panel and keeps the counts", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.reach [data-action="reach-count"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".reach")).toHaveLength(1);
+    expect(container.querySelector("#reach-h")?.textContent).toBe("Atteindre les commandes au clavier ou au contacteur");
+    expect(container.querySelector(".reach")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#reach-result-h")?.textContent).toBe("Ce qui a été compté");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const tapBefore = container.querySelector(".tap")?.innerHTML;
+    const handBefore = container.querySelector(".hand")?.innerHTML;
+    await press(container, '.reach [data-action="reach-count"]');
+    expect(container.querySelector(".tap")?.innerHTML).toBe(tapBefore);
+    expect(container.querySelector(".hand")?.innerHTML).toBe(handBefore);
+    unmount();
+    expect(document.querySelector(".reach")).toBeNull();
+  });
+});
+
+/** "Screen zones I can reach" sits between the tap test and "Look by hand". jsdom lays nothing out, so every element is given a box at the top left. */
+describe("NarrowAuditPage: screen zones I can reach", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    Element.prototype.getBoundingClientRect = function box(): DOMRect {
+      return { x: 0, y: 0, top: 0, left: 0, right: 50, bottom: 20, width: 50, height: 20, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const zone = (container: HTMLElement, i: number) => container.querySelector(`.zones [data-action="zone-${i}"]`) as HTMLButtonElement;
+
+  it("is on the page once, under an h2, between the tap test and Look by hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".zones")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#zones-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Screen zones I can reach");
+    expect((container.querySelector("#tap-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#hand-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("has 12 zone buttons in a named list, each a toggle that keeps focus when pressed", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    const list = container.querySelector(".zones-grid") as HTMLElement;
+    expect(container.querySelector(`#${list.getAttribute("aria-labelledby") ?? ""}`)?.textContent).toBe("Zones of the window, from the top");
+    expect(list.querySelectorAll("button[aria-pressed]")).toHaveLength(12);
+    await press(container, '.zones [data-action="zone-9"]');
+    expect(zone(container, 9).getAttribute("aria-pressed")).toBe("true");
+    expect(document.activeElement).toBe(zone(container, 9));
+    await act(async () => {
+      (zone(container, 9).querySelector("span") as HTMLElement).click();
+    });
+    expect(zone(container, 9).getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("does not read the page with no zone: the message is by the grid and focus is on the first zone", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.zones [data-action="zones-check"]');
+    expect(document.activeElement).toBe(zone(container, 0));
+    const ids = (container.querySelector(".zones-grid")?.getAttribute("aria-describedby") ?? "").split(" ");
+    expect(ids.map((id) => container.querySelector(`#${id}`)?.textContent)).toEqual([
+      "Each button is one zone, in the same place as on the window. Press it to mark it, and again to unmark it.",
+      "Mark at least one zone you can reach first.",
+    ]);
+    expect(container.querySelector("#zones-result-h")).toBeNull();
+  });
+
+  it("reads the controls of the other panels and lists those out of reach, then none once their zone is marked", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.zones [data-action="zone-11"]');
+    await press(container, '.zones [data-action="zones-check"]');
+    expect(document.activeElement).toBe(container.querySelector("#zones-result-h"));
+    const listed = [...container.querySelectorAll(".zones section li strong")].map((e) => e.textContent);
+    // Every box is at the top left, so with only the bottom right marked nothing can be reached: 20 are listed and the rest counted.
+    expect(listed[0]).toBe("Run audit");
+    expect(listed).toHaveLength(20);
+    expect(container.querySelector(".zones section")?.textContent).toMatch(/Of (\d+) controls, 0 can be brought into a zone you marked, by scrolling if needed, and \1 cannot\./);
+    expect(container.querySelector(".zones section")?.textContent).toMatch(/… and \d+ more, in the copied text\./);
+    expect(listed.some((name) => /zone/i.test(name ?? ""))).toBe(false);
+    await press(container, '.zones [data-action="zone-0"]');
+    expect(container.querySelector(".zones section")?.textContent).toMatch(/All \d+ controls of this page can be brought into a zone you marked/);
+  });
+
+  it("puts the marked zones into the barrier text of the fit panel", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.zones [data-action="zone-9"]');
+    await press(container, '.zones [data-action="zone-10"]');
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The menu button is at the top right.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    expect((container.querySelector("#fit-text") as HTMLTextAreaElement).value).toContain("Screen zones I can reach: Bottom, left; Bottom, centre (2 of 12).");
+  });
+
+  it("follows the language of the audit panel and keeps the zones and the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.zones [data-action="zone-0"]');
+    await press(container, '.zones [data-action="zones-check"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".zones")).toHaveLength(1);
+    expect(container.querySelector("#zones-h")?.textContent).toBe("Zones de l’écran que j’atteins");
+    expect(container.querySelector(".zones")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(zone(container, 0).getAttribute("aria-pressed")).toBe("true");
+    expect(zone(container, 0).textContent).toBe("✓ Haut, gauche");
+    expect(container.querySelector("#zones-result-h")?.textContent).toBe("Ce qui a été trouvé");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const handBefore = container.querySelector(".hand")?.innerHTML;
+    const tapBefore = container.querySelector(".tap")?.innerHTML;
+    await press(container, '.zones [data-action="zones-all"]');
+    await press(container, '.zones [data-action="zones-check"]');
+    expect(container.querySelector(".hand")?.innerHTML).toBe(handBefore);
+    expect(container.querySelector(".tap")?.innerHTML).toBe(tapBefore);
+    unmount();
+    expect(document.querySelector(".zones")).toBeNull();
+  });
+});
