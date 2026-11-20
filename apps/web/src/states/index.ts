@@ -188,3 +188,8 @@ export * from "./noteTopicFilter.ts";
 export * from "./noteTopicCopy.ts";
 export * from "./noteTopicExport.ts";
 export * from "./NoteTopics.tsx";
+export * from "./tagNoteRules.ts";
+export * from "./tagNoteIndex.ts";
+export * from "./tagNoteCopy.ts";
+export * from "./tagNoteExport.ts";
+export { TagNoteReads } from "./TagNoteReads.tsx";

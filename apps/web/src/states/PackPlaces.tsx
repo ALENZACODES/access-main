@@ -17,6 +17,7 @@ import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, pack
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
+import { TagNoteReads } from "./TagNoteReads.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PlaceSheet } from "./PlaceSheet.tsx";
@@ -206,6 +207,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
+      <TagNoteReads places={view.shownPlaces} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
