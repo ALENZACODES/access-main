@@ -137,17 +137,15 @@ describe("shortlist in French and with the shipped pack", () => {
     expect(screen.getByText("Alpha Hall ajouté à la liste.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Retirer de la liste Alpha Hall" }).getAttribute("aria-pressed")).toBe("true");
   });
-  it("has no axe violations with places on the list, in both languages", async () => {
-    for (const locale of ["en", "fr"] as const) {
+  for (const locale of ["en", "fr"] as const) {
+    it(`has no axe violations with places on the list, in ${locale === "en" ? "English" : "French"}`, async () => {
       const { container } = show(realPlaces, locale);
       const buttons = screen.getAllByRole("button", { name: locale === "en" ? /^Add to list / : /^Ajouter à la liste / });
       fireEvent.click(buttons[0]!);
       fireEvent.click(buttons[1]!);
       expect((await axe.run(container, axeRules)).violations, locale).toEqual([]);
-      cleanup();
-      localStorage.clear();
-    }
-  });
+    });
+  }
   it("lets the person list the first two places of the shipped pack and see both in the table", () => {
     show(realPlaces);
     const buttons = screen.getAllByRole("button", { name: /^Add to list / });
