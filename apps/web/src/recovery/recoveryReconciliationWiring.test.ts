@@ -90,7 +90,14 @@ describe("reconciliation live mounts and public APIs", () => {
   it("provides proper semantic headings", () => {
     expect(ui).toContain("aria-labelledby={heading}");
     expect(ui).toContain("aria-labelledby={casesHeading}");
-    expect(ui).toContain("aria-labelledby={findingsHeading}");
+    expect(ui).toContain("aria-labelledby={`${heading} ${findingsHeading}`}");
+  });
+  it("gives the two review landmarks distinct, feature-scoped accessible names", () => {
+    const drill = read("./RecoveryDrillPanel.tsx");
+    expect(drill).toContain("aria-labelledby={`${heading} ${listHeading}`}");
+    expect(ui).toContain("aria-labelledby={`${heading} ${findingsHeading}`}");
+    expect(drill).not.toContain("<section aria-labelledby={listHeading}>");
+    expect(ui).not.toContain("<section aria-labelledby={findingsHeading}");
   });
   it("uses native controls for keyboard access", () => {
     expect(ui).toContain("<button");
