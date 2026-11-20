@@ -303,6 +303,17 @@ export function mountOfflineDashboard(
     // The core offline dashboard remains usable if this optional panel fails.
   });
 
+  const preparationHost = element("div");
+  section.append(preparationHost);
+  let disposedPreparation = false;
+  let unmountPreparation: () => void = () => undefined;
+  void import("./accessPreparationPanel").then(({ mountAccessPreparation }) => {
+    if (disposedPreparation) return;
+    unmountPreparation = mountAccessPreparation(preparationHost, manifest, model, language);
+  }).catch(() => {
+    // Existing offline controls remain usable when the optional module cannot load.
+  });
+
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
     details.hidden = !state.expanded || state.inventory === null;
@@ -429,6 +440,8 @@ export function mountOfflineDashboard(
     unmountTimeline();
     disposedWorkbook = true;
     unmountWorkbook();
+    disposedPreparation = true;
+    unmountPreparation();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
