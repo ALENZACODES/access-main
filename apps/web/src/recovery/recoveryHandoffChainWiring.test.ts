@@ -77,7 +77,7 @@ describe("local handoff chain live integration", () => {
       for (const needle of forbiddenOrgNeedles()) {
         expect(item.toLowerCase()).not.toContain(needle.toLowerCase());
       }
-      expect(item).not.toMatch(/\\bverified\\b|\\bguarantee\\b|\\bpartnership\\b/i);
+      expect(item).not.toMatch(/\bverified\b|\bguarantee\b|\bpartnership\b/i);
     }
   });
   it("never invents pack readiness", () => { expect(analysis).toContain("contentReady: false"); expect(plan).toContain("contentReady: false"); });
