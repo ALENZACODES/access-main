@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { narrowRoute } from "./narrow-route.ts";
 
 /**
  * "Screen zones I can reach" on the built app, at 320 by 640 CSS pixels.
@@ -11,7 +12,7 @@ type Page = import("@playwright/test").Page;
 const open = async (page: Page, language: "en" | "fr" = "en") => {
   await page.goto("/");
   await page.getByRole("button", { name: language === "fr" ? "Français" : "English" }).click();
-  await page.goto("/dev/narrow");
+  await page.goto(narrowRoute());
   await expect(page.locator("#zones-h")).toBeVisible();
 };
 

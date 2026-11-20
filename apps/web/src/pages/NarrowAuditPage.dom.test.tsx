@@ -821,3 +821,113 @@ describe("NarrowAuditPage: screen zones I can reach", () => {
     expect(document.querySelector(".zones")).toBeNull();
   });
 });
+
+/** "How I press" sits between the zones and "Look by hand", with a real DOM and real key events under it. */
+describe("NarrowAuditPage: how I press", () => {
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  /** One press of the pad by key: keydown then keyup, both bubbling to the panel. */
+  const keyPress = async (container: HTMLElement, key = "Enter") => {
+    await act(async () => {
+      const pad = container.querySelector("#press-pad") as HTMLElement;
+      pad.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+      pad.dispatchEvent(new KeyboardEvent("keyup", { key, bubbles: true, cancelable: true }));
+    });
+  };
+
+  it("is on the page once, under an h2, between the zones and Look by hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".press")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#press-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("How I press");
+    expect((container.querySelector("#zones-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#hand-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("starts with focus on the pad, a button described by the instructions", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.press [data-action="press-start"]');
+    const pad = container.querySelector("#press-pad") as HTMLButtonElement;
+    expect(document.activeElement).toBe(pad);
+    expect(pad.textContent).toBe("Press here");
+    expect(container.querySelector(`#${pad.getAttribute("aria-describedby") ?? ""}`)?.textContent).toMatch(/^Press the large button and let go/);
+  });
+
+  it("counts key presses on the pad, keeps focus on it, and ends with the result in focus", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.press [data-action="press-start"]');
+    for (let i = 0; i < 7; i += 1) await keyPress(container, i % 2 === 0 ? "Enter" : " ");
+    expect(container.querySelector("#press-run-h")?.textContent).toBe("Press 8 of 8");
+    expect(document.activeElement).toBe(container.querySelector("#press-pad"));
+    expect(container.querySelector(".press [role=status]")?.textContent).toBe("7 of 8.");
+    await keyPress(container);
+    expect(document.activeElement).toBe(container.querySelector("#press-result-h"));
+    expect(container.querySelector(".press tbody")?.querySelectorAll("tr")).toHaveLength(8);
+    expect(container.querySelector(".press")?.textContent).toContain("8 of 8 presses measured.");
+  });
+
+  it("ignores other keys and presses outside the pad", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.press [data-action="press-start"]');
+    await keyPress(container, "a");
+    await act(async () => {
+      const h = container.querySelector("#press-run-h") as HTMLElement;
+      h.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      h.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", bubbles: true }));
+    });
+    expect(container.querySelector("#press-run-h")?.textContent).toBe("Press 1 of 8");
+  });
+
+  it("puts the press line into the barrier text of the fit panel once the test is over", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.press [data-action="press-start"]');
+    await keyPress(container);
+    await keyPress(container);
+    await press(container, '.press [data-action="press-stop"]');
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "Pressing the menu opens a different menu.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    expect((container.querySelector("#fit-text") as HTMLTextAreaElement).value).toMatch(/My presses \(key\): held from \d+ ms to \d+ ms; at least \d+ ms between presses\./);
+  });
+
+  it("follows the language of the audit panel and keeps a finished result", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.press [data-action="press-start"]');
+    await keyPress(container);
+    await press(container, '.press [data-action="press-stop"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".press")).toHaveLength(1);
+    expect(container.querySelector("#press-h")?.textContent).toBe("Ma façon d’appuyer");
+    expect(container.querySelector(".press")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#press-result-h")?.textContent).toBe("Vos temps d’appui");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const tapBefore = container.querySelector(".tap")?.innerHTML;
+    const zonesBefore = container.querySelector(".zones")?.innerHTML;
+    await press(container, '.press [data-action="press-start"]');
+    await keyPress(container);
+    expect(container.querySelector(".tap")?.innerHTML).toBe(tapBefore);
+    expect(container.querySelector(".zones")?.innerHTML).toBe(zonesBefore);
+    unmount();
+    expect(document.querySelector(".press")).toBeNull();
+  });
+});

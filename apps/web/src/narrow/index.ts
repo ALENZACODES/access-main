@@ -89,6 +89,9 @@ export * from './fit-panel.ts';
 export * from './colorspace.ts';
 export * from './contrast-fix.ts';
 export * from './palette.ts';
+// palette.ts and plain-summary.ts both name a type Theme. The barrel keeps the plain-summary one, as before; the palette one is TokenTheme here.
+export type { Theme } from './plain-summary.ts';
+export type { Theme as TokenTheme } from './palette.ts';
 export * from './pair-tool.ts';
 export * from './overflow-inpage.ts';
 export * from './overflow.ts';
@@ -102,3 +105,5 @@ export * from './reach-panel.ts';
 export * from './zones-inpage.ts';
 export * from './zones.ts';
 export * from './zones-panel.ts';
+export * from './press-timing.ts';
+export * from './press-panel.ts';

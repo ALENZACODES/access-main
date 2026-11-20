@@ -245,7 +245,7 @@ describe('regions', () => {
   it('adds a note about the keyboard only when nothing in the region takes focus', () => {
     expect(regionSentence(regionOf({ table: true, keyboard: false }), 'en')).toContain('Nothing in the region takes keyboard focus, so also check that it can be scrolled with the keyboard.');
     expect(regionSentence(regionOf({ table: true, keyboard: true }), 'en')).not.toContain('keyboard');
-    expect(regionSentence(regionOf({ keyboard: false }), 'fr')).toContain('vérifiez aussi qu’elle peut défiler au clavier');
+    expect(regionSentence(regionOf({ keyboard: false }), 'fr')).toContain('essayez aussi de la faire défiler au clavier');
   });
 
   it('says that running text in a region takes scrolling in two directions', () => {

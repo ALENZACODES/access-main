@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { narrowRoute } from "./narrow-route.ts";
 
 /**
  * "Reaching controls by keyboard or switch" on the built app, at 320 CSS
@@ -13,7 +14,7 @@ type Page = import("@playwright/test").Page;
 const open = async (page: Page, language: "en" | "fr" = "en") => {
   await page.goto("/");
   await page.getByRole("button", { name: language === "fr" ? "Français" : "English" }).click();
-  await page.goto("/dev/narrow");
+  await page.goto(narrowRoute());
   await expect(page.locator("#reach-h")).toBeVisible();
 };
 

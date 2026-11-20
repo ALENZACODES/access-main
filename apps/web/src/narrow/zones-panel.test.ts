@@ -224,7 +224,7 @@ describe('the wording of the panel', () => {
   it('makes none of the claims the App does not make, and gives no advice about the person', () => {
     for (const lang of LANGS) {
       const t = allText(lang).toLowerCase();
-      for (const word of ['verified', 'vérifié', 'real-time', 'temps réel', 'partnership', 'partenariat', 'guarantee', 'garanti', 'eligib', 'admissib', 'diagnos', 'therap', 'thérap', 'compliant', 'conforme']) {
+      for (const word of ['verified', 'vérifié', 'real-time', 'temps réel', 'partnership', 'partenariat', 'guarantee', 'garanti', 'eligib', 'admissib', 'diagnos', 'therap', 'thérap', 'compliant', 'conforme', 'verif', 'vérif']) {
         expect(t, word).not.toContain(word);
       }
     }

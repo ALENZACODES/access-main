@@ -216,8 +216,8 @@ export function reachNotes(model: ReachModel, lang: Lang): ReachNote[] {
     out.push({
       kind: 'skip-not-main',
       text: fr
-        ? 'Le lien d’évitement mène ailleurs que dans le contenu principal. Vérifiez où il doit mener.'
-        : 'The skip link leads somewhere other than the main content. Check where it should lead.',
+        ? 'Le lien d’évitement mène ailleurs que dans le contenu principal. Regardez où il doit mener.'
+        : 'The skip link leads somewhere other than the main content. Look at where it should lead.',
     });
   }
   if (!model.skip && model.stops.length > LONG_TO_MAIN && main && main.index > 0) {
