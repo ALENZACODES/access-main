@@ -85,3 +85,31 @@ describe("local handoff chain live integration", () => {
   it("uses bilingual source metadata", () => { expect(copy).toContain("retrievedOn"); expect(copy).toContain("licence"); });
   it("has a bounded import", () => { expect(CHAIN_LIMITS.bytes).toBeLessThanOrEqual(1_000_000); });
 });
+
+// Regression: preserve the two features already included on the base branch.
+describe("merged recovery packet and witness preservation", () => {
+  it("keeps both lazy-loaded components in the live recovery shell", () => {
+    for (const name of ["RecoveryEvidencePacketPanel", "RecoveryTransferWitnessPanel"]) {
+      expect(shell).toContain(`await import("./${name}")`);
+      expect(shell).toContain(`<${name} locale={locale}`);
+    }
+  });
+  it("keeps their fresh-inspection gates and file callbacks", () => {
+    for (const name of ["RecoveryEvidencePacketPanel", "RecoveryTransferWitnessPanel"]) {
+      const start = shell.indexOf(`<${name} locale={locale}`);
+      expect(start).toBeGreaterThan(-1);
+      const end = shell.indexOf("/>", start);
+      expect(shell.slice(start, end)).toContain("inspected={hasInspected && !checking && !inventoryFailure}");
+      expect(shell.slice(start, end)).toContain("saveFile={saveFile}");
+    }
+  });
+  it("keeps both panel, model, analysis and copy exports", () => {
+    for (const name of ["RecoveryEvidencePacketPanel", "RecoveryTransferWitnessPanel"]) {
+      expect(barrel).toContain(`export { ${name} } from "./${name}"`);
+    }
+    for (const name of ["recoveryEvidencePacket", "recoveryEvidenceAnalysis", "recoveryEvidencePacketCopy", "recoveryTransferWitness", "recoveryTransferWitnessAnalysis", "recoveryTransferWitnessCopy"]) {
+      expect(barrel).toContain(`from "./${name}"`);
+    }
+    expect(barrel).toContain('export { evidenceCopy } from "./recoveryEvidenceCopy"');
+  });
+});
