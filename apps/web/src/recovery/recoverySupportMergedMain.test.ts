@@ -6,10 +6,10 @@ const shell = read("./RecoveryCenter.tsx");
 const barrel = read("./index.ts");
 const panels = [
   "RecoveryEvidencePacketPanel", "RecoveryTransferWitnessPanel", "RecoveryHandoffChainPanel",
-  "RecoveryDrillPanel", "RecoveryReconciliationPanel", "RecoverySupportBriefPanel",
+  "RecoveryDrillPanel", "RecoveryReconciliationPanel", "RecoveryReceiptLedgerPanel", "RecoverySupportBriefPanel",
 ] as const;
 
-describe("support briefs integrated with merged recovery shell", () => {
+describe("support briefs integrated with current merged recovery shell", () => {
   it("keeps all established lazy mounts and adds the support brief", () => {
     for (const name of panels) {
       expect(shell).toContain(`await import("./${name}")`);
@@ -31,5 +31,13 @@ describe("support briefs integrated with merged recovery shell", () => {
   it("keeps original manual download and local export", () => {
     expect(shell).toContain("session.start(download)");
     expect(shell).toContain("saveRecoveryExport(records, createdAt, saveFile)");
+  });
+  it("preserves the merged receipt ledger on main d60c07a4", () => {
+    expect(shell).toContain('await import("./RecoveryReceiptLedgerPanel")');
+    expect(shell).toContain('<RecoveryReceiptLedgerPanel locale={locale}');
+    expect(barrel).toContain('export { RecoveryReceiptLedgerPanel } from "./RecoveryReceiptLedgerPanel"');
+    expect(barrel).toContain('from "./recoveryReceiptLedger"');
+    expect(barrel).toContain('from "./recoveryReceiptAnalysis"');
+    expect(barrel).toContain('from "./recoveryReceiptCopy"');
   });
 });
