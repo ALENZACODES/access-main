@@ -36,6 +36,10 @@ const RecoveryHandoffChainPanel = lazy(async () => ({
   default: (await import("./RecoveryHandoffChainPanel")).RecoveryHandoffChainPanel,
 }));
 
+const RecoveryGuidedReviewPanel = lazy(async () => ({
+  default: (await import("./RecoveryGuidedReviewPanel")).RecoveryGuidedReviewPanel,
+}));
+
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
   readonly locale: RecoveryLocale;
@@ -188,6 +192,11 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de la chaîne…" : "Loading handoff chain…"}</p>}>
         <RecoveryHandoffChainPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen guidé…" : "Loading guided review…"}</p>}>
+        <RecoveryGuidedReviewPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure}
+          onInspect={() => { void refresh(); }} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
