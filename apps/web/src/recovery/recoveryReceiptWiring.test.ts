@@ -73,10 +73,10 @@ describe("live recovery receipt integration", () => {
   it("preserves UNKNOWN in both languages", () => { expect(recoveryReceiptCopy("en").unknown).toBe("UNKNOWN"); expect(recoveryReceiptCopy("fr").unknown).toBe("UNKNOWN"); });
   it("uses bilingual source metadata", () => { expect(copy).toContain("retrievedOn"); expect(copy).toContain("licence"); });
   it("keeps nested receipt forms within narrow viewport widths", () => {
-    expect(ui).toContain('gridTemplateColumns: "minmax(0, 1fr)"');
-    expect(ui).toContain('maxWidth: "100%"');
-    expect(ui).toContain('boxSizing: "border-box"');
-    expect(ui).toContain('style={{ ...control, width: "100%" }}');
+    expect(panel).toContain('gridTemplateColumns: "minmax(0, 1fr)"');
+    expect(panel).toContain('maxWidth: "100%"');
+    expect(panel).toContain('boxSizing: "border-box"');
+    expect(panel).toContain('style={{ ...control, width: "100%" }}');
   });
   it("preserves bounded imports", () => { expect(RECEIPT_LIMITS.bytes).toBeLessThanOrEqual(512000); });
 });
