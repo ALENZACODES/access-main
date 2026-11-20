@@ -44,6 +44,10 @@ const RecoveryDrillPanel = lazy(async () => ({
   default: (await import("./RecoveryDrillPanel")).RecoveryDrillPanel,
 }));
 
+const RecoverySupportBriefPanel = lazy(async () => ({
+  default: (await import("./RecoverySupportBriefPanel")).RecoverySupportBriefPanel,
+}));
+
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
   readonly locale: RecoveryLocale;
@@ -205,6 +209,11 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’exercice…" : "Loading practice drill…"}</p>}>
         <RecoveryDrillPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du résumé local…" : "Loading local support brief…"}</p>}>
+        <RecoverySupportBriefPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure}
+          onInspect={() => { void refresh(); }} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>

@@ -281,3 +281,15 @@ export * from "./recoveryReconciliation";
 export * from "./recoveryReconciliationAnalysis";
 export { reconciliationCopy } from "./recoveryReconciliationCopy";
 export type { ReconciliationCopy } from "./recoveryReconciliationCopy";
+
+// User-directed offline support briefs; no automated handoffs or pack readiness claims.
+export { RecoverySupportBriefPanel } from "./RecoverySupportBriefPanel";
+export type { RecoverySupportBriefPanelProps } from "./RecoverySupportBriefPanel";
+export * from "./recoverySupportBrief";
+export * from "./recoverySupportAnalysis";
+export { recoverySupportCopy } from "./recoverySupportCopy";
+export type { SupportCopy } from "./recoverySupportCopy";
+export { auditBriefPrivacy, briefExportAllowed, briefPrivacyCodes } from "./recoverySupportPrivacy";
+export type { BriefPrivacyCode, BriefPrivacyFinding, BriefPrivacyReport } from "./recoverySupportPrivacy";
+export { buildBriefReviewPlan, buildBriefPortfolio, briefTopicLabels, briefReviewText } from "./recoverySupportReview";
+export type { BriefTopicReview, BriefReviewPlan, BriefPortfolio } from "./recoverySupportReview";
