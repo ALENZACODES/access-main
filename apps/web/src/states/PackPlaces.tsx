@@ -7,6 +7,7 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { TextMap } from "./TextMap.tsx";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
@@ -162,6 +163,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         <TextInput label={message("pack.lat", locale)} value={lat} onChange={setLat} error={view.nearError ?? undefined} />
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
+      <TextMap places={view.shownPlaces} from={from} locale={locale} />
       <PackBands places={view.beforeBand} shown={view.shownPlaces} from={from} locale={locale} today={day} selected={activeBand} onSelect={setBand} />
       <p role="status">{view.announcement}</p>
       {view.facetSummary ? <p>{view.facetSummary}</p> : null}

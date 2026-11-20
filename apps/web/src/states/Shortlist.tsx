@@ -4,6 +4,7 @@ import type { PackPlaceRecord } from "./packPlaces.ts";
 import type { Point } from "./packGeo.ts";
 import { type ShortlistEntry, MAX_SHORTLIST, resolveShortlist } from "./shortlist.ts";
 import { ChoiceGroup } from "../design/fields.tsx";
+import { DistanceMatrix } from "./DistanceMatrix.tsx";
 import { GapMatrix } from "./GapMatrix.tsx";
 import { ShortlistFiles } from "./ShortlistFiles.tsx";
 import { SHORTLIST_ORDERS, type ShortlistOrder, buildShortlistTable, differencesLine, differingColumns, missingNotice, shortlistToCsv, shortlistToText } from "./shortlistTable.ts";
@@ -144,6 +145,7 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
         </Button>
       </div>
       {resolved.found.length > 0 ? <VisitPlan found={resolved.found.map((f) => f.place)} missing={resolved.missing.length} locale={locale} today={today} /> : null}
+      <DistanceMatrix places={resolved.found.map((f) => f.place)} locale={locale} />
       <GapMatrix places={resolved.found.map((f) => f.place)} locale={locale} today={today} />
       <ShortlistFiles places={resolved.found.map((f) => f.place)} locale={locale} />
       {shown !== null ? <textarea id={textId} readOnly rows={12} value={shown === "csv" ? csv : text} aria-label={shown === "csv" ? t(locale, "The list as CSV", "La liste en CSV") : t(locale, "The list as text", "La liste en texte")} style={{ width: "100%" }} /> : null}
