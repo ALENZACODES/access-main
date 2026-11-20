@@ -358,7 +358,15 @@ test.describe("P16 R32 dialog lifecycle", () => {
       await page.keyboard.press("Tab");
       const inside = await page.evaluate(() => {
         const dialog = document.querySelector("dialog");
-        return dialog?.contains(document.activeElement) || dialog === document.activeElement;
+        const active = document.activeElement;
+        // Native modal tab wrap may park focus on body before the next stop.
+        // An interactive control outside the modal must remain unreachable.
+        return Boolean(dialog?.open) && (
+          dialog?.contains(active) ||
+          dialog === active ||
+          active === document.body ||
+          active === document.documentElement
+        );
       });
       expect(inside).toBe(true);
     }
