@@ -95,6 +95,13 @@ describe("merged recovery packet and witness preservation", () => {
       expect(shell.slice(start, end)).toContain("saveFile={saveFile}");
     }
   });
+  it("preserves the merged handoff chain and its evidence provenance exports", () => {
+    expect(shell).toContain('await import("./RecoveryHandoffChainPanel")');
+    expect(shell).toContain('<RecoveryHandoffChainPanel locale={locale}');
+    for (const name of ["RecoveryHandoffChainPanel", "recoveryHandoffChain", "recoveryHandoffChainAnalysis", "recoveryHandoffChainPlan", "recoveryHandoffChainCopy"]) {
+      expect(barrel).toContain(name);
+    }
+  });
   it("keeps both panel, model, analysis and copy exports", () => {
     for (const name of ["RecoveryEvidencePacketPanel", "RecoveryTransferWitnessPanel"]) {
       expect(barrel).toContain(`export { ${name} } from "./${name}"`);

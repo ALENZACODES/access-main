@@ -99,6 +99,15 @@ describe("reconciliation live mounts and public APIs", () => {
     expect(drill).not.toContain("<section aria-labelledby={listHeading}>");
     expect(ui).not.toContain("<section aria-labelledby={findingsHeading}");
   });
+  it("allows nested forms and file selection to fit narrow viewports", () => {
+    const drill = read("./RecoveryDrillPanel.tsx");
+    expect(ui).toContain('gridTemplateColumns: "minmax(0, 1fr)"');
+    expect(drill).toContain('gridTemplateColumns: "minmax(0, 1fr)"');
+    expect(ui).toContain('minWidth: 0');
+    expect(drill).toContain('minWidth: 0');
+    expect(ui).toContain('style={{ ...control, width: "100%" }}');
+    expect(drill).toContain('style={{ ...input, width: "100%" }}');
+  });
   it("uses native controls for keyboard access", () => {
     expect(ui).toContain("<button");
     expect(ui).toContain("<input");

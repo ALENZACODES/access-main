@@ -19,10 +19,10 @@ export interface RecoveryDrillPanelProps {
   readonly inspected: boolean;
   readonly saveFile?: SaveTextFile;
 }
-const frame: CSSProperties = { display: "grid", gap: 16, border: "1px solid currentColor", borderRadius: 8, padding: 16, marginBlock: 16, overflowWrap: "anywhere" };
+const frame: CSSProperties = { display: "grid", gap: 16, border: "1px solid currentColor", borderRadius: 8, padding: 16, marginBlock: 16, overflowWrap: "anywhere", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", gridTemplateColumns: "minmax(0, 1fr)" };
 const controls: CSSProperties = { display: "flex", flexWrap: "wrap", alignItems: "end", gap: 12 };
-const input: CSSProperties = { minHeight: 44, minWidth: 44, padding: "10px 12px", font: "inherit" };
-const field: CSSProperties = { display: "grid", gap: 6, flex: "1 1 170px", minWidth: 170 };
+const input: CSSProperties = { minHeight: 44, minWidth: 44, maxWidth: "100%", boxSizing: "border-box", padding: "10px 12px", font: "inherit" };
+const field: CSSProperties = { display: "grid", gap: 6, flex: "1 1 170px", minWidth: 0, maxWidth: "100%", gridTemplateColumns: "minmax(0, 1fr)" };
 const item: CSSProperties = { border: "1px solid currentColor", borderRadius: 8, padding: 12, marginBlock: 10 };
 const DISPLAY_LIMIT = 100;
 const niceNumber = (value: number, locale: DrillLocale): string => new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA").format(value);
@@ -252,7 +252,7 @@ export function RecoveryDrillPanel({ locale, records, inspected, saveFile }: Rec
       </section>
       <div style={controls}>
         <label style={field}>{copy.open}
-          <input ref={fileInput} type="file" accept=".json,application/json" style={input} onChange={(event) => { void chooseFile(event); }} />
+          <input ref={fileInput} type="file" accept=".json,application/json" style={{ ...input, width: "100%" }} onChange={(event) => { void chooseFile(event); }} />
         </label>
         {staged && preview && (
           <>

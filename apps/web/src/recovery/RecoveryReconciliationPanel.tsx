@@ -24,10 +24,10 @@ export interface RecoveryReconciliationPanelProps {
   readonly saveFile?: SaveTextFile;
   readonly onInspect?: () => void;
 }
-const frame: CSSProperties = { border: "1px solid currentColor", borderRadius: 8, padding: 16, marginBlock: 16, display: "grid", gap: 14, overflowWrap: "anywhere" };
-const control: CSSProperties = { minWidth: 44, minHeight: 44, padding: "10px 12px", font: "inherit" };
+const frame: CSSProperties = { border: "1px solid currentColor", borderRadius: 8, padding: 16, marginBlock: 16, display: "grid", gap: 14, overflowWrap: "anywhere", minWidth: 0, maxWidth: "100%", boxSizing: "border-box", gridTemplateColumns: "minmax(0, 1fr)" };
+const control: CSSProperties = { minWidth: 44, minHeight: 44, maxWidth: "100%", boxSizing: "border-box", padding: "10px 12px", font: "inherit" };
 const row: CSSProperties = { display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" };
-const field: CSSProperties = { display: "grid", gap: 5, flex: "1 1 180px", minWidth: 170 };
+const field: CSSProperties = { display: "grid", gap: 5, flex: "1 1 180px", minWidth: 0, maxWidth: "100%", gridTemplateColumns: "minmax(0, 1fr)" };
 const item: CSSProperties = { border: "1px solid currentColor", borderRadius: 6, padding: 12, display: "grid", gap: 8 };
 const label: CSSProperties = { fontWeight: 600 };
 const displayLimit = 100;
@@ -268,7 +268,7 @@ export function RecoveryReconciliationPanel({ locale, records, inspected, saveFi
       </section>
       <section aria-labelledby={transferHeading} style={frame}>
         <h3 id={transferHeading}>{copy.importFile}</h3>
-        <input ref={inputRef} style={control} type="file" accept=".json,application/json" aria-label={copy.importFile} onChange={(event) => { void chooseFile(event); }} />
+        <input ref={inputRef} style={{ ...control, width: "100%" }} type="file" accept=".json,application/json" aria-label={copy.importFile} onChange={(event) => { void chooseFile(event); }} />
         {staged && preview && <div style={item}>
           <p>{copy.pendingImport}</p>
           <p>{copy.caseCount}{colon}{preview.newCases} ({preview.conflictingCases} {copy.conflict})</p>
