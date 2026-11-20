@@ -282,6 +282,14 @@ export * from "./recoveryReconciliationAnalysis";
 export { reconciliationCopy } from "./recoveryReconciliationCopy";
 export type { ReconciliationCopy } from "./recoveryReconciliationCopy";
 
+// User-controlled recovery receipt documentation.
+export { RecoveryReceiptLedgerPanel } from "./RecoveryReceiptLedgerPanel";
+export type { RecoveryReceiptLedgerPanelProps } from "./RecoveryReceiptLedgerPanel";
+export * from "./recoveryReceiptLedger";
+export * from "./recoveryReceiptAnalysis";
+export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
+export type { ReceiptCopy } from "./recoveryReceiptCopy";
+
 // User-directed offline support briefs; no automated handoffs or pack readiness claims.
 export { RecoverySupportBriefPanel } from "./RecoverySupportBriefPanel";
 export type { RecoverySupportBriefPanelProps } from "./RecoverySupportBriefPanel";
