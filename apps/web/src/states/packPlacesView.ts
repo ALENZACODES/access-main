@@ -7,6 +7,8 @@
 import type { Locale } from "./stateCopy";
 import { MIN_TOUCH_TARGET_PX } from "./stateCopy";
 import { normalizeText } from "./filters";
+import { filterBySearch } from "./packSearchMatch";
+import { parsePackSearch } from "./packSearchParse";
 import { message, type MessageId } from "./messages";
 import { type PackPlaceRecord, type WheelchairTag, WHEELCHAIR_TAGS, countByTag } from "./packPlaces";
 import { type Point, type PointInput, distanceMetres, formatPackDistance } from "./packGeo";
@@ -129,12 +131,6 @@ export function toCard(p: PackPlaceRecord, ctx: PackContext, from: Point | null)
   };
 }
 
-function matchesText(p: PackPlaceRecord, words: readonly string[]): boolean {
-  if (words.length === 0) return true;
-  const hay = normalizeText([p.name, p.address, p.category].filter(Boolean).join(" "));
-  return words.every((w) => hay.includes(w));
-}
-
 /** Name order, UNKNOWN names last, id as the tie-break so the order never changes between renders. */
 function byName(a: PackPlaceRecord, b: PackPlaceRecord): number {
   if ((a.name === null) !== (b.name === null)) return a.name === null ? 1 : -1;
@@ -144,11 +140,10 @@ function byName(a: PackPlaceRecord, b: PackPlaceRecord): number {
 
 export function packPlacesView(places: readonly PackPlaceRecord[], dropped: number, query: PackQuery, ctx: PackContext): PackView {
   const { locale } = ctx;
-  const words = normalizeText(query.text).split(" ").filter(Boolean);
   const from = query.near.status === "ok" ? query.near.point : null;
 
   const facets = query.facets ?? EMPTY_FACETS;
-  const byText = places.filter((p) => matchesText(p, words));
+  const byText = filterBySearch(places, parsePackSearch(query.text));
   const byTag = byText.filter((p) => query.tag === "any" || p.tag === query.tag);
   const afterFacets = applyFacets(byTag, facets, ctx.today);
   const beforeKind = filterByBand(afterFacets, from, query.band ?? null);
