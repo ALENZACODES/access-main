@@ -261,7 +261,7 @@ export function RecoveryReconciliationPanel({ locale, records, inspected, saveFi
         </li>)}</ul>
         <p>{copy.sortLabel}</p>
       </section>
-      <section aria-labelledby={findingsHeading} style={frame}>
+      <section aria-labelledby={`${heading} ${findingsHeading}`} style={frame}>
         <h3 id={findingsHeading}>{copy.issueHeading}</h3>
         <ul>{findings.map((f) => <li key={`${f.caseId}:${f.code}`}>{f.packId}{colon}{f.detail} ({f.priority})</li>)}</ul>
         <ul>{groups.map((g) => <li key={g.packId}>{g.packId}{colon}{g.cases} / {g.unknown} UNKNOWN</li>)}</ul>
