@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath, URL } from 'node:url';
 import test from 'node:test';
-import { forbiddenOrgNeedles } from '../../../packages/shared/test/forbiddenOrg.ts';
+import { forbiddenOrgNeedles } from '../../packages/shared/test/forbiddenOrg.ts';
 
 const files = [
   'offline-release-incidents.mjs',

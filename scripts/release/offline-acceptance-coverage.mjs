@@ -2,7 +2,7 @@
 import {
   ACCEPTANCE_KINDS, acceptanceSummary, validateAcceptanceLedger,
 } from './offline-acceptance-ledger.mjs';
-import { validateQueue } from '../../../scripts/release/offline-review-queue.mjs';
+import { validateQueue } from './offline-review-queue.mjs';
 
 export const COVERAGE_VERSION = 1;
 export const REQUIRED_GLOBAL = Object.freeze([

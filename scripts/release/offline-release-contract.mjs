@@ -1,3 +1,5 @@
+import { URL } from 'node:url';
+import { Buffer } from 'node:buffer';
 /** Offline release evidence contract. Pure checks; never verifies a physical place. */
 import { createHash } from 'node:crypto';
 import { isOpenLicence, isValidDate } from './site-audit.mjs';

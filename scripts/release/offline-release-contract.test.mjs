@@ -1,3 +1,4 @@
+import { URL } from 'node:url';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
@@ -35,7 +36,7 @@ const release = () => ({ version: CONTRACT_VERSION, releaseId: 'round-29',
   notice: { en: 'No real-world conclusion.', fr: 'Aucune conclusion réelle.' },
   sources: [source()], assets: [asset()], claims: [claim()],
 });
-const copy = (value) => structuredClone(value);
+const copy = (value) => globalThis.structuredClone(value);
 const codes = (issues) => issues.map((entry) => entry.code);
 function check(document) { return inspectRelease(document, { today: TODAY }); }
 function change(path, value) {

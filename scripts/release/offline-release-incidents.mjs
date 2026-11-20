@@ -6,7 +6,7 @@ import { Buffer } from 'node:buffer';
  * A closed incident is not proof that the underlying concern has been fixed.
  */
 import { createHash } from 'node:crypto';
-import { isOpenLicence, isValidDate } from '../../../scripts/release/site-audit.mjs';
+import { isOpenLicence, isValidDate } from './site-audit.mjs';
 
 export const INCIDENT_VERSION = 1;
 export const INCIDENT_STATUSES = Object.freeze(['open', 'triaged', 'blocked', 'resolved', 'closed']);
