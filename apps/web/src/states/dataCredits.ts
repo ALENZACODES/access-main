@@ -142,7 +142,7 @@ function records(n: number, locale: Locale): string {
 export function tierCountsText(g: Pick<CreditGroup, "tiers" | "tierUnknownRecords">, locale: Locale): string {
   const parts = g.tiers.map((x) => t(locale, `Tier ${x.tier}: ${x.records}`, `Niveau ${x.tier} : ${x.records}`));
   if (g.tierUnknownRecords > 0) parts.push(t(locale, `Tier UNKNOWN: ${g.tierUnknownRecords}`, `Niveau UNKNOWN : ${g.tierUnknownRecords}`));
-  return parts.join("; ");
+  return parts.join(locale === "fr" ? "\u202f; " : "; ");
 }
 
 export function dateRangeText(g: Pick<CreditGroup, "earliest" | "latest">, locale: Locale): string {
