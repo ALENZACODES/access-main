@@ -61,7 +61,7 @@ export * from "./recoveryBatchesCopy";
 export * from "./recoveryBatchesExport";
 export * from "./recoveryBatchesPanel";
 
-export * from "./recoveryGuide";
-export * from "./recoveryGuideCopy";
-export * from "./recoveryGuideExport";
-export * from "./recoveryGuidePanel";
+export * from "./continuityDrill";
+export * from "./continuityDrillCopy";
+export * from "./continuityDrillExport";
+export * from "./continuityDrillPanel";
