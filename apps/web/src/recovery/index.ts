@@ -234,3 +234,11 @@ export * from "./recoveryEvidencePacket";
 export * from "./recoveryEvidenceAnalysis";
 export { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
 export type { PacketCopy } from "./recoveryEvidencePacketCopy";
+
+// Manual handoff receipt records; no pack-readiness inference.
+export { RecoveryReceiptLedgerPanel } from "./RecoveryReceiptLedgerPanel";
+export type { RecoveryReceiptLedgerPanelProps } from "./RecoveryReceiptLedgerPanel";
+export * from "./recoveryReceiptLedger";
+export * from "./recoveryReceiptAnalysis";
+export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
+export type { ReceiptCopy } from "./recoveryReceiptCopy";
