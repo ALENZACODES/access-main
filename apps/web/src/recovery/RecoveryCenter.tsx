@@ -22,6 +22,10 @@ import { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
 import { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
 import { planPackRepairs } from "./recoveryPolicy";
 
+const RecoveryReconciliationPanel = lazy(async () => ({
+  default: (await import("./RecoveryReconciliationPanel")).RecoveryReconciliationPanel,
+}));
+
 const RecoveryDrillPanel = lazy(async () => ({
   default: (await import("./RecoveryDrillPanel")).RecoveryDrillPanel,
 }));
@@ -167,6 +171,11 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       <RecoveryDecisionMatrix locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du rapprochement…" : "Loading reconciliation…"}</p>}>
+        <RecoveryReconciliationPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure}
+          onInspect={() => { void refresh(); }} saveFile={saveFile} />
+      </Suspense>
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du registre local…" : "Loading local register…"}</p>}>
       <RecoveryDrillPanel locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
