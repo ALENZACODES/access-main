@@ -151,6 +151,8 @@ export function activityText(
         return `Liste des données téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "kept-export":
         return `Liste de tout ce qui est conservé téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "features-export":
+        return `Liste des fonctions du navigateur téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "consent-granted":
         return `Autorisé${NBSP}: «${NNBSP}${label()}${NNBSP}»`;
       case "consent-declined":
@@ -180,6 +182,8 @@ export function activityText(
       return `Downloaded the data list (${e.format === "csv" ? "CSV" : "text"})`;
     case "kept-export":
       return `Downloaded the list of everything kept (${e.format === "csv" ? "CSV" : "text"})`;
+    case "features-export":
+      return `Downloaded the list of browser features (${e.format === "csv" ? "CSV" : "text"})`;
     case "consent-granted":
       return `Allowed: “${label()}”`;
     case "consent-declined":
