@@ -36,8 +36,20 @@ const RecoveryHandoffChainPanel = lazy(async () => ({
   default: (await import("./RecoveryHandoffChainPanel")).RecoveryHandoffChainPanel,
 }));
 
+const RecoveryReconciliationPanel = lazy(async () => ({
+  default: (await import("./RecoveryReconciliationPanel")).RecoveryReconciliationPanel,
+}));
+
+const RecoveryDrillPanel = lazy(async () => ({
+  default: (await import("./RecoveryDrillPanel")).RecoveryDrillPanel,
+}));
+
 const RecoveryGuidedReviewPanel = lazy(async () => ({
   default: (await import("./RecoveryGuidedReviewPanel")).RecoveryGuidedReviewPanel,
+}));
+
+const RecoveryReceiptLedgerPanel = lazy(async () => ({
+  default: (await import("./RecoveryReceiptLedgerPanel")).RecoveryReceiptLedgerPanel,
 }));
 
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
@@ -193,10 +205,23 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         <RecoveryHandoffChainPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du rapprochement…" : "Loading reconciliation…"}</p>}>
+        <RecoveryReconciliationPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure}
+          onInspect={() => { void refresh(); }} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’exercice…" : "Loading practice drill…"}</p>}>
+        <RecoveryDrillPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen guidé…" : "Loading guided review…"}</p>}>
         <RecoveryGuidedReviewPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure}
           onInspect={() => { void refresh(); }} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement des reçus…" : "Loading handoff receipts…"}</p>}>
+        <RecoveryReceiptLedgerPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
