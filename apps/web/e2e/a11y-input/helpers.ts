@@ -35,7 +35,7 @@ export function appRoutes(): string[] {
   for (const match of router.matchAll(/path:\s*"([^"]+)"/g)) {
     const path = match[1];
     if (!path) continue;
-    if (!path || path === "/" || path === "*" || path.includes(":")) continue;
+    if (path === "/" || path === "*" || path.includes(":")) continue;
     found.add(`/${path.replace(/^\//, "").replace(/\/\*$/, "")}`);
   }
   const features = read("features/routes.tsx");
