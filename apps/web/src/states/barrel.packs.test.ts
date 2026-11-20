@@ -10,6 +10,7 @@ describe("the states barrel exposes the pack tools", () => {
     "PackCategories", "buildKindRows", "kindKey", "kindLabel", "filterByKind", "summariseKinds", "kindsLine", "kindsToCsv", "kindsToText", "KIND_CSV_HEADER",
     "PackCompare", "readEarlierFile", "diffPacks", "changesFor", "diffToCsv", "diffToText", "diffSummaryLine", "parseCsv", "undoFormulaGuard",
     "DataCredits", "buildCredits", "creditRecordsFromPack",
+    "VisitPlan", "buildVisitPlan", "questionsFor", "visitPlanToText", "visitPlanToCsv", "toggleDone", "QUESTION_TOPICS", "filterPlan", "VISIT_FILTERS", "draftMessage", "mailtoHref",
     "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
   ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
