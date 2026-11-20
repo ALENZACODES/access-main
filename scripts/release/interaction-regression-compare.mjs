@@ -25,7 +25,7 @@ export function keyMap(snapshot) {
   return result;
 }
 
-export function severityForKind(kind, before, after) {
+export function severityForKind(kind, before) {
   if (kind === 'regression') return 'block';
   if (kind === 'removed') return before?.outcome === 'PASS' ? 'block' : 'review';
   if (kind === 'unknown-transition' || kind === 'improvement-needs-review') return 'review';
@@ -77,7 +77,7 @@ export function compareChecks(before, after) {
   return changes.length === 0 ? ['unchanged'] : changes;
 }
 
-export function impactForChange(kind, before, after) {
+export function impactForChange(kind) {
   if (kind === 'removed') return 'Re-run and document the missing check';
   if (kind === 'regression') return 'Reproduce the recorded failure with human review';
   if (kind === 'unknown-transition') return 'Capture fresh evidence; do not infer a pass';
