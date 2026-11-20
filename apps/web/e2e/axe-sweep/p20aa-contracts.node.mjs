@@ -9,13 +9,13 @@ import {
 } from "./p20aa-journey-model.ts";
 import {
   eligible, tabbable, targetFindings, targetListFindings, orderedTabStops,
-  expectedTabTarget, arrowDirection, compositeEligible, nextComposite,
+  expectedTabTarget, arrowDirection, nextComposite,
   compositeFindings, compositeStrokeFindings, linearStrokeFindings,
-  dialogFindings, dialogEscapeFindings, pathFindings, keyboardSummary,
+  dialogFindings, dialogEscapeFindings, keyboardSummary,
 } from "./p20aa-keyboard-policy.ts";
 import {
   COPY, copy, observedOrUnknown, documentLanguage,
-  frenchTypographyFindings, forbiddenClaims, localeCopyFindings,
+  frenchTypographyFindings, forbiddenClaims,
   statusCopyFindings, translationPairFindings, copyForOutcome,
   messageMatchesOutcome, makeStatusRecord, copyReport,
 } from "./p20aa-language-contract.ts";
