@@ -21,7 +21,7 @@ function read(file: string): string {
 function tablePaths(source: string): string[] {
   return [...source.matchAll(/path:\s*"([^"]+)"/g)]
     .map((match) => match[1])
-    .filter((path) => !path.includes(":") && !path.includes("*"));
+    .filter((path): path is string => typeof path === "string" && !path.includes(":") && !path.includes("*"));
 }
 
 /**
@@ -34,7 +34,7 @@ export function appRoutes(): string[] {
   const router = read("router.tsx");
   for (const match of router.matchAll(/path:\s*"([^"]+)"/g)) {
     const path = match[1];
-    if (path === "/" || path === "*" || path.includes(":")) continue;
+    if (!path || path === "/" || path === "*" || path.includes(":")) continue;
     found.add(`/${path.replace(/^\//, "").replace(/\/\*$/, "")}`);
   }
   const features = read("features/routes.tsx");
