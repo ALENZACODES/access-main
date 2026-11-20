@@ -5,10 +5,9 @@ import {
   evidenceSignature, classifyGroup, classifyRelationships, analyzeConflicts,
   reviewPlan, groupCoverage,
 } from './offline-conflict-analysis.mjs';
-import { DAY, record, register, sample, opposed, sharedSource, resultCodes, deepCopy } from './offline-conflict-fixtures.mjs';
+import { DAY, record, register, sample, opposed, sharedSource, deepCopy } from './offline-conflict-fixtures.mjs';
 const run = value => analyzeConflicts(value, { today: DAY });
 const kinds = output => output.conflicts.map(item => item.kind);
-const pairs = value => value.conflicts.map(x => `${x.kind}:${x.subject}:${x.attribute}`);
 
 test('bounded conflict vocabulary has no duplicates', () => {
   assert.equal(new Set(CONFLICT_KINDS).size, CONFLICT_KINDS.length);
