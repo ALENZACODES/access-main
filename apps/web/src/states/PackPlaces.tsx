@@ -13,6 +13,7 @@ import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
+import { AroundPlace } from "./AroundPlace.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PlaceSheet } from "./PlaceSheet.tsx";
 import { Shortlist } from "./Shortlist.tsx";
@@ -194,6 +195,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onClear={shortlist.clear}
       />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
+      <AroundPlace places={view.shownPlaces} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
