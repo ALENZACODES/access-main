@@ -19,6 +19,7 @@ import { OutingPlanner } from "./OutingPlanner.tsx";
 import { AroundPlace } from "./AroundPlace.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
+import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PlaceSheet } from "./PlaceSheet.tsx";
 import { Shortlist } from "./Shortlist.tsx";
 import { MAX_SHORTLIST, type AddResult, resolveShortlist } from "./shortlist.ts";
@@ -146,6 +147,9 @@ export function PackPlaces({ places, locale, today }: Props) {
       <h2 id={headingId}>{message("pack.heading", locale)}</h2>
       <p>{message("pack.intro", locale)}</p>
       <TextInput label={message("pack.search", locale)} value={text} onChange={setText} />
+      <PackSearchEcho text={text} locale={locale} />
+      <PackSearchHelp places={parsed.places} locale={locale} onTry={setText} />
+      <PackSearchWhy places={parsed.places} text={text} locale={locale} onUse={setText} />
       <ChoiceGroup
         label={message("pack.tagLabel", locale)}
         value={tag}
