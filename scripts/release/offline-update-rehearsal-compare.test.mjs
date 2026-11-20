@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  CHANGE_KINDS, assetChanges, sessionChanges, compareRehearsals,
+  CHANGE_KINDS, assetChanges, compareRehearsals,
   coverageDelta, reviewChanges, safeSummary, crossReleaseSourceChanges,
   provenanceDictionary,
 } from './offline-update-rehearsal-compare.mjs';

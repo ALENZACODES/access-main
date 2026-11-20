@@ -5,7 +5,7 @@ import {
   REHEARSAL_VERSION, RESULTS, CONDITIONS, LOCALES, PHASES, EVENT_KINDS,
   LIMITS, issue, object, pointer, goodId, goodDay, hasControls, goodText,
   safePath, safeUrl, goodFrench, textPair, keyName, privateIssues,
-  provenanceIssues, assetIssues, eventIssues, sessionIssues,
+  provenanceIssues, assetIssues,
   validateRehearsal, parseRehearsal, canonicalRehearsal, serializeRehearsal,
 } from './offline-update-rehearsal-contract.mjs';
 import { TODAY, asset, event, session, document, provenance, pair, duplicate, suiteIssueCodes } from './offline-update-rehearsal-fixtures.mjs';

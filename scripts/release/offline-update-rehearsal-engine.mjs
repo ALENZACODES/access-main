@@ -4,7 +4,7 @@
  * from filenames, dates or source tiers. Only recorded events establish states.
  */
 import { createHash } from 'node:crypto';
-import { validateRehearsal, RESULTS, PHASES } from './offline-update-rehearsal-contract.mjs';
+import { validateRehearsal, PHASES } from './offline-update-rehearsal-contract.mjs';
 
 export const REVIEW_RULES = Object.freeze([
   'COMPLETE_TRACE', 'SHELL_SURVIVES', 'ASSETS_AVAILABLE', 'UPDATE_ATOMIC',
