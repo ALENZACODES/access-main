@@ -25,6 +25,7 @@ import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
 import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
+import { mountOfflineCasebook } from "./offlineCasebookPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -265,6 +266,10 @@ export function mountOfflineDashboard(
   const unmountContinuity = mountOfflineContinuityDrill(
     continuityHost, manifest, model, language, dependencies.estimateStorage,
   );
+  const casebookHost = element("div");
+  section.append(casebookHost);
+  const unmountCasebook = mountOfflineCasebook(casebookHost, manifest, model, language);
+
   const handoffHost = element("div");
   section.append(handoffHost);
   let disposedHandoff = false;
@@ -273,7 +278,29 @@ export function mountOfflineDashboard(
     if (disposedHandoff) return;
     unmountHandoff = mountOfflineHandoffRehearsal(handoffHost, manifest, model, language);
   }).catch(() => {
-    // All existing offline controls remain available without the optional panel.
+    // Keep the rest of the dashboard operational if optional code is unavailable.
+  });
+
+  const timelineHost = element("div");
+  section.append(timelineHost);
+  let timelineDisposed = false;
+  let unmountTimeline: () => void = () => undefined;
+  void import("./localEvidenceTimelinePanel").then(({ mountLocalEvidenceTimeline }) => {
+    if (timelineDisposed) return;
+    unmountTimeline = mountLocalEvidenceTimeline(timelineHost, manifest, model, language);
+  }).catch(() => {
+    // The timeline is an optional, read-only record of local observations.
+  });
+  const workbookHost = element("div");
+  section.append(workbookHost);
+  let disposedWorkbook = false;
+  let unmountWorkbook: () => void = () => undefined;
+  // Keep the substantial local workbook out of the initial offline page chunk.
+  void import("./reconciliationWorkbookPanel").then(({ mountOfflineReconciliationWorkbook }) => {
+    if (disposedWorkbook) return;
+    unmountWorkbook = mountOfflineReconciliationWorkbook(workbookHost, manifest, model, language);
+  }).catch(() => {
+    // The core offline dashboard remains usable if this optional panel fails.
   });
 
   const renderDetails = (state: DashboardState): void => {
@@ -395,8 +422,13 @@ export function mountOfflineDashboard(
     unmountRecovery();
     unmountSourceAge();
     unmountContinuity();
+    unmountCasebook();
     disposedHandoff = true;
     unmountHandoff();
+    timelineDisposed = true;
+    unmountTimeline();
+    disposedWorkbook = true;
+    unmountWorkbook();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
