@@ -3,7 +3,7 @@ import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { saveTextFile, type SavedFile } from "./downloadFile.ts";
 import { type OutingInput, type OutingMode, OUTING_MODES, buildOuting, isOutingMode, moveStop, orderFor, reverseOrder } from "./outingPlan.ts";
-import { cannotMoveLine, legText, legTimeText, modeHint, modeLabel, movedLine, paceNote, planTitle, startLine, straightLineNote, summaryLine, tagText } from "./outingCopy.ts";
+import { cannotMoveLine, legText, legTimeText, modeHint, modeLabel, movedLine, paceNote, planTitle, startLine, outingStraightLineNote, summaryLine, tagText } from "./outingCopy.ts";
 import { OUTING_CSV_FILENAMES, OUTING_GEOJSON_FILENAMES, OUTING_TEXT_FILENAMES, outingToCsv, outingToGeoJson, outingToText } from "./outingExport.ts";
 import { parsePace, MAX_PACE_KMH, MIN_PACE_KMH } from "./outingPace.ts";
 import type { Point } from "./packGeo.ts";
@@ -88,7 +88,7 @@ export function OutingPlanner({ places, locale, today, start = null, onSave = sa
       <TextInput label={t(locale, "Your usual pace in km/h (optional)", "Votre rythme habituel en km/h (facultatif)")} description={t(locale, "Only used to work out a minimum time. It is not saved.", "Sert seulement à calculer une durée minimale. Il n’est pas enregistré.")} value={paceText} onChange={setPaceText} error={paceError} inputMode="numeric" />
       <p data-outing-summary>{summaryLine(outing, locale, kmh)}</p>
       <p>{startLine(start !== null, locale)}</p>
-      <p>{straightLineNote(locale)}</p>
+      <p>{outingStraightLineNote(locale)}</p>
       {showTime ? <p>{paceNote(locale)}</p> : null}
       {/* A scrolling region has to be reachable by keyboard, or its far columns cannot be read without a mouse. */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}

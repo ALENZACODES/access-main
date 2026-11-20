@@ -7,7 +7,7 @@ import { csvCell, type CsvOptions } from "./exportData";
 import { formatPackDistance } from "./packGeo";
 import { UNKNOWN_TOKEN } from "./packExport";
 import { type Outing, type Stop } from "./outingPlan";
-import { legText, legTimeText, paceNote, startLine, straightLineNote, summaryLine, tagText } from "./outingCopy";
+import { legText, legTimeText, paceNote, startLine, outingStraightLineNote, summaryLine, tagText } from "./outingCopy";
 import type { Locale } from "./stateCopy";
 import { t } from "./typography";
 
@@ -48,7 +48,7 @@ export function outingToCsv(outing: Outing, opts: CsvOptions = {}): string {
 /** The outing as plain text, one numbered block per stop. */
 export function outingToText(outing: Outing, locale: Locale, today: string, kmh: number | null = null): string {
   const title = t(locale, "Outing plan", "Plan de sortie");
-  const out: string[] = [title, "=".repeat(title.length), t(locale, `Date: ${today}`, `Date\u00a0: ${today}`), summaryLine(outing, locale, kmh), startLine(outing.start !== null, locale), straightLineNote(locale)];
+  const out: string[] = [title, "=".repeat(title.length), t(locale, `Date: ${today}`, `Date\u00a0: ${today}`), summaryLine(outing, locale, kmh), startLine(outing.start !== null, locale), outingStraightLineNote(locale)];
   if (kmh !== null) out.push(paceNote(locale));
   out.push("");
   const field = (en: string, fr: string, value: string): string => `   ${t(locale, `${en}: ${value}`, `${fr}\u00a0: ${value}`)}`;

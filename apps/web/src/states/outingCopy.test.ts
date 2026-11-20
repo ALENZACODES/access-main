@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { lintCopy } from "./copyLint";
 import { onLine, START_WEST } from "./outingFixtures";
-import { UNKNOWN, cannotMoveLine, legText, legTimeText, modeHint, modeLabel, movedLine, paceNote, planTitle, startLine, straightLineNote, summaryLine, tagText } from "./outingCopy";
+import { UNKNOWN, cannotMoveLine, legText, legTimeText, modeHint, modeLabel, movedLine, paceNote, planTitle, startLine, outingStraightLineNote, summaryLine, tagText } from "./outingCopy";
 import { OUTING_MODES, buildOuting } from "./outingPlan";
 import { lintFrench } from "./typography";
 
@@ -14,7 +14,7 @@ const single = buildOuting([onLine("a", 1)], ["a"], null);
 
 const everyLine = (locale: "en" | "fr"): string[] => [
   planTitle(locale),
-  straightLineNote(locale),
+  outingStraightLineNote(locale),
   paceNote(locale),
   startLine(true, locale),
   startLine(false, locale),
@@ -55,12 +55,12 @@ describe("the modes", () => {
   });
 });
 
-describe("straightLineNote and paceNote", () => {
+describe("outingStraightLineNote and paceNote", () => {
   it("say a distance is a straight line and a real route is longer", () => {
-    expect(straightLineNote("en")).toMatch(/straight lines between map points/);
-    expect(straightLineNote("en")).toMatch(/a real route is longer/);
-    expect(straightLineNote("fr")).toMatch(/lignes droites entre des points de carte/);
-    expect(straightLineNote("fr")).toMatch(/un vrai itinéraire est plus long/);
+    expect(outingStraightLineNote("en")).toMatch(/straight lines between map points/);
+    expect(outingStraightLineNote("en")).toMatch(/a real route is longer/);
+    expect(outingStraightLineNote("fr")).toMatch(/lignes droites entre des points de carte/);
+    expect(outingStraightLineNote("fr")).toMatch(/un vrai itinéraire est plus long/);
   });
   it("say the time is a minimum and the pace is not saved", () => {
     expect(paceNote("en")).toMatch(/minimum/);
@@ -148,7 +148,7 @@ describe("all the copy", () => {
         expect(line, line).toBe(line.trim());
         expect(line, line).not.toMatch(/ {2}/);
       }
-      for (const note of [straightLineNote(locale), paceNote(locale), summaryLine(whole, locale, null)]) expect(note.endsWith(".")).toBe(true);
+      for (const note of [outingStraightLineNote(locale), paceNote(locale), summaryLine(whole, locale, null)]) expect(note.endsWith(".")).toBe(true);
     }
   });
 });

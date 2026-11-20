@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import { Button } from "../design/Button.tsx";
 import { type SavedFile, saveTextFile } from "./downloadFile.ts";
+import { PackTagMoves } from "./PackTagMoves.tsx";
 import { type PackDiff, diffPacks, isUnchanged } from "./packDiff.ts";
 import { type EarlierFile, MAX_LISTED_SKIPS, readEarlierFile } from "./packEarlier.ts";
 import { DIFF_CSV_FILENAMES, DIFF_TEXT_FILENAMES, diffSummaryLine, diffToCsv, diffToText, fieldCountsLine, fieldLabel, placesWord } from "./packDiffText.ts";
@@ -108,6 +109,7 @@ export function PackCompare({ places, locale, today, readFile = readFileText, on
       {state.kind === "read" && state.file.ok && diff ? (
         <>
           {fieldCountsLine(diff, locale) ? <p>{fieldCountsLine(diff, locale)}</p> : null}
+          <PackTagMoves diff={diff} locale={locale} today={today} onSave={onSave} />
           {state.file.skippedTotal > 0 ? (
             <details>
               <summary>

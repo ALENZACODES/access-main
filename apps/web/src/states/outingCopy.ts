@@ -43,7 +43,7 @@ export function modeHint(mode: OutingMode, locale: Locale): string {
 export const planTitle = (locale: Locale): string => t(locale, "Plan an outing", "Planifier une sortie");
 
 /** What the distances are, and are not. Shown wherever a distance is. */
-export function straightLineNote(locale: Locale): string {
+export function outingStraightLineNote(locale: Locale): string {
   return t(
     locale,
     "Distances are straight lines between map points. They are not walking or rolling routes: they ignore streets, crossings, slopes and closures, and a real route is longer.",
