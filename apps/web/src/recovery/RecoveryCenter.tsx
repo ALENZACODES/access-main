@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useMemo, useState } from "react";
 import type { CSSProperties, ReactElement } from "react";
 import { PackDownloadSession, downloadCopy, type DownloadSnapshot, type SessionOptions } from "./downloadSession";
 import { inspectInstalledPacks, inventoryCopy, type LocalPackRecord, type LocalPackStore } from "./packInventory";
@@ -20,8 +20,11 @@ import { RecoverySessionTracePanel } from "./RecoverySessionTracePanel";
 import { RecoveryCheckpointPanel } from "./RecoveryCheckpointPanel";
 import { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
 import { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
-import { RecoveryEvidencePacketPanel } from "./RecoveryEvidencePacketPanel";
+
 import { planPackRepairs } from "./recoveryPolicy";
+const RecoveryEvidencePacketPanel = lazy(async () => ({
+  default: (await import("./RecoveryEvidencePacketPanel")).RecoveryEvidencePacketPanel,
+}));
 
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
@@ -164,8 +167,10 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       <RecoveryDecisionMatrix locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du dossier…" : "Loading local packet…"}</p>}>
       <RecoveryEvidencePacketPanel locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>
