@@ -6,7 +6,9 @@ import { message } from "./messages.ts";
 import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces } from "./packPlaces.ts";
+import { PackBands } from "./PackBands.tsx";
 import { PackCategories } from "./PackCategories.tsx";
+import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
@@ -70,6 +72,7 @@ export function PackPlaces({ places, locale, today }: Props) {
   const [tag, setTag] = useState<TagFilter>("any");
   const [facets, setFacets] = useState<FacetSelection>(EMPTY_FACETS);
   const [kind, setKind] = useState<string | null>(null);
+  const [band, setBand] = useState<BandKey | null>(null);
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const day = today ?? new Date().toISOString().slice(0, 10);
@@ -78,9 +81,12 @@ export function PackPlaces({ places, locale, today }: Props) {
 
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
+  const from = near.status === "ok" ? near.point : null;
+  // A distance band means nothing without a point, so it is ignored (not forgotten) until a point is typed again.
+  const activeBand = from === null ? null : band;
   const view = useMemo(
-    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets, kind }, { locale, today: day }),
-    [parsed, text, tag, near, facets, kind, locale, day],
+    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets, kind, band: activeBand }, { locale, today: day }),
+    [parsed, text, tag, near, facets, kind, activeBand, locale, day],
   );
 
   // Other names to try when a typed search finds nothing. Only places the current filter allows are offered.
@@ -120,6 +126,7 @@ export function PackPlaces({ places, locale, today }: Props) {
     setTag("any");
     setFacets(EMPTY_FACETS);
     setKind(null);
+    setBand(null);
   };
   const isTag = (value: string): value is TagFilter => (TAG_FILTERS as readonly string[]).includes(value);
 
@@ -152,6 +159,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         <TextInput label={message("pack.lat", locale)} value={lat} onChange={setLat} error={view.nearError ?? undefined} />
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
+      <PackBands places={view.beforeBand} shown={view.shownPlaces} from={from} locale={locale} today={day} selected={activeBand} onSelect={setBand} />
       <p role="status">{view.announcement}</p>
       {view.facetSummary ? <p>{view.facetSummary}</p> : null}
       {view.unknownHiddenNotice ? <p>{view.unknownHiddenNotice}</p> : null}
