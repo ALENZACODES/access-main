@@ -224,3 +224,11 @@ export * from "./recoveryTransferWitness";
 export * from "./recoveryTransferWitnessAnalysis";
 export { recoveryTransferWitnessCopy } from "./recoveryTransferWitnessCopy";
 export type { WitnessCopy } from "./recoveryTransferWitnessCopy";
+
+// Manual recovery evidence packets: never change installed pack readiness.
+export { RecoveryEvidencePacketPanel } from "./RecoveryEvidencePacketPanel";
+export type { RecoveryEvidencePacketPanelProps } from "./RecoveryEvidencePacketPanel";
+export * from "./recoveryEvidencePacket";
+export * from "./recoveryEvidenceAnalysis";
+export { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
+export type { PacketCopy } from "./recoveryEvidencePacketCopy";
