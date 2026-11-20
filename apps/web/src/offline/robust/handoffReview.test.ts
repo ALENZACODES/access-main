@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { RegionInventory, InventoryCause } from "./regionInventory";
 import type { RegionManifest } from "./regionDownload";
 import { captureHandoff, startHandoff, updateHandoff, appendHandoffNote, type HandoffBook } from "./handoffRehearsal";
 import { handoffReviewText, pageHandoffReview, reviewHandoff } from "./handoffReview";
@@ -17,12 +18,14 @@ function withNote(book: HandoffBook, cellId: string, id = "note-1", resolution: 
   return appendHandoffNote(book, { id, cellId, kind: "observation", resolution,
     text: "Manual reading of local copy", at: b });
 }
-function inventory(causes: readonly ("present" | "missing" | "stale" | "unreadable")[]) {
-  const cells = manifest.cells.map((cell, i) => ({
-    id: cell.id, expectedBytes: cell.bytes, provenance: cell.provenance,
-    state: causes[i] === "present" ? "saved" as const : "unknown" as const,
-    cause: causes[i],
-  }));
+function inventory(causes: readonly InventoryCause[]): RegionInventory {
+  if (causes.length !== manifest.cells.length) throw new TypeError("Missing fixture cause");
+  const cells: RegionInventory["cells"][number][] = manifest.cells.map((cell, i) => {
+    const cause = causes[i];
+    if (cause === undefined) throw new TypeError("Missing fixture cause");
+    return { id: cell.id, expectedBytes: cell.bytes, provenance: cell.provenance,
+      state: cause === "present" ? "saved" : "unknown", cause };
+  });
   const savedCount = cells.filter((cell) => cell.state === "saved").length;
   return { regionId: manifest.regionId, cells, savedCount,
     unknownCount: cells.length - savedCount, savedBytes: 0, expectedBytes: 1000, complete: false };
@@ -43,6 +46,7 @@ describe("handoff review queue", () => {
   });
   it("records the source and expected file bytes", () => {
     const item = reviewHandoff(history()).reviewItems[0];
+    if (!item) throw new Error("Missing review item");
     expect(item.source).toBe("Ontario data catalogue");
     expect(item.expectedBytes).toBe(100);
     expect(item.provenanceDate).toBe("2026-11-01");
@@ -72,7 +76,7 @@ describe("handoff review queue", () => {
   });
   it("does not treat a closed note as an available file", () => {
     const review = reviewHandoff(withNote(history(), "a", "closed-note", "closed"));
-    expect(review.reviewItems[0].status).toBe("UNKNOWN");
+    expect(review.reviewItems[0]!.status).toBe("UNKNOWN");
   });
   it("counts open notes", () => {
     const book = withNote(withNote(history(), "a", "note-a"), "b", "note-b");
@@ -84,19 +88,21 @@ describe("handoff review queue", () => {
   });
   it("tracks the note IDs for each cell", () => {
     const book = withNote(withNote(history(), "a", "note-a"), "a", "note-b");
-    expect(reviewHandoff(book).reviewItems[0].noteIds).toEqual(["note-a", "note-b"]);
+    expect(reviewHandoff(book).reviewItems[0]!.noteIds).toEqual(["note-a", "note-b"]);
   });
   it("flags source metadata drift", () => {
     const book = comparing();
     const after = book.after;
     if (after === null) throw new Error("Expected a later capture");
+    const changedCell = after.cells[0];
+    if (changedCell === undefined) throw new Error("Missing captured cell");
     const changed = { ...after, cells: [
-      { ...after.cells[0], source: { ...after.cells[0].source, date: "2026-11-18" } }, ...after.cells.slice(1),
+      { ...changedCell, source: { ...changedCell.source, date: "2026-11-18" } }, ...after.cells.slice(1),
     ] };
     const review = reviewHandoff({ ...book, after: changed });
     expect(review.sourceMismatch).toBe(1);
-    expect(review.reviewItems[0].reason).toBe("source-mismatch");
-    expect(review.reviewItems[0].status).toBe("UNKNOWN");
+    expect(review.reviewItems[0]!.reason).toBe("source-mismatch");
+    expect(review.reviewItems[0]!.status).toBe("UNKNOWN");
   });
   it("keeps the queue deterministic across reads", () => {
     expect(reviewHandoff(comparing())).toEqual(reviewHandoff(comparing()));
@@ -106,7 +112,7 @@ describe("handoff review queue", () => {
   });
   it("does not include a note as a source proof", () => {
     const review = reviewHandoff(withNote(history(), "a"));
-    expect(review.reviewItems[0].status).toBe("UNKNOWN");
+    expect(review.reviewItems[0]!.status).toBe("UNKNOWN");
   });
 });
 
