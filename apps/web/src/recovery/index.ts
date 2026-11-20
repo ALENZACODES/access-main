@@ -246,3 +246,11 @@ export type {
 } from "./recoveryDrillAnalysis";
 export { recoveryDrillCopy } from "./recoveryDrillCopy";
 export type { DrillCopy } from "./recoveryDrillCopy";
+
+// Manual recovery reconciliation; observations never authorize pack use.
+export { RecoveryReconciliationPanel } from "./RecoveryReconciliationPanel";
+export type { RecoveryReconciliationPanelProps } from "./RecoveryReconciliationPanel";
+export * from "./recoveryReconciliation";
+export * from "./recoveryReconciliationAnalysis";
+export { reconciliationCopy } from "./recoveryReconciliationCopy";
+export type { ReconciliationCopy } from "./recoveryReconciliationCopy";
