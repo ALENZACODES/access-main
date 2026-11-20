@@ -143,6 +143,11 @@ function closestWord(word: string, words: readonly string[]): string | null {
   return best;
 }
 
+/** A word looked up in one of the tables above. Own keys only, so "constructor" or "__proto__" typed into the box is just an unknown word. */
+function own<T>(table: Readonly<Record<string, T>>, key: string): T | undefined {
+  return Object.hasOwn(table, key) ? table[key] : undefined;
+}
+
 const FIELD_NAMES = Object.keys(SEARCH_FIELD_WORDS);
 
 export function parsePackSearch(input: string): ParsedSearch {
@@ -217,7 +222,7 @@ function termFor(tok: RawToken, problems: SearchProblem[]): SearchTerm | null {
   const folded = normalizeText(tok.value).replace(/\s+/g, " ");
   if (tok.field === null) return folded === "" ? null : { type: "text", field: "any", value: folded, phrase: tok.quoted && folded.includes(" "), negated: tok.negated };
   const key = normalizeText(tok.field);
-  const kind = SEARCH_FIELD_WORDS[key];
+  const kind = own(SEARCH_FIELD_WORDS, key);
   if (kind === undefined) {
     problems.push({ kind: "unknown-field", text: `${tok.field}:`, suggestion: closestWord(tok.field, FIELD_NAMES) });
     const literal = normalizeText(`${tok.field}:${tok.value}`).replace(/\s+/g, " ");
@@ -228,7 +233,7 @@ function termFor(tok: RawToken, problems: SearchProblem[]): SearchTerm | null {
     return null;
   }
   if (kind === "tag") {
-    const value = SEARCH_TAG_WORDS[folded];
+    const value = own(SEARCH_TAG_WORDS, folded);
     if (value === undefined) {
       problems.push({ kind: "bad-tag-value", text: tok.typed, suggestion: closestWord(folded, Object.keys(SEARCH_TAG_WORDS)) });
       return null;
@@ -236,7 +241,7 @@ function termFor(tok: RawToken, problems: SearchProblem[]): SearchTerm | null {
     return { type: "tag", value, negated: tok.negated };
   }
   if (kind === "has" || kind === "no") {
-    const hasKey = SEARCH_HAS_WORDS[folded];
+    const hasKey = own(SEARCH_HAS_WORDS, folded);
     if (hasKey === undefined) {
       problems.push({ kind: "bad-has-value", text: tok.typed, suggestion: closestWord(folded, Object.keys(SEARCH_HAS_WORDS)) });
       return null;
