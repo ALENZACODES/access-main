@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { PACKET_LIMITS } from "./recoveryEvidencePacket";
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
+const liveShell = read("./RecoveryCenter.tsx");
+const barrel = read("./index.ts");
 const model = read("./recoveryEvidencePacket.ts");
 const analysis = read("./recoveryEvidenceAnalysis.ts");
 const copy = read("./recoveryEvidencePacketCopy.ts");
@@ -10,6 +12,17 @@ const ui = read("./RecoveryEvidencePacketPanel.tsx");
 const modules = [model, analysis, copy, ui];
 
 describe("local recovery evidence panel contracts", () => {
+  it("mounts the evidence panel against active inspection", () => {
+    expect(liveShell).toContain('import { RecoveryEvidencePacketPanel } from "./RecoveryEvidencePacketPanel"');
+    expect(liveShell).toContain('<RecoveryEvidencePacketPanel locale={locale} records={inventory}');
+    expect(liveShell).toContain('inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile}');
+  });
+  it("preserves notebook copy and exports the distinct packet modules", () => {
+    expect(barrel).toContain('export { evidenceCopy } from "./recoveryEvidenceCopy"');
+    expect(barrel).toContain('from "./recoveryEvidencePacketCopy"');
+    expect(barrel).toContain('from "./recoveryEvidencePacket"');
+    expect(barrel).toContain('from "./recoveryEvidenceAnalysis"');
+  });
   it("uses 44px minimum control height", () => {
     expect(ui).toContain("minHeight: 44");
   });

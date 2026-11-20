@@ -120,7 +120,7 @@ const en: PacketCopy = {
 const fr: PacketCopy = {
   heading: "Dossier local de récupération",
   description: "Consignez les observations de l’appareil localement, examinez les changements et exportez un dossier transférable.",
-  caution: "UNKNOWN signifie inconnu. Une observation ne confirme pas qu’un ensemble est utilisable.",
+  caution: "UNKNOWN reste UNKNOWN. Une observation ne confirme pas qu’un ensemble est utilisable.",
   unknown: "UNKNOWN",
   inspect: "Examinez les ensembles locaux avant de consigner une observation.",
   add: "Ajouter une observation",
