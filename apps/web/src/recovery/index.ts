@@ -282,6 +282,14 @@ export * from "./recoveryReconciliationAnalysis";
 export { reconciliationCopy } from "./recoveryReconciliationCopy";
 export type { ReconciliationCopy } from "./recoveryReconciliationCopy";
 
+// User-controlled recovery receipt documentation.
+export { RecoveryReceiptLedgerPanel } from "./RecoveryReceiptLedgerPanel";
+export type { RecoveryReceiptLedgerPanelProps } from "./RecoveryReceiptLedgerPanel";
+export * from "./recoveryReceiptLedger";
+export * from "./recoveryReceiptAnalysis";
+export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
+export type { ReceiptCopy } from "./recoveryReceiptCopy";
+
 // Manual local guided review; notes cannot change installed pack readiness.
 export { RecoveryGuidedReviewPanel } from "./RecoveryGuidedReviewPanel";
 export type { RecoveryGuidedReviewPanelProps } from "./RecoveryGuidedReviewPanel";
@@ -313,11 +321,3 @@ export type {
 } from "./recoveryGuidedAnalysis";
 export { recoveryGuidedCopy } from "./recoveryGuidedCopy";
 export type { GuidedCopy } from "./recoveryGuidedCopy";
-
-// User-controlled recovery receipt documentation.
-export { RecoveryReceiptLedgerPanel } from "./RecoveryReceiptLedgerPanel";
-export type { RecoveryReceiptLedgerPanelProps } from "./RecoveryReceiptLedgerPanel";
-export * from "./recoveryReceiptLedger";
-export * from "./recoveryReceiptAnalysis";
-export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
-export type { ReceiptCopy } from "./recoveryReceiptCopy";
