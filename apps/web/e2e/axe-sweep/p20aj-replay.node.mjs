@@ -11,7 +11,7 @@ import { coverageMatrix } from "./p20aj-offline.ts";
 const codes = (items) => items.map((item) => item.code);
 const s = (change = {}) => sampleSnapshot(change);
 const action = (kind, change = {}) => plannedAction(kind, change);
-const scenario = (actions, change = {}) => sequenceScenario(s(), actions, "Journey");
+const scenario = (actions, change = {}) => sequenceScenario(s(change), actions, "Journey");
 const frame = (kind, before = s(), after = s(), change = {}) => ({ action: action(kind), before, after, observed: true, ...change });
 for (const kind of ["navigate", "search", "clear", "retry", "disconnect", "reconnect", "language", "back", "forward", "open", "close", "export", "import"]) {
   test(`planned action preserves kind ${kind}`, () => {
