@@ -1,4 +1,6 @@
 import { renderSarif } from './ci.js';
+import { EMPTY_PAIR, PAIR_SELECTORS, isPairAction, pairStep, renderPairTool, withInputs, type PairState } from './pair-tool.js';
+import { pageCss, type PageCss } from './palette.js';
 import { escapeHtml, renderBody, renderJson, type AuditReport } from './report.js';
 import { selfAudit } from './run.js';
 import type { Lang } from './types.js';
@@ -8,7 +10,7 @@ export interface PanelRoot {
   innerHTML: string;
   setAttribute?(name: string, value: string): void;
   addEventListener(type: 'click', handler: (e: { target: unknown }) => void): void;
-  querySelector?(selector: string): { focus?(): void } | null;
+  querySelector?(selector: string): { focus?(): void; value?: string; checked?: boolean } | null;
 }
 
 export interface PanelOptions {
@@ -23,6 +25,8 @@ export interface PanelOptions {
   readonly heading?: boolean;
   /** Called with the new language when the person switches it inside the panel, so the host can keep its own heading in step. */
   readonly onLang?: (lang: Lang) => void;
+  /** The CSS of the page, for the colour tokens of the "Compare two colours" tool. Defaults to the style sheets of the document. */
+  readonly css?: () => PageCss;
 }
 
 type State =
@@ -49,7 +53,12 @@ const TEXT = {
   copyFailed: { en: 'Copying failed.', fr: 'La copie a échoué.' },
 } as const;
 
-export function renderPanel(lang: Lang, state: State, notice = '', heading = true): string {
+/**
+ * The markup of the panel. When `pair` is given, the "Compare two colours"
+ * tool is drawn under the audit, with its own heading one level below the
+ * page heading.
+ */
+export function renderPanel(lang: Lang, state: State, notice = '', heading = true, pair?: PairState): string {
   const other: Lang = lang === 'en' ? 'fr' : 'en';
   let status: string;
   let body = '';
@@ -77,7 +86,8 @@ export function renderPanel(lang: Lang, state: State, notice = '', heading = tru
     `<p><button type="button" data-action="run" style="min-height:44px;min-width:44px">${escapeHtml(TEXT.run[lang])}</button> ` +
     `<button type="button" data-action="lang-${other}" lang="${other}" style="min-height:44px;min-width:44px">${escapeHtml(TEXT.switchTo[lang])}</button></p>` +
     `<div role="status" aria-live="polite">${escapeHtml(status)}</div>` +
-    `<div>${body}</div>`
+    `<div>${body}</div>` +
+    (pair ? renderPairTool(lang, pair, 2) : '')
   );
 }
 
@@ -89,6 +99,8 @@ export function mountNarrowPanel(opts: PanelOptions): { getLang(): Lang } {
   let lang = opts.lang;
   let state: State = { kind: 'idle' };
   let notice = '';
+  let pair: PairState = EMPTY_PAIR;
+  const css = opts.css ?? pageCss;
   const run = opts.run ?? (() => selfAudit((opts.now ?? (() => new Date()))()));
 
   const copy =
@@ -102,13 +114,31 @@ export function mountNarrowPanel(opts: PanelOptions): { getLang(): Lang } {
 
   const render = (focusAction?: string): void => {
     opts.root.setAttribute?.('lang', lang);
-    opts.root.innerHTML = renderPanel(lang, state, notice, opts.heading !== false);
-    if (focusAction) opts.root.querySelector?.(`[data-action="${focusAction}"]`)?.focus?.();
+    opts.root.innerHTML = renderPanel(lang, state, notice, opts.heading !== false, pair);
+    if (focusAction) opts.root.querySelector?.(focusAction.startsWith('#') || focusAction.startsWith('[') ? focusAction : `[data-action="${focusAction}"]`)?.focus?.();
+  };
+
+  /** What is typed in the colour tool, read before each re-render so that it is not lost. */
+  const readPair = (): void => {
+    const q = opts.root.querySelector?.bind(opts.root);
+    if (!q) return;
+    const text = q(PAIR_SELECTORS.text)?.value;
+    const background = q(PAIR_SELECTORS.background)?.value;
+    const large = q(PAIR_SELECTORS.large)?.checked;
+    pair = withInputs(pair, { ...(text !== undefined ? { text } : {}), ...(background !== undefined ? { background } : {}), ...(large !== undefined ? { large } : {}) });
   };
 
   opts.root.addEventListener('click', (e) => {
     const target = e.target as { getAttribute?(n: string): string | null };
     const action = target.getAttribute?.('data-action') ?? null;
+    if (action === null) return;
+    readPair();
+    if (isPairAction(action)) {
+      const step = pairStep(pair, action, lang, css);
+      pair = step.state;
+      render(step.focus);
+      return;
+    }
     if ((action === 'copy-json' || action === 'copy-sarif') && state.kind === 'done') {
       const report = state.report;
       const text = action === 'copy-json' ? renderJson(report) : renderSarif(report);
@@ -129,6 +159,9 @@ export function mountNarrowPanel(opts: PanelOptions): { getLang(): Lang } {
     } else if (action === 'lang-en' || action === 'lang-fr') {
       lang = action === 'lang-fr' ? 'fr' : 'en';
       notice = '';
+      // The messages of the colour tool were written in the other language. The colours stay, the result is made again.
+      pair = pair.outcome || pair.errors.length > 0 ? pairStep({ ...pair, notice: '' }, 'pair-compare', lang, css).state : { ...pair, notice: '' };
+      pair = { ...pair, notice: '' };
       opts.onLang?.(lang);
       render(`lang-${lang === 'fr' ? 'en' : 'fr'}`);
     } else if (action === 'run' && state.kind !== 'running') {

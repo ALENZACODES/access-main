@@ -118,7 +118,9 @@ describe("shortlist on the places list", () => {
     expect(screen.queryByRole("columnheader", { name: "Distance" })).toBeNull();
     fireEvent.change(screen.getByLabelText("Latitude"), { target: { value: "43.65" } });
     fireEvent.change(screen.getByLabelText("Longitude"), { target: { value: "-79.38" } });
-    expect(screen.getByRole("columnheader", { name: "Distance" })).toBeTruthy();
+    // The page also has the distance table, whose first column is called Distance too, so look in the list's own table.
+    const list = screen.getByRole("table", { name: /Shortlisted places/ });
+    expect(within(list).getByRole("columnheader", { name: "Distance" })).toBeTruthy();
   });
   it("does not store anything for a pack it cannot read", () => {
     show([null, 5]);
