@@ -13,6 +13,7 @@ vi.mock("../../../../packages/data-client/src/index.ts", async (original) => ({
   createPackSource: () => source,
 }));
 vi.mock("../shell/useOnline.ts", () => ({ useOnline: () => true }));
+vi.mock("../recovery/RecoveryCenter.tsx", () => ({ RecoveryCenter: () => null }));
 
 const { OfflineRegionPage } = await import("./RegionPackPage.tsx");
 const i18n = initI18n();
