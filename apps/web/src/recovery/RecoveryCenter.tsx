@@ -19,11 +19,11 @@ import { RecoveryHandoffPanel } from "./RecoveryHandoffPanel";
 import { RecoverySessionTracePanel } from "./RecoverySessionTracePanel";
 import { RecoveryCheckpointPanel } from "./RecoveryCheckpointPanel";
 import { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
-
 import { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
 import { planPackRepairs } from "./recoveryPolicy";
-const RecoveryReconciliationPanel = lazy(async () => ({
-  default: (await import("./RecoveryReconciliationPanel")).RecoveryReconciliationPanel,
+
+const RecoveryDrillPanel = lazy(async () => ({
+  default: (await import("./RecoveryDrillPanel")).RecoveryDrillPanel,
 }));
 
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
@@ -167,10 +167,9 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       <RecoveryDecisionMatrix locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
-      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du registre…" : "Loading review register…"}</p>}>
-      <RecoveryReconciliationPanel locale={locale} records={inventory}
-        inspected={hasInspected && !checking && !inventoryFailure}
-        onInspect={() => { void refresh(); }} saveFile={saveFile} />
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du registre local…" : "Loading local register…"}</p>}>
+      <RecoveryDrillPanel locale={locale} records={inventory}
+        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
