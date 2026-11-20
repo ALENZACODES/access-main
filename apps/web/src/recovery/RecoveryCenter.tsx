@@ -22,6 +22,10 @@ import { RecoveryDecisionMatrix } from "./RecoveryDecisionMatrix";
 import { RecoveryTransferPreflight } from "./RecoveryTransferPreflight";
 import { planPackRepairs } from "./recoveryPolicy";
 
+const RecoveryEvidencePacketPanel = lazy(async () => ({
+  default: (await import("./RecoveryEvidencePacketPanel")).RecoveryEvidencePacketPanel,
+}));
+
 const RecoveryTransferWitnessPanel = lazy(async () => ({
   default: (await import("./RecoveryTransferWitnessPanel")).RecoveryTransferWitnessPanel,
 }));
@@ -168,6 +172,10 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
       <RecoveryDecisionMatrix locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du registre local…" : "Loading local register…"}</p>}>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du dossier…" : "Loading local packet…"}</p>}>
+      <RecoveryEvidencePacketPanel locale={locale} records={inventory}
+        inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
       <RecoveryTransferWitnessPanel locale={locale} records={inventory}
         inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
