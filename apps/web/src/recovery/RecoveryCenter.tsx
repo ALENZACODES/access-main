@@ -25,15 +25,20 @@ import { planPackRepairs } from "./recoveryPolicy";
 const RecoveryEvidencePacketPanel = lazy(async () => ({
   default: (await import("./RecoveryEvidencePacketPanel")).RecoveryEvidencePacketPanel,
 }));
-const RecoveryReceiptLedgerPanel = lazy(async () => ({
-  default: (await import("./RecoveryReceiptLedgerPanel")).RecoveryReceiptLedgerPanel,
-}));
 
 const RecoveryTransferWitnessPanel = lazy(async () => ({
   default: (await import("./RecoveryTransferWitnessPanel")).RecoveryTransferWitnessPanel,
 }));
 
 
+
+const RecoveryHandoffChainPanel = lazy(async () => ({
+  default: (await import("./RecoveryHandoffChainPanel")).RecoveryHandoffChainPanel,
+}));
+
+const RecoveryReceiptLedgerPanel = lazy(async () => ({
+  default: (await import("./RecoveryReceiptLedgerPanel")).RecoveryReceiptLedgerPanel,
+}));
 
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
@@ -184,10 +189,13 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         <RecoveryTransferWitnessPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
-      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement des accusés locaux…" : "Loading local receipts…"}</p>}>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de la chaîne…" : "Loading handoff chain…"}</p>}>
+        <RecoveryHandoffChainPanel locale={locale} records={inventory}
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
+      </Suspense>
+      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement des reçus…" : "Loading handoff receipts…"}</p>}>
         <RecoveryReceiptLedgerPanel locale={locale} records={inventory}
-          inspected={hasInspected && !checking && !inventoryFailure}
-          onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
