@@ -6,12 +6,13 @@
 import type { ControllerDeps } from "./controller";
 import { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, liveRefused } from "./live";
 import { DEVICE_REGISTER } from "./deviceRegister";
+import { ADDRESS_REGISTER, CALL_REGISTER } from "./addressRegister";
 import { FEATURE_REGISTER } from "./featureRegister";
 import { browserFeatureHost } from "./permissions";
 import { outsideItemsForScope } from "./outsideSection";
 import { STORAGE_REGISTER, UNSCANNED, panelExtraKeys, type RegisterRow, type UnscannedRow } from "./storageRegister";
 
-export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside" | "deviceRegister" | "kept" | "features">;
+export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside" | "deviceRegister" | "kept" | "features" | "addresses" | "glance">;
 
 export interface LiveControllerOptions {
   /** For tests: other registers. Defaults to the App's own. */
@@ -32,6 +33,8 @@ export function liveControllerDeps(options: LiveControllerOptions = {}): LiveCon
     deviceRegister: DEVICE_REGISTER,
     kept: { register, unscanned },
     features: { register: FEATURE_REGISTER, host: browserFeatureHost() },
+    addresses: { addresses: ADDRESS_REGISTER, calls: CALL_REGISTER },
+    glance: true,
     outside: outsideItemsForScope(register, unscanned, { prefix: PRIVACY_STORAGE_PREFIX, keys: extraKeys }),
   };
 }
