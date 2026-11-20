@@ -49,15 +49,15 @@ describe('renderHandPanel', () => {
     expect(html).toContain('<h2 id="hand-h">Look by hand</h2>');
     expect(html.match(/<h1[ >]/g)).toBeNull();
     expect(html.match(/<h2[ >]/g)).toHaveLength(1);
-    expect(html.match(/<h3[ >]/g)).toHaveLength(3);
-    for (const id of ['hand-setup-h', 'hand-step-h', 'hand-log-h']) expect(html).toContain(`<section aria-labelledby="${id}">`);
+    expect(html.match(/<h3[ >]/g)).toHaveLength(4);
+    for (const id of ['hand-setup-h', 'hand-step-h', 'hand-all-h', 'hand-log-h']) expect(html).toContain(`<section aria-labelledby="${id}">`);
   });
 
   it('moves every heading down a level when asked', () => {
     const html = renderHandPanel('en', initialHandState(), NOW, 3);
     expect(html.match(/<h2[ >]/g)).toBeNull();
     expect(html.match(/<h3[ >]/g)).toHaveLength(1);
-    expect(html.match(/<h4[ >]/g)).toHaveLength(3);
+    expect(html.match(/<h4[ >]/g)).toHaveLength(4);
   });
 
   it('says what the steps are, what they are not, and that nothing is kept', () => {
@@ -168,11 +168,22 @@ describe('renderHandPanel', () => {
     expect(html).toContain('<p class="hand-error" id="hand-earlier-error">The by-hand log is not valid JSON.</p>');
   });
 
-  it('lists all steps in a closed disclosure, each a button that says where it stands', () => {
+  it('has a button that shows the list of all steps, and no step button while the list is hidden', () => {
     const state = { ...initialHandState(), session: answer(newSession(), SECOND, 'no-problem-found', '') };
     const html = renderHandPanel('en', state, NOW);
     const total = stepIds(newSession()).length;
-    expect(html).toContain(`<details id="hand-all"><summary>All steps (1 of ${total} looked at)</summary><ol>`);
+    expect(html).toContain('<section aria-labelledby="hand-all-h"><h3 id="hand-all-h">All steps</h3>');
+    expect(html).toContain(`<button type="button" data-action="hand-list" aria-expanded="false">Show all steps (1 of ${total} looked at)</button>`);
+    expect(html).not.toContain('data-action="hand-go-');
+    expect(html).not.toContain('id="hand-all"');
+    expect(html).not.toContain('<details');
+  });
+
+  it('lists all steps when shown, each a button that says where it stands', () => {
+    const state = { ...initialHandState(), session: answer(newSession(), SECOND, 'no-problem-found', ''), listOpen: true };
+    const html = renderHandPanel('en', state, NOW);
+    const total = stepIds(newSession()).length;
+    expect(html).toContain(`<button type="button" data-action="hand-list" aria-expanded="true" aria-controls="hand-all">Hide the list of steps (1 of ${total} looked at)</button></p><ol id="hand-all">`);
     expect(html.match(/data-action="hand-go-/g)).toHaveLength(total);
     expect(html).toContain(`data-action="hand-go-${FIRST.replace(/\./g, '-')}" aria-current="step">`);
     expect(html.match(/ aria-current="step">/g)).toHaveLength(1);
@@ -180,13 +191,14 @@ describe('renderHandPanel', () => {
     expect(html).toMatch(/: not looked at yet<\/button>/);
   });
 
-  it('keeps the list open when the state says so', () => {
-    expect(renderHandPanel('en', { ...initialHandState(), listOpen: true }, NOW)).toContain('<details id="hand-all" open>');
+  it('writes the list button in French', () => {
+    expect(renderHandPanel('fr', { ...initialHandState(), listOpen: true }, NOW)).toContain('>Masquer la liste des étapes (0 sur ');
+    expect(renderHandPanel('fr', initialHandState(), NOW)).toContain('>Afficher toutes les étapes (0 sur ');
   });
 
   it('gives every step button a different name', () => {
     for (const lang of LANGS) {
-      const labels = [...renderHandPanel(lang, initialHandState(), NOW).matchAll(/data-action="hand-go-[^"]+"[^>]*>([^<]+)</g)].map((m) => m[1]);
+      const labels = [...renderHandPanel(lang, { ...initialHandState(), listOpen: true }, NOW).matchAll(/data-action="hand-go-[^"]+"[^>]*>([^<]+)</g)].map((m) => m[1]);
       expect(new Set(labels).size).toBe(labels.length);
     }
   });
@@ -226,7 +238,7 @@ describe('renderHandPanel', () => {
   it('has only buttons of type button, each with text', () => {
     for (const [name, state] of states('en')) {
       const buttons = renderHandPanel('en', state, NOW).match(/<button[^>]*>[^<]*<\/button>/g) ?? [];
-      expect(buttons.length, name).toBeGreaterThan(10);
+      expect(buttons.length, name).toBeGreaterThan(8);
       for (const b of buttons) {
         expect(b).toContain('type="button"');
         expect(b.replace(/<[^>]+>/g, '').trim()).not.toBe('');
@@ -253,11 +265,10 @@ describe('renderHandPanel', () => {
 });
 
 describe('the styles of the panel', () => {
-  it('gives buttons, fields, boxes, the save link and the disclosure a 44 pixel minimum', () => {
+  it('gives buttons, fields, boxes and the save link a 44 pixel minimum', () => {
     expect(HAND_CSS).toContain('.hand button,.hand .hand-save{min-height:44px;min-width:44px;');
     expect(HAND_CSS).toContain('.hand .hand-field{display:block;width:100%;max-width:24rem;min-height:44px;');
     expect(HAND_CSS).toContain('.hand .hand-check input{width:44px;height:44px;');
-    expect(HAND_CSS).toContain('.hand summary{min-height:44px;');
   });
 
   it('wraps on a narrow screen and hides nothing', () => {
@@ -346,7 +357,7 @@ describe('the wording of the panel', () => {
 });
 
 describe('isHandAction', () => {
-  it.each(['hand-needs', 'hand-read', 'hand-save', 'hand-save-next', 'hand-previous', 'hand-next', 'hand-next-open', 'hand-clear', 'hand-export', 'hand-reset', 'hand-go-1-4-10', 'hand-go-2-5-8'])('takes %s', (a) => {
+  it.each(['hand-list', 'hand-needs', 'hand-read', 'hand-save', 'hand-save-next', 'hand-previous', 'hand-next', 'hand-next-open', 'hand-clear', 'hand-export', 'hand-reset', 'hand-go-1-4-10', 'hand-go-2-5-8'])('takes %s', (a) => {
     expect(isHandAction(a)).toBe(true);
   });
 
@@ -582,12 +593,18 @@ describe('mountHandPanel', () => {
     expect(root.innerHTML).toContain('id="hand-need-keyboard" name="hand-need-keyboard">');
   });
 
-  it('keeps the list open across a re-render when it was open', () => {
-    const { root } = mount();
-    (root.fields as Record<string, { open?: boolean }>)['#hand-all'] = { open: true };
+  it('shows and hides the list of steps, keeps it shown across other actions, and keeps focus on its button', () => {
+    const { root, panel } = mount();
+    root.click('hand-list');
+    expect(panel.getState().listOpen).toBe(true);
+    expect(root.innerHTML).toContain('<ol id="hand-all">');
+    expect(root.focused.at(-1)).toBe('[data-action="hand-list"]');
     type(root, 'not-sure');
     root.click('hand-save');
-    expect(root.innerHTML).toContain('<details id="hand-all" open>');
+    expect(root.innerHTML).toContain('<ol id="hand-all">');
+    root.click('hand-list');
+    expect(panel.getState().listOpen).toBe(false);
+    expect(root.innerHTML).not.toContain('id="hand-all"');
   });
 
   it('prepares the log, then copies it and says so', async () => {

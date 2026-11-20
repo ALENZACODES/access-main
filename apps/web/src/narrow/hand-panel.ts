@@ -45,7 +45,7 @@ export interface HandRoot {
   innerHTML: string;
   setAttribute?(name: string, value: string): void;
   addEventListener(type: 'click', handler: (e: { target: unknown }) => void): void;
-  querySelector?(selector: string): { focus?(): void; value?: string; checked?: boolean; open?: boolean } | null;
+  querySelector?(selector: string): { focus?(): void; value?: string; checked?: boolean } | null;
 }
 
 export interface HandDraft {
@@ -73,7 +73,7 @@ export interface HandState {
   /** The text pasted as an earlier log. */
   readonly earlierText: string;
   readonly earlierError: string;
-  /** True while the list of all steps is open. */
+  /** True while the list of all steps is shown. */
   readonly listOpen: boolean;
 }
 
@@ -143,6 +143,8 @@ const T = {
   notSaved: { en: 'The answer was not saved.', fr: 'La réponse n’a pas été enregistrée.' },
   allDone: { en: 'Every step has an answer. Prepare the log below.', fr: 'Chaque étape a une réponse. Préparez le journal ci-dessous.' },
   all: { en: 'All steps', fr: 'Toutes les étapes' },
+  show: { en: 'Show all steps', fr: 'Afficher toutes les étapes' },
+  hide: { en: 'Hide the list of steps', fr: 'Masquer la liste des étapes' },
   open: { en: 'not looked at yet', fr: 'pas encore regardée' },
   log: { en: 'The log', fr: 'Le journal' },
   logIntro: {
@@ -188,11 +190,10 @@ export const HAND_CSS =
   '.hand .hand-save{display:inline-block;line-height:28px}' +
   '.hand .hand-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}' +
   '.hand .hand-error{font-weight:600}.hand [aria-invalid="true"]{outline:3px solid currentColor;outline-offset:2px}' +
-  '.hand summary{min-height:44px;display:flex;align-items:center;font-weight:600;cursor:pointer}' +
   '.hand ol{padding-left:0;list-style:none}.hand ol li{margin:8px 0}.hand ol button{width:100%}' +
   '.hand [aria-current="step"]{border-width:3px;font-weight:600}' +
   '.hand p,.hand li,.hand legend,.hand label{overflow-wrap:anywhere}' +
-  '.hand button:focus-visible,.hand input:focus-visible,.hand textarea:focus-visible,.hand a:focus-visible,.hand summary:focus-visible,.hand [tabindex="-1"]:focus-visible{outline:3px solid currentColor;outline-offset:3px}';
+  '.hand button:focus-visible,.hand input:focus-visible,.hand textarea:focus-visible,.hand a:focus-visible,.hand [tabindex="-1"]:focus-visible{outline:3px solid currentColor;outline-offset:3px}';
 
 const idOf = (sc: string): string => sc.replace(/\./g, '-');
 
@@ -269,7 +270,7 @@ function stepSection(state: HandState, lang: Lang, h: number, now: Date): string
   );
 }
 
-function listSection(state: HandState, lang: Lang): string {
+function listSection(state: HandState, lang: Lang, h: number): string {
   const steps = stepsOf(state.session, lang);
   if (steps.length === 0) return '';
   const p = progress(state.session);
@@ -281,8 +282,10 @@ function listSection(state: HandState, lang: Lang): string {
       return `<li><button type="button" data-action="hand-go-${idOf(sc)}"${sc === state.session.current ? ' aria-current="step"' : ''}>${escapeHtml(`${aaLabel(sc, lang)}${colon(lang)} ${status}`)}</button></li>`;
     })
     .join('');
-  const summary = `${T.all[lang]} (${lang === 'fr' ? `${p.answered} sur ${p.total} ${p.answered < 2 ? 'regardée' : 'regardées'}` : `${p.answered} of ${p.total} looked at`})`;
-  return `<details id="hand-all"${state.listOpen ? ' open' : ''}><summary>${escapeHtml(summary)}</summary><ol>${items}</ol></details>`;
+  const count = lang === 'fr' ? `${p.answered} sur ${p.total} ${p.answered < 2 ? 'regardée' : 'regardées'}` : `${p.answered} of ${p.total} looked at`;
+  // A button that adds the list, not a closed details element: a browser gives the buttons inside a closed details a box and no name, which reads as unnamed controls.
+  const toggle = `<p class="hand-actions"><button type="button" data-action="hand-list" aria-expanded="${state.listOpen ? 'true' : 'false'}"${state.listOpen ? ' aria-controls="hand-all"' : ''}>${escapeHtml(`${state.listOpen ? T.hide[lang] : T.show[lang]} (${count})`)}</button></p>`;
+  return `<section aria-labelledby="hand-all-h"><h${h} id="hand-all-h">${tx('all', lang)}</h${h}>${toggle}${state.listOpen ? `<ol id="hand-all">${items}</ol>` : ''}</section>`;
 }
 
 function logSection(state: HandState, lang: Lang, h: number, now: Date): string {
@@ -323,16 +326,16 @@ export function renderHandPanel(lang: Lang, state: HandState, now: Date, heading
     `<div role="status" aria-live="polite">${escapeHtml(state.notice)}</div>` +
     setupSection(state, lang, h + 1) +
     stepSection(state, lang, h + 1, now) +
-    listSection(state, lang) +
+    listSection(state, lang, h + 1) +
     logSection(state, lang, h + 1, now) +
     '</div>'
   );
 }
 
-export type HandAction = 'hand-needs' | 'hand-read' | 'hand-save' | 'hand-save-next' | 'hand-previous' | 'hand-next' | 'hand-next-open' | 'hand-clear' | 'hand-export' | 'hand-reset' | `hand-go-${string}`;
+export type HandAction = 'hand-list' | 'hand-needs' | 'hand-read' | 'hand-save' | 'hand-save-next' | 'hand-previous' | 'hand-next' | 'hand-next-open' | 'hand-clear' | 'hand-export' | 'hand-reset' | `hand-go-${string}`;
 
 export function isHandAction(action: string | null): action is HandAction {
-  return action !== null && /^hand-(needs|read|save|save-next|previous|next|next-open|clear|export|reset|go-\d+-\d+-\d+)$/.test(action);
+  return action !== null && /^hand-(list|needs|read|save|save-next|previous|next|next-open|clear|export|reset|go-\d+-\d+-\d+)$/.test(action);
 }
 
 export interface HandStep {
@@ -350,6 +353,7 @@ const STEP_HEADING = '#hand-step-h';
 export function handStep(state: HandState, action: HandAction, lang: Lang, now: Date): HandStep {
   const s = state.session;
   const clean = { ...state, errors: [] as HandError[], earlierError: '' };
+  if (action === 'hand-list') return { state: { ...clean, listOpen: !state.listOpen, notice: '' }, focus: '[data-action="hand-list"]' };
   if (action === 'hand-needs') {
     return { state: { ...clean, session: setNeeds(s, state.needsDraft), notice: T.applied[lang], output: null }, focus: STEP_HEADING };
   }
@@ -441,7 +445,7 @@ export function mountHandPanel(opts: HandOptions): { getState(): HandState } {
       const draft = { result: picked === null ? '' : (picked.value ?? before.result), note: q('#hand-note')?.value ?? before.note };
       drafts = { ...state.drafts, [sc]: draft };
     }
-    return { ...state, session: { ...state.session, who }, needsDraft, drafts, earlierText: q('#hand-earlier')?.value ?? state.earlierText, listOpen: q('#hand-all')?.open ?? state.listOpen };
+    return { ...state, session: { ...state.session, who }, needsDraft, drafts, earlierText: q('#hand-earlier')?.value ?? state.earlierText };
   };
 
   opts.root.addEventListener('click', (e) => {

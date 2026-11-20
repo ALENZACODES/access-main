@@ -6,7 +6,7 @@ A panel on the `/dev/narrow` page, under the other two, that takes a person thro
 
 1. **Before you start.** Who is looking (a handle or initials), and what they have besides a browser: a keyboard, a screen reader, a phone or tablet, pages with audio or video. Only steps that fit are shown. An earlier log can be pasted in, so the last look shows next to each step and its notes stay in the new log.
 2. **One step at a time.** The criterion, what to do, what to look for, what is needed. The person chooses "I saw a problem", "I found no problem" or "I am not sure", and adds a note. A problem needs a note that says what was seen.
-3. **All steps.** A list that can be opened, with where each step stands and a button to go to it.
+3. **All steps.** A button shows the list of steps, with where each step stands and a button to go to each. The list is added only when shown, so its buttons are never present without a name.
 4. **The log.** The same file `--manual-log` reads, to copy or to save, and the same in words for a message or a ticket.
 
 So what a person records on a phone goes into the reports and the worksheet with no retyping.

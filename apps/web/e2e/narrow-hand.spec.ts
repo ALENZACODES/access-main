@@ -83,12 +83,13 @@ test("reads a pasted earlier log and shows the last look at its step", async ({ 
   await hand(page).getByLabel("An earlier log, if you have one").fill(JSON.stringify({ version: 1, notes: [{ sc: "1.4.10", result: "problem", on: "2026-01-15", by: "@lee", note: "The table is cut off." }] }));
   await hand(page).getByRole("button", { name: "Read this log" }).click();
   await expect(hand(page).locator("[role=status]")).toHaveText("1 note read from the earlier log.");
-  await hand(page).locator("#hand-all summary").click();
+  await hand(page).getByRole("button", { name: /^Show all steps/ }).click();
+  await expect(hand(page).getByRole("button", { name: /^Hide the list of steps/ })).toHaveAttribute("aria-expanded", "true");
   await hand(page).getByRole("button", { name: /^1\.4\.10 Reflow \(AA\): not looked at yet$/ }).click();
   await expect(page.locator("#hand-step-h")).toContainText("1.4.10 Reflow (AA)");
   await expect(page.locator("#hand-step-h")).toBeFocused();
   await expect(hand(page)).toContainText("Looked on 2026-01-15 by @lee");
-  await expect(hand(page).locator("#hand-all")).toHaveAttribute("open", "");
+  await expect(hand(page).locator("#hand-all")).toBeVisible();
 });
 
 test("shows more steps when more is at hand", async ({ page }) => {
@@ -108,10 +109,10 @@ test("does not scroll sideways at 320 pixels, and every control is at least 44 p
   await hand(page).getByLabel("Note").fill(`${"A-very-long-word-with-no-space-in-it-".repeat(4)} on the search page.`);
   await hand(page).getByRole("button", { name: "Save this answer" }).click();
   await hand(page).getByRole("button", { name: "Prepare the log" }).click();
-  await hand(page).locator("#hand-all summary").click();
+  await hand(page).getByRole("button", { name: /^Show all steps/ }).click();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
-  const sizes = await hand(page).locator("button, input, summary, a.hand-save").evaluateAll((els) =>
+  const sizes = await hand(page).locator("button, input, a.hand-save").evaluateAll((els) =>
     els.map((el) => {
       const r = el.getBoundingClientRect();
       return { what: ((el as HTMLElement).textContent || el.id).trim().slice(0, 40), w: Math.round(r.width), h: Math.round(r.height), right: Math.round(r.right) };

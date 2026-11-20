@@ -296,7 +296,7 @@ describe("NarrowAuditPage: look by hand", () => {
     expect(stepHeading(container).tabIndex).toBe(-1);
     expect(container.querySelector('input[name="hand-result"]:checked')).toBeNull();
     expect((container.querySelector("#hand-note") as HTMLTextAreaElement).value).toBe("");
-    expect(container.querySelector("#hand-all summary")?.textContent).toMatch(/^All steps \(1 of \d+ looked at\)$/);
+    expect(container.querySelector('.hand [data-action="hand-list"]')?.textContent).toMatch(/^Show all steps \(1 of \d+ looked at\)$/);
   });
 
   it("goes back to a saved step and shows the answer in the form and in words", async () => {
@@ -311,20 +311,26 @@ describe("NarrowAuditPage: look by hand", () => {
     expect(container.querySelector('.hand [data-action="hand-clear"]')).not.toBeNull();
   });
 
-  it("jumps to a step from the list of all steps, which stays open", async () => {
+  it("shows the list of all steps from its button, jumps to a step, and the list stays shown", async () => {
     await act(() => i18n.changeLanguage("en"));
     const { container } = render(page());
-    const list = container.querySelector("#hand-all") as HTMLDetailsElement;
-    list.open = true;
+    const toggle = () => container.querySelector('.hand [data-action="hand-list"]') as HTMLButtonElement;
+    expect(toggle().getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector("#hand-all")).toBeNull();
+    await press(container, "hand-list");
+    expect(toggle().getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector(`#${toggle().getAttribute("aria-controls")}`)?.tagName).toBe("OL");
+    expect(document.activeElement).toBe(toggle());
     await press(container, "hand-go-1-4-10");
     expect(stepHeading(container).textContent).toContain("1.4.10 Reflow (AA)");
-    expect((container.querySelector("#hand-all") as HTMLDetailsElement).open).toBe(true);
+    expect(container.querySelector("#hand-all")).not.toBeNull();
     expect(container.querySelector('.hand [aria-current="step"]')?.textContent).toContain("1.4.10 Reflow (AA)");
   });
 
   it("shows more steps when the person has more at hand", async () => {
     await act(() => i18n.changeLanguage("en"));
     const { container } = render(page());
+    await press(container, "hand-list");
     const count = () => container.querySelectorAll('.hand [data-action^="hand-go-"]').length;
     const before = count();
     (container.querySelector("#hand-need-screen-reader") as HTMLInputElement).checked = true;
@@ -370,6 +376,7 @@ describe("NarrowAuditPage: look by hand", () => {
     await press(container, "hand-read");
     expect(container.querySelector(".hand [role=status]")?.textContent).toBe("1 note read from the earlier log.");
     expect((container.querySelector("#hand-earlier") as HTMLTextAreaElement).value).toBe("");
+    await press(container, "hand-list");
     await press(container, "hand-go-1-4-10");
     expect(container.querySelector(".hand")?.textContent).toContain("Looked on 2026-01-15 by @lee");
     expect(container.querySelector(".hand")?.textContent).toContain("a problem was seen. The table is cut off.");
@@ -404,7 +411,7 @@ describe("NarrowAuditPage: look by hand", () => {
     expect(stepHeading(container).textContent).toMatch(/^Étape 2 sur \d+/);
     expect((container.querySelector("#hand-result-not-sure") as HTMLInputElement).checked).toBe(true);
     expect((container.querySelector("#hand-note") as HTMLTextAreaElement).value).toBe("Half written");
-    expect(container.querySelector("#hand-all summary")?.textContent).toMatch(/^Toutes les étapes \(1 sur \d+ regardée\)$/);
+    expect(container.querySelector('.hand [data-action="hand-list"]')?.textContent).toMatch(/^Afficher toutes les étapes \(1 sur \d+ regardée\)$/);
     await press(container, "hand-export");
     expect((container.querySelector("#hand-summary") as HTMLTextAreaElement).value).toContain("J’ai vu un problème. The menu cannot be opened.");
   });
@@ -417,7 +424,7 @@ describe("NarrowAuditPage: look by hand", () => {
     await press(container, "hand-save-next");
     await press(container, "hand-reset");
     expect(stepHeading(container).textContent).toMatch(/^Step 1 of /);
-    expect(container.querySelector("#hand-all summary")?.textContent).toMatch(/^All steps \(0 of /);
+    expect(container.querySelector('.hand [data-action="hand-list"]')?.textContent).toMatch(/^Show all steps \(0 of /);
     expect((container.querySelector("#hand-who") as HTMLInputElement).value).toBe("@sam");
     expect(container.querySelector(".hand [role=status]")?.textContent).toBe("All answers were erased.");
   });
@@ -433,5 +440,149 @@ describe("NarrowAuditPage: look by hand", () => {
     expect(container.querySelector('[data-action="run"]')?.parentElement?.innerHTML).toBe(auditBefore);
     unmount();
     expect(document.querySelector(".hand")).toBeNull();
+  });
+});
+
+/** "Button size for my taps" sits between the fit panel and "Look by hand", with a real DOM under it. */
+describe("NarrowAuditPage: button size for my taps", () => {
+  const TOTAL = 16;
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const area = (container: HTMLElement) => container.querySelector(".tap-area") as HTMLElement;
+
+  it("is on the page once, under an h2, between the fit panel and Look by hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".tap")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#tap-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Button size for my taps");
+    expect((container.querySelector("#fit-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#hand-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("starts the test with a target named by its visible text, inside a named area, with focus on it", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    const target = container.querySelector("#tap-target") as HTMLButtonElement;
+    expect(document.activeElement).toBe(target);
+    expect(target.textContent).toBe("Tap here");
+    expect(target.getAttribute("aria-label")).toBe(`Tap here, target 1 of ${TOTAL}`);
+    expect(area(container).getAttribute("role")).toBe("group");
+    expect(area(container).getAttribute("aria-label")).toBe("Area of the test");
+    expect(area(container).contains(target)).toBe(true);
+    expect(container.querySelector("#tap-run-h")?.textContent).toBe(`Target 1 of ${TOTAL}, 96 CSS pixels`);
+  });
+
+  it("counts a tap on the target as landed and a tap on the area as missed", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    await press(container, "#tap-target");
+    expect(container.querySelector("#tap-run-h")?.textContent).toMatch(/^Target 2 of /);
+    await act(async () => {
+      area(container).click();
+    });
+    expect(container.querySelector("#tap-run-h")?.textContent).toMatch(/^Target 3 of /);
+    await press(container, '.tap [data-action="tap-stop"]');
+    const rows = [...container.querySelectorAll(".tap tbody tr")].map((tr) => [...tr.children].map((c) => c.textContent));
+    expect(rows[0]).toEqual(["96 CSS pixels", "2 of 4", "1"]);
+    expect(rows[3]).toEqual(["44 CSS pixels", "0 of 4", "UNKNOWN"]);
+    expect(document.activeElement).toBe(container.querySelector("#tap-result-h"));
+    expect(container.querySelector(".tap [role=status]")?.textContent).toBe("The test was stopped.");
+  });
+
+  it("gives a size, the zoom for the App and the controls of this page that are smaller", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    for (let i = 0; i < TOTAL; i += 1) {
+      if (i === 9) {
+        await act(async () => {
+          area(container).click();
+        });
+      } else await press(container, "#tap-target");
+    }
+    const tap = container.querySelector(".tap") as HTMLElement;
+    expect(tap.textContent).toContain("On this screen, today, every tap landed from 72 CSS pixels up.");
+    expect(tap.textContent).toContain("A browser zoom of 175% brings them to 77 CSS pixels or more.");
+    expect(container.querySelector("#tap-page-h")?.textContent).toBe("Controls of this page");
+    expect(container.querySelector("#tap-target")).toBeNull();
+  });
+
+  it("follows the language of the audit panel and keeps a finished result", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.tap [data-action="tap-start"]');
+    await press(container, '.tap [data-action="tap-stop"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".tap")).toHaveLength(1);
+    expect(container.querySelector("#tap-h")?.textContent).toBe("Taille de bouton pour mes appuis");
+    expect(container.querySelector(".tap")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector(".tap")?.textContent).toContain("Taille UNKNOWN.");
+    expect(container.querySelector('.tap [data-action="tap-again"]')?.textContent).toBe("Refaire le test");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const handBefore = container.querySelector(".hand")?.innerHTML;
+    await press(container, '.tap [data-action="tap-start"]');
+    await press(container, "#tap-target");
+    expect(container.querySelector(".hand")?.innerHTML).toBe(handBefore);
+    unmount();
+    expect(document.querySelector(".tap")).toBeNull();
+  });
+});
+
+/** The tap size goes into the barrier text of the fit panel once the test is over. */
+describe("NarrowAuditPage: the tap size in the barrier text", () => {
+  const prepare = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The close button is too small to press.";
+    await act(async () => {
+      (container.querySelector('[data-action="fit-make"]') as HTMLElement).click();
+    });
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+
+  it("has no tap line before the test, and one after it, in the language of the page", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(await prepare(container)).not.toContain("Button size");
+    await act(async () => {
+      (container.querySelector('.tap [data-action="tap-start"]') as HTMLElement).click();
+    });
+    for (let i = 0; i < 16; i += 1) {
+      await act(async () => {
+        (container.querySelector("#tap-target") as HTMLElement).click();
+      });
+    }
+    expect(await prepare(container)).toContain("Button size at which my taps land: 44 CSS pixels");
+  });
+
+  it("keeps the tap line after a language switch", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await act(async () => {
+      (container.querySelector('.tap [data-action="tap-start"]') as HTMLElement).click();
+    });
+    await act(async () => {
+      (container.querySelector('.tap [data-action="tap-stop"]') as HTMLElement).click();
+    });
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(await prepare(container)).toContain("Taille de bouton où mes appuis atteignent leur cible\u00A0: UNKNOWN");
   });
 });
