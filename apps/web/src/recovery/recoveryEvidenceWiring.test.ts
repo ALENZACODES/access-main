@@ -5,7 +5,7 @@ import { PACKET_LIMITS } from "./recoveryEvidencePacket";
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 const model = read("./recoveryEvidencePacket.ts");
 const analysis = read("./recoveryEvidenceAnalysis.ts");
-const copy = read("./recoveryEvidenceCopy.ts");
+const copy = read("./recoveryEvidencePacketCopy.ts");
 const ui = read("./RecoveryEvidencePacketPanel.tsx");
 const modules = [model, analysis, copy, ui];
 

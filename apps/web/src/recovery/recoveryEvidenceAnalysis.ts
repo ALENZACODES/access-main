@@ -74,7 +74,7 @@ export interface EvidenceComparison {
 
 const operations: readonly PacketOperation[] = ["pack", "download", "export", "handoff"];
 const uniq = <T>(values: readonly T[]): T[] => [...new Set(values)];
-const alpha = (a: string, b: string): number => a.localeCompare(b);
+const alpha = (a: string, b: string): number => a < b ? -1 : a > b ? 1 : 0;
 const byId = (a: PacketEntry, b: PacketEntry): number => alpha(a.id, b.id);
 const isoDay = (value: string): string => value.slice(0, 10);
 

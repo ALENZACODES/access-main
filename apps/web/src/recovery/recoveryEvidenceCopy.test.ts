@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { recoveryEvidenceCopy } from "./recoveryEvidenceCopy";
+import { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
 import {
   PACKET_ACTIONS, PACKET_CONDITIONS, PACKET_OPERATIONS,
   PACKET_STAGES, PACKET_TIERS,
 } from "./recoveryEvidencePacket";
 
-const en = recoveryEvidenceCopy("en");
-const fr = recoveryEvidenceCopy("fr");
+const en = recoveryEvidencePacketCopy("en");
+const fr = recoveryEvidencePacketCopy("fr");
 
 describe("recovery evidence packet bilingual copy", () => {
   it("provides English heading", () => {

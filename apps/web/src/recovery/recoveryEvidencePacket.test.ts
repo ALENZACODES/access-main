@@ -219,7 +219,7 @@ describe("manual evidence packet model", () => {
     expect(total).toMatchObject({ total: 2, drafts: 1, closed: 1, unknown: 1, distinctPacks: 1 });
   });
   it("summarizes distinct packs", () => {
-    expect(packetSummary(document(entry(), entry("packet-2", { packId: "pack-b" }))).toMatchObject({ distinctPacks: 2 });
+    expect(packetSummary(document(entry(), entry("packet-2", { packId: "pack-b" })))).toMatchObject({ distinctPacks: 2 });
   });
   it("filters entries by operation", () => {
     const doc = document(entry(), entry("packet-2", { operation: "download" }));

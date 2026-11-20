@@ -11,7 +11,7 @@ import {
   type PacketLocale, type PacketOperation, type PacketStage, type PacketTier,
 } from "./recoveryEvidencePacket";
 import { evidenceReport, evidenceNarrative } from "./recoveryEvidenceAnalysis";
-import { recoveryEvidenceCopy } from "./recoveryEvidenceCopy";
+import { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
 
 export interface RecoveryEvidencePacketPanelProps {
   readonly locale: PacketLocale;
@@ -44,7 +44,7 @@ export function RecoveryEvidencePacketPanel({
   const listHeading = useId();
   const statusId = useId();
   const fileInput = useRef<HTMLInputElement | null>(null);
-  const copy = recoveryEvidenceCopy(locale);
+  const copy = recoveryEvidencePacketCopy(locale);
   const [document, setDocument] = useState<PacketDocument>(emptyPacket);
   const [staged, setStaged] = useState<PacketDocument | null>(null);
   const [message, setMessage] = useState("");
