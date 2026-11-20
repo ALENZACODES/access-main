@@ -123,7 +123,7 @@ describe('renderAgeBandsHtml', () => {
   it('has a caption, scoped headers and a row for each band plus Unknown', () => {
     expect(html).toContain('<caption>Sources by age of retrieved date</caption>');
     expect(html.match(/<tr><th scope="row">/g)).toHaveLength(AGE_BANDS.length + 1);
-    expect(html).toContain('<th scope="row">Unknown date</th><td>1</td><td>33%</td>');
+    expect(html).toContain('<th scope="row">Date UNKNOWN</th><td>1</td><td>33%</td>');
   });
   it('states the range and the Unknown note in words', () => {
     expect(html).toContain('The most recent retrieved date is 14 days old and the oldest is 1049 days old.');

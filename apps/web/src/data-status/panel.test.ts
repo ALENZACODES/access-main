@@ -53,7 +53,7 @@ describe('renderDataStatusPanel', () => {
   it('renders every section with text statuses and real dates', () => {
     for (const caption of ['Datasets', 'Sources', 'Credits and licences']) expect(en).toContain(`<caption>${caption}</caption>`);
     expect(en).toContain('May be out of date');
-    expect(en).toContain('Update date unknown');
+    expect(en).toContain('Update date UNKNOWN');
     expect(en).toContain('<time datetime="2026-11-01">November 1, 2026</time>');
     expect(en).toContain('rel="noopener noreferrer"');
     expect(en).toContain('data-action="recalculate"');
@@ -75,8 +75,8 @@ describe('renderDataStatusPanel', () => {
   });
 
   it('shows Unknown for a source with no licence or date', () => {
-    expect(fr).toContain('<td>Inconnu</td>');
-    expect(fr).toContain('Nom inconnu');
+    expect(fr).toContain('<td>UNKNOWN</td>');
+    expect(fr).toContain('Nom UNKNOWN');
   });
 
   it('includes coverage only when attributes are given, with Unknown shown as Unknown', () => {
@@ -91,7 +91,7 @@ describe('renderDataStatusPanel', () => {
     expect(html).toContain('<td>50.0%</td>');
     expect(structureProblems(html)).toEqual([]);
     const none = renderDataStatusPanel({ ...base, locale: 'fr', attributes: [{ key: 'k', label: { en: 'F', fr: 'C' } }], attributeRecords: [] });
-    expect(none).toContain('<td>Inconnu</td><td>Inconnu</td>');
+    expect(none).toContain('<td>UNKNOWN</td><td>UNKNOWN</td>');
   });
 
   it('shows the saved-copy notice with a readable date', () => {

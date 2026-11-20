@@ -93,7 +93,7 @@ describe('facts for each dataset', () => {
   });
   it('shows a row for each dataset', () => {
     const html = renderRecordFactsHtml(facts(RECORDS), 'en');
-    expect(html).toContain('<caption>Unknown facts for each dataset</caption>');
+    expect(html).toContain('<caption>Facts that are UNKNOWN, for each dataset</caption>');
     expect(html).toContain('<th scope="row">Routes</th><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>1</td>');
   });
 });
@@ -112,7 +112,7 @@ describe('renderRecordFactsHtml', () => {
   });
   it('shows Recorded or Unknown in each cell', () => {
     const html = renderRecordFactsHtml(facts([one({ tier: null })]), 'en');
-    expect(html).toContain('<th scope="row">Set / Publisher</th><td>Recorded</td><td>Recorded</td><td>Recorded</td><td>Unknown</td>');
+    expect(html).toContain('<th scope="row">Set / Publisher</th><td>Recorded</td><td>Recorded</td><td>Recorded</td><td>UNKNOWN</td>');
   });
   it('has a count for each fact', () => {
     const html = renderRecordFactsHtml(facts(RECORDS), 'en');

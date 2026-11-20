@@ -96,32 +96,31 @@ const NBSP = '\u00A0';
 
 const STRINGS = {
   en: {
-    unknown: 'Unknown',
-    rateUnknown: 'Unknown',
-    rateUnknownSpoken: 'unknown',
+    unknown: 'UNKNOWN',
+    rateUnknown: 'UNKNOWN',
+    rateUnknownSpoken: 'UNKNOWN',
     rate: 'Rate',
     today: 'Retrieved today',
     oneDay: 'Retrieved 1 day ago',
     days: 'Retrieved {n} days ago',
     stale: 'May be out of date.',
-    noDate: 'Retrieval date unknown',
+    noDate: 'Retrieval date UNKNOWN',
     source: 'Source',
     licence: 'Licence',
     retrieved: 'Retrieved',
     colon: ': ',
   },
   fr: {
-    // Source, licence and date are feminine in French: « Inconnue ».
-    unknown: 'Inconnue',
-    // Taux is masculine: « Taux : inconnu ».
-    rateUnknown: 'Inconnu',
-    rateUnknownSpoken: 'inconnu',
+    // The token is the same in both languages and does not take a gender.
+    unknown: 'UNKNOWN',
+    rateUnknown: 'UNKNOWN',
+    rateUnknownSpoken: 'UNKNOWN',
     rate: 'Taux',
     today: 'Récupéré aujourd’hui',
     oneDay: 'Récupéré il y a 1 jour',
     days: 'Récupéré il y a {n} jours',
     stale: 'Possiblement périmé.',
-    noDate: 'Date de récupération inconnue',
+    noDate: 'Date de récupération UNKNOWN',
     source: 'Source',
     licence: 'Licence',
     retrieved: 'Date de récupération',

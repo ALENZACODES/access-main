@@ -112,7 +112,9 @@ describe('handleDataStatus: HTML page', () => {
     expect(stale.body).toContain('<option value="stale" selected>');
     const relaxed = await ok(get('/en/data-status?state=stale&stale_places=2000'));
     expect(relaxed.body).toContain('0 of 3 sources shown');
-    expect(relaxed.body).toContain('<input type="hidden" name="stale_places" value="2000">');
+    // The review period is a field of the form now, so the next submit keeps it.
+    expect(relaxed.body).toMatch(/<select id="ds-rp-places" name="stale_places"[^>]*>.*?<option value="2000" selected>/s);
+    expect(relaxed.body).not.toContain('<input type="hidden" name="stale_places"');
     expect(relaxed.body).toContain('<td>Custom value</td>');
   });
 

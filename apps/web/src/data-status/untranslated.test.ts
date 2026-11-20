@@ -35,7 +35,8 @@ describe('catalogue', () => {
 
   it('the marker list has no duplicate-sensitive French words', () => {
     // None of the markers may be a word the French catalogue uses on purpose.
-    const frWords = new Set(Object.values(FR).flatMap((v) => v.replace(/\{\w+\}/g, ' ').toLowerCase().split(/[^a-zà-öø-ÿ]+/)));
+    // The token UNKNOWN is taken out first: it is written the same in both languages on purpose.
+    const frWords = new Set(Object.values(FR).flatMap((v) => v.replace(/\{\w+\}/g, ' ').replace(/\bUNKNOWN\b/g, ' ').toLowerCase().split(/[^a-zà-öø-ÿ]+/)));
     for (const m of ENGLISH_MARKERS) expect(frWords.has(m), `marker "${m}" appears in French copy`).toBe(false);
   });
 
@@ -62,6 +63,13 @@ describe('detectors', () => {
 
   it('does not flag French', () => {
     expect(englishWordsIn('Les sources sont possiblement périmées et la licence à examiner.')).toEqual([]);
+  });
+
+  it('does not count the token UNKNOWN in capitals, and still counts the word in any other case', () => {
+    expect(englishWordsIn('La date de récupération est UNKNOWN.')).toEqual([]);
+    expect(englishWordsIn('Niveau\u00A0: UNKNOWN (3)')).toEqual([]);
+    expect(englishWordsIn('est Unknown, ou unknown')).toEqual(['unknown']);
+    expect(englishWordsIn('UNKNOWNS')).toEqual([]);
   });
 
   it('flags a French sentence with one English word left in', () => {

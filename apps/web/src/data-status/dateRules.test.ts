@@ -46,8 +46,8 @@ describe('placeholder text is Unknown, never a value', () => {
   it('shows a placeholder source/licence as Unknown in the source list', () => {
     const [row] = buildSourceList([{ id: 'a', name: 'N/A', licence: 'TBD', retrievedAt: 'n/a', url: null }], 'en', NOW);
     expect(row?.name).not.toBe('N/A');
-    expect(row?.licence).toBe('Unknown');
-    expect(row?.retrieved).toBe('Unknown');
+    expect(row?.licence).toBe('UNKNOWN');
+    expect(row?.retrieved).toBe('UNKNOWN');
     expect(row?.licenceOpen).toBeNull();
   });
   it('lists no duplicates', () => {
@@ -81,7 +81,7 @@ describe('the stale limit is explicit and the same everywhere', () => {
     expect(ageInDays('2026-05-19T23:00:00Z', NOW)).toBe(181);
   });
   it('formats an invalid date as Unknown in both languages', () => {
-    expect(formatDisplayDate('2026-02-31', 'en')).toBe('Unknown');
-    expect(formatDisplayDate('2026-02-31', 'fr')).toBe('Inconnu');
+    expect(formatDisplayDate('2026-02-31', 'en')).toBe('UNKNOWN');
+    expect(formatDisplayDate('2026-02-31', 'fr')).toBe('UNKNOWN');
   });
 });

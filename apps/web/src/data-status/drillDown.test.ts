@@ -63,7 +63,7 @@ describe('drill-down targets', () => {
 describe('wording and controls', () => {
   it('names the sources in the same words the filters use', () => {
     expect(drillLabel({ kind: 'tier', value: 'E' }, 'en')).toBe('List these sources. Tier: E');
-    expect(drillLabel({ kind: 'tier', value: 'unknown' }, 'en')).toBe('List these sources. Tier: Unknown');
+    expect(drillLabel({ kind: 'tier', value: 'unknown' }, 'en')).toBe('List these sources. Tier: UNKNOWN');
     expect(drillLabel({ kind: 'dataset', value: 'p' }, 'en', new Map([['p', 'Places']]))).toBe('List these sources. Dataset: Places');
     expect(drillLabel({ kind: 'tier', value: 'E' }, 'fr')).toBe('Afficher ces sources. Niveau : E');
     expect(drillColumnHeading('en')).toBe('In the source list');
