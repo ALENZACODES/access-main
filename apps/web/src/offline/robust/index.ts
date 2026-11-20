@@ -96,3 +96,12 @@ export * from "./accessPreparation";
 export * from "./accessPreparationCopy";
 export * from "./accessPreparationExport";
 export * from "./accessPreparationPanel";
+
+// Inquiry and contingency capabilities; each panel is mounted on explicit page load.
+export * from "./accessInquiry";
+export * from "./accessInquiryCopy";
+export * from "./accessInquiryExport";
+export * from "./accessInquiryPanel";
+export * from "./contingencyPlan";
+export * from "./contingencyCopy";
+export * from "./contingencyExport";
