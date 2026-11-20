@@ -6,6 +6,7 @@ import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { SHELL_CONTRACT_VERSION } from "../../packages/shared/src/modules.ts";
 import { BUILD_MANIFEST_FILE, createBuildManifest } from "./src/release/manifest.ts";
+import { ON_DEMAND_AUDIT_GLOB, ON_DEMAND_AUDIT_URL_PATTERN } from "./src/perf/optional-audit-assets.ts";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(root, "../..");
@@ -161,13 +162,24 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
-        globIgnores: ["data/**", "**/*.pmtiles", "**/maplibre-*.js"],
+        globIgnores: ["data/**", "**/*.pmtiles", "**/maplibre-*.js", ON_DEMAND_AUDIT_GLOB],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/packs\//, dataPath],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false,
         runtimeCaching: [
+          // Large optional narrow-screen audits are downloaded only when opened, then
+          // cached for subsequent offline visits. The audit route and its controls remain available.
+          // A fresh install needs a connection for the first visit to this optional screen.
+          {
+            urlPattern: ON_DEMAND_AUDIT_URL_PATTERN,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "optional-narrow-audit",
+              expiration: { maxEntries: 4, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            },
+          },
           // Data pack files are never cached here. The data client keeps its own copy in IndexedDB.
           { urlPattern: dataPath, handler: "NetworkOnly" },
           {
