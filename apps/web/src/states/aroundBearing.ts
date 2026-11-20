@@ -13,13 +13,13 @@ export const COMPASS_POINTS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] as co
 export type CompassPoint = (typeof COMPASS_POINTS)[number];
 
 /** Two points closer than this are the same spot: no direction is given. */
-export const SAME_SPOT_METRES = 1;
+export const AROUND_SAME_SPOT_METRES = 1;
 
 const rad = (d: number): number => (d * Math.PI) / 180;
 const deg = (r: number): number => (r * 180) / Math.PI;
 
 /** Initial great-circle bearing from `from` to `to`, in degrees clockwise from north: 0 up to but not including 360. */
-export function bearingDegrees(from: Point, to: Point): number {
+export function compassBearing(from: Point, to: Point): number {
   const dLon = rad(to.lon - from.lon);
   const y = Math.sin(dLon) * Math.cos(rad(to.lat));
   const x = Math.cos(rad(from.lat)) * Math.sin(rad(to.lat)) - Math.sin(rad(from.lat)) * Math.cos(rad(to.lat)) * Math.cos(dLon);
@@ -36,8 +36,8 @@ export function compassPoint(bearing: number): CompassPoint | null {
 
 /** The direction from `from` to `to`, or null when they are the same spot (or a point is not usable). */
 export function directionBetween(from: Point, to: Point, metres: number): CompassPoint | null {
-  if (!Number.isFinite(metres) || metres < SAME_SPOT_METRES) return null;
-  return compassPoint(bearingDegrees(from, to));
+  if (!Number.isFinite(metres) || metres < AROUND_SAME_SPOT_METRES) return null;
+  return compassPoint(compassBearing(from, to));
 }
 
 /** The opposite point: the direction back. */

@@ -79,7 +79,7 @@ export function centreChoices(places: readonly PackPlaceRecord[]): readonly Pack
     });
 }
 
-export function buildAround(places: readonly PackPlaceRecord[], centreId: string | null, radius: number): AroundResult {
+export function buildAroundList(places: readonly PackPlaceRecord[], centreId: string | null, radius: number): AroundResult {
   if (centreId === null || centreId === "") return { status: "no-centre" };
   const centre = places.find((p) => p.id === centreId);
   if (centre === undefined) return { status: "centre-not-found", id: centreId };

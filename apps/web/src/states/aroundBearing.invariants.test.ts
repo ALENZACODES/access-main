@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COMPASS_POINTS, bearingDegrees, compassPoint, directionBetween, oppositePoint } from "./aroundBearing";
+import { COMPASS_POINTS, compassBearing, compassPoint, directionBetween, oppositePoint } from "./aroundBearing";
 import { ORIGIN, offset } from "./aroundFixtures";
 import { distanceMetres } from "./packGeo";
 import { lcg } from "./placeFixtures";
@@ -27,7 +27,7 @@ describe("direction between random pairs of points", () => {
   it("gives the opposite point when the pair is swapped, except close to a sector edge", () => {
     let checked = 0;
     for (const { a, b, metres } of pairs) {
-      const there = bearingDegrees(a, b);
+      const there = compassBearing(a, b);
       if (edgeGap(there) < 0.5 || metres < 1) continue;
       expect(directionBetween(b, a, metres), `${there}`).toBe(oppositePoint(directionBetween(a, b, metres)!));
       checked += 1;
@@ -37,7 +37,7 @@ describe("direction between random pairs of points", () => {
   it("agrees with compassPoint of the bearing", () => {
     for (const { a, b, metres } of pairs) {
       if (metres < 1) continue;
-      expect(directionBetween(a, b, metres)).toBe(compassPoint(bearingDegrees(a, b)));
+      expect(directionBetween(a, b, metres)).toBe(compassPoint(compassBearing(a, b)));
     }
   });
   it("does not change when both points move together by the same small amount", () => {
@@ -46,7 +46,7 @@ describe("direction between random pairs of points", () => {
     const dLon = shift.lon - ORIGIN.lon;
     let checked = 0;
     for (const { a, b, metres } of pairs.slice(0, 400)) {
-      if (edgeGap(bearingDegrees(a, b)) < 1 || metres < 1) continue;
+      if (edgeGap(compassBearing(a, b)) < 1 || metres < 1) continue;
       const moved = directionBetween({ lat: a.lat + dLat, lon: a.lon + dLon }, { lat: b.lat + dLat, lon: b.lon + dLon }, metres);
       expect(moved).toBe(directionBetween(a, b, metres));
       checked += 1;

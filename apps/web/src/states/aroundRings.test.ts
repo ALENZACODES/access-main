@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AROUND_TAG_COLUMNS, countTags, directionsWithPlaces, emptyTagCounts, ringEdges, ringRows, sectorRows } from "./aroundRings";
-import { buildAround, type AroundMember } from "./aroundSearch";
+import { buildAroundList, type AroundMember } from "./aroundSearch";
 import { at, crossroads } from "./aroundFixtures";
 
 const m = (id: string, metres: number, tag: AroundMember["tag"], direction: AroundMember["direction"], name: string | null = id): AroundMember => ({ id, name, tag, category: null, address: null, metres, direction });
@@ -61,7 +61,7 @@ describe("ringRows", () => {
     for (const r of rows) expect(r.count).toBe(0);
   });
   it("matches a real search", () => {
-    const r = buildAround(crossroads(), "centre", 250);
+    const r = buildAroundList(crossroads(), "centre", 250);
     if (r.status !== "ok") throw new Error("expected ok");
     expect(ringRows(r.members, 250).map((x) => x.count)).toEqual([0, 1, 1 + 1 + 1]);
   });
@@ -99,7 +99,7 @@ describe("directionsWithPlaces", () => {
     expect(directionsWithPlaces([])).toEqual([]);
   });
   it("finds all four neighbours of the crossroads", () => {
-    const r = buildAround([...crossroads(), at("x", 10, 10)], "centre", 250);
+    const r = buildAroundList([...crossroads(), at("x", 10, 10)], "centre", 250);
     if (r.status !== "ok") throw new Error("expected ok");
     expect(directionsWithPlaces(r.members)).toEqual(["N", "NE", "E", "S", "W"]);
   });

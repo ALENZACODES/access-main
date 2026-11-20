@@ -5,7 +5,7 @@ import {
 } from "./aroundCopy";
 import { crossroads, at } from "./aroundFixtures";
 import { lintCopy } from "./copyLint";
-import { buildAround, type AroundMember } from "./aroundSearch";
+import { buildAroundList, type AroundMember } from "./aroundSearch";
 import { sectorRows } from "./aroundRings";
 import type { Locale } from "./stateCopy";
 
@@ -13,7 +13,7 @@ const LOCALES: Locale[] = ["en", "fr"];
 const NBSP = "\u00a0";
 
 function okResult(radius = 250, list = crossroads(), id = "centre") {
-  const r = buildAround(list, id, radius);
+  const r = buildAroundList(list, id, radius);
   if (r.status !== "ok") throw new Error("expected ok");
   return r;
 }

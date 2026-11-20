@@ -6,12 +6,12 @@ import {
   aroundCaveat, aroundHeading, aroundIntro, aroundSummary, aroundToggle, beyondLine, centreNotFound, centreOptionLabel, chooseFirst, memberName, nearestInSector,
   noMatchesLine, noPointCentre, radiusOptionLabel, ringLabel, sectorLabel, tagWord, aroundUnmeasuredLine, distanceAndDirection,
 } from "./aroundCopy.ts";
-import { AROUND_CSV_FILENAMES, AROUND_TEXT_FILENAMES, aroundToCsv, aroundToText } from "./aroundExport.ts";
+import { AROUND_CSV_FILENAMES, AROUND_TEXT_FILENAMES, aroundListToCsv, aroundListToText } from "./aroundExport.ts";
 import {
   AROUND_ORDERS, type AroundFilter, type AroundOrder, DEFAULT_AROUND_ORDER, NO_AROUND_FILTER, aroundOrderLabel, filterAround, isAroundOrder, isFiltered, orderAround, toggleTag,
 } from "./aroundFilter.ts";
 import { AROUND_TAG_COLUMNS, ringRows, sectorRows } from "./aroundRings.ts";
-import { AROUND_RADII, DEFAULT_AROUND_RADIUS, buildAround, centreChoices, isAroundRadius } from "./aroundSearch.ts";
+import { AROUND_RADII, DEFAULT_AROUND_RADIUS, buildAroundList, centreChoices, isAroundRadius } from "./aroundSearch.ts";
 import { saveTextFile, type SavedFile } from "./downloadFile.ts";
 import type { PackPlaceRecord } from "./packPlaces.ts";
 import type { Locale } from "./stateCopy.ts";
@@ -42,7 +42,7 @@ export function AroundPlace({ places, locale, onSave = saveTextFile }: Props) {
   const [status, setStatus] = useState("");
 
   const choices = useMemo(() => centreChoices(places), [places]);
-  const result = useMemo(() => buildAround(places, centreId === "" ? null : centreId, radius), [places, centreId, radius]);
+  const result = useMemo(() => buildAroundList(places, centreId === "" ? null : centreId, radius), [places, centreId, radius]);
   const ok = result.status === "ok" ? result : null;
   const shown = useMemo(() => (ok === null ? [] : orderAround(filterAround(ok.members, filter), order)), [ok, filter, order]);
   const rings = useMemo(() => (ok === null ? [] : ringRows(ok.members, ok.radius)), [ok]);
@@ -231,10 +231,10 @@ export function AroundPlace({ places, locale, onSave = saveTextFile }: Props) {
               {aroundUnmeasuredLine(ok.unmeasured, locale) ? <p>{aroundUnmeasuredLine(ok.unmeasured, locale)}</p> : null}
               {shown.length > 0 ? (
                 <div className="stack" role="group" aria-label={t(locale, "Save this list", "Enregistrer cette liste")}>
-                  <Button variant="secondary" onPress={() => save({ name: AROUND_TEXT_FILENAMES[locale], mime: "text/plain;charset=utf-8", content: aroundToText(ok, shown, isFiltered(filter), locale) })}>
+                  <Button variant="secondary" onPress={() => save({ name: AROUND_TEXT_FILENAMES[locale], mime: "text/plain;charset=utf-8", content: aroundListToText(ok, shown, isFiltered(filter), locale) })}>
                     {t(locale, "Save as text (.txt)", "Enregistrer en texte (.txt)")}
                   </Button>
-                  <Button variant="secondary" onPress={() => save({ name: AROUND_CSV_FILENAMES[locale], mime: "text/csv;charset=utf-8", content: aroundToCsv(ok, shown, { bom: true }) })}>
+                  <Button variant="secondary" onPress={() => save({ name: AROUND_CSV_FILENAMES[locale], mime: "text/csv;charset=utf-8", content: aroundListToCsv(ok, shown, { bom: true }) })}>
                     {t(locale, "Save as a spreadsheet (.csv)", "Enregistrer en tableur (.csv)")}
                   </Button>
                 </div>

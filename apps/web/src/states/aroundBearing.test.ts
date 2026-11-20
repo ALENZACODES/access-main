@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { lintFrench } from "./typography";
 import {
-  COMPASS_POINTS, SAME_SPOT_METRES, bearingDegrees, compassFrom, compassPoint, compassShort, compassWord, directionBetween, oppositePoint,
+  COMPASS_POINTS, AROUND_SAME_SPOT_METRES, compassBearing, compassFrom, compassPoint, compassShort, compassWord, directionBetween, oppositePoint,
 } from "./aroundBearing";
 import { ORIGIN, offset } from "./aroundFixtures";
 import { distanceMetres } from "./packGeo";
 
-describe("bearingDegrees", () => {
+describe("compassBearing", () => {
   it.each([
     ["north", 100, 0, 0],
     ["east", 0, 100, 90],
@@ -17,24 +17,24 @@ describe("bearingDegrees", () => {
     ["south-west", -100, -100, 225],
     ["north-west", 100, -100, 315],
   ])("is about the right angle for %s", (_name, north, east, want) => {
-    const got = bearingDegrees(ORIGIN, offset(north, east));
+    const got = compassBearing(ORIGIN, offset(north, east));
     expect(Math.abs(got - want)).toBeLessThan(0.1);
   });
   it("stays below 360 and never goes negative", () => {
     for (let a = 0; a < 360; a += 7) {
       const r = (a * Math.PI) / 180;
-      const b = bearingDegrees(ORIGIN, offset(100 * Math.cos(r), 100 * Math.sin(r)));
+      const b = compassBearing(ORIGIN, offset(100 * Math.cos(r), 100 * Math.sin(r)));
       expect(b).toBeGreaterThanOrEqual(0);
       expect(b).toBeLessThan(360);
     }
   });
   it("is 0 for a point just west of north (not 360)", () => {
-    const b = bearingDegrees(ORIGIN, offset(100, -0.00001));
+    const b = compassBearing(ORIGIN, offset(100, -0.00001));
     expect(b === 0 || b > 359.9).toBe(true);
     expect(b).toBeLessThan(360);
   });
   it("is 0 for identical points", () => {
-    expect(bearingDegrees(ORIGIN, ORIGIN)).toBe(0);
+    expect(compassBearing(ORIGIN, ORIGIN)).toBe(0);
   });
 });
 
@@ -73,7 +73,7 @@ describe("directionBetween", () => {
     expect(directionBetween(ORIGIN, offset(0.5, 0), 0.5)).toBeNull();
   });
   it("gives a direction at exactly the same-spot limit", () => {
-    expect(directionBetween(ORIGIN, offset(SAME_SPOT_METRES, 0), SAME_SPOT_METRES)).toBe("N");
+    expect(directionBetween(ORIGIN, offset(AROUND_SAME_SPOT_METRES, 0), AROUND_SAME_SPOT_METRES)).toBe("N");
   });
   it("gives no direction when the distance is not a usable number", () => {
     for (const bad of [Number.NaN, Infinity, -5]) expect(directionBetween(ORIGIN, offset(50, 0), bad)).toBeNull();

@@ -29,7 +29,7 @@ export function csvDirection(m: Pick<AroundMember, "direction">): string {
 }
 
 /** One row per shown place. With no places, only the header row. */
-export function aroundToCsv(result: Ok, shown: readonly AroundMember[], opts: CsvOptions = {}): string {
+export function aroundListToCsv(result: Ok, shown: readonly AroundMember[], opts: CsvOptions = {}): string {
   const rows: string[][] = [[...AROUND_CSV_HEADER]];
   for (const m of shown) {
     rows.push([
@@ -49,7 +49,7 @@ export function aroundToCsv(result: Ok, shown: readonly AroundMember[], opts: Cs
 }
 
 /** A short, readable file: heading, the numbers in words, then one block per place, then the credit. */
-export function aroundToText(result: Ok, shown: readonly AroundMember[], filtered: boolean, locale: Locale): string {
+export function aroundListToText(result: Ok, shown: readonly AroundMember[], filtered: boolean, locale: Locale): string {
   const lines: string[] = [];
   lines.push(t(locale, `Places around ${centreName(result.centre, locale)}`, `Lieux autour de ${centreName(result.centre, locale)}`));
   lines.push("");
