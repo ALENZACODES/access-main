@@ -8,14 +8,10 @@ import { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, liveRefused } from "
 import { outsideItems } from "../privacy/panel/outsideSection.ts";
 import { STORAGE_REGISTER, UNSCANNED } from "../privacy/panel/storageRegister.ts";
 import { aboutNoticeItems } from "../privacy/onDeviceNotice/index.ts";
-import {
-  adaptElement,
-  browserDownload,
-  createPrivacyController,
-  mountPrivacyPanel,
-  safeLocalStorage,
-  type InventoryEntry,
-} from "../privacy/panel/index.ts";
+import { adaptElement, browserDownload, mountPrivacyPanel } from "../privacy/panel/mount.ts";
+import { createPrivacyController } from "../privacy/panel/controller.ts";
+import { safeLocalStorage } from "../privacy/panel/storage.ts";
+import type { InventoryEntry } from "../privacy/panel/inventory.ts";
 
 const REVIEWED_ON = "2026-11-15";
 
