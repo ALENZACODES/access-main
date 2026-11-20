@@ -13,7 +13,8 @@ const modules = [model, analysis, copy, ui];
 
 describe("local recovery evidence panel contracts", () => {
   it("mounts the evidence panel against active inspection", () => {
-    expect(liveShell).toContain('import { RecoveryEvidencePacketPanel } from "./RecoveryEvidencePacketPanel"');
+    expect(liveShell).toContain('await import("./RecoveryEvidencePacketPanel")');
+    expect(liveShell).toContain("<Suspense fallback=");
     expect(liveShell).toContain('<RecoveryEvidencePacketPanel locale={locale} records={inventory}');
     expect(liveShell).toContain('inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile}');
   });
