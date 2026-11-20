@@ -9,7 +9,12 @@ import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
-import { StateNotice, SuggestionList, escalateView, helpTitleHints, moduleStateFor, moduleStateView, titledItems, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { StateNotice } from "../states/StateNotice.tsx";
+import { SuggestionList } from "../states/SuggestionList.tsx";
+import { escalateView } from "../states/retryPolicy.ts";
+import { helpTitleHints, titledItems } from "../states/hints.ts";
+import { moduleStateFor, moduleStateView, type ModuleAvailability } from "../states/moduleStates.ts";
+import { useFailureStreak } from "../states/useFailureStreak.ts";
 
 export function HelpPage() {
   const { t, i18n } = useTranslation();
