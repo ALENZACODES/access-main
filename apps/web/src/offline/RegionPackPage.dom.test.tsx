@@ -194,7 +194,7 @@ describe("offline region fail-safe states (docs/failsafe.md)", () => {
 
   it.each(["en", "fr"] as const)("names unavailable cells with the builder's reason, stale cells and the dropped count (%s)", async (locale) => {
     const c = offlineCatalog[locale];
-    const { container } = await view(locale, mockSource({ parts: [part()], regions: async () => [failsafe] }));
+    await view(locale, mockSource({ parts: [part()], regions: async () => [failsafe] }));
     await screen.findByRole("heading", { name: c.title });
     const notes = await screen.findByTestId("failsafe-toronto");
     await waitFor(() => expect(notes.querySelector('[data-failsafe="dropped"]')).not.toBeNull());
@@ -207,7 +207,9 @@ describe("offline region fail-safe states (docs/failsafe.md)", () => {
     expect(notes.textContent).toContain(c.failsafeStale);
     expect([...notes.querySelectorAll('[data-failsafe="stale"]')].map((item) => item.textContent)).toEqual(["n44.5_w079.5"]);
     expect(notes.querySelector('[data-failsafe="dropped"]')?.textContent).toBe(c.failsafeDroppedMany.replace("{count}", "3"));
-    expect(await axeViolations(container)).toEqual([]);
+    // Scope axe to the live fail-safe region: full-page audits are covered above.
+    // This keeps the bilingual evidence assertions and accessibility audit in one render.
+    expect(await axeViolations(notes)).toEqual([]);
   });
 
   it.each(["en", "fr"] as const)("uses the singular for one dropped record and shows nothing else (%s)", async (locale) => {
