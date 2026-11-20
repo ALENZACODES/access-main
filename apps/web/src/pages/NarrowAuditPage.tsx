@@ -10,6 +10,7 @@ import { mountReachPanel, type ReachPanelState } from "../narrow/reach-panel.ts"
 import { mountTapPanel, type TapPanelState } from "../narrow/tap-panel.ts";
 import { mountScrollPanel, type ScrollPanelState } from "../narrow/scroll-panel.ts";
 import { tapNote } from "../narrow/tap-trial.ts";
+import { mountVoicePanel, type VoicePanelState } from "../narrow/voice-panel.ts";
 import { zoneNote } from "../narrow/zones.ts";
 import { mountZonesPanel, type ZonesState } from "../narrow/zones-panel.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
@@ -47,6 +48,10 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
  * few times and the panel times each press and the gaps between them. That
  * line goes into the barrier text as well.
  *
+ * After "How I press" comes "Say it to press it", for people who use voice
+ * control: it counts the controls of this page that take extra steps by voice
+ * and lets the person try a phrase.
+ *
  * Last of all, "Scroll effort on this page" counts how far down the page its
  * headings, send buttons and last control sit, in screens of the window.
  */
@@ -68,6 +73,8 @@ export function NarrowAuditPage() {
   const pressRef = useRef<HTMLDivElement>(null);
   const pressStateRef = useRef<PressPanelState | undefined>(undefined);
   const pressMountedRef = useRef<{ getState(): PressPanelState } | null>(null);
+  const voiceRef = useRef<HTMLDivElement>(null);
+  const voiceStateRef = useRef<VoicePanelState | undefined>(undefined);
   const reachRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollStateRef = useRef<ScrollPanelState | undefined>(undefined);
@@ -161,6 +168,18 @@ export function NarrowAuditPage() {
   }, [panelLang]);
 
   useEffect(() => {
+    const host = voiceRef.current;
+    if (!host) return;
+    const root = document.createElement("div");
+    host.appendChild(root);
+    const mounted = mountVoicePanel({ root, lang: panelLang, ...(voiceStateRef.current ? { state: voiceStateRef.current } : {}) });
+    return () => {
+      voiceStateRef.current = mounted.getState();
+      root.remove();
+    };
+  }, [panelLang]);
+
+  useEffect(() => {
     const host = reachRef.current;
     if (!host) return;
     const root = document.createElement("div");
@@ -192,6 +211,7 @@ export function NarrowAuditPage() {
       <div ref={tapRef} />
       <div ref={zonesRef} />
       <div ref={pressRef} />
+      <div ref={voiceRef} />
       <div ref={handRef} />
       <div ref={reachRef} />
       <div ref={scrollRef} />

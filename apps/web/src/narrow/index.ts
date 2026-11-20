@@ -110,3 +110,6 @@ export * from './press-panel.ts';
 export * from './scroll-inpage.ts';
 export * from './scroll-effort.ts';
 export * from './scroll-panel.ts';
+export * from './voice-inpage.ts';
+export * from './voice.ts';
+export * from './voice-panel.ts';

@@ -1006,3 +1006,83 @@ describe("NarrowAuditPage: scroll effort", () => {
     expect(document.querySelector(".scroll-effort")).toBeNull();
   });
 });
+
+/** "Say it to press it" sits after "How I press". jsdom lays nothing out, so every element is given a box. */
+describe("NarrowAuditPage: say it to press it", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    Element.prototype.getBoundingClientRect = function box(): DOMRect {
+      return { x: 0, y: 0, top: 0, left: 0, right: 80, bottom: 30, width: 80, height: 30, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, between How I press and Look by hand", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".voice")).toHaveLength(1);
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const h2 = container.querySelector("#voice-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Say it to press it");
+    expect((container.querySelector("#press-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#hand-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("reads the controls of the other panels, leaves its own out, and puts focus on the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.voice [data-action="voice-count"]');
+    expect(document.activeElement).toBe(container.querySelector("#voice-result-h"));
+    expect(container.querySelector("#voice-result-h + p")?.textContent).toMatch(/^Of \d+ controls, \d+ can be reached in one step by saying what they show\.$/);
+    expect(container.querySelector(".voice [role=status]")?.textContent).toBe("The controls were read.");
+  });
+
+  it("finds a control of another panel by what a person would say, and leaves its own button out", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.voice [data-action="voice-count"]');
+    (container.querySelector("#voice-say") as HTMLInputElement).value = "click Start the press test";
+    await press(container, '.voice [data-action="voice-try"]');
+    expect(container.querySelector("#voice-said")?.textContent).toBe("One control answers to “start the press test”: button “Start the press test”.");
+    expect(document.activeElement).toBe(container.querySelector('.voice [data-action="voice-try"]'));
+    (container.querySelector("#voice-say") as HTMLInputElement).value = "See what it reaches";
+    await press(container, '.voice [data-action="voice-try"]');
+    expect(container.querySelector("#voice-said")?.textContent).toMatch(/^No control of this page has/);
+  });
+
+  it("follows the language of the audit panel and keeps what was read and typed", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.voice [data-action="voice-count"]');
+    (container.querySelector("#voice-say") as HTMLInputElement).value = "Send";
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".voice")).toHaveLength(1);
+    expect(container.querySelector("#voice-h")?.textContent).toBe("Le dire pour appuyer");
+    expect(container.querySelector(".voice")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect((container.querySelector("#voice-say") as HTMLInputElement).value).toBe("Send");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const pressBefore = container.querySelector(".press")?.innerHTML;
+    await press(container, '.voice [data-action="voice-count"]');
+    expect(container.querySelector(".press")?.innerHTML).toBe(pressBefore);
+    unmount();
+    expect(document.querySelector(".voice")).toBeNull();
+  });
+});
