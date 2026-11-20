@@ -14,8 +14,9 @@ const AREAS = [
 ] as const;
 
 export function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { profile, ready } = useProfileState();
+  const french = i18n.language.startsWith("fr");
   useDocumentTitle(t("appName"));
 
   return (
@@ -54,6 +55,12 @@ export function HomePage() {
               </Link>
             </li>
           ))}
+          <li>
+            <Link className="card" to="/access-rehearsal" style={{ minHeight: 44 }}>
+              <span className="card-title">{french ? "Répétition d’accessibilité" : "Access rehearsal"}</span>
+              <span>{french ? "Parcours au clavier et par balayage, sans transmission de données." : "Practice keyboard and switch journeys without sending data."}</span>
+            </Link>
+          </li>
         </ul>
       </section>
     </div>

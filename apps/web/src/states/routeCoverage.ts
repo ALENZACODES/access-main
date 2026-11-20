@@ -40,6 +40,7 @@ export const ROUTE_COVERAGE: Readonly<Record<string, RouteCoverage>> = {
   "data-status": { file: "pages/DataStatusPage.tsx", mechanism: "shell", shellStates: ["storageUnavailable"], why: "Storage failure uses the shell state with retry." },
   "build-card": { file: "pages/BuildCardPage.tsx", mechanism: "static", why: "Reads build information compiled into the app." },
   offline: { file: "offline/RegionPackPage.tsx", mechanism: "states", stateRoute: "offline", why: "Pack list failure and an empty list." },
+  "access-rehearsal": { file: "input/rehearsal/AccessRehearsalPage.tsx", mechanism: "form", why: "Device-local step editor reports missing bilingual fields next to the editable inputs and provides retry by editing and saving." },
   places: { file: "pages/ModulePage.tsx", mechanism: "states", stateRoute: "search", why: "Search, offline and load failures." },
   "places/:id": { file: "pages/PlaceDetailPage.tsx", mechanism: "states", stateRoute: "place", why: "Not found and load failures." },
   map: { file: "map/MapPage.tsx", mechanism: "states", stateRoute: "map", why: "Empty view and load failures." },
@@ -63,6 +64,7 @@ export const ROUTE_COVERAGE: Readonly<Record<string, RouteCoverage>> = {
  */
 export const BARE_ALERT_ALLOWLIST: Readonly<Record<string, string>> = {
   "pages/OnboardingPage.tsx": "Form error summary; each field error is next to the field.",
+  "input/rehearsal/AccessRehearsalPage.tsx": "Missing bilingual step fields show an alert beside the editable inputs; the person can correct the fields and choose Save step again.",
   "pages/OfflinePackPage.tsx": "Legacy page, not routed; the routed page is offline/RegionPackPage.tsx.",
   "pages/ProfilePage.tsx": "Save failure; the shell state's link to data status sits beside it.",
   "offline/RegionPackPage.tsx": "Download result text names its cause; the region card keeps Download, Resume and Delete.",
