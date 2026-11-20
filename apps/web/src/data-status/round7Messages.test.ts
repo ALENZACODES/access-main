@@ -36,11 +36,15 @@ import { CHECKLIST_MESSAGES } from './reviewChecklist';
 import { DATASET_CARD_MESSAGES } from './datasetCards';
 import { COLUMN_MESSAGES } from './columns';
 import { FACET_MESSAGES } from './facets';
+import { FILE_CHECK_MESSAGES } from './fileChecks';
 import { FILE_GUIDE_MESSAGES } from './fileGuide';
 import { LISTED_TABLE_MESSAGES } from './listedTable';
 import { LISTED_JSON_MESSAGES } from './listedJson';
 import { NAME_SUGGESTION_MESSAGES } from './nameSuggestions';
+import { NOTES_FILE_MESSAGES } from './notesFile';
+import { ODDITY_MESSAGES } from './oddities';
 import { PIVOT_MESSAGES } from './pivot';
+import { PUBLISHER_MESSAGES } from './publishers';
 import { QUERY_TOKEN_MESSAGES } from './queryTokens';
 import { REVIEW_BATCH_MESSAGES } from './reviewBatches';
 import { SHARED_PAGE_MESSAGES } from './sharedPages';
@@ -83,6 +87,10 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['facets', FACET_MESSAGES],
   ['columns', COLUMN_MESSAGES],
   ['pivot', PIVOT_MESSAGES],
+  ['notesFile', NOTES_FILE_MESSAGES],
+  ['fileChecks', FILE_CHECK_MESSAGES],
+  ['oddities', ODDITY_MESSAGES],
+  ['publishers', PUBLISHER_MESSAGES],
   ['fileGuide', FILE_GUIDE_MESSAGES],
   ['reviewBatches', REVIEW_BATCH_MESSAGES],
   ['sharedPages', SHARED_PAGE_MESSAGES],

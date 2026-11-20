@@ -178,7 +178,7 @@ describe('the section', () => {
     expect(html.match(/<caption>/g)).toHaveLength(1);
   });
   it('marks the files that open in the browser, on the server page only', () => {
-    expect(renderFileGuideHtml('static', 'en').match(/\(Opens in the browser\)/g)).toHaveLength(2);
+    expect(renderFileGuideHtml('static', 'en').match(/\(Opens in the browser\)/g)).toHaveLength(3);
     expect(renderFileGuideHtml('live', 'en')).not.toContain('Opens in the browser');
   });
   it('says how many files there are and how a missing fact is written', () => {

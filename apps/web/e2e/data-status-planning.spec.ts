@@ -607,3 +607,39 @@ test("Data status: the page stays short to cross with the Tab key, and the jump 
   await expect(panel.getByRole("heading", { level: 2, name: "Words used on this panel" })).toBeFocused();
   await expect(panel.getByRole("heading", { level: 2, name: "Words used on this panel" })).toBeInViewport();
 });
+
+test("Data status: publishers, things worth a second look and the files read back are shown from the saved records", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "p-twin", kind: "place", title: "Old place", retrieved_at: daysAgo(10) },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+
+  const publishers = panel.getByRole("region", { name: "Sources by publisher" });
+  await expect(publishers).toContainText(/\d+ publishers? (is|are) recorded\./);
+  await expect(publishers.getByRole("table").getByRole("columnheader")).toHaveText(["Publisher", "Sources", "Datasets", "Licence types", "Oldest retrieved date", "Next review date"]);
+
+  const look = panel.getByRole("region", { name: "Worth a second look" });
+  await expect(look).toContainText("None of these is an error, and none changes a status.");
+  await expect(look.getByRole("heading", { level: 3, name: "The same name twice in one dataset" })).toBeVisible();
+
+  const checks = panel.getByRole("region", { name: "Files read back and counted" });
+  await expect(checks).toContainText("All 10 files agree with the list.");
+  await expect(checks.getByRole("row")).toHaveCount(11);
+  await expect(checks.getByRole("cell", { name: "Does not agree" })).toHaveCount(0);
+
+  // The sections are in the jump menu.
+  const menu = panel.getByRole("navigation", { name: "On this panel" });
+  await menu.getByLabel("Section").selectOption({ label: "Worth a second look" });
+  await menu.getByRole("button", { name: "Go to this section" }).click();
+  await expect(panel.getByRole("heading", { level: 2, name: "Worth a second look" })).toBeFocused();
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("region", { name: "Sources par diffuseur" })).toBeVisible();
+  await expect(fr.getByRole("region", { name: "Fichiers relus et comptés" })).toContainText("Les 10 fichiers concordent avec la liste.");
+});

@@ -44,6 +44,13 @@ import {
   buildNoMatchHints,
   renderDueSummaryHtml,
   clampLimit,
+  notesFileLabel,
+  renderFileChecksHtml,
+  runFileChecks,
+  buildOddities,
+  buildPublishers,
+  renderOdditiesHtml,
+  renderPublishersHtml,
   TOC_GO_ACTION,
   renderFileGuideHtml,
   BATCH_EXPORT_ACTION,
@@ -265,6 +272,9 @@ export interface StaticView {
   /** The listed sources as a Markdown table and as plain text, with the extra columns of the list. */
   listedMdHref?: string;
   listedTxtHref?: string;
+  /** Every publisher (CSV), and the notes on the saved records (Markdown). Both cover every source. */
+  publishersHref?: string;
+  notesHref?: string;
 }
 
 const esc = escapeHtml;
@@ -687,6 +697,8 @@ export function renderDataStatusPanel(state: PanelState): string {
       (sv.listedJsonHref ? ` ${downloadLink(sv.listedJsonHref + listQuery, listedJsonLabel(locale))}` : '') +
       (sv.listedMdHref ? ` ${downloadLink(sv.listedMdHref + tableQuery, listedTableLabel('md', locale))}` : '') +
       (sv.listedTxtHref ? ` ${downloadLink(sv.listedTxtHref + tableQuery, listedTableLabel('txt', locale))}` : '') +
+      (sv.publishersHref ? ` ${downloadLink(sv.publishersHref + thrQuery, notesFileLabel('publishers', locale))}` : '') +
+      (sv.notesHref ? ` ${downloadLink(sv.notesHref + thrQuery, notesFileLabel('notes', locale))}` : '') +
       `</div>`
     : `<div>${btn('recalculate', t(locale, 'act.recalculate'))} ${btn('export-csv', t(locale, 'act.exportCsv'))} ${btn('export-report', extraLabel('markdown', locale))} ${btn('export-checksums', extraLabel('checksums', locale))} ${btn('export-tables', extraLabel('tables', locale))} ${btn('export-facts', extraLabel('facts', locale))} ${btn('export-summary', extraLabel('summary', locale))} ${CHECKLIST_FORMATS.map((f) => btn(checklistAction(f), checklistLabel(f, locale))).join(' ')} ${btn(LISTED_JSON_ACTION, listedJsonLabel(locale))} ${LISTED_TABLE_FORMATS.map((f) => btn(listedTableAction(f), listedTableLabel(f, locale))).join(' ')}</div>`;
   const drillNames = new Map(datasetOptions(audit).map((d) => [d.id, d.name]));
@@ -713,6 +725,8 @@ export function renderDataStatusPanel(state: PanelState): string {
     }) +
     renderReviewCalendarHtml(buildReviewCalendar(audit, state.now), locale) +
     renderSharedPagesHtml(buildSharedPages(audit), locale) +
+    renderPublishersHtml(buildPublishers(state.records, audit), locale) +
+    renderOdditiesHtml(buildOddities(audit), locale) +
     renderThresholdsHtml(thresholds, locale) +
     renderBasisHtml(audit, locale) +
     `<div data-region="quick">${renderQuickRegion(audit, locale, filters, sv ? (f: Filters) => `${sv.action}${serializeViewState({ filters: f, thresholds })}` : undefined)}</div>` +
@@ -728,6 +742,7 @@ export function renderDataStatusPanel(state: PanelState): string {
     renderRecordFactsHtml(buildRecordFacts(state.records, audit), locale, { heading: drillColumnHeading(locale), cell: (field) => drill({ kind: 'gap', value: field }) }) +
     renderAgeBandsHtml(buildAgeDistribution(audit, state.now), locale, { heading: drillColumnHeading(locale), cell: (id) => drill({ kind: 'age', value: id }) }) +
     renderSelfCheckHtml(runSelfCheck(state.records, state.now, thresholds), locale) +
+    renderFileChecksHtml(runFileChecks(state.records, audit, NO_FILTERS, state.now, locale), locale) +
     renderFileGuideHtml(sv ? 'static' : 'live', locale) +
     renderGlossaryHtml(locale) +
     scrollable(t(locale, 'attr.title'), renderAttributionHtml(buildAttributions(audit.sources, locale), locale));

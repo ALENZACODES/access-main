@@ -730,4 +730,30 @@ describe("planning sections and extra downloads on the live panel", () => {
     const results = await axe.run(panel(), { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
+
+  it("groups the sources by publisher, lists what is worth a second look, and reads the files back", async () => {
+    seeds = [
+      { id: "a", title: "Fresh stop", source: "Desk source", retrieved: daysAgo(3) },
+      { id: "b", title: "Desk stop", source: "desk  SOURCE", retrieved: daysAgo(5), tier: "E" },
+      { id: "c", title: "Desk stop", source: "Other source", retrieved: null, tier: null },
+    ];
+    await view("en");
+    await screen.findByRole("heading", { name: "Tier of each record" });
+    const panel = screen.getByRole("region", { name: "Data status panel" });
+
+    const publishers = within(panel).getByRole("region", { name: "Sources by publisher" });
+    hasText(publishers, /\d+ publishers? (is|are) recorded\./);
+    expect(within(publishers).getByRole("table")).toBeTruthy();
+
+    const look = within(panel).getByRole("region", { name: "Worth a second look" });
+    hasText(look, "None of these is an error, and none changes a status.");
+
+    const checks = within(panel).getByRole("region", { name: "Files read back and counted" });
+    hasText(checks, "All 10 files agree with the list.");
+    expect(within(checks).getAllByRole("row")).toHaveLength(11);
+    expect(within(checks).queryByText("Does not agree")).toBeNull();
+
+    const results = await axe.run(panel, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
 });

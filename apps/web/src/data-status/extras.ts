@@ -46,3 +46,8 @@ export * from './sharedPages';
 export * from './pivot';
 export * from './reviewBatches';
 export * from './fileGuide';
+export * from './publishers';
+export * from './oddities';
+export * from './listedJsonSchema';
+export * from './fileChecks';
+export * from './notesFile';
