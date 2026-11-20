@@ -227,7 +227,7 @@ export function RecoveryDrillPanel({ locale, records, inspected, saveFile }: Rec
         <label style={field}>{copy.filter}<input style={input} value={query} onChange={(event) => setQuery(event.target.value)} /></label>
         <button type="button" style={input} onClick={() => setQuery("")}>{copy.clear}</button>
       </div>
-      <section aria-labelledby={listHeading}>
+      <section aria-labelledby={`${heading} ${listHeading}`}>
         <h3 id={listHeading}>{copy.review}</h3>
         {visible.length === 0 && <p>{copy.empty}</p>}
         <ul>
