@@ -243,7 +243,7 @@ describe('saved views on the panel', () => {
     expect(renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW })).not.toContain('ds-views-title');
     const withViews = renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW, savedViews: { views: [], durable: false } });
     expect(withViews).toContain('id="ds-views-title"');
-    expect(withViews).toContain('href="#ds-views-title"');
+    expect(withViews).toContain('<option value="ds-views-title">');
     expect(structureProblems(withViews)).toEqual([]);
     const page = renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW, savedViews: { views: [v('?tier=E')], durable: true }, staticView: { action: '/x', csvHref: '/c', creditsHref: '/k', summaryHref: '/s' } });
     expect(page).not.toContain('ds-views-title');

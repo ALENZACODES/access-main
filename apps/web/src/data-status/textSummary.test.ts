@@ -24,12 +24,12 @@ describe('plain-text summary', () => {
     const l = lines(RECORDS);
     expect(l).toContain('- Within its review period: 1');
     expect(l).toContain('- May be out of date: 1');
-    expect(l).toContain('- Update date unknown: 1');
+    expect(l).toContain('- Update date UNKNOWN: 1');
   });
   it('lists licences with their type, and tiers in use', () => {
     const l = lines(RECORDS);
     expect(l).toContain('- Proprietary: 1 (Not on the reference list)');
-    expect(l).toContain('- Unknown: 1 (Unknown)');
+    expect(l).toContain('- UNKNOWN: 1 (UNKNOWN)');
     expect(l).toContain('- Tier 0: 1');
     expect(l).toContain('- Tier E: 1');
     expect(l).toContain('Records that state a tier: 2 of 3.');
@@ -37,8 +37,8 @@ describe('plain-text summary', () => {
   it('says how many records carry the four facts and where each is unknown', () => {
     const l = lines(RECORDS);
     expect(l).toContain('Records that carry all four: 2 of 3.');
-    expect(l).toContain('- Source: unknown on 1');
-    expect(l).toContain('- Tier: unknown on 1');
+    expect(l).toContain('- Source: UNKNOWN on 1');
+    expect(l).toContain('- Tier: UNKNOWN on 1');
   });
   it('has its section headings in order', () => {
     const l = lines(RECORDS);
@@ -54,7 +54,7 @@ describe('plain-text summary', () => {
     const text = buildTextSummary(RECORDS, auditRegistry(RECORDS, NOW, {}), NOW, 'fr');
     expect(text).toContain('Résumé de l’état des données\n');
     expect(text).toContain('- Niveau E\u00A0: 1\n');
-    expect(text).toContain('- Licence\u00A0: inconnu pour 1\n');
+    expect(text).toContain('- Licence\u00A0: UNKNOWN pour 1\n');
     expect(lintFrench(text)).toEqual([]);
   });
   it('ends every line with a line feed and keeps control characters out', () => {

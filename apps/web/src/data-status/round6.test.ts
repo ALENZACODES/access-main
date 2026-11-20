@@ -156,7 +156,7 @@ describe('sorting links in the sources table', () => {
   it('actually sorts the rows, Unknown dates last', () => {
     const html = region(many, 'en', '?sort=retrieved&size=100');
     const bodyRows = html.split('<tbody>')[1] ?? '';
-    const firstUnknown = bodyRows.indexOf('<td>Unknown</td><td>Unknown</td>');
+    const firstUnknown = bodyRows.indexOf('<td>UNKNOWN</td><td>UNKNOWN</td>');
     const lastDate = bodyRows.lastIndexOf('<time datetime=');
     expect(firstUnknown).toBeGreaterThan(lastDate);
   });

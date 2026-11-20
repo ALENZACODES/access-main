@@ -36,7 +36,7 @@ describe('copy rules leave ordinary copy alone', () => {
   it.each([
     'Within its review period',
     'May be out of date',
-    'Update date unknown',
+    'Update date UNKNOWN',
     'Licence to review',
     'Source: Open Data Ontario · Licence: OGL-Ontario',
     'Dans sa période de révision',

@@ -64,7 +64,7 @@ describe('renderQuickFiltersHtml', () => {
     const html = renderQuickFiltersHtml(buildQuickFilters(audit), 'en', { active: NO_FILTERS });
     expect(html).toContain('data-action="quick:review" aria-pressed="false"');
     expect(html).toContain('>Needs review (2)</button>');
-    expect(html).toContain('>Tier: Unknown (1)</button>');
+    expect(html).toContain('>Tier: UNKNOWN (1)</button>');
     expect(html).toContain('>Licence not on the reference list (1)</button>');
     expect(html.match(/<button/g)).toHaveLength(5);
   });
@@ -92,7 +92,7 @@ describe('renderQuickFiltersHtml', () => {
   });
   it('labels in French', () => {
     expect(quickFilterLabel({ id: 'review', count: 3 }, 'fr')).toBe('À examiner (3)');
-    expect(quickFilterLabel({ id: 'noTier', count: 1 }, 'fr')).toBe('Niveau\u00A0: Inconnu (1)');
+    expect(quickFilterLabel({ id: 'noTier', count: 1 }, 'fr')).toBe('Niveau\u00A0: UNKNOWN (1)');
   });
   it('passes the markup, target and wording audits in both languages, as buttons and as links', () => {
     for (const locale of ['en', 'fr'] as const) {
@@ -114,7 +114,7 @@ describe('quick filters on the panel', () => {
     const html = renderDataStatusPanel({ records: RECORDS, locale: 'en', now: NOW });
     expect(html.indexOf('id="ds-quick-title"')).toBeGreaterThan(-1);
     expect(html.indexOf('id="ds-quick-title"')).toBeLessThan(html.indexOf('id="ds-f-state"'));
-    expect(html).toContain('href="#ds-quick-title"');
+    expect(html).toContain('<option value="ds-quick-title">');
   });
   it('applies the filter, re-renders the controls to match, tells the page and says what changed', () => {
     const host = new FakeHost();
@@ -124,7 +124,7 @@ describe('quick filters on the panel', () => {
     expect(host.innerHTML).toContain('<option value="unknown" selected>');
     expect(host.innerHTML).toContain('data-action="quick:noTier" aria-pressed="true"');
     expect(seen.at(-1)).toContain('tier=unknown');
-    expect(host.announce.innerHTML).toContain('tier unknown');
+    expect(host.announce.innerHTML).toContain('tier UNKNOWN');
     host.click('quick:stale');
     expect(host.innerHTML).toContain('data-action="quick:stale" aria-pressed="true"');
     expect(host.innerHTML).toContain('data-action="quick:noTier" aria-pressed="false"');

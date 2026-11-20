@@ -47,12 +47,12 @@ test("Data status: the workload and age views read the saved records", async ({ 
   const weeks = views.getByRole("table", { name: "Sources to review, by week" });
   await expect(weeks.getByRole("row")).toHaveCount(2); // header plus the one week with work
   await expect(views).toContainText("1 source is past its review date.");
-  await expect(views).toContainText("1 source is not scheduled because its retrieved date is unknown.");
+  await expect(views).toContainText("1 source is not scheduled because its retrieved date is UNKNOWN.");
   const ages = views.getByRole("table", { name: "Sources by age of retrieved date" });
   await expect(ages.getByRole("row", { name: /^0 to 30 days 1/ })).toBeVisible();
   await expect(ages.getByRole("row", { name: /^91 to 180 days 1/ })).toBeVisible();
   await expect(ages.getByRole("row", { name: /^More than 365 days 1/ })).toBeVisible();
-  await expect(ages.getByRole("row", { name: /^Unknown date 1/ })).toBeVisible();
+  await expect(ages.getByRole("row", { name: /^Date UNKNOWN 1/ })).toBeVisible();
 });
 
 test("Data status: the views and buttons switch to French with the real characters", async ({ page }) => {
@@ -142,13 +142,13 @@ test("Data status: records are counted by tier, gaps are listed, and the facts f
   const tiers = panel.getByRole("table", { name: "Records by tier", exact: true });
   await expect(tiers.getByRole("row", { name: /^Tier 0 .* 1 List these sources/ })).toBeVisible();
   await expect(tiers.getByRole("row", { name: /^Tier E .* 1 List these sources/ })).toBeVisible();
-  await expect(tiers.getByRole("row", { name: /^Unknown .* 1 List these sources/ })).toBeVisible();
+  await expect(tiers.getByRole("row", { name: /^UNKNOWN .* 1 List these sources/ })).toBeVisible();
   await expect(panel).toContainText("Records that state a tier: 2 of 3.");
   await expect(panel).toContainText("Records that carry all four: 2 of 3.");
   const gaps = panel.getByRole("table", { name: "Records with a missing source, licence, date or tier" });
   await expect(gaps.getByRole("row")).toHaveCount(2);
   await expect(gaps.getByRole("row").nth(1)).toContainText("Recorded");
-  await expect(panel.getByRole("navigation", { name: "On this panel" }).getByRole("link", { name: "Tier of each record" })).toBeVisible();
+  await expect(panel.getByRole("navigation", { name: "On this panel" }).getByLabel("Section").getByRole("option", { name: "Tier of each record" })).toHaveCount(1);
   await expect(panel.getByRole("heading", { name: "Words used on this panel" })).toBeVisible();
 
   const download = page.waitForEvent("download");
@@ -181,13 +181,13 @@ test("Data status: the source list shows each tier and can be filtered by tier",
   await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(2);
   await expect(panel.locator('[data-region="sources"]').getByRole("row").nth(1)).toContainText("Desk place");
   await tier.selectOption("unknown");
-  await expect(status).toHaveText("1 source shown. Filters: tier unknown.");
+  await expect(status).toHaveText("1 source shown. Filters: tier UNKNOWN.");
   await expect(panel.locator('[data-region="sources"]').getByRole("row").nth(1)).toContainText("No tier journey");
   await tier.selectOption("any");
   await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(4);
 
-  await panel.getByRole("button", { name: "Tier: Unknown (1)" }).click();
-  await expect(panel.getByRole("button", { name: "Tier: Unknown (1)" })).toHaveAttribute("aria-pressed", "true");
+  await panel.locator('[data-region="quick"]').getByRole("button", { name: "Tier: UNKNOWN (1)", exact: true }).click();
+  await expect(panel.locator('[data-region="quick"]').getByRole("button", { name: "Tier: UNKNOWN (1)", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("unknown");
   await expect(panel.locator('[data-region="sources"]').getByRole("row")).toHaveCount(2);
   await expect(panel.getByRole("table", { name: "Records by tier and status" }).getByRole("row", { name: /^All tiers/ })).toContainText("3");
@@ -203,20 +203,20 @@ test("Data status: filters in force are listed above the list and can be removed
   await page.reload();
   const panel = page.getByRole("region", { name: "Data status panel" });
   const list = panel.locator('[data-region="sources"]');
-  await panel.getByLabel("Licence type").selectOption("open");
+  await panel.getByLabel("Licence type", { exact: true }).selectOption("open");
   await expect(list).toContainText("1 filter in force");
   await expect(list.getByRole("row")).toHaveCount(4);
   await panel.getByLabel("Dataset", { exact: true }).selectOption({ label: "Places" });
   await expect(list).toContainText("2 filters in force");
   await expect(list.getByRole("row")).toHaveCount(3);
-  await panel.getByLabel("Licence type").selectOption("unknown");
+  await panel.getByLabel("Licence type", { exact: true }).selectOption("unknown");
   await expect(list).toContainText("No sources match");
   await expect(list).toContainText("Removing one filter would bring sources back.");
-  await expect(list.getByRole("button", { name: "Remove filter. Licence type: Unknown (shows 2 sources)" })).toBeVisible();
+  await expect(list.getByRole("button", { name: "Remove filter. Licence type: UNKNOWN (shows 2 sources)" })).toBeVisible();
 
-  await list.getByRole("button", { name: "Remove filter. Licence type: Unknown", exact: true }).click();
+  await list.getByRole("button", { name: "Remove filter. Licence type: UNKNOWN", exact: true }).click();
   await expect(list).toContainText("1 filter in force");
-  await expect(panel.getByLabel("Licence type")).toHaveValue("any");
+  await expect(panel.getByLabel("Licence type", { exact: true })).toHaveValue("any");
   await expect(panel.getByLabel("Dataset", { exact: true })).not.toHaveValue("any");
   await expect(list.getByRole("row")).toHaveCount(3);
   await list.getByRole("button", { name: "Remove filter. Dataset: Places" }).click();
@@ -309,18 +309,18 @@ test("Data status: a count in the tier or dataset table can list its sources", a
   await expect(panel.getByRole("button", { name: "List these sources. Tier: E" })).toBeFocused();
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Desk place");
-  await panel.getByRole("button", { name: "List these sources. Dataset: Journeys" }).click();
+  await panel.getByRole("button", { name: "List these sources. Dataset: Journeys" }).first().click();
   await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("any");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("No tier journey");
   await panel.getByRole("button", { name: "List these sources. Licence type: Open licence" }).click();
   await expect(list.getByRole("row")).toHaveCount(4);
 
-  await panel.getByRole("button", { name: "List these sources. Unknown: Tier" }).click();
-  await expect(panel.getByLabel("Unknown fact")).toHaveValue("tier");
+  await panel.getByRole("button", { name: "List these sources. UNKNOWN: Tier" }).click();
+  await expect(panel.getByLabel("Fact that is UNKNOWN")).toHaveValue("tier");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("No tier journey");
-  await list.getByRole("button", { name: "Remove filter. Unknown: Tier", exact: true }).click();
+  await list.getByRole("button", { name: "Remove filter. UNKNOWN: Tier", exact: true }).click();
   await expect(panel.getByRole("button", { name: "Clear filters" })).toBeFocused();
 
   await page.getByRole("button", { name: "Français" }).click();
@@ -341,18 +341,352 @@ test("Data status: the list can be narrowed by age of the retrieved date and by 
   const list = panel.locator('[data-region="sources"]');
 
   await panel.getByRole("button", { name: "Review due within 30 days (1)" }).click();
-  await expect(panel.getByLabel("Review date")).toHaveValue("d30");
+  await expect(panel.getByLabel("Review date", { exact: true })).toHaveValue("d30");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Soon place");
 
   await panel.getByRole("button", { name: "List these sources. Age of retrieved date: More than 365 days" }).click();
-  await expect(panel.getByLabel("Review date")).toHaveValue("any");
-  await expect(panel.getByLabel("Age of retrieved date")).toHaveValue("d366_plus");
+  await expect(panel.getByLabel("Review date", { exact: true })).toHaveValue("any");
+  await expect(panel.getByLabel("Age of retrieved date", { exact: true })).toHaveValue("d366_plus");
   await expect(list.getByRole("row")).toHaveCount(2);
   await expect(list).toContainText("Old place");
 
-  await panel.getByLabel("Age of retrieved date").selectOption("unknown");
+  await panel.getByLabel("Age of retrieved date", { exact: true }).selectOption("unknown");
   await expect(list).toContainText("Undated journey");
-  await expect(panel.locator('[data-region="announce"]')).toContainText("age of retrieved date unknown date");
+  await expect(panel.locator('[data-region="announce"]')).toContainText("age of retrieved date date UNKNOWN");
 });
 
+test("Data status: the list can be grouped, show details under each source, and give a review checklist", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+
+  await panel.getByLabel("Group by").selectOption("status");
+  await expect(said).toHaveText("Grouped by status, in 3 groups.");
+  await expect(list.getByRole("heading", { level: 3 })).toHaveText(["May be out of date (1 source)", "Within its review period (1 source)", "Update date UNKNOWN (1 source)", "Narrow this list"]);
+  await expect(list.getByRole("table", { name: "Sources: May be out of date" }).getByRole("row")).toHaveCount(2);
+
+  await panel.getByLabel("Tier", { exact: true }).selectOption("E");
+  await expect(list.getByRole("heading", { level: 3 })).toHaveText(["May be out of date (1 source)"]);
+  await panel.getByLabel("Tier", { exact: true }).selectOption("any");
+
+  await panel.getByLabel("Show details under each source").check();
+  await expect(said).toHaveText("Details are shown under each source.");
+  await expect(list.getByRole("table", { name: "Sources: Update date UNKNOWN" })).toContainText("Not scheduled, because the retrieved date is UNKNOWN.");
+  await expect(list.getByRole("table", { name: "Sources: May be out of date" })).toContainText("days ago)");
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    panel.getByRole("button", { name: "Download a review checklist for the listed sources (CSV)" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("review-checklist.csv");
+  await expect(said).toHaveText(/^Checklist saved with \d+ steps\.$/);
+
+  await panel.getByLabel("Group by").selectOption("none");
+  await expect(said).toHaveText("Grouping removed.");
+  await expect(list.getByRole("table", { name: "Sources", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await fr.getByLabel("Regrouper par").selectOption("tier");
+  await expect(fr.locator('[data-region="announce"]')).toHaveText("Regroupement par niveau, en 3 groupes.");
+});
+
+
+test("Data status: search words can become filters, and the dataset cards and review months read the saved records", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+
+  await expect(panel.getByRole("heading", { level: 2, name: "Dataset cards" })).toBeVisible();
+  const calendar = panel.getByRole("region", { name: "Review dates by month" });
+  await expect(calendar).toContainText("1 source is already past its review date.");
+  await expect(calendar).toContainText("1 source is not scheduled, because its retrieved date is UNKNOWN.");
+  await expect(calendar.getByRole("table").getByRole("row")).toHaveCount(13);
+
+  const search = panel.getByLabel("Search by name");
+  await search.fill("place tier:E");
+  await expect(list).toContainText("Some search words can be used as filters: Tier: E.");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("any");
+  await list.getByRole("button", { name: "Use them as filters" }).click();
+  await expect(said).toHaveText("1 search word is now a filter.");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(panel.getByLabel("Search by name")).toHaveValue("place");
+  await expect(panel.getByLabel("Search by name")).toBeFocused();
+  await expect(list.getByRole("button", { name: "Use them as filters" })).toHaveCount(0);
+  await expect(list).toContainText("Old place");
+  await expect(list).not.toContainText("Zero place");
+
+  await panel.getByLabel("Search by name").fill("tier:9");
+  await expect(list).toContainText("Not understood as a filter: tier:9. Examples that work: tier:E, licence:open, status:stale, unknown:date, age:0-30, due:30.");
+  await expect(list.getByRole("button", { name: "Use them as filters" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("region", { name: "Dates de révision par mois" })).toBeVisible();
+});
+
+test("Data status: the list can be narrowed from its own counts, a slip in the search is offered a close spelling, and the listed sources save as JSON", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+
+  const narrow = list.getByRole("region", { name: "Narrow this list" });
+  await expect(narrow.getByRole("list", { name: "By tier" }).getByRole("button")).toHaveText(["Tier: 0 (1)", "Tier: E (1)", "Tier: UNKNOWN (1)"]);
+  await narrow.getByRole("button", { name: "Tier: E (1)" }).click();
+  await expect(said).toHaveText("Filter added. Tier: E. 1 source listed.");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(list.getByRole("region", { name: "Narrow this list" })).toHaveCount(0);
+  await expect(panel.getByLabel("Status", { exact: true })).toBeFocused();
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    panel.getByRole("button", { name: "Download the listed sources (JSON)" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("listed-sources.json");
+  await expect(said).toHaveText("File saved with 1 source.");
+
+  await panel.getByRole("button", { name: "Clear filters" }).click();
+  await panel.getByLabel("Search by name").fill("jurney");
+  await expect(list).toContainText("No name contains the search text as typed. A close spelling does appear.");
+  await list.getByRole("button", { name: "Search for “journey” instead (1 source)" }).click();
+  await expect(said).toHaveText("Now searching for “journey”. 1 source listed.");
+  await expect(panel.getByLabel("Search by name")).toHaveValue("journey");
+  await expect(panel.getByLabel("Search by name")).toBeFocused();
+  await expect(list).toContainText("No tier journey");
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await fr.getByRole("button", { name: "Effacer les filtres" }).click();
+  await expect(fr.locator('[data-region="sources"]').getByRole("button", { name: "Niveau : UNKNOWN (1)" })).toBeVisible();
+});
+
+test("Data status: extra columns can be added to the list, the listed sources save as a table, and shared pages are listed", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+  const table = list.getByRole("table", { name: "Sources", exact: true });
+
+  await expect(table.getByRole("columnheader")).toHaveCount(5);
+  const chooser = panel.getByRole("group", { name: "More columns" });
+  await chooser.getByLabel("Column: Time to review date").check();
+  await expect(said).toHaveText("1 extra column shown. Time to review date.");
+  await expect(table.getByRole("columnheader")).toHaveCount(6);
+  await expect(table.getByRole("row", { name: /Old place/ })).toContainText("Passed 220 days ago");
+  await expect(table.getByRole("row", { name: /No tier journey/ }).getByRole("cell").last()).toHaveText("UNKNOWN");
+  await chooser.getByLabel("Column: Kind of data").check();
+  await expect(said).toHaveText("2 extra columns shown. Kind of data, Time to review date.");
+  await expect(chooser.getByLabel("Column: Time to review date")).toBeChecked();
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    panel.getByRole("button", { name: "Download the listed sources as a table (Markdown)" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("listed-sources.md");
+  await expect(said).toHaveText("File saved with 3 sources.");
+
+  await chooser.getByLabel("Column: Kind of data").uncheck();
+  await chooser.getByLabel("Column: Time to review date").uncheck();
+  await expect(said).toHaveText("No extra column is shown.");
+  await expect(table.getByRole("columnheader")).toHaveCount(5);
+
+  await expect(panel.getByRole("region", { name: "Pages recorded for more than one source" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await fr.getByRole("group", { name: "Colonnes supplémentaires" }).getByLabel("Colonne\u00A0: Date de révision", { exact: true }).check();
+  await expect(fr.locator('[data-region="announce"]')).toHaveText("1 colonne supplémentaire affichée. Date de révision.");
+});
+
+test("Data status: the list can be counted two ways, the review split into sessions, and every gap reads UNKNOWN", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const list = panel.locator('[data-region="sources"]');
+  const said = panel.locator('[data-region="announce"]');
+
+  await expect(panel.getByLabel("Tier", { exact: true }).getByRole("option", { name: "UNKNOWN" })).toHaveCount(1);
+  await expect(panel).not.toContainText(/\bUnknown\b/);
+
+  await panel.getByLabel("Count the list by").selectOption("tier");
+  await expect(said).toHaveText("Count table by tier.");
+  await expect(panel.getByLabel("Count the list by")).toBeFocused();
+  await panel.getByLabel("And across by").selectOption("state");
+  await expect(said).toHaveText("Count table by tier and status.");
+  const counts = list.getByRole("table", { name: "Listed sources by tier and status" });
+  await expect(counts.getByRole("row")).toHaveCount(5);
+  await expect(counts.getByRole("row", { name: /^All/ })).toContainText("3");
+
+  const [csv] = await Promise.all([
+    page.waitForEvent("download"),
+    list.getByRole("button", { name: "Download the count table (CSV)" }).click(),
+  ]);
+  expect(csv.suggestedFilename()).toBe("list-counts.csv");
+
+  await counts.getByRole("button", { name: "1 source. Tier E, May be out of date. List it" }).click();
+  await expect(said).toHaveText("List narrowed to 1 source. Tier E, May be out of date.");
+  await expect(panel.getByLabel("Tier", { exact: true })).toHaveValue("E");
+  await expect(panel.getByLabel("Status", { exact: true })).toHaveValue("stale");
+  await panel.getByRole("button", { name: "Clear filters" }).click();
+
+  await panel.getByLabel("Split the review into sessions of").selectOption("5");
+  await expect(said).toHaveText("Review split into 1 session of up to 5 sources.");
+  const sessions = list.getByRole("region", { name: "Review sessions" });
+  await expect(sessions.getByRole("heading", { level: 4 })).toHaveText(["Session 1 of 1"]);
+  const [md] = await Promise.all([
+    page.waitForEvent("download"),
+    list.getByRole("button", { name: "Download the review sessions (Markdown)" }).click(),
+  ]);
+  expect(md.suggestedFilename()).toBe("review-sessions.md");
+  await expect(said).toHaveText("File saved with 1 session.");
+
+  await expect(panel.getByRole("region", { name: "Files you can save" }).getByRole("table").getByRole("row")).toHaveCount(14);
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("region", { name: "Fichiers à enregistrer" })).toBeVisible();
+  await expect(fr).not.toContainText(/\bInconnue?s?\b/);
+});
+
+test("Data status: the page stays short to cross with the Tab key, and the jump menu goes to a section", async ({ page }) => {
+  // Arrive the way a person does, through the app's own navigation: the page then puts focus on its
+  // heading, and Tab starts from there. (Going to the address directly leaves focus at the top of
+  // the document, which would make this count far too small.)
+  await page.goto("/");
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Data status" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Data status" })).toBeFocused();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  await expect(panel).toBeVisible();
+
+  // The release check allows 60 presses of Tab to get from here to the Help link of the app's
+  // navigation, so this holds the page to 56. The count has to be a real crossing of the panel.
+  const help = page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Help" });
+  let presses = 0;
+  while (presses < 56 && !(await help.evaluate((el) => el === document.activeElement))) {
+    await page.keyboard.press("Tab");
+    presses += 1;
+  }
+  await expect(help).toBeFocused();
+  expect(presses).toBeGreaterThan(30);
+
+  // No control is tucked away where a keyboard cannot reach it.
+  await expect(panel.locator("details:not([open]) a, details:not([open]) button, details:not([open]) input, details:not([open]) select")).toHaveCount(0);
+
+  // The jump menu: choose a section, press the button, and the heading of that section has focus.
+  const menu = panel.getByRole("navigation", { name: "On this panel" });
+  await menu.getByLabel("Section").selectOption({ label: "Words used on this panel" });
+  await menu.getByRole("button", { name: "Go to this section" }).click();
+  await expect(panel.getByRole("heading", { level: 2, name: "Words used on this panel" })).toBeFocused();
+  await expect(panel.getByRole("heading", { level: 2, name: "Words used on this panel" })).toBeInViewport();
+});
+
+test("Data status: publishers, things worth a second look and the files read back are shown from the saved records", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "p-twin", kind: "place", title: "Old place", retrieved_at: daysAgo(10) },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+
+  const publishers = panel.getByRole("region", { name: "Sources by publisher" });
+  await expect(publishers).toContainText(/\d+ publishers? (is|are) recorded\./);
+  await expect(publishers.getByRole("table").getByRole("columnheader")).toHaveText(["Publisher", "Sources", "Datasets", "Licence types", "Oldest retrieved date", "Next review date"]);
+
+  const look = panel.getByRole("region", { name: "Worth a second look" });
+  await expect(look).toContainText("None of these is an error, and none changes a status.");
+  await expect(look.getByRole("heading", { level: 3, name: "The same name twice in one dataset" })).toBeVisible();
+
+  const checks = panel.getByRole("region", { name: "Files read back and counted" });
+  await expect(checks).toContainText("All 10 files agree with the list.");
+  await expect(checks.getByRole("row")).toHaveCount(11);
+  await expect(checks.getByRole("cell", { name: "Does not agree" })).toHaveCount(0);
+
+  // The sections are in the jump menu.
+  const menu = panel.getByRole("navigation", { name: "On this panel" });
+  await menu.getByLabel("Section").selectOption({ label: "Worth a second look" });
+  await menu.getByRole("button", { name: "Go to this section" }).click();
+  await expect(panel.getByRole("heading", { level: 2, name: "Worth a second look" })).toBeFocused();
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("region", { name: "Sources par diffuseur" })).toBeVisible();
+  await expect(fr.getByRole("region", { name: "Fichiers relus et comptés" })).toContainText("Les 10 fichiers concordent avec la liste.");
+});
+
+test("Data status: another review period can be tried, and the later-days and web-site tables read the saved records", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "p-zero", kind: "place", title: "Zero place", retrieved_at: daysAgo(3) },
+    { id: "p-mid", kind: "place", title: "Mid place", retrieved_at: daysAgo(100) },
+    { id: "p-old", kind: "place", title: "Old place", retrieved_at: daysAgo(400), tier: "E" },
+    { id: "j-none", kind: "journey", title: "No tier journey", retrieved_at: null, tier: null },
+  ]);
+  await page.reload();
+  const panel = page.getByRole("region", { name: "Data status panel" });
+  const said = panel.locator('[data-region="announce"]');
+
+  const periods = panel.getByRole("region", { name: "Review periods, and what another one would change" });
+  await expect(periods).toContainText("Trying another period changes no record.");
+  const kind = periods.getByLabel("Review period for");
+  const days = periods.getByLabel("Marked possibly out of date after");
+  await expect(kind).toHaveValue("places");
+  await expect(days).toHaveValue("default");
+
+  await days.selectOption("90");
+  await expect(said).toHaveText(/^Review period for Places set to 90 days\. \d+ sources? of that kind (is|are) now marked possibly out of date \(it was \d+\)\.$/);
+  await expect(panel.getByLabel("Marked possibly out of date after")).toBeFocused();
+  await expect(panel.getByLabel("Marked possibly out of date after")).toHaveValue("90");
+  await expect(panel.getByRole("region", { name: "Review periods, and what another one would change" })).toContainText("90 days, chosen here:");
+
+  await panel.getByLabel("Marked possibly out of date after").selectOption("default");
+  await expect(said).toHaveText(/back to the default, 180 days\./);
+
+  const later = panel.getByRole("region", { name: "If no source is retrieved again" });
+  await expect(later).toContainText("It does not say what any publisher will do.");
+  await expect(later.getByRole("table").getByRole("row")).toHaveCount(7);
+  await expect(later.getByRole("row", { name: /^Today/ })).toBeVisible();
+
+  const sites = panel.getByRole("region", { name: "Sources by web site" });
+  await expect(sites).toContainText("No page is opened to make this table");
+
+  await page.getByRole("button", { name: "Français" }).click();
+  const fr = page.getByRole("region", { name: "Panneau de l’état des données" });
+  await expect(fr.getByRole("region", { name: "Si aucune source n’est récupérée de nouveau" })).toBeVisible();
+  await expect(fr.getByLabel("Période de révision pour")).toHaveValue("places");
+});

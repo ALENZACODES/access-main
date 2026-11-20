@@ -25,7 +25,7 @@ const MESSAGES: Messages<Key> = {
     'fc.retrieved': 'Retrieved (YYYY-MM-DD)',
     'fc.status': 'Status',
     'fc.tier': 'Tier',
-    'fc.gaps': 'Facts that are unknown',
+    'fc.gaps': 'Facts that are UNKNOWN',
   },
   fr: {
     'fc.dataset': 'Jeu de données',
@@ -37,7 +37,7 @@ const MESSAGES: Messages<Key> = {
     'fc.retrieved': 'Récupération (AAAA-MM-JJ)',
     'fc.status': 'État',
     'fc.tier': 'Niveau',
-    'fc.gaps': 'Éléments inconnus',
+    'fc.gaps': 'Éléments UNKNOWN',
   },
 };
 

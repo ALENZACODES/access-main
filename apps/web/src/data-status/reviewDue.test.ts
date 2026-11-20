@@ -39,7 +39,7 @@ describe('buildReviewQueue', () => {
     const q = buildReviewQueue(auditRegistry(recs, NOW), new Date('2026-11-15T23:59:59Z'));
     expect(q[0]).toMatchObject({ dueIso: '2026-11-15', daysUntil: 0, status: 'today' });
   });
-  it('a future retrieved date is Unknown, not scheduled', () => {
+  it('a future retrieved date is UNKNOWN, not scheduled', () => {
     const recs: DatasetRecord[] = [{ id: 'x', name: 'X', kind: 'places', sources: [{ id: 's', retrievedAt: '2030-01-01' }] }];
     expect(buildReviewQueue(auditRegistry(recs, NOW), NOW)[0]).toMatchObject({ status: 'unknown', dueIso: null });
   });
@@ -55,7 +55,7 @@ describe('dueText', () => {
     expect(dueText({ status: 'today', daysUntil: 0 }, 'fr')).toBe('À réviser aujourd’hui');
     expect(dueText({ status: 'upcoming', daysUntil: 1 }, 'fr')).toBe('À réviser dans 1 jour');
     expect(dueText({ status: 'upcoming', daysUntil: 166 }, 'fr')).toBe('À réviser dans 166 jours');
-    expect(dueText({ status: 'unknown', daysUntil: null }, 'en')).toBe('Not scheduled: retrieved date is Unknown');
+    expect(dueText({ status: 'unknown', daysUntil: null }, 'en')).toBe('Not scheduled: retrieved date is UNKNOWN');
   });
 });
 
@@ -67,7 +67,7 @@ describe('renderReviewHtml', () => {
     expect(html).toContain('<time datetime="2027-04-30">April 30, 2027</time>');
     expect(html).toContain('Past due by 869 days');
     expect(html).toContain('It is a reminder to look at the source again, not a statement about the data.');
-    expect(html).toContain('<td>Unknown</td>');
+    expect(html).toContain('<td>UNKNOWN</td>');
   });
   it('limits rows and says how many are left', () => {
     const html = renderReviewHtml(queue, 'en', 1);

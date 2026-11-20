@@ -8,9 +8,13 @@
  */
 import { CATALOG, EN, FR, type MessageKey } from './i18n';
 import { visibleText } from './copyLint';
+import { UNKNOWN_WORD } from './unknownWord';
 
 /** Messages that are legitimately the same in both languages (words that are spelled alike). */
-export const SAME_IN_BOTH: readonly MessageKey[] = ['qa.counts.sources', 'tbl.sources', 'tbl.sourceCount', 'tbl.source', 'tbl.licence', 'csv.source', 'csv.licence', 'hist.date', 'due.source', 'comp.f.licence'];
+export const SAME_IN_BOTH: readonly MessageKey[] = ['qa.counts.sources', 'tbl.sources', 'tbl.sourceCount', 'tbl.source', 'tbl.licence', 'csv.source', 'csv.licence', 'hist.date', 'due.source', 'comp.f.licence',
+  // The token UNKNOWN is the same in both languages on purpose.
+  'unknown', 'cov.unknown', 'comp.unknown',
+];
 
 /**
  * English words that are not French words. Words spelled the same in both languages (source, licence, page, date)
@@ -35,12 +39,16 @@ function words(text: string): string[] {
 /**
  * English marker words in a piece of text. `ignore` lists words that are data (names, titles)
  * and so are allowed to be English. Words are matched whole and case-insensitively.
+ * The token UNKNOWN, written in capitals, is the same in both languages and is not counted;
+ * the same word in any other case still is.
  */
+const UNKNOWN_TOKEN_RE = new RegExp(`(?<![\\p{L}\\p{N}])${UNKNOWN_WORD}(?![\\p{L}\\p{N}])`, 'gu');
+
 export function englishWordsIn(text: string, ignore: readonly string[] = []): string[] {
   const skip = new Set(ignore.map((w) => w.toLowerCase()));
   const marks = new Set(ENGLISH_MARKERS);
   const hits = new Set<string>();
-  for (const w of words(text)) if (marks.has(w) && !skip.has(w)) hits.add(w);
+  for (const w of words(text.replace(UNKNOWN_TOKEN_RE, ' '))) if (marks.has(w) && !skip.has(w)) hits.add(w);
   return [...hits].sort();
 }
 
