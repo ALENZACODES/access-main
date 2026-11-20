@@ -6,6 +6,6 @@
     "test": "node --test --experimental-strip-types *.test.mjs",
     "verify": "npm run test && node --experimental-strip-types check.mjs --dir ../../apps/web/dist && node audit.mjs --dir ../../apps/web/dist && node deep-audit.mjs --dir ../../apps/web/dist && node preflight.mjs --root ../.. --dist ../../apps/web/dist",
     "audit:custody": "node --experimental-strip-types artifact-custody-cli.mjs",
-    "audit:precache": "node --experimental-strip-types precache-cli.mjs"
+    "audit:interaction-regression": "node --experimental-strip-types interaction-regression-cli.mjs"
   }
 }
