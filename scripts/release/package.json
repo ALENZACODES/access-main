@@ -6,6 +6,6 @@
     "test": "node --test --experimental-strip-types *.test.mjs",
     "verify": "npm run test && node --experimental-strip-types check.mjs --dir ../../apps/web/dist && node audit.mjs --dir ../../apps/web/dist && node deep-audit.mjs --dir ../../apps/web/dist && node preflight.mjs --root ../.. --dist ../../apps/web/dist",
     "audit:custody": "node --experimental-strip-types artifact-custody-cli.mjs",
-    "audit:assistive-traces": "node --experimental-strip-types assistive-trace-cli.mjs"
+    "audit:update-rehearsal": "node --experimental-strip-types offline-update-rehearsal-cli.mjs"
   }
 }
