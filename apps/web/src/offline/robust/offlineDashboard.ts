@@ -24,6 +24,8 @@ import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
+import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
+import { mountOfflineCasebook } from "./offlineCasebookPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -259,17 +261,68 @@ export function mountOfflineDashboard(
   const sourceAgeHost = element("div");
   section.append(sourceAgeHost);
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
+  const continuityHost = element("div");
+  section.append(continuityHost);
+  const unmountContinuity = mountOfflineContinuityDrill(
+    continuityHost, manifest, model, language, dependencies.estimateStorage,
+  );
+  const casebookHost = element("div");
+  section.append(casebookHost);
+  const unmountCasebook = mountOfflineCasebook(casebookHost, manifest, model, language);
+
+  const handoffHost = element("div");
+  section.append(handoffHost);
+  let disposedHandoff = false;
+  let unmountHandoff: () => void = () => undefined;
+  void import("./handoffRehearsalPanel").then(({ mountOfflineHandoffRehearsal }) => {
+    if (disposedHandoff) return;
+    unmountHandoff = mountOfflineHandoffRehearsal(handoffHost, manifest, model, language);
+  }).catch(() => {
+    // Keep the rest of the dashboard operational if optional code is unavailable.
+  });
+
+  const timelineHost = element("div");
+  section.append(timelineHost);
+  let timelineDisposed = false;
+  let unmountTimeline: () => void = () => undefined;
+  void import("./localEvidenceTimelinePanel").then(({ mountLocalEvidenceTimeline }) => {
+    if (timelineDisposed) return;
+    unmountTimeline = mountLocalEvidenceTimeline(timelineHost, manifest, model, language);
+  }).catch(() => {
+    // The timeline is an optional, read-only record of local observations.
+  });
+  const workbookHost = element("div");
+  section.append(workbookHost);
+  let disposedWorkbook = false;
+  let unmountWorkbook: () => void = () => undefined;
+  // Keep the substantial local workbook out of the initial offline page chunk.
+  void import("./reconciliationWorkbookPanel").then(({ mountOfflineReconciliationWorkbook }) => {
+    if (disposedWorkbook) return;
+    unmountWorkbook = mountOfflineReconciliationWorkbook(workbookHost, manifest, model, language);
+  }).catch(() => {
+    // The core offline dashboard remains usable if this optional panel fails.
+  });
+
+  const preparationHost = element("div");
+  section.append(preparationHost);
+  let disposedPreparation = false;
+  let unmountPreparation: () => void = () => undefined;
+  void import("./accessPreparationPanel").then(({ mountAccessPreparation }) => {
+    if (disposedPreparation) return;
+    unmountPreparation = mountAccessPreparation(preparationHost, manifest, model, language);
+  }).catch(() => {
+    // Existing offline controls remain usable when the optional module cannot load.
+  });
 
   const inquiryHost = element("div");
   section.append(inquiryHost);
   let inquiryDisposed = false;
   let unmountInquiry: () => void = () => undefined;
-  // The personal notebook stays outside the initial offline page bundle.
   void import("./accessInquiryPanel").then(({ mountAccessInquiry }) => {
     if (inquiryDisposed) return;
     unmountInquiry = mountAccessInquiry(inquiryHost, manifest, model, language);
   }).catch(() => {
-    // Other offline controls remain usable if this view cannot load.
+    // Existing offline controls remain usable when the optional module cannot load.
   });
 
   const renderDetails = (state: DashboardState): void => {
@@ -390,6 +443,16 @@ export function mountOfflineDashboard(
     unmountDiagnostics();
     unmountRecovery();
     unmountSourceAge();
+    unmountContinuity();
+    unmountCasebook();
+    disposedHandoff = true;
+    unmountHandoff();
+    timelineDisposed = true;
+    unmountTimeline();
+    disposedWorkbook = true;
+    unmountWorkbook();
+    disposedPreparation = true;
+    unmountPreparation();
     inquiryDisposed = true;
     unmountInquiry();
     model.dispose();

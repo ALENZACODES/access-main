@@ -234,3 +234,12 @@ export * from "./recoveryEvidencePacket";
 export * from "./recoveryEvidenceAnalysis";
 export { recoveryEvidencePacketCopy } from "./recoveryEvidencePacketCopy";
 export type { PacketCopy } from "./recoveryEvidencePacketCopy";
+
+// Manual local recovery handoff chain; no inferred pack readiness.
+export { RecoveryHandoffChainPanel } from "./RecoveryHandoffChainPanel";
+export type { RecoveryHandoffChainPanelProps } from "./RecoveryHandoffChainPanel";
+export * from "./recoveryHandoffChain";
+export * from "./recoveryHandoffChainAnalysis";
+export * from "./recoveryHandoffChainPlan";
+export { recoveryHandoffChainCopy } from "./recoveryHandoffChainCopy";
+export type { ChainCopy } from "./recoveryHandoffChainCopy";
