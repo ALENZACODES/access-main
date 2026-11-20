@@ -13,6 +13,7 @@ import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
 import { PlaceSheet } from "./PlaceSheet.tsx";
+import { ListTransfer } from "./ListTransfer.tsx";
 import { Shortlist } from "./Shortlist.tsx";
 import { MAX_SHORTLIST, type AddResult } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
@@ -190,6 +191,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onRemove={shortlist.remove}
         onClear={shortlist.clear}
       />
+      <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
