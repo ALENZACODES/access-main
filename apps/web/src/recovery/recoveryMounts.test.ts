@@ -31,6 +31,8 @@ describe("recovery shell preservation and reconciliation integration", () => {
     expect(shell).toContain('await import("./RecoveryReconciliationPanel")');
     expect(shell).toContain("<Suspense fallback=");
     expect(shell).toContain("<RecoveryReconciliationPanel locale={locale}");
+    expect(shell).toContain('await import("./RecoveryDrillPanel")');
+    expect(shell).toContain("<RecoveryDrillPanel locale={locale}");
   });
   it("keeps all inspection-sensitive panels fail-closed", () => {
     for (const name of [
