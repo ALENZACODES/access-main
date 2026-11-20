@@ -226,3 +226,31 @@ describe("any text at all", () => {
     }
   });
 });
+
+describe("words that are also names of things every object has", () => {
+  const kinds = (q: string) => parsePackSearch(q).problems.map((p) => p.kind);
+  it("treats them as unknown fields, never as a field", () => {
+    for (const w of ["constructor", "toString", "hasOwnProperty", "valueOf"]) {
+      expect(kinds(`${w}:x`), w).toEqual(["unknown-field"]);
+      expect(parsePackSearch(`${w}:x`).clauses[0]!.alternatives[0], w).toMatchObject({ type: "text", field: "any", value: `${w.toLowerCase()}:x` });
+    }
+  });
+  it("reads __proto__:x as plain text, since an underscore cannot start a field word", () => {
+    expect(kinds("__proto__:x")).toEqual([]);
+    expect(parsePackSearch("__proto__:x").clauses).toHaveLength(1);
+  });
+  it("treats them as unreadable values after tag: and has:, and no: too", () => {
+    for (const w of ["constructor", "__proto__", "toString"]) {
+      expect(kinds(`tag:${w}`), `tag:${w}`).toEqual(["bad-tag-value"]);
+      expect(kinds(`has:${w}`), `has:${w}`).toEqual(["bad-has-value"]);
+      expect(kinds(`no:${w}`), `no:${w}`).toEqual(["bad-has-value"]);
+      expect(parsePackSearch(`tag:${w}`).clauses).toHaveLength(0);
+    }
+  });
+  it("searches them as plain words, and as a kind value", () => {
+    for (const w of ["constructor", "__proto__", "toString"]) {
+      expect(kinds(w)).toEqual([]);
+      expect(kinds(`kind:${w}`)).toEqual([]);
+    }
+  });
+});
