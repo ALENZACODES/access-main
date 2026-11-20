@@ -18,15 +18,19 @@ const components = [
   "RecoverySessionTracePanel",
   "RecoveryCheckpointPanel",
   "RecoveryDecisionMatrix",
-  "RecoveryReconciliationPanel",
 ] as const;
 
 describe("recovery shell preservation and reconciliation integration", () => {
-  it("imports and mounts every established panel and the reconciliation panel", () => {
+  it("imports and mounts every established panel", () => {
     for (const name of components) {
       expect(shell).toContain(`import { ${name} } from "./${name}";`);
       expect(shell).toContain(`<${name} locale={locale}`);
     }
+  });
+  it("lazy-loads reconciliation without dropping its inspection gate", () => {
+    expect(shell).toContain('await import("./RecoveryReconciliationPanel")');
+    expect(shell).toContain("<Suspense fallback=");
+    expect(shell).toContain("<RecoveryReconciliationPanel locale={locale}");
   });
   it("keeps all inspection-sensitive panels fail-closed", () => {
     for (const name of [
