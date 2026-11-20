@@ -9,6 +9,7 @@
     "audit:conflicts": "node --experimental-strip-types offline-conflict-cli.mjs",
     "audit:recovery-traces": "node --experimental-strip-types offline-recovery-trace-cli.mjs",
     "audit:ui-snapshots": "node --experimental-strip-types snapshot-a11y-cli.mjs",
-    "audit:input-continuity": "node --experimental-strip-types input-continuity-cli.mjs"
+    "audit:input-continuity": "node --experimental-strip-types input-continuity-cli.mjs",
+    "audit:evidence-review": "node --experimental-strip-types offline-evidence-review-cli.mjs"
   }
 }
