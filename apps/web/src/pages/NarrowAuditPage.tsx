@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { BarrierDraft } from "../narrow/barrier-report.ts";
 import { mountFitPanel } from "../narrow/fit-panel.ts";
+import { mountHandPanel, type HandState } from "../narrow/hand-panel.ts";
 import { mountNarrowPanel, narrowRoute } from "../narrow/panel.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 
@@ -14,6 +15,10 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
  * reports about the screen, what the checks find in plain words, and a form
  * that turns a barrier into text to copy or save. It follows the language of
  * the audit panel, and keeps what the person wrote when the language changes.
+ *
+ * Last comes "Look by hand": the by-hand steps one at a time, with a log of
+ * what the person found to copy or save. It follows the same language and
+ * keeps the session when the language changes.
  */
 export function NarrowAuditPage() {
   const { i18n } = useTranslation();
@@ -22,6 +27,8 @@ export function NarrowAuditPage() {
   const hostRef = useRef<HTMLDivElement>(null);
   const fitRef = useRef<HTMLDivElement>(null);
   const draftRef = useRef<BarrierDraft | undefined>(undefined);
+  const handRef = useRef<HTMLDivElement>(null);
+  const handStateRef = useRef<HandState | undefined>(undefined);
   const title = narrowRoute.title[panelLang];
   useDocumentTitle(title);
 
@@ -49,11 +56,24 @@ export function NarrowAuditPage() {
     };
   }, [panelLang]);
 
+  useEffect(() => {
+    const host = handRef.current;
+    if (!host) return;
+    const root = document.createElement("div");
+    host.appendChild(root);
+    const mounted = mountHandPanel({ root, lang: panelLang, ...(handStateRef.current ? { state: handStateRef.current } : {}) });
+    return () => {
+      handStateRef.current = mounted.getState();
+      root.remove();
+    };
+  }, [panelLang]);
+
   return (
     <>
       <h1 lang={panelLang}>{title}</h1>
       <div ref={hostRef} />
       <div ref={fitRef} />
+      <div ref={handRef} />
     </>
   );
 }

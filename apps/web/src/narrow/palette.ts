@@ -32,7 +32,7 @@ export interface Token {
   readonly own: boolean;
 }
 
-export interface Theme {
+export interface TokenTheme {
   /** Where the tokens are set: the at-rules around the rule, then its selector. */
   readonly label: string;
   readonly tokens: readonly Token[];
@@ -60,7 +60,7 @@ function resolve(value: string, lookup: (name: string) => string | undefined, de
  * would do for a token it does not set again, and such a token is marked
  * as not its own.
  */
-export function themesFromCss(css: string): Theme[] {
+export function themesFromCss(css: string): TokenTheme[] {
   const raw = new Map<string, Map<string, string>>();
   for (const rule of parseCss(css)) {
     const custom = rule.declarations.filter((d) => d.prop.startsWith('--'));
@@ -72,7 +72,7 @@ export function themesFromCss(css: string): Theme[] {
   }
   const labels = [...raw.keys()];
   const base = labels[0] === undefined ? undefined : raw.get(labels[0]);
-  const themes: Theme[] = [];
+  const themes: TokenTheme[] = [];
   labels.forEach((label, index) => {
     const own = raw.get(label) ?? new Map<string, string>();
     const merged = new Map<string, string>(index === 0 || !base ? [] : base);
@@ -171,7 +171,7 @@ export function measurePair(text: Token, surface: Token, required: number): Toke
   return { ...names, status: fix.meets ? 'reaches' : 'below', ratio: fix.ratio, fix: fix.meets ? null : fix };
 }
 
-export function auditPalette(themes: readonly Theme[], options: PaletteOptions = {}): ThemePairs[] {
+export function auditPalette(themes: readonly TokenTheme[], options: PaletteOptions = {}): ThemePairs[] {
   const required = options.required ?? DEFAULT_REQUIRED;
   return themes.map((theme) => {
     const by = new Map(theme.tokens.map((t) => [t.name, t]));
