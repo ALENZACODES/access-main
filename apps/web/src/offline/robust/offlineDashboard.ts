@@ -260,6 +260,18 @@ export function mountOfflineDashboard(
   section.append(sourceAgeHost);
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
 
+  const inquiryHost = element("div");
+  section.append(inquiryHost);
+  let inquiryDisposed = false;
+  let unmountInquiry: () => void = () => undefined;
+  // The personal notebook stays outside the initial offline page bundle.
+  void import("./accessInquiryPanel").then(({ mountAccessInquiry }) => {
+    if (inquiryDisposed) return;
+    unmountInquiry = mountAccessInquiry(inquiryHost, manifest, model, language);
+  }).catch(() => {
+    // Other offline controls remain usable if this view cannot load.
+  });
+
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
     details.hidden = !state.expanded || state.inventory === null;
@@ -378,6 +390,8 @@ export function mountOfflineDashboard(
     unmountDiagnostics();
     unmountRecovery();
     unmountSourceAge();
+    inquiryDisposed = true;
+    unmountInquiry();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
