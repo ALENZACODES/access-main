@@ -7,6 +7,8 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { VenueGroups } from "./VenueGroups.tsx";
+import { type VenueNote, venueNoteText, venueNotes } from "./venueGroups.ts";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
@@ -30,7 +32,7 @@ interface Props {
   today?: string;
 }
 
-function Card({ card, locale, listed, onToggle, place, today }: { card: PackPlaceCard; locale: Locale; listed: boolean; onToggle: () => void; place?: PackPlaceRecord; today: string }) {
+function Card({ card, locale, listed, onToggle, place, today, venue }: { card: PackPlaceCard; locale: Locale; listed: boolean; onToggle: () => void; place?: PackPlaceRecord; today: string; venue?: VenueNote }) {
   const titleId = useId();
   const buttonId = useId();
   return (
@@ -41,6 +43,7 @@ function Card({ card, locale, listed, onToggle, place, today }: { card: PackPlac
       </p>
       {card.distanceText ? <p>{card.distanceText}</p> : null}
       <p>{card.category}</p>
+      {venue ? <p>{venueNoteText(venue, locale)}</p> : null}
       <p>{card.address}</p>
       {card.note ? <p>{card.note}</p> : null}
       {card.noSourceNotice ? <p>{card.noSourceNotice}</p> : null}
@@ -84,6 +87,7 @@ export function PackPlaces({ places, locale, today }: Props) {
   const [listNote, setListNote] = useState("");
 
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
+  const venues = useMemo(() => venueNotes(parsed.places), [parsed.places]);
   const byId = useMemo(() => new Map(parsed.places.map((p) => [p.id, p] as const)), [parsed.places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
   const stops = useMemo(() => inputsFromPlaces(resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place)), [shortlist.list, parsed.places]);
@@ -178,10 +182,11 @@ export function PackPlaces({ places, locale, today }: Props) {
       ) : (
         <ul className="record-list">
           {view.cards.map((card) => (
-            <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} place={byId.get(card.id)} today={day} />
+            <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} place={byId.get(card.id)} today={day} venue={venues.get(card.id)} />
           ))}
         </ul>
       )}
+      <VenueGroups places={view.shownPlaces} locale={locale} />
       <p aria-live="polite">{listNote}</p>
       <Shortlist
         list={shortlist.list}

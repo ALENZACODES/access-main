@@ -14,6 +14,7 @@ describe("the states barrel exposes the pack tools", () => {
     "DataCredits", "buildCredits", "creditRecordsFromPack",
     "VisitPlan", "buildVisitPlan", "questionsFor", "visitPlanToText", "visitPlanToCsv", "toggleDone", "QUESTION_TOPICS", "filterPlan", "VISIT_FILTERS", "draftMessage", "mailtoHref",
     "PlaceSheet", "ShortlistFiles", "GapMatrix", "placeSheetToText", "buildGapMatrix", "gapSentence", "cellWord", "gapMatrixToCsv", "buildPlaceSheet", "sheetSummary", "placeToVcard", "placesToVcards", "placesToGpx", "foldVcardLine", "escapeXml",
+    "VenueGroups", "buildVenueGroups", "readName", "foldVenueName", "venueBase", "venueDisplayBase", "venuePartKind", "venuePartLabel", "PART_KINDS", "VENUE_RADIUS_METRES", "onlyDiffering", "venueSummary", "venueCaveat", "groupHeading", "memberDistance", "venuesToText", "venuesToCsv", "VENUE_TEXT_FILENAMES", "VENUE_ORDERS", "DEFAULT_VENUE_ORDER", "NO_VENUE_FILTER", "venueOrderLabel", "orderVenues", "filterVenues", "kindCounts", "kindSentence", "spanSentence", "TAG_COLUMNS", "kindTagRows", "venueNotes", "venueNoteText", "VENUE_CSV_FILENAMES",
     "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
