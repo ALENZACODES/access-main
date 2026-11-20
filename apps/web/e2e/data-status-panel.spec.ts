@@ -63,7 +63,7 @@ test("Data status: the quality panel reflects the cache and shows gaps as Unknow
   const sources = panel.getByRole("table", { name: "Sources", exact: true });
   await expect(sources.getByRole("row")).toHaveCount(4);
   const undated = sources.getByRole("row").filter({ hasText: "Source of Undated journey" });
-  await expect(undated).toContainText("Unknown");
+  await expect(undated).toContainText("UNKNOWN");
   await expect(panel).not.toContainText(/verified|recently updated/i);
   // The older page sections are unchanged.
   await expect(page.getByTestId("unknown-date-rate")).toHaveText("33.3%");

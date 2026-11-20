@@ -79,12 +79,12 @@ describe('age filter', () => {
   });
   it('is named in words in both languages', () => {
     expect(ageValueLabel('d0_30', 'en')).toBe('0 to 30 days');
-    expect(ageValueLabel('unknown', 'fr')).toBe('Date inconnue');
+    expect(ageValueLabel('unknown', 'fr')).toBe('Date UNKNOWN');
     expect(ageValueLabel('nope', 'en')).toBeNull();
     expect(listActiveFilters({ ...NO_FILTERS, age: 'd0_30' }, 'en')).toEqual([{ key: 'age', label: 'Age of retrieved date: 0 to 30 days' }]);
     expect(filterParts({ ...NO_FILTERS, age: 'd0_30' }, 'en')).toEqual(['age of retrieved date 0 to 30 days']);
     const fr = listActiveFilters({ ...NO_FILTERS, age: 'unknown' }, 'fr')[0]?.label ?? '';
-    expect(fr).toBe('Âge de la date de récupération : Date inconnue');
+    expect(fr).toBe('Âge de la date de récupération : Date UNKNOWN');
     expect(lintFrench(fr)).toEqual([]);
   });
 });

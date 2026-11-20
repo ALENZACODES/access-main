@@ -35,8 +35,8 @@ describe('panel sections: review workload and age bands', () => {
   });
   it('reads the same audit as the rest of the panel', () => {
     expect(en).toContain('1 source is past its review date.');
-    expect(en).toContain('1 source is not scheduled because its retrieved date is unknown.');
-    expect(en).toContain('<th scope="row">Unknown date</th><td>1</td><td>33%</td>');
+    expect(en).toContain('1 source is not scheduled because its retrieved date is UNKNOWN.');
+    expect(en).toContain('<th scope="row">Date UNKNOWN</th><td>1</td><td>33%</td>');
   });
   it('places the workload after the review calendar and the age bands after completeness', () => {
     expect(en.indexOf('ds-review-title')).toBeLessThan(en.indexOf('ds-workload-title'));

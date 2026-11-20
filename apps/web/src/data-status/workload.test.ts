@@ -125,7 +125,7 @@ describe('workloadSentences', () => {
       '3 sources reach their review date within 12 weeks.',
       'The busiest week starts November 22, 2026, with 2 sources.',
       '1 source is due after that.',
-      '1 source is not scheduled because its retrieved date is unknown.',
+      '1 source is not scheduled because its retrieved date is UNKNOWN.',
     ]);
   });
   it('reads in French with the singular and plural forms', () => {

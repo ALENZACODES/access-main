@@ -54,7 +54,7 @@ describe('explainSource: every status states its reason', () => {
   });
 
   it('explains a missing date', () => {
-    for (const v of [null, '', 'N/A', 'TBD']) expect(explainSource(one(v), 'en')).toEqual({ code: 'missing-date', text: 'No retrieved date is recorded, so the status is unknown.' });
+    for (const v of [null, '', 'N/A', 'TBD']) expect(explainSource(one(v), 'en')).toEqual({ code: 'missing-date', text: 'No retrieved date is recorded, so the status is UNKNOWN.' });
   });
 
   it('explains an unreadable date', () => {
@@ -64,13 +64,13 @@ describe('explainSource: every status states its reason', () => {
   it('explains a date in the future and shows that date', () => {
     const e = explainSource(one('2026-12-25'), 'en');
     expect(e.code).toBe('future-date');
-    expect(e.text).toBe('The retrieved date (December 25, 2026) is after today, so the status is unknown.');
+    expect(e.text).toBe('The retrieved date (December 25, 2026) is after today, so the status is UNKNOWN.');
   });
 
   it('never calls an unknown status fresh or stale', () => {
     for (const v of [null, 'x', '2027-01-01']) {
       const e = explainSource(one(v), 'en');
-      expect(e.text).toMatch(/unknown/);
+      expect(e.text).toMatch(/UNKNOWN/);
       expect(e.text).not.toMatch(/Within|Past/);
     }
   });
@@ -132,7 +132,7 @@ describe('renderBasisHtml', () => {
   it('lists only the sources that are not within the limit, each with its reason', () => {
     const text = visibleText(renderBasisHtml(audit, 'en'));
     expect(text).toMatch(/Old & stale\s*: Retrieved January 1, 2026, 319 days ago/);
-    expect(text).toMatch(/Unknown name\s*: No retrieved date is recorded/);
+    expect(text).toMatch(/Name UNKNOWN\s*: No retrieved date is recorded/);
     expect(text).not.toContain('November 10');
   });
 

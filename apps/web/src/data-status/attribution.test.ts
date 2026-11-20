@@ -40,14 +40,14 @@ describe('buildAttributions', () => {
 
   it('keeps unrecognised licence text and never assumes a credit rule', () => {
     expect(by('Delta')).toMatchObject({ licenceId: null, licenceName: 'Custom terms', licenceUrl: null, credit: null, shareAlike: null });
-    expect(by('Epsilon')).toMatchObject({ licenceName: 'Unknown', credit: null, retrievedIso: null });
+    expect(by('Epsilon')).toMatchObject({ licenceName: 'UNKNOWN', credit: null, retrievedIso: null });
   });
 
   it('sorts by label and localizes names', () => {
     expect(en.map((e) => e.sourceLabel.split(' / ')[1])).toEqual(['Alpha', 'Beta <b>', 'Delta', 'Epsilon', 'Gamma']);
     const fr = buildAttributions(sources, 'fr');
     expect(fr.find((e) => e.licenceId === 'OGL-Ontario')?.licenceName).toBe('Licence du gouvernement ouvert – Ontario');
-    expect(fr.find((e) => e.sourceLabel.endsWith('Epsilon'))?.licenceName).toBe('Inconnu');
+    expect(fr.find((e) => e.sourceLabel.endsWith('Epsilon'))?.licenceName).toBe('UNKNOWN');
   });
 });
 
@@ -57,7 +57,7 @@ describe('creditText', () => {
     expect(creditText(e.find((x) => x.licenceId === 'OGL-Ontario')!, 'en')).toBe('Credit required');
     expect(creditText(e.find((x) => x.licenceId === 'CC0-1.0')!, 'en')).toBe('No credit required');
     expect(creditText(e.find((x) => x.licenceId === 'CC-BY-SA-4.0')!, 'en')).toBe('Credit required · Share-alike applies');
-    expect(creditText(e.find((x) => x.licenceId === null)!, 'fr')).toBe('Exigence de mention inconnue');
+    expect(creditText(e.find((x) => x.licenceId === null)!, 'fr')).toBe('Exigence de mention UNKNOWN');
   });
 });
 
@@ -75,7 +75,7 @@ describe('renderAttributionHtml', () => {
 
   it('shows Unknown without a link when licence or date is missing', () => {
     const html = renderAttributionHtml(buildAttributions(sources, 'fr').filter((e) => e.sourceLabel.endsWith('Epsilon')), 'fr');
-    expect(html).toContain('<td>Inconnu</td><td>Inconnu</td>');
+    expect(html).toContain('<td>UNKNOWN</td><td>UNKNOWN</td>');
     expect(html).not.toContain('<a ');
   });
 });

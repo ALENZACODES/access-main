@@ -132,8 +132,8 @@ describe('tier wording', () => {
   it('labels tiers and Unknown in both languages', () => {
     expect(tierLabel('0', 'en')).toBe('Tier 0');
     expect(tierLabel('E', 'fr')).toBe('Niveau E');
-    expect(tierLabel(null, 'en')).toBe('Unknown');
-    expect(tierLabel(null, 'fr')).toBe('Inconnu');
+    expect(tierLabel(null, 'en')).toBe('UNKNOWN');
+    expect(tierLabel(null, 'fr')).toBe('UNKNOWN');
   });
   it('has a meaning for every tier and for Unknown, different in each language', () => {
     for (const id of [...TIER_IDS, null]) {
@@ -143,8 +143,8 @@ describe('tier wording', () => {
   });
   it('writes a short cell value', () => {
     expect(tierCell({ kind: 'tier', tier: 'E' }, 'en')).toBe('E');
-    expect(tierCell({ kind: 'unknown' }, 'fr')).toBe('Inconnu');
-    expect(tierCell({ kind: 'unrecognised', text: 'x' }, 'en')).toBe('Unknown');
+    expect(tierCell({ kind: 'unknown' }, 'fr')).toBe('UNKNOWN');
+    expect(tierCell({ kind: 'unrecognised', text: 'x' }, 'en')).toBe('UNKNOWN');
   });
   it('summarises how many records state a tier', () => {
     expect(tierSummary(buildTierBreakdown(RECORDS), 'en')).toBe('Records that state a tier: 2 of 3.');
@@ -163,7 +163,7 @@ describe('renderTierBreakdownHtml', () => {
     expect(html).toContain('<th scope="row">Tier 0</th>');
     expect(html).toContain('<th scope="row">Tier E</th>');
     expect(html).not.toContain('<th scope="row">Tier 1</th>');
-    expect(html).toContain('<th scope="row">Unknown</th>');
+    expect(html).toContain('<th scope="row">UNKNOWN</th>');
     expect(html.match(/<table>/g)).toHaveLength(2);
   });
   it('leaves the Unknown row out when every record states a tier', () => {
