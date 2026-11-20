@@ -1,7 +1,7 @@
 /** Localised read-only reports for recorded accessibility regression evidence. */
 import { Buffer } from 'node:buffer';
-import { compareRegressionSnapshots, reviewQueue, regressionGate } from './interaction-regression-compare.mjs';
-import { analyzeCoverage, reviewMissingCoverage } from './interaction-regression-coverage.mjs';
+import { reviewQueue, regressionGate } from './interaction-regression-compare.mjs';
+import { reviewMissingCoverage } from './interaction-regression-coverage.mjs';
 
 const WORDS = Object.freeze({
   en: Object.freeze({
