@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { assessJourney, DEFAULT_OPTIONS, journeyIssues, issue } from './model.ts';
+import { assessJourney, DEFAULT_OPTIONS, journeyIssues } from './model.ts';
 import { initialScan, inspectAnnouncements, inspectKeyboard, inspectTargets, replayScan, targetsForJourney } from './scanner.ts';
 import { auditSemanticSnapshot, compareSemantics } from './semantics.ts';
 import { coverage, exportCsv, exportJson, inspectSession, limitedSummary } from './report.ts';
