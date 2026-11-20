@@ -1164,3 +1164,76 @@ describe("NarrowAuditPage: my access summary", () => {
     expect(document.querySelector(".summary")).toBeNull();
   });
 });
+
+/** "Slips onto risky controls" sits before the summary. Every element is given a box, each 30 pixels further right than the one before. */
+describe("NarrowAuditPage: slips onto risky controls", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    const lefts = new WeakMap<Element, number>();
+    let next = 0;
+    Element.prototype.getBoundingClientRect = function box(this: Element): DOMRect {
+      let left = lefts.get(this);
+      if (left === undefined) {
+        left = next;
+        next += 30;
+        lefts.set(this, left);
+      }
+      return { x: left, y: 0, top: 0, left, right: left + 28, bottom: 28, width: 28, height: 28, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, before the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".slip")).toHaveLength(1);
+    const h2 = container.querySelector("#slip-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Slips onto risky controls");
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("reads the page with the App minimum when the tap test was not taken, and puts focus on the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.slip [data-action="slip-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#slip-result-h"));
+    expect(container.querySelector("#slip-result-h + p")?.textContent).toBe("Tap size used: 44 px, the App’s minimum, since the tap test was not taken. Yours stays UNKNOWN.");
+    expect(container.querySelector(".slip")?.textContent).toMatch(/Of \d+ controls, \d+ do(es)? something hard to take back\./);
+    // Every control here is 28 pixels, so each risky one is smaller than the tap size.
+    expect(container.querySelectorAll(".slip #slip-small-h + ul li").length).toBeGreaterThan(0);
+  });
+
+  it("follows the language of the audit panel and keeps what was read", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.slip [data-action="slip-read"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".slip")).toHaveLength(1);
+    expect(container.querySelector("#slip-h")?.textContent).toBe("Glissements vers des commandes à risque");
+    expect(container.querySelector(".slip")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#slip-result-h")?.textContent).toBe("Ce qui a été trouvé");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const tapBefore = container.querySelector(".tap")?.innerHTML;
+    await press(container, '.slip [data-action="slip-read"]');
+    expect(container.querySelector(".tap")?.innerHTML).toBe(tapBefore);
+    unmount();
+    expect(document.querySelector(".slip")).toBeNull();
+  });
+});

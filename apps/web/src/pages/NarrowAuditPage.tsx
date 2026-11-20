@@ -9,8 +9,9 @@ import { pressNote } from "../narrow/press-timing.ts";
 import { mountReachPanel, type ReachPanelState } from "../narrow/reach-panel.ts";
 import { mountTapPanel, type TapPanelState } from "../narrow/tap-panel.ts";
 import { mountScrollPanel, type ScrollPanelState } from "../narrow/scroll-panel.ts";
+import { mountSlipPanel, type SlipPanelState } from "../narrow/slip-panel.ts";
 import { PART_HEADINGS, mountSummaryPanel, type SummaryPanelState } from "../narrow/summary-panel.ts";
-import { tapNote } from "../narrow/tap-trial.ts";
+import { tapNote, tapResult } from "../narrow/tap-trial.ts";
 import { mountVoicePanel, type VoicePanelState } from "../narrow/voice-panel.ts";
 import { zoneNote } from "../narrow/zones.ts";
 import { mountZonesPanel, type ZonesState } from "../narrow/zones-panel.ts";
@@ -53,6 +54,10 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
  * control: it counts the controls of this page that take extra steps by voice
  * and lets the person try a phrase.
  *
+ * Then "Slips onto risky controls" finds where a tap aimed at one control may
+ * land on another that does something hard to take back, with the person's
+ * tap size from the tap test when they took it.
+ *
  * Then "My access summary" brings together, on request, what the person
  * measured in the tap, zones and press tests, as text to share, with a way
  * to each test not done yet.
@@ -80,6 +85,8 @@ export function NarrowAuditPage() {
   const pressMountedRef = useRef<{ getState(): PressPanelState } | null>(null);
   const voiceRef = useRef<HTMLDivElement>(null);
   const voiceStateRef = useRef<VoicePanelState | undefined>(undefined);
+  const slipRef = useRef<HTMLDivElement>(null);
+  const slipStateRef = useRef<SlipPanelState | undefined>(undefined);
   const summaryRef = useRef<HTMLDivElement>(null);
   const summaryStateRef = useRef<SummaryPanelState | undefined>(undefined);
   const reachRef = useRef<HTMLDivElement>(null);
@@ -187,6 +194,25 @@ export function NarrowAuditPage() {
   }, [panelLang]);
 
   useEffect(() => {
+    const host = slipRef.current;
+    if (!host) return;
+    const root = document.createElement("div");
+    host.appendChild(root);
+    // The person's tap size, read at each reading, so a tap test taken later counts.
+    const tapSize = (): number | null => {
+      const tap = tapMountedRef.current?.getState() ?? tapStateRef.current;
+      if (!tap || tap.trial.phase !== "done") return null;
+      const result = tapResult(tap.trial.taps);
+      return result.kind === "size" ? result.px : null;
+    };
+    const mounted = mountSlipPanel({ root, lang: panelLang, tapSize, ...(slipStateRef.current ? { state: slipStateRef.current } : {}) });
+    return () => {
+      slipStateRef.current = mounted.getState();
+      root.remove();
+    };
+  }, [panelLang]);
+
+  useEffect(() => {
     const host = summaryRef.current;
     if (!host) return;
     const root = document.createElement("div");
@@ -244,6 +270,7 @@ export function NarrowAuditPage() {
       <div ref={zonesRef} />
       <div ref={pressRef} />
       <div ref={voiceRef} />
+      <div ref={slipRef} />
       <div ref={summaryRef} />
       <div ref={handRef} />
       <div ref={reachRef} />

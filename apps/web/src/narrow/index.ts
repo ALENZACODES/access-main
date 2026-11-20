@@ -115,3 +115,6 @@ export * from './voice.ts';
 export * from './voice-panel.ts';
 export * from './access-summary.ts';
 export * from './summary-panel.ts';
+export * from './slip-inpage.ts';
+export * from './slip.ts';
+export * from './slip-panel.ts';
