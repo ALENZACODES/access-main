@@ -9,6 +9,8 @@ import { packIntegrityCopy } from "../recovery/packIntegrity.ts";
 import { offlineCatalog } from "./catalog.ts";
 import { OfflineRegionPage } from "./RegionPackPage.tsx";
 
+vi.mock("../recovery/RecoveryCenter.tsx", () => ({ RecoveryCenter: () => null }));
+
 const i18n = initI18n();
 const sourceMeta = { name: "OpenStreetMap", licence: "ODbL-1.0" as const, date: "2026-11-01" };
 const goodBytes = new TextEncoder().encode("abc");
