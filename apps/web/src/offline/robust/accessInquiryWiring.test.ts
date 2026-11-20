@@ -5,9 +5,9 @@ describe("access inquiry panel integration", () => {
   it("exports the independent inquiry engine", () => {
     expect(source("index.ts")).toContain('export * from "./accessInquiry";');
   });
-  it("exports bilingual copy without importing panel in the entry chunk", () => {
+  it("exports bilingual copy and the public inquiry panel", () => {
     expect(source("index.ts")).toContain('export * from "./accessInquiryCopy";');
-    expect(source("index.ts")).not.toContain('export * from "./accessInquiryPanel";');
+    expect(source("index.ts")).toContain('export * from "./accessInquiryPanel";');
   });
   it("exports the metadata report API", () => {
     expect(source("index.ts")).toContain('export * from "./accessInquiryExport";');
