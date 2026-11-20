@@ -10,7 +10,7 @@ const established = [
   "RecoveryReconciliationPanel", "RecoveryDrillPanel", "RecoveryReceiptLedgerPanel",
 ] as const;
 
-describe("recovery integration on merged main 822d221d", () => {
+describe("recovery integration on merged main d60c07a4", () => {
   it("preserves every merged panel and adds the new one", () => {
     for (const name of [...established, "RecoveryGuidedReviewPanel"]) {
       expect(shell).toContain(`await import("./${name}")`);
@@ -28,5 +28,13 @@ describe("recovery integration on merged main 822d221d", () => {
     for (const name of ["recoveryHandoffChain", "recoveryDrillRun", "recoveryReconciliation", "recoveryEvidencePacket", "recoveryTransferWitness", "recoveryReceiptLedger", "recoveryReceiptAnalysis", "recoveryReceiptCopy"]) {
       expect(barrel).toContain(`from "./${name}"`);
     }
+  });
+  it("preserves the merged receipt ledger on main d60c07a4", () => {
+    expect(shell).toContain('await import("./RecoveryReceiptLedgerPanel")');
+    expect(shell).toContain('<RecoveryReceiptLedgerPanel locale={locale}');
+    expect(barrel).toContain('export { RecoveryReceiptLedgerPanel } from "./RecoveryReceiptLedgerPanel"');
+    expect(barrel).toContain('from "./recoveryReceiptLedger"');
+    expect(barrel).toContain('from "./recoveryReceiptAnalysis"');
+    expect(barrel).toContain('from "./recoveryReceiptCopy"');
   });
 });
