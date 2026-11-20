@@ -1,185 +1,125 @@
-import type {
-  PacketAction, PacketCondition, PacketIssue, PacketLocale,
-  PacketOperation, PacketStage, PacketTier,
-} from "./recoveryEvidencePacket";
+import type { EvidenceDecision, EvidenceIssue, EvidenceTier } from "./recoveryEvidenceNotebook";
+import type { RecoveryLocale } from "./index";
 
-export interface PacketCopy {
-  readonly heading: string;
-  readonly description: string;
-  readonly caution: string;
-  readonly unknown: "UNKNOWN";
-  readonly inspect: string;
-  readonly add: string;
-  readonly record: string;
-  readonly note: string;
+export interface EvidenceCopy {
+  readonly title: string;
+  readonly intro: string;
+  readonly packId: string;
+  readonly field: string;
+  readonly value: string;
+  readonly unknownValue: string;
   readonly source: string;
   readonly licence: string;
-  readonly retrievedOn: string;
-  readonly reference: string;
+  readonly date: string;
   readonly tier: string;
-  readonly condition: string;
-  readonly operation: string;
-  readonly pack: string;
-  readonly entries: string;
-  readonly stage: string;
+  readonly note: string;
+  readonly add: string;
+  readonly inspect: string;
   readonly save: string;
-  readonly open: string;
-  readonly import: string;
-  readonly apply: string;
-  readonly reject: string;
+  readonly load: string;
+  readonly merge: string;
+  readonly reset: string;
   readonly empty: string;
   readonly pending: string;
-  readonly saved: string;
-  readonly failed: string;
   readonly imported: string;
-  readonly export: string;
-  readonly close: string;
-  readonly reopen: string;
+  readonly exported: string;
+  readonly stopped: string;
+  readonly unsupported: string;
+  readonly details: string;
+  readonly created: string;
+  readonly changed: string;
+  readonly status: string;
   readonly review: string;
-  readonly events: string;
-  readonly summaries: string;
-  readonly warning: string;
-  readonly action: string;
-  readonly search: string;
-  readonly clear: string;
-  readonly findings: string;
-  readonly filterAll: string;
-  readonly fileLabel: string;
-  readonly dateLabel: string;
-  readonly noPack: string;
-  readonly issues: Readonly<Record<PacketIssue, string>>;
-  readonly operations: Readonly<Record<PacketOperation, string>>;
-  readonly conditions: Readonly<Record<PacketCondition, string>>;
-  readonly tiers: Readonly<Record<PacketTier, string>>;
-  readonly stages: Readonly<Record<PacketStage, string>>;
-  readonly actions: Readonly<Record<PacketAction, string>>;
+  readonly summary: string;
+  readonly all: string;
+  readonly known: string;
+  readonly unknown: string;
+  readonly conflicts: string;
+  readonly duplicates: string;
+  readonly additions: string;
+  readonly cancel: string;
+  readonly state: Readonly<Record<EvidenceDecision, string>>;
+  readonly tiers: Readonly<Record<EvidenceTier, string>>;
+  readonly issues: Readonly<Record<EvidenceIssue, string>>;
 }
-const en: PacketCopy = {
-  heading: "Local recovery evidence packet",
-  description: "Document local observations manually, review changes, and export a portable packet.",
-  caution: "UNKNOWN means unknown. Recorded observations do not establish that a pack is usable.",
-  unknown: "UNKNOWN",
-  inspect: "Inspect local packs before recording an observation.",
-  add: "Add observation",
-  record: "Observation",
-  note: "What was observed",
-  source: "Source name",
-  licence: "Source licence",
-  retrievedOn: "Retrieved on (YYYY-MM-DD)",
-  reference: "Source reference",
-  tier: "Evidence tier",
-  condition: "Observed condition",
-  operation: "Operation",
-  pack: "Local pack",
-  entries: "Recorded entries",
-  stage: "Review stage",
-  save: "Save evidence packet",
-  open: "Choose local packet file",
-  import: "Import preview",
-  apply: "Merge imported entries",
-  reject: "Discard import",
-  empty: "No observations have been recorded.",
-  pending: "Import preview is ready. Review before merging.",
-  saved: "Packet export submitted to your file saver.",
-  failed: "The file operation could not be completed.",
-  imported: "Imported entries were merged without replacing existing records.",
-  export: "Export",
-  close: "Close review",
-  reopen: "Reopen review",
-  review: "Mark for review",
-  events: "Manual activity",
-  summaries: "Packet summary",
-  warning: "Conflicting identifiers are rejected; existing observations are never silently overwritten.",
-  action: "Review note",
-  search: "Find an observation",
-  clear: "Clear filters",
-  findings: "Review findings",
-  filterAll: "All conditions",
-  fileLabel: "Local JSON file",
-  dateLabel: "Observation date",
-  noPack: "No local pack selected",
+
+const EN: EvidenceCopy = {
+  title: "Recovery evidence notebook",
+  intro: "Keep local notes about pack files. A note does not change pack readiness or describe physical accessibility. UNKNOWN remains UNKNOWN.",
+  packId: "Pack ID", field: "File field", value: "Recorded value", unknownValue: "Leave UNKNOWN",
+  source: "Source", licence: "Open licence", date: "Source date", tier: "Evidence tier", note: "Note",
+  add: "Add local note", inspect: "Review notes", save: "Save JSON file", load: "Choose local JSON file",
+  merge: "Add non-conflicting notes", reset: "Clear local notes", empty: "No local notes in this session.",
+  pending: "Reading the selected file…", imported: "Local notes added.", exported: "JSON file saved.",
+  stopped: "The requested action did not finish.", unsupported: "This file cannot be used.",
+  details: "Local file comparison", created: "Created", changed: "Last changed", status: "Review state",
+  review: "Review entry", summary: "Summary", all: "All", known: "With a value", unknown: "UNKNOWN",
+  conflicts: "Conflicting notes", duplicates: "Already present", additions: "New notes", cancel: "Dismiss preview",
+  state: { open: "To review", accepted: "Reviewed", superseded: "Superseded", dismissed: "Dismissed" },
+  tiers: { official: "Public source", community: "Community", "self-reported": "Personal observation", unknown: "UNKNOWN" },
   issues: {
-    format: "File format is not supported.",
-    limit: "The file or packet exceeds a local limit.",
-    identity: "Choose a valid pack and entry identifier.",
-    duplicate: "An identifier is already in use.",
-    reference: "An entry or event reference could not be found.",
-    transition: "This review transition is not available.",
-    source: "Supply valid source and licence details.",
-    date: "Use a valid YYYY-MM-DD source date.",
-    text: "A text field contains invalid characters or is too long.",
-    timestamp: "A timestamp is not valid UTC ISO time.",
-    conflict: "Conflicting identifiers require manual review. Import was not changed.",
+    "invalid-shape": "The document structure is not supported.",
+    "invalid-version": "The document format is not supported.",
+    "too-large": "The selected file is too large.",
+    "too-many": "Too many entries are present.",
+    "invalid-date": "The date is not valid.",
+    "future-date": "The source date is after the entry date.",
+    "invalid-id": "The entry or pack ID is invalid.",
+    "duplicate-id": "The entry ID appears more than once.",
+    "invalid-key": "Use a short lower-case field key.",
+    "invalid-value": "The value is not supported.",
+    "invalid-source": "A source name is required.",
+    "closed-licence": "Choose one of the supported open licences.",
+    "invalid-tier": "Choose an evidence tier.",
+    "invalid-note": "The note contains unsupported characters or is too long.",
+    "invalid-decision": "The review state is not supported.",
+    "invalid-timestamp": "The entry timestamps are inconsistent.",
+    "invalid-history": "A closed review state cannot be changed.",
+    "unexpected-key": "The document contains an unsupported field.",
+    "unsafe-text": "The document contains unsupported text.",
+    conflict: "Conflicting notes must be resolved outside this import.",
   },
-  operations: { pack: "Pack", download: "Download", export: "Export", handoff: "Handoff" },
-  conditions: { UNKNOWN: "UNKNOWN", incomplete: "Incomplete", interrupted: "Interrupted", unavailable: "Unavailable", "needs-review": "Needs review" },
-  tiers: { UNKNOWN: "UNKNOWN", "self-reported": "Self-reported", documented: "Documented", reviewed: "Reviewed" },
-  stages: { draft: "Draft", review: "Needs review", closed: "Closed" },
-  actions: { created: "Created", noted: "Note added", "review-requested": "Review requested", reopened: "Reopened", closed: "Closed" },
 };
-const fr: PacketCopy = {
-  heading: "Dossier local de récupération",
-  description: "Consignez les observations localement, examinez les changements et exportez un dossier transférable.",
-  caution: "UNKNOWN signifie inconnu. Une observation ne confirme pas qu’un ensemble est utilisable.",
-  unknown: "UNKNOWN",
-  inspect: "Examinez les ensembles locaux avant de consigner une observation.",
-  add: "Ajouter une observation",
-  record: "Observation",
-  note: "Description de l’observation",
-  source: "Nom de la source",
-  licence: "Licence de la source",
-  retrievedOn: "Date de récupération (AAAA-MM-JJ)",
-  reference: "Référence de la source",
-  tier: "Niveau de preuve",
-  condition: "État observé",
-  operation: "Opération",
-  pack: "Ensemble local",
-  entries: "Observations consignées",
-  stage: "Étape de révision",
-  save: "Enregistrer le dossier",
-  open: "Choisir un dossier local",
-  import: "Aperçu de l’importation",
-  apply: "Fusionner les observations",
-  reject: "Annuler l’importation",
-  empty: "Aucune observation consignée.",
-  pending: "L’aperçu est prêt. Examinez les données avant la fusion.",
-  saved: "Le dossier a été transmis au mécanisme d’enregistrement.",
-  failed: "L’opération sur le fichier a échoué.",
-  imported: "Les données ont été fusionnées sans remplacer les observations existantes.",
-  export: "Exporter",
-  close: "Terminer la révision",
-  reopen: "Rouvrir la révision",
-  review: "Demander une révision",
-  events: "Activité manuelle",
-  summaries: "Résumé du dossier",
-  warning: "Les identifiants contradictoires sont refusés\u202F; les observations existantes ne sont jamais remplacées automatiquement.",
-  action: "Note de révision",
-  search: "Rechercher une observation",
-  clear: "Effacer les filtres",
-  findings: "Points à examiner",
-  filterAll: "Tous les états",
-  fileLabel: "Fichier JSON local",
-  dateLabel: "Date de l’observation",
-  noPack: "Aucun ensemble local sélectionné",
+
+const FR: EvidenceCopy = {
+  title: "Carnet de renseignements de récupération",
+  intro: "Consignez des notes locales sur les fichiers. Une note ne change pas l’état de l’ensemble et ne décrit pas l’accessibilité physique. UNKNOWN reste UNKNOWN.",
+  packId: "Identifiant de l’ensemble", field: "Champ du fichier", value: "Valeur consignée", unknownValue: "Garder UNKNOWN",
+  source: "Source", licence: "Licence ouverte", date: "Date de la source", tier: "Niveau de preuve", note: "Note",
+  add: "Ajouter une note locale", inspect: "Examiner les notes", save: "Enregistrer le fichier JSON",
+  load: "Choisir un fichier JSON local", merge: "Ajouter les notes sans conflit", reset: "Effacer les notes locales",
+  empty: "Aucune note locale dans cette session.", pending: "Lecture du fichier sélectionné…",
+  imported: "Notes locales ajoutées.", exported: "Fichier JSON enregistré.",
+  stopped: "L’action demandée ne s’est pas terminée.", unsupported: "Ce fichier ne peut pas être utilisé.",
+  details: "Comparaison du fichier local", created: "Créé le", changed: "Dernière modification", status: "État de la revue",
+  review: "Examiner l’entrée", summary: "Résumé", all: "Total", known: "Avec une valeur", unknown: "UNKNOWN",
+  conflicts: "Notes en conflit", duplicates: "Déjà présentes", additions: "Nouvelles notes", cancel: "Fermer l’aperçu",
+  state: { open: "À examiner", accepted: "Examinée", superseded: "Remplacée", dismissed: "Écartée" },
+  tiers: { official: "Source publique", community: "Communauté", "self-reported": "Observation personnelle", unknown: "UNKNOWN" },
   issues: {
-    format: "Le format du fichier n’est pas pris en charge.",
-    limit: "La taille du fichier ou du dossier dépasse la limite locale.",
-    identity: "Choisissez un ensemble et un identifiant valides.",
-    duplicate: "Cet identifiant est déjà utilisé.",
-    reference: "La référence d’une observation ou d’un évènement est introuvable.",
-    transition: "Cette transition de révision est indisponible.",
-    source: "Indiquez une source et une licence valides.",
-    date: "Utilisez une date valide au format AAAA-MM-JJ.",
-    text: "Un champ contient des caractères interdits ou trop de texte.",
-    timestamp: "L’horodatage UTC n’est pas valide.",
-    conflict: "Un conflit d’identifiants exige une révision manuelle. L’importation est inchangée.",
+    "invalid-shape": "La structure du document n’est pas prise en charge.",
+    "invalid-version": "Le format du document n’est pas pris en charge.",
+    "too-large": "Le fichier sélectionné est trop volumineux.",
+    "too-many": "Le document contient trop d’entrées.",
+    "invalid-date": "La date n’est pas valide.",
+    "future-date": "La date de la source suit la date de l’entrée.",
+    "invalid-id": "L’identifiant de l’entrée ou de l’ensemble est invalide.",
+    "duplicate-id": "Un identifiant d’entrée apparaît plusieurs fois.",
+    "invalid-key": "Utilisez une clé de champ courte, en minuscules.",
+    "invalid-value": "La valeur n’est pas prise en charge.",
+    "invalid-source": "Le nom de la source est obligatoire.",
+    "closed-licence": "Choisissez une licence ouverte prise en charge.",
+    "invalid-tier": "Choisissez un niveau de preuve.",
+    "invalid-note": "La note contient des caractères non pris en charge ou est trop longue.",
+    "invalid-decision": "L’état de la revue n’est pas pris en charge.",
+    "invalid-timestamp": "Les dates des entrées sont incohérentes.",
+    "invalid-history": "L’état d’une revue terminée ne peut pas être modifié.",
+    "unexpected-key": "Le document contient un champ non pris en charge.",
+    "unsafe-text": "Le document contient du texte non pris en charge.",
+    conflict: "Les notes en conflit doivent être résolues en dehors de cet import.",
   },
-  operations: { pack: "Ensemble", download: "Téléchargement", export: "Exportation", handoff: "Transfert" },
-  conditions: { UNKNOWN: "UNKNOWN", incomplete: "Incomplet", interrupted: "Interrompu", unavailable: "Indisponible", "needs-review": "À examiner" },
-  tiers: { UNKNOWN: "UNKNOWN", "self-reported": "Déclaré", documented: "Documenté", reviewed: "Examiné" },
-  stages: { draft: "Brouillon", review: "À examiner", closed: "Terminé" },
-  actions: { created: "Créé", noted: "Note ajoutée", "review-requested": "Révision demandée", reopened: "Rouvert", closed: "Terminé" },
 };
-export function recoveryEvidenceCopy(locale: PacketLocale): PacketCopy {
-  return locale === "fr" ? fr : en;
+
+export function evidenceCopy(locale: RecoveryLocale): EvidenceCopy {
+  return locale === "fr" ? FR : EN;
 }
