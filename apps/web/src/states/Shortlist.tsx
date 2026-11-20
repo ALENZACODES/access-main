@@ -4,6 +4,7 @@ import type { PackPlaceRecord } from "./packPlaces.ts";
 import type { Point } from "./packGeo.ts";
 import { type ShortlistEntry, MAX_SHORTLIST, resolveShortlist } from "./shortlist.ts";
 import { ChoiceGroup } from "../design/fields.tsx";
+import { DistanceMatrix } from "./DistanceMatrix.tsx";
 import { GapMatrix } from "./GapMatrix.tsx";
 import { Handout } from "./Handout.tsx";
 import { ShortlistFiles } from "./ShortlistFiles.tsx";
@@ -145,6 +146,7 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
         </Button>
       </div>
       {resolved.found.length > 0 ? <VisitPlan found={resolved.found.map((f) => f.place)} missing={resolved.missing.length} locale={locale} today={today} /> : null}
+      <DistanceMatrix places={resolved.found.map((f) => f.place)} locale={locale} />
       <GapMatrix places={resolved.found.map((f) => f.place)} locale={locale} today={today} />
       <Handout places={resolved.found.map((f) => f.place)} locale={locale} today={today} />
       <ShortlistFiles places={resolved.found.map((f) => f.place)} locale={locale} />
