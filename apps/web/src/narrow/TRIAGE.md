@@ -15,6 +15,7 @@ npx tsx apps/web/src/narrow/bin.mjs triage audit/narrow-audit.json \
 | `--ledger FILE` | Adds how long each failure has been open. Needed by policy rules that use `olderThanDays`. |
 | `--owners FILE` | Adds the owner of each finding. |
 | `--policy FILE` | Compares the report with limits the team chose. Sets the exit code. |
+| `--manual-log FILE` | Prints what people saw by hand. With `--tickets`, each problem in the log gets a draft too, before the others. |
 | `--tickets DIR` | Writes one Markdown draft per distinct finding, and a `README.md` index. |
 | `--tickets-for fail\|all` | Drafts failures only, or UNKNOWN findings too (default). |
 | `--out FILE.md` | Writes the full order as a Markdown table, with the parts of each score. |
@@ -83,7 +84,6 @@ Both are needed.
 
 ## Where the command lives
 
-`triage` is started from `bin.mjs`, not from `cli.ts`. `cli.ts` is changed by
-another chunk of this lane that has not merged, so the dispatch was kept out
-of it. The help of the main command does not list `triage` yet for the same
-reason; `narrow-audit triage --help` prints its own.
+`triage` is one of four subcommands of the main command, next to `plan`,
+`check` and `init`. `narrow-audit --help` lists them, and each prints its own
+help with `--help`.

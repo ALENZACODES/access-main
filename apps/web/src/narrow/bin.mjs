@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 // Launcher for the narrow-screen audit.
 //   npx tsx apps/web/src/narrow/bin.mjs --help
-//   npx tsx apps/web/src/narrow/bin.mjs triage --help
+//   npx tsx apps/web/src/narrow/bin.mjs triage --help   (also: plan, check, init)
 // Needs playwright-core or @playwright/test, plus a Chromium it can start.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { runCli } from './cli.ts';
-import { runTriage } from './triage-cli.ts';
 
 async function loadChromium() {
   for (const name of ['playwright-core', '@playwright/test']) {
@@ -31,11 +30,7 @@ async function launch() {
   return { page, context, close: () => browser.close() };
 }
 
-const argv = process.argv.slice(2);
-// `triage` works on a report that was already written. It never starts a browser.
-const run = argv[0] === 'triage' ? (deps) => runTriage(argv.slice(1), deps) : (deps) => runCli(argv, deps);
-
-process.exitCode = await run({
+process.exitCode = await runCli(process.argv.slice(2), {
   launch,
   readText: (path) => readFile(path, 'utf8'),
   writeText: async (path, text) => {

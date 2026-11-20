@@ -82,3 +82,7 @@ export * from './sitepages.ts';
 export * from './sitelinks.ts';
 export * from './langpairs.ts';
 export * from './sitefiles.ts';
+export * from './device-facts.ts';
+export * from './plain-summary.ts';
+export * from './barrier-report.ts';
+export * from './fit-panel.ts';
