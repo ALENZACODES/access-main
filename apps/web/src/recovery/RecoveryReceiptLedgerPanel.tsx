@@ -23,19 +23,24 @@ export interface RecoveryReceiptLedgerPanelProps {
 const frame: CSSProperties = {
   border: "1px solid currentColor", borderRadius: 8, padding: 16,
   marginBlock: 16, display: "grid", gap: 14, overflowWrap: "anywhere",
+  width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box",
+  gridTemplateColumns: "minmax(0, 1fr)",
 };
 const control: CSSProperties = {
-  minHeight: 44, minWidth: 44, font: "inherit", padding: "10px 12px",
+  minHeight: 44, minWidth: 44, maxWidth: "100%", boxSizing: "border-box",
+  font: "inherit", padding: "10px 12px",
 };
 const fields: CSSProperties = {
   display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-start",
 };
 const field: CSSProperties = {
-  display: "grid", gap: 4, flex: "1 1 180px", minWidth: 170,
+  display: "grid", gap: 4, flex: "1 1 180px", minWidth: 0,
+  maxWidth: "100%", gridTemplateColumns: "minmax(0, 1fr)",
 };
 const card: CSSProperties = {
   border: "1px solid currentColor", borderRadius: 6, padding: 12,
-  marginBlock: 10, display: "grid", gap: 8,
+  marginBlock: 10, display: "grid", gap: 8, minWidth: 0,
+  maxWidth: "100%", boxSizing: "border-box", gridTemplateColumns: "minmax(0, 1fr)",
 };
 const LIMIT_DISPLAY = 80;
 
@@ -239,7 +244,7 @@ export function RecoveryReceiptLedgerPanel({
       </section>
       <section aria-labelledby={fileHeading}>
         <h3 id={fileHeading}>{copy.open}</h3>
-        <input ref={fileInput} type="file" accept=".json,application/json" style={control}
+        <input ref={fileInput} type="file" accept=".json,application/json" style={{ ...control, width: "100%" }}
           aria-label={copy.open} onChange={(event: ChangeEvent<HTMLInputElement>) => { void chooseFile(event); }} />
         {preview && <div>
           <p>{copy.staged}</p>
