@@ -7,6 +7,7 @@ import type { PackManifest, PackSource, RegionIntegrityPart, RegionStatus } from
 import { initI18n } from "../i18n/index.ts";
 import { packIntegrityCopy } from "../recovery/packIntegrity.ts";
 import { offlineCatalog } from "./catalog.ts";
+vi.mock("../recovery/RecoveryCenter.tsx", () => ({ RecoveryCenter: () => null }));
 import { OfflineRegionPage } from "./RegionPackPage.tsx";
 
 const i18n = initI18n();
