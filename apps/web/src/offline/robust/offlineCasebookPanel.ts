@@ -1,5 +1,5 @@
 import { createOfflineAction } from "./accessibilityGuard";
-import type { DashboardModel, DashboardState } from "./offlineDashboard";
+import type { DashboardModel } from "./offlineDashboard";
 import type { Language, RegionManifest } from "./regionDownload";
 import {
   addCaseNote, casebookSummary, changeCaseStatus, emptyCasebook,
@@ -277,7 +277,7 @@ export function mountOfflineCasebook(
   const onOrder = (): void => { order = orderChoice.select.value as CaseOrder; offset = 0; render(); };
   const onPrevious = (): void => { offset = Math.max(0, offset - PAGE_SIZE); render(); };
   const onNext = (): void => { offset += PAGE_SIZE; render(); };
-  const onDashboard = (_state: DashboardState): void => {
+  const onDashboard = (): void => {
     // Existing records intentionally stay historical until a manual recheck.
     if (!disposed && expanded) render();
   };
