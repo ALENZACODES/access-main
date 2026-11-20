@@ -22,6 +22,7 @@ export type Status =
   | { kind: "expired-removed"; count: number }
   | { kind: "list-exported"; format: "csv" | "text" }
   | { kind: "kept-exported"; format: "csv" | "text" }
+  | { kind: "features-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
   | DeviceStatus;
@@ -118,6 +119,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Data list prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "kept-exported":
           return `List of everything the App keeps on this device prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "features-exported":
+          return `List of what the App asks of your browser prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
           return "The list is marked as seen.";
         default:
@@ -184,6 +187,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Liste des données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "kept-exported":
           return `Liste de tout ce que l’App conserve sur cet appareil préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "features-exported":
+          return `Liste de ce que l’App demande à votre navigateur préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":
           return "La liste est marquée comme vue.";
         default:

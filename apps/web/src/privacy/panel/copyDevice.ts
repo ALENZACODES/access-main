@@ -15,13 +15,14 @@ export type ProtectedProblem = PassphraseProblem | OpenProblem | "mismatch";
 
 export type DeviceStatus =
   | { kind: "scan-done" }
+  | { kind: "features-checked" }
   | { kind: "device-cleared"; caches: number; databases: number }
   | { kind: "device-clear-partial"; failed: number }
   | { kind: "device-nothing" }
   | { kind: "protected-prepared"; count: number }
   | { kind: "protected-problem"; code: ProtectedProblem };
 
-const KINDS: ReadonlySet<string> = new Set(["scan-done", "device-cleared", "device-clear-partial", "device-nothing", "protected-prepared", "protected-problem"]);
+const KINDS: ReadonlySet<string> = new Set(["scan-done", "features-checked", "device-cleared", "device-clear-partial", "device-nothing", "protected-prepared", "protected-problem"]);
 export const isDeviceStatus = (s: { kind: string }): s is DeviceStatus => KINDS.has(s.kind);
 
 export interface DeviceStrings {
@@ -150,6 +151,8 @@ export const DEVICE_STRINGS: Record<Locale, DeviceStrings> = {
       switch (s.kind) {
         case "scan-done":
           return "Offline storage checked.";
+        case "features-checked":
+          return "Browser answers checked.";
         case "device-cleared":
           return `Removed: ${n("en", s.caches, "cache", "caches")} and ${n("en", s.databases, "database", "databases")}.`;
         case "device-clear-partial":
@@ -215,6 +218,8 @@ export const DEVICE_STRINGS: Record<Locale, DeviceStrings> = {
       switch (s.kind) {
         case "scan-done":
           return "Stockage hors ligne examiné.";
+        case "features-checked":
+          return "Réponses du navigateur contrôlées.";
         case "device-cleared":
           return `Retiré${NBSP}: ${n("fr", s.caches, "cache", "caches")} et ${n("fr", s.databases, "base de données", "bases de données")}.`;
         case "device-clear-partial":
