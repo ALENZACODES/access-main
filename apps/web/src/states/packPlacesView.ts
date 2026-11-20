@@ -12,6 +12,7 @@ import { type PackPlaceRecord, type WheelchairTag, WHEELCHAIR_TAGS, countByTag }
 import { type Point, type PointInput, distanceMetres, formatPackDistance } from "./packGeo";
 import { tierLine } from "./recordTier";
 import { filterByKind } from "./packCategories";
+import { type BandKey, filterByBand } from "./packBands";
 import { type FacetGroup, type FacetSelection, EMPTY_FACETS, applyFacets, facetGroups, facetSummary } from "./packFacets";
 import { attributionLine, ageLabel, isStale } from "./provenance";
 import { type RouteStateView, getRouteEmpty } from "./routeStates";
@@ -27,6 +28,8 @@ export interface PackQuery {
   readonly facets?: FacetSelection;
   /** A kind key from packCategories (see kindKey). Left out or null means every kind. */
   readonly kind?: string | null;
+  /** A distance band from packBands. Used only when a starting point is typed; left out or null means every distance. */
+  readonly band?: BandKey | null;
 }
 
 export const EMPTY_PACK_QUERY: PackQuery = { text: "", tag: "any", near: { status: "none" } };
@@ -72,8 +75,12 @@ export interface PackListView {
   readonly tagOptions: readonly TagOption[];
   readonly facetGroups: readonly FacetGroup[];
   readonly facetSummary: string | null;
-  /** Places that pass the text, tag and facet filters, before the kind filter. The kinds table counts these. */
+  /** Places that pass the text, tag, facet and distance filters, before the kind filter. The kinds table counts these. */
   readonly beforeKind: readonly PackPlaceRecord[];
+  /** Places that pass the text, tag, facet and kind filters, before the distance filter. The distance table counts these. */
+  readonly beforeBand: readonly PackPlaceRecord[];
+  /** The places in the list, in list order: every filter applied. The closest-place table reads these. */
+  readonly shownPlaces: readonly PackPlaceRecord[];
   readonly minTargetPx: number;
 }
 
@@ -143,8 +150,10 @@ export function packPlacesView(places: readonly PackPlaceRecord[], dropped: numb
   const facets = query.facets ?? EMPTY_FACETS;
   const byText = places.filter((p) => matchesText(p, words));
   const byTag = byText.filter((p) => query.tag === "any" || p.tag === query.tag);
-  const beforeKind = applyFacets(byTag, facets, ctx.today);
-  const shown = filterByKind(beforeKind, query.kind ?? null);
+  const afterFacets = applyFacets(byTag, facets, ctx.today);
+  const beforeKind = filterByBand(afterFacets, from, query.band ?? null);
+  const beforeBand = filterByKind(afterFacets, query.kind ?? null);
+  const shown = filterByBand(beforeBand, from, query.band ?? null);
   const hiddenUnknown = query.tag !== "any" && query.tag !== "unknown" ? byText.filter((p) => p.tag === "unknown").length : 0;
 
   const ordered = [...shown].sort((a, b) => {
@@ -166,6 +175,8 @@ export function packPlacesView(places: readonly PackPlaceRecord[], dropped: numb
     facetGroups: facetGroups(byTag, facets, locale, ctx.today),
     facetSummary: facetSummary(facets, locale),
     beforeKind,
+    beforeBand,
+    shownPlaces: ordered,
     minTargetPx: MIN_TOUCH_TARGET_PX,
   };
 
