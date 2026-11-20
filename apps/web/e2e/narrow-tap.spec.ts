@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { narrowRoute } from "./narrow-route.ts";
 
 /**
  * "Button size for my taps" on the built app, at 320 CSS pixels, with real
@@ -14,7 +15,7 @@ const TOTAL = 16;
 const open = async (page: import("@playwright/test").Page, language: "en" | "fr" = "en") => {
   await page.goto("/");
   await page.getByRole("button", { name: language === "fr" ? "Français" : "English" }).click();
-  await page.goto("/dev/narrow");
+  await page.goto(narrowRoute());
   await expect(page.locator("#tap-h")).toBeVisible();
 };
 

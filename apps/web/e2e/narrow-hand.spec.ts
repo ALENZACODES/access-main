@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { narrowRoute } from "./narrow-route.ts";
 
 /**
  * "Look by hand" on the built app, in a real browser at 320 CSS pixels:
@@ -11,7 +12,7 @@ test.use({ viewport: { width: 320, height: 640 } });
 const open = async (page: import("@playwright/test").Page, language: "en" | "fr") => {
   await page.goto("/");
   await page.getByRole("button", { name: language === "fr" ? "Français" : "English" }).click();
-  await page.goto("/dev/narrow");
+  await page.goto(narrowRoute());
   await expect(page.locator("#hand-h")).toBeVisible();
 };
 

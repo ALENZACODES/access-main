@@ -54,7 +54,7 @@ An element is an origin when it reaches past the end edge of the page and also s
 | `run.ts` | Runs the probe for each route and for the live document |
 | `testkit.ts` | The shared stand-in document gained a body with a box, and `querySelector`, `querySelectorAll` and `closest` on elements |
 | `index.ts` | Exports these modules, and the colour modules of the earlier rounds |
-| `palette.ts` | `Theme` is now `TokenTheme`, so the barrel can export it next to the `Theme` of the plain summary |
+| `index.ts` | `palette.ts` keeps its `Theme`; the barrel exports the plain-summary `Theme` by name and the palette one as `TokenTheme`, so the two do not clash |
 
 ## Not wired, and why
 

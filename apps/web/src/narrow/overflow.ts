@@ -190,7 +190,7 @@ export function regionSentence(r: OverflowRegion, lang: Lang): string {
   const keyboard = r.keyboard
     ? ''
     : fr
-      ? ' Rien dans la zone ne prend le focus du clavier, donc vérifiez aussi qu’elle peut défiler au clavier.'
+      ? ' Rien dans la zone ne prend le focus du clavier, donc essayez aussi de la faire défiler au clavier.'
       : ' Nothing in the region takes keyboard focus, so also check that it can be scrolled with the keyboard.';
   return fr
     ? `Cette zone défile de côté à cette largeur (${content} de contenu dans ${space}). ${what} Un contenu qui a besoin des deux directions peut défiler ainsi, et une personne doit décider si c’est le cas.${keyboard}`
