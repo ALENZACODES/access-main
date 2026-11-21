@@ -10,6 +10,7 @@ import {
   MIN_TOUCH_TARGET_PX,
   type Locale,
 } from "./index.ts";
+import { containsForbiddenOrg } from "../../../../packages/shared/test/forbiddenOrg.ts";
 
 const locales: Locale[] = ["en", "fr"];
 
@@ -46,20 +47,26 @@ describe("route states (via package index)", () => {
   it("aria labels include the route name and have no straight apostrophes in FR", () => {
     expect(getRouteEmpty("search", "en")?.ariaLabel).toBe("Search – No places match this search");
     for (const r of ROUTE_IDS) {
-      const label = getRouteEmpty(r, "fr")?.ariaLabel ?? "";
-      expect(label).toContain(ROUTE_STATES[r].label.fr);
-      expect(label).not.toContain("'");
+      const empty = getRouteEmpty(r, "fr");
+      // A route with no empty state (the generic page route) has nothing to label.
+      if (!empty) {
+        expect(ROUTE_STATES[r].empty).toBeNull();
+        continue;
+      }
+      expect(empty.ariaLabel).toContain(ROUTE_STATES[r].label.fr);
+      expect(empty.ariaLabel).not.toContain("'");
     }
   });
 
   it("route labels avoid banned and prohibited wording", () => {
     const banned = new RegExp(
-      ["verified", "vérifié", "AAA", String.raw`\bAI\b`, String.raw`\bIA\b`, "sci" + "ontario", "SCI" + "O"].join("|"),
+      ["verified", "vérifié", "AAA", String.raw`\bAI\b`, String.raw`\bIA\b`].join("|"),
       "i",
     );
     for (const r of ROUTE_IDS) {
       for (const l of locales) {
         expect(ROUTE_STATES[r].label[l]).not.toMatch(banned);
+        expect(containsForbiddenOrg(ROUTE_STATES[r].label[l])).toBe(false);
       }
     }
   });

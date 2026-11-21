@@ -54,11 +54,11 @@ const RECORDS = [
   { id: "q-none", title: "Undated place", licence: "Open Government Licence – Toronto", retrieved_at: null },
 ];
 
-test("Data status: an empty cache has an Unknown share, never 0", async ({ page }) => {
+test("Data status: an empty cache has an UNKNOWN share, never 0", async ({ page }) => {
   await page.goto("/data-status");
   await expect(page.getByText("Share of cached records with no usable retrieval date", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("unknown-date-rate")).toHaveText("Unknown");
-  await expect(page.getByTestId("unknown-date-rate")).toHaveAttribute("aria-label", "Rate: unknown");
+  await expect(page.getByTestId("unknown-date-rate")).toHaveText("UNKNOWN");
+  await expect(page.getByTestId("unknown-date-rate")).toHaveAttribute("aria-label", "Rate: UNKNOWN");
 });
 
 test("Data status: each cached record states its age, Unknown gaps and its licence kind", async ({ page }) => {
@@ -72,8 +72,8 @@ test("Data status: each cached record states its age, Unknown gaps and its licen
   await expect(recent).toContainText("Retrieved 3 days ago");
   await expect(recent).toContainText("Used under the provider’s terms of use.");
   const undated = page.locator("li", { hasText: "Undated place" });
-  await expect(undated).toContainText("Retrieved: Unknown");
-  await expect(undated).toContainText("Retrieval date unknown");
+  await expect(undated).toContainText("Retrieved: UNKNOWN");
+  await expect(undated).toContainText("Retrieval date UNKNOWN");
   await expect(page.locator("main")).not.toContainText(/recently updated/i);
   await expect(page.getByTestId("unknown-date-rate")).toHaveText("33.3%");
 
@@ -83,18 +83,55 @@ test("Data status: each cached record states its age, Unknown gaps and its licen
   const metrolinx = table.getByRole("row").filter({ hasText: "Metrolinx Access and Use Agreement" });
   await expect(metrolinx).toContainText("Retrieved 200 days ago. May be out of date.");
   await expect(table).not.toContainText("Licence needs review");
-  await expect(table.getByRole("row").filter({ hasText: "Open Government Licence" })).toContainText("Retrieval date unknown");
+  await expect(table.getByRole("row").filter({ hasText: "Open Government Licence" })).toContainText("Retrieval date UNKNOWN");
 });
 
-test("Data status in French: masculine « inconnu » for the rate, NBSP before colons", async ({ page }) => {
+test("Data status in French: the token UNKNOWN for the rate, NBSP before colons", async ({ page }) => {
   await page.goto("/data-status");
   await page.getByRole("button", { name: "Français" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-  await expect(page.getByTestId("unknown-date-rate")).toHaveText("Inconnu");
-  await expect(page.getByTestId("unknown-date-rate")).toHaveAttribute("aria-label", "Taux\u00a0: inconnu");
+  await expect(page.getByTestId("unknown-date-rate")).toHaveText("UNKNOWN");
+  await expect(page.getByTestId("unknown-date-rate")).toHaveAttribute("aria-label", "Taux\u00a0: UNKNOWN");
   await seed(page, RECORDS);
   await page.reload();
   await expect(page.getByTestId("unknown-date-rate")).toHaveText("33,3\u00a0%");
   await expect(page.locator("li", { hasText: "Old transit stop" })).toContainText("Récupéré il y a 200\u00a0jours. Possiblement périmé.");
-  await expect(page.locator("li", { hasText: "Undated place" })).toContainText("Date de récupération\u00a0: Inconnue");
+  await expect(page.locator("li", { hasText: "Undated place" })).toContainText("Date de récupération\u00a0: UNKNOWN");
+});
+
+test("Data status: a source shared by several records is Unknown when any record has no usable date", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, [
+    { id: "s-new", title: "Recent stop", licence: "Open Government Licence – Toronto", retrieved_at: daysAgo(3) },
+    { id: "s-bad", title: "Placeholder stop", licence: "Open Government Licence – Toronto", retrieved_at: "N/A" },
+  ]);
+  await page.reload();
+  const table = page.getByRole("table", { name: "Data sources" });
+  await expect(table.getByRole("row")).toHaveCount(2);
+  await expect(table.getByRole("row").nth(1)).toContainText("Retrieval date UNKNOWN");
+  await expect(table.getByRole("row").nth(1)).not.toContainText(/Retrieved \d+ days? ago/);
+  await expect(page.getByTestId("source-basis")).toContainText("Records without a usable retrieved date: 1 of 2.");
+});
+
+test("Data status: every record states why it has its status, and UNKNOWN rates are shown", async ({ page }) => {
+  await page.goto("/data-status");
+  await seed(page, RECORDS);
+  await page.reload();
+  const old = page.locator("li", { hasText: "Old transit stop" });
+  await expect(old.getByTestId("status-basis")).toContainText("200 days ago. Past the 180 days limit.");
+  const undated = page.locator("li", { hasText: "Undated place" });
+  await expect(undated.getByTestId("status-basis")).toHaveText("No retrieved date is recorded, so the status is UNKNOWN.");
+  const table = page.getByRole("table", { name: "Completeness by field" });
+  await expect(table.getByRole("row").filter({ hasText: "Retrieved date" })).toContainText("33.3%");
+  await expect(page.getByTestId("unknown-date-rate")).toHaveText("33.3%");
+});
+
+test("Data status in French: the reasons and the rates are French", async ({ page }) => {
+  await page.goto("/data-status");
+  await page.getByRole("button", { name: "Français" }).click();
+  await seed(page, RECORDS);
+  await page.reload();
+  await expect(page.locator("li", { hasText: "Old transit stop" }).getByTestId("status-basis")).toContainText("Au-delà de la limite de 180 jours.");
+  await expect(page.getByRole("table", { name: "Complétude par champ" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sources et licences" })).toBeVisible();
 });

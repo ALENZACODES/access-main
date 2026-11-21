@@ -109,3 +109,52 @@ button.primary {
   margin-top: 2rem;
   border-top: 1px solid #5b5b5b;
 }
+
+h4 {
+  font-size: 1rem;
+  margin: 1rem 0 0.25rem;
+}
+
+.report-table {
+  margin: 1rem 0;
+}
+
+.table-fit {
+  max-width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+caption {
+  padding: 4px 0;
+  font-weight: 600;
+  text-align: start;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  text-align: start;
+  vertical-align: top;
+  border: 1px solid #5b5b5b;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 30em) {
+  th,
+  td {
+    padding: 6px 6px;
+  }
+}
+
+thead th {
+  background: #eef1f6;
+}
+
+td.is-suppressed {
+  font-style: italic;
+  background: #f3f3f3;
+}

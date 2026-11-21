@@ -16,7 +16,7 @@ describe('formatRate', () => {
   it.each([null, undefined, NaN, Infinity, -1, 101, '12', {}])('treats %s as unknown, never 0', (v) => {
     const r = formatRate(v, 'en');
     expect(r.known).toBe(false);
-    expect(r.text).toBe('Unknown');
+    expect(r.text).toBe('UNKNOWN');
     expect(r.text).not.toMatch(/0/);
   });
 
@@ -29,9 +29,9 @@ describe('formatRate', () => {
     expect(r.text).toBe('12,5\u00A0%');
     expect(r.ariaLabel).toBe('Taux\u00A0: 12,5\u00A0%');
     // Taux is masculine: the visible text and the spoken label agree.
-    expect(formatRate(null, 'fr').text).toBe('Inconnu');
-    expect(formatRate(null, 'fr').ariaLabel).toBe('Taux\u00A0: inconnu');
-    expect(formatRate(null, 'en').ariaLabel).toBe('Rate: unknown');
+    expect(formatRate(null, 'fr').text).toBe('UNKNOWN');
+    expect(formatRate(null, 'fr').ariaLabel).toBe('Taux\u00A0: UNKNOWN');
+    expect(formatRate(null, 'en').ariaLabel).toBe('Rate: UNKNOWN');
   });
 });
 
@@ -64,15 +64,15 @@ describe('provenance', () => {
       'Source: Open Data Ontario · Licence: OGL-Ontario · Retrieved: 2026-10-01',
     );
     expect(provenanceLine({ source: '  ' }, 'en')).toBe(
-      'Source: Unknown · Licence: Unknown · Retrieved: Unknown',
+      'Source: UNKNOWN · Licence: UNKNOWN · Retrieved: UNKNOWN',
     );
   });
 
   it('FR line uses NBSP before colons and typographic apostrophes only', () => {
     const line = provenanceLine({ source: 'Données ouvertes de l’Ontario' }, 'fr');
     expect(line).toContain('Source\u00A0: Données ouvertes de l’Ontario');
-    expect(line).toContain('Licence\u00A0: Inconnue');
-    expect(line).toContain('Date de récupération\u00A0: Inconnue');
+    expect(line).toContain('Licence\u00A0: UNKNOWN');
+    expect(line).toContain('Date de récupération\u00A0: UNKNOWN');
     expect(line).not.toMatch(/[^\u00A0]:/);
   });
 });
@@ -96,7 +96,7 @@ describe('dataBadge', () => {
 
   it('missing date is unknown, not fresh', () => {
     expect(dataBadge({ source: 'x', licence: 'CC0-1.0' }, 'fr', NOW).label).toBe(
-      'Date de récupération inconnue',
+      'Date de récupération UNKNOWN',
     );
   });
 

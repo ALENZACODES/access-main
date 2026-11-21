@@ -1,0 +1,28 @@
+import { describe, expect, it } from "vitest";
+import * as states from "./index";
+
+describe("the states barrel exposes the pack tools", () => {
+  it.each([
+    "auditPackPlaces", "assertPackClean", "computePackCoverage", "packCoverageLines", "PackAuditError",
+    "readExportRecords", "packPlacesToCsv", "packPlaceToText", "packExportSummary", "PACK_CSV_HEADER", "PACK_CSV_FILENAMES",
+    "computeFreshness", "freshnessLines", "freshnessSummary", "PackFreshness",
+    "PackReport", "buildPackReport", "packReportToText", "issuesToCsv", "groupIssues", "issueMessage", "findPossibleDuplicates", "saveTextFile", "safeFileName",
+    "PackBands", "buildBands", "bandOf", "filterByBand", "bandsToCsv", "bandsToText", "BAND_EDGES_M", "PackNearest", "nearestByTag",
+    "PackCategories", "buildKindRows", "kindKey", "kindLabel", "filterByKind", "summariseKinds", "kindsLine", "kindsToCsv", "kindsToText", "KIND_CSV_HEADER",
+    "PackCompare", "readEarlierFile", "diffPacks", "changesFor", "diffToCsv", "diffToText", "diffSummaryLine", "parseCsv", "undoFormulaGuard",
+    "PackTagMoves", "buildTagMoves", "tagMovesToCsv", "tagMovesToText", "rankedMoves", "MOVE_KEYS",
+    "DataCredits", "buildCredits", "creditRecordsFromPack",
+    "VisitPlan", "buildVisitPlan", "questionsFor", "visitPlanToText", "visitPlanToCsv", "toggleDone", "QUESTION_TOPICS", "filterPlan", "VISIT_FILTERS", "draftMessage", "mailtoHref",
+    "PackSearchEcho", "PackSearchHelp", "PackSearchWhy", "whyNoPlaces", "parsePackSearch", "matchPackSearch", "matchSearchTerm", "filterBySearch", "plainWordsOf", "explainPackSearch", "explainSearchClauses", "describeSearchTerm", "describeSearchProblem", "searchQuoted", "searchExamples", "SEARCH_FIELD_WORDS", "SEARCH_TAG_WORDS", "SEARCH_HAS_WORDS", "SEARCH_MAX_CHARS", "SEARCH_MAX_TERMS", "EMPTY_PARSED_SEARCH",
+    "PackSearchWords", "PackWordList", "WORDS_SHOWN", "buildWordIndex", "wordList", "wordTokens", "wordPlaces", "isWordField", "WORD_FIELDS", "nearWords", "spellingWords", "frenchKindWord", "FRENCH_KIND_WORDS", "findMissingWords", "replaceTypedWord", "searchFindsNothing", "wordsToCsv", "wordsToText", "WORD_CSV_HEADER", "WORD_CSV_FILENAMES", "missingWordLine", "nearWordLine", "wordsHeading",
+    "NoteTopics", "TOPIC_IDS", "TOPICS", "topicLabel", "isTopicId", "CUE_TO_TOPIC", "scanTopics", "topicWordSpans", "topicMarkSegments", "buildTopicIndex", "topicEntryFor", "topicTallyAddsUp", "TOPIC_TAG_ORDER", "filterTopicEntries", "orderTopicEntries", "topicsInUse", "entryUsesTopic", "NO_TOPIC_FILTER", "topicsToText", "topicEntriesToCsv", "topicTableToCsv", "TOPIC_CSV_HEADER",
+    "PlaceSheet", "ShortlistFiles", "GapMatrix", "Handout", "ListTransfer", "listToCode", "parseListCode", "planImport", "importSummary", "LIST_CODE_HEADER", "buildHandout", "handoutToHtml", "handoutToText", "parseHandoutOptions", "escapeHandoutHtml", "handoutCss", "handoutTitle", "placeSheetToText", "buildGapMatrix", "gapSentence", "cellWord", "gapMatrixToCsv", "buildPlaceSheet", "sheetSummary", "placeToVcard", "placesToVcards", "placesToGpx", "foldVcardLine", "escapeXml",
+    "StreetIndex", "buildStreetIndex", "parseAddress", "parityOf", "foldAddressText", "streetSummary", "streetCaveat", "streetGroupLine", "orderGroups", "orderLabel", "compareNames", "STREET_ORDERS", "DEFAULT_STREET_ORDER", "filterStreets", "keyWord", "addMany", "addManySentence", "streetIndexToText", "streetIndexToCsv", "STREET_TEXT_FILENAMES", "STREET_CSV_FILENAMES",
+    "TextMap", "DistanceMatrix", "buildDistanceMatrix", "cellText", "matrixSummary", "matrixCaveat", "matrixToText", "matrixToCsv", "MAX_MATRIX_PLACES", "buildTextMap", "buildAround", "bearingDegrees", "compassOf", "compassName", "locate", "partOf", "tagMix", "cellSentence", "gridSummary", "directionLine", "textMapToText", "aroundToText", "textMapToCsv", "aroundToCsv", "GRID_SIZES", "COMPASS",
+    "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
+    "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
+    "MeetUp", "buildMeetUp", "halfway", "meetUpPage", "MEET_UP_ORDERS", "MEET_UP_LIMITS", "isMeetUpOrder", "isMeetUpLimit", "meetUpToText", "meetUpToCsv", "meetUpRowText", "meetUpOrderLabel", "meetUpCaveat", "MEET_UP_FILENAMES", "MEET_UP_CSV_FILENAMES", "meetUpMinutes", "readPaces", "hasPace", "NO_PACES", "meetUpTimeText", "meetUpPaceNote", "meetUpMinutesCell", "meetUpToGeoJson", "MEET_UP_GEOJSON_FILENAMES",
+    "NoteReading", "READING_ROWS_SHOWN", "readNote", "countSyllables", "splitSentences", "tokensOf", "rawScore", "clampScore", "readingBandOf", "guessNoteLanguage", "noteLocale", "buildReadingIndex", "filterReadings", "orderReadings", "readingsToCsv", "readingsToText", "readingBandLabel", "hintsFor", "hintText", "HINT_KINDS",
+    "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
+  ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
+});

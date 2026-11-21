@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
+import { ROUTES } from "./shell-routes.ts";
 import { expect, test, type Page } from "@playwright/test";
 
-const ROUTES = ["/", "/about", "/onboarding", "/profile", "/data-status", "/build-card", "/offline", "/places", "/map", "/journey", "/finders", "/navigator", "/games", "/settings", "/more", "/help"];
 
 async function expectOneHeading(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
@@ -68,6 +68,8 @@ test("french shell persists and returns to english", { annotation: { type: "chec
 });
 
 test("module pages do not invent places and axe is clean", { annotation: [{ type: "check", description: "G1-place-honesty" }, { type: "check", description: "G3-accessibility-routes" }] }, async ({ page }) => {
+  // One page load and one axe run per route. The time allowed grows with the route list.
+  test.setTimeout(Math.max(30_000, ROUTES.length * 1_500));
   for (const route of ROUTES) {
     await page.goto(route);
     await expectOneHeading(page);
@@ -85,8 +87,12 @@ test("module pages do not invent places and axe is clean", { annotation: [{ type
 
   await page.goto("/finders");
   await expect(page.getByRole("radio", { name: "Washroom" })).toBeDisabled();
+  // No data pack in the e2e build: the mounted planner is unavailable, and every journey control stays off.
   await page.goto("/journey");
+  await expect(page.getByText("This part of the App is not available yet. No records are shown.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Plan this journey" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Find places for From" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Find places for To" })).toBeDisabled();
   await page.goto("/help");
   await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
 });

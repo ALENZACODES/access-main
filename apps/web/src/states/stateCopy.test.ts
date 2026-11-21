@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { containsForbiddenOrg } from "../../../../packages/shared/test/forbiddenOrg.ts";
 import {
   EMPTY_KINDS,
   ERROR_KINDS,
@@ -74,7 +75,7 @@ describe("state copy", () => {
     for (const l of locales) {
       for (const v of allViews(l)) {
         for (const s of strings(v)) {
-          expect(s).not.toMatch(/scio|sciontario|spinal cord injury ontario/i);
+          expect(containsForbiddenOrg(s)).toBe(false);
           expect(s).not.toMatch(/\b(AI|IA|artificial|intelligence)\b/);
         }
       }
@@ -83,7 +84,7 @@ describe("state copy", () => {
 
   it("covers the six Day 22 states, each with a next action", () => {
     expect(DAY22_STATES).toHaveLength(6);
-    expect(new Set([...ERROR_KINDS, ...EMPTY_KINDS])).toEqual(new Set([...DAY22_STATES, "accessibility-unknown", "map-no-places"]));
+    expect(new Set([...ERROR_KINDS, ...EMPTY_KINDS])).toEqual(new Set([...DAY22_STATES, "accessibility-unknown", "map-no-places", "no-saved-places", "not-found", "load-failed", "data-load-failed", "offline", "pack-unreadable", "module-load-failed", "page-load-failed", "region-list-unavailable", "help-no-results", "nothing-listed", "no-regions"]));
   });
 
   it("uses local-app wording: no server, service or blame", () => {

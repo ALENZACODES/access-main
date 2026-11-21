@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { createHash } from "node:crypto";
 
 // Demonstration data, not assertions about real-world accessibility.
 const demonstration = [
@@ -72,20 +73,39 @@ function fixturePMTiles(): Uint8Array {
   return bytes;
 }
 
-async function installFixture(page: Page) {
+const ODBL_PATH = "tiles/odbl/places-n43.pmtiles";
+const OPEN_PATH = "tiles/open/places.pmtiles";
+const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+const fixtureBbox = [-79.382, 43.652, -79.37, 43.658];
+
+/**
+ * The pack manifest lists the tile files; the map loads the ones covering the
+ * view. With `brokenOpen`, a second file is listed whose served bytes do not
+ * match its SHA-256, so that file is unavailable and the other still loads.
+ */
+async function installFixture(page: Page, options: { brokenOpen?: boolean } = {}) {
   const bytes = fixturePMTiles();
-  await page.route("**/data/tiles/odbl/places.pmtiles", async (route) => {
-    const range = route.request().headers().range;
-    const match = /^bytes=(\d+)-(\d+)$/.exec(range ?? "");
-    const start = match ? Number(match[1]) : 0;
-    const end = match ? Math.min(Number(match[2]), bytes.length - 1) : bytes.length - 1;
-    await route.fulfill({ status: match ? 206 : 200, contentType: "application/octet-stream",
-      headers: { "Access-Control-Allow-Origin": "*", "Accept-Ranges": "bytes",
-        "Content-Range": `bytes ${start}-${end}/${bytes.length}` }, body: Buffer.from(bytes.slice(start, end + 1)) });
+  const tiles: Record<string, object> = {
+    "odbl/n43": { path: ODBL_PATH, bytes: bytes.length, sha256: sha256(bytes), licence: "ODbL-1.0", bbox: fixtureBbox },
+  };
+  const tampered = bytes.slice();
+  tampered[tampered.length - 1] = (tampered[tampered.length - 1]! + 1) % 256;
+  if (options.brokenOpen) tiles.open = { path: OPEN_PATH, bytes: bytes.length, sha256: sha256(bytes), licence: "OGL-Ontario", bbox: fixtureBbox };
+  const requests: Record<string, number> = { [ODBL_PATH]: 0, [OPEN_PATH]: 0 };
+  await page.route("**/data/pack/v1/manifest.json", (route) => route.fulfill({ json: {
+    version: 1, builtAt: "2026-11-15T00:00:00Z", sourceCommit: "e2e", sources: [], regions: [], tranches: {}, search: {}, tiles,
+    counts: { records: 0, byTranche: {}, bySource: {} },
+  } }));
+  await page.route(/\/data\/tiles\/(odbl|open)\/places(-n43)?\.pmtiles$/, async (route) => {
+    const path = new URL(route.request().url()).pathname.replace(/^.*?\/data\//, "");
+    requests[path] = (requests[path] ?? 0) + 1;
+    const body = path === OPEN_PATH ? tampered : bytes;
+    await route.fulfill({ status: 200, contentType: "application/octet-stream", body: Buffer.from(body) });
   });
+  return requests;
 }
 
-async function openMap(page: Page, lang: "en" | "fr" = "en") {
+async function openMap(page: Page, lang: "en" | "fr" = "en", options: { brokenOpen?: boolean } = {}) {
   await page.addInitScript((language) => {
     localStorage.setItem("access.language", language);
     localStorage.setItem("access.language.set", "1");
@@ -97,9 +117,10 @@ async function openMap(page: Page, lang: "en" | "fr" = "en") {
       worker.getRegistrations = async () => [];
     }
   }, lang);
-  await installFixture(page);
+  const requests = await installFixture(page, options);
   await page.goto("./map");
   await expect(page.getByText("Demonstration washroom").first()).toBeVisible();
+  return requests;
 }
 
 test("demonstration PMTiles list, keyboard navigation, provenance and filters", async ({ page }) => {
@@ -132,14 +153,37 @@ for (const language of ["en", "fr"] as const) {
   }
 }
 
-test("offline reload reads previously requested PMTiles byte ranges", async ({ page }) => {
+test("offline reload reads the checked tile file and the tile list saved on the device", async ({ page }) => {
   await openMap(page);
   await expect(page.locator("#map-place-list").getByRole("button")).toHaveCount(3);
-  await page.waitForFunction(async () => (await caches.open("map-tiles-v1")).keys().then((keys) => keys.length > 0));
-  await page.unroute("**/data/tiles/odbl/places.pmtiles");
-  // The archive is served from the same-origin Cache API. Aborting the URL
-  // simulates a later offline session without blocking reload of the shell.
-  await page.route("**/data/tiles/odbl/places.pmtiles", (route) => route.abort());
+  await page.waitForFunction(async () => (await caches.open("map-tiles-v2")).keys().then((keys) => keys.length > 0));
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  // Aborting the data URLs simulates a later offline session without blocking reload of the shell.
+  await page.route("**/data/**", (route) => route.abort());
   await page.reload();
   await expect(page.locator("#map-place-list").getByRole("button")).toHaveCount(3);
+  await expect(page.getByTestId("map-tile-status")).toHaveText("");
 });
+
+const unavailable = {
+  en: "Map data for other open data places is unavailable: its file did not pass the integrity check. Other map data still loads.",
+  fr: "Les données cartographiques pour lieux d’autres données ouvertes sont indisponibles : leur fichier n’a pas réussi le contrôle d’intégrité. Les autres données de la carte se chargent toujours.",
+} as const;
+
+for (const language of ["en", "fr"] as const) {
+  test(`a tile file that fails its SHA-256 twice is unavailable and the other file still loads (${language})`, async ({ page }) => {
+    const requests = await openMap(page, language, { brokenOpen: true });
+    await expect(page.locator("#map-place-list").getByRole("button")).toHaveCount(3);
+    const status = page.getByTestId("map-tile-status");
+    await expect(status).toHaveAttribute("role", "status");
+    await expect(status.locator('[data-tile-key="open"]')).toHaveText(unavailable[language]);
+    await expect(status.locator('[data-tile-key="odbl/n43"]')).toHaveCount(0);
+    // Fetched once, then once more without the HTTP cache; never stored.
+    expect(requests[OPEN_PATH]).toBe(2);
+    expect(requests[ODBL_PATH]).toBe(1);
+    expect(await page.evaluate(async () => (await (await caches.open("map-tiles-v2")).keys()).map((key) => new URL(key.url).pathname))).toEqual(["/data/tiles/odbl/places-n43.pmtiles"]);
+    await expect(page.locator(".map-attribution")).toContainText("© OpenStreetMap contributors");
+    const result = await new AxeBuilder({ page }).analyze();
+    expect(result.violations).toEqual([]);
+  });
+}

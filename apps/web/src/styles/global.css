@@ -204,8 +204,14 @@ body {
   border-top: 2px solid var(--line);
 }
 
-.stack { display: grid; gap: 0.9rem; min-width: 0; max-width: 100%; }
+/* The single column is minmax(0, 1fr): an auto column grows to its widest
+   item and pushed /data-status 27px past a 320px viewport (WCAG 1.4.10). */
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.9rem; min-width: 0; max-width: 100%; }
 .stack > * { margin: 0; }
+
+/* A fieldset defaults to min-inline-size: min-content and can force its
+   container wider than a 320px viewport. */
+fieldset { min-inline-size: 0; max-inline-size: 100%; }
 
 .lane-note summary {
   min-height: 3rem;
@@ -437,3 +443,29 @@ progress {
   .card-table td { border-color: #000; }
 }
 
+
+/* 44px minimum for interactive targets measured by the narrow audit. */
+a[href],
+button,
+[role="button"],
+[role="link"],
+[role="checkbox"],
+[role="tab"],
+[role="menuitem"],
+summary,
+select,
+textarea,
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]) {
+  box-sizing: border-box;
+  min-height: 44px;
+  min-width: 44px;
+  /* A text field keeps its default width where there is room and never exceeds its container. */
+  max-width: 100%;
+}
+
+.app-mark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+}

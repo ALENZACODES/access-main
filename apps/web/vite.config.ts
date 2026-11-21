@@ -34,14 +34,54 @@ interface LanePackage {
 const lock = JSON.parse(readFileSync(path.join(repoRoot, "lanes.lock.json"), "utf8")) as { packages: LanePackage[] };
 const fallbacks = path.join(root, "src/modules/lane-fallbacks.ts");
 const UNLINKED = new Set(["@access-tools/games", "@access-tools/navigator"]);
-const laneAliases = lock.packages.map((pkg) => {
-  const repo = pkg.repo.split("/")[1];
-  if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
-  const pkgRoot = path.join(repoRoot, ".lanes", repo, ...pkg.path.split("/"));
-  const real = path.join(pkgRoot, "src", "index.ts");
-  const resolved = UNLINKED.has(pkg.alias) ? fallbacks : existsSync(real) ? real : fallbacks;
-  return { find: new RegExp(`^${escapeRegExp(pkg.alias)}$`), replacement: resolved };
-});
+const laneAliases = lock.packages
+  // @access-tools/place is resolved by placeLaneAlias so finders search does not load Ajv.
+  .filter((pkg) => pkg.alias !== "@access-tools/place")
+  .map((pkg) => {
+    const repo = pkg.repo.split("/")[1];
+    if (!repo) throw new Error(`lanes.lock.json repo must look like owner/name, got ${pkg.repo}`);
+    const pkgRoot = path.join(repoRoot, ".lanes", repo, ...pkg.path.split("/"));
+    const real = path.join(pkgRoot, "src", "index.ts");
+    const resolved = UNLINKED.has(pkg.alias) ? fallbacks : existsSync(real) ? real : fallbacks;
+    return { find: new RegExp(`^${escapeRegExp(pkg.alias)}$`), replacement: resolved };
+  });
+const slimLaneAlias = (find: RegExp, repo: string, pkgPath: string, file: string, fallback: string) => {
+  const real = path.join(repoRoot, ".lanes", repo, ...pkgPath.split("/"), file);
+  return { find, replacement: existsSync(real) ? real : fallback };
+};
+
+/**
+ * pack-finders only needs adultChangeVerdict from pack/alias-resolve.ts. The place
+ * package barrel also re-exports schema.ts, which compiles Ajv at module load.
+ * Resolving the barrel from the finders search graph would put ~250 kB of Ajv on
+ * the Day 22 washroom-finder first-result path. PlaceDetailPage still uses the
+ * full package via a separate lazy import.
+ */
+function placeLaneAlias() {
+  const full = path.join(repoRoot, ".lanes", "access-tools", "packages", "place", "src", "index.ts");
+  const slim = path.join(repoRoot, ".lanes", "access-tools", "packages", "place", "src", "pack", "alias-resolve.ts");
+  const resolvedFull = existsSync(full) ? full : fallbacks;
+  const resolvedSlim = existsSync(slim) ? slim : resolvedFull;
+  return {
+    find: /^@access-tools\/place$/,
+    replacement: resolvedFull,
+    customResolver(_id: string, importer: string | undefined) {
+      if (importer && /[/\\]packages[/\\]finders[/\\]/.test(importer)) return resolvedSlim;
+      return resolvedFull;
+    },
+  };
+}
+
+const slimLaneAliases = [
+  slimLaneAlias(/^@access-tools\/finders\/shell$/, "access-tools", "packages/finders", "src/shell.ts", path.join(root, "src/modules/finders-shell-fallback.ts")),
+  slimLaneAlias(/^@access\/help\/shell$/, "access-help", "packages/help", "src/shell.ts", path.join(root, "src/modules/help-shell-fallback.ts")),
+  // The games and navigator module routes load only the list adapters, not the package screens.
+  slimLaneAlias(/^@access-tools\/games\/shell$/, "access-tools", "packages/games", "src/shell.ts", path.join(root, "src/modules/games-shell-fallback.ts")),
+  slimLaneAlias(/^@access-tools\/games\/library$/, "access-tools", "packages/games", "src/library.ts", path.join(root, "src/modules/games-shell-fallback.ts")),
+  slimLaneAlias(/^@access-tools\/navigator\/shell$/, "access-tools", "packages/navigator", "src/shell.ts", path.join(root, "src/modules/navigator-shell-fallback.ts")),
+  placeLaneAlias(),
+];
+
 const dataClientReal = path.join(repoRoot, "packages/data-client/src/index.ts");
 const dataClientAlias = {
   find: /^@access-main\/data-client$/,
@@ -60,12 +100,24 @@ const hubAliases = (
     ["@access-tools/handoff", "access-tools", "handoff"],
     ["@hub/handoff-fixtures", "access-tools", "handoff", "src/fixtures.ts"],
     ["@access/peers", "access-help", "peers"],
+    ["@hub/peers-ui", "access-help", "peers", "src/ui/index.ts"],
     ["@access/event-access", "access-help", "event-access"],
+    ["@hub/event-access-ui", "access-help", "event-access", "src/ui/index.ts"],
+    ["@access/outings", "access-help", "outings"],
+    ["@access-maps/conditions", "access-maps", "conditions"],
+    ["@hub/wav-dataset", "access-maps", "conditions", "datasets/wav-services.json"],
+    ["@hub/games", "access-tools", "games"],
   ] as Array<[string, string, string] | [string, string, string, string]>
-).map(([find, repo, pkg, entry = "src/index.ts"]) => ({
-  find,
-  replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
-}));
+)
+  .map(([find, repo, pkg, entry = "src/index.ts"]) => ({
+    find,
+    replacement: path.join(repoRoot, ".lanes", repo, "packages", pkg, entry),
+  }))
+  .concat([
+    // This repository's own advocacy package: the report tables screen and its labelled demonstration set.
+    { find: "@hub/advocacy-reports", replacement: path.join(repoRoot, "packages/advocacy/src/ui/ReportsPanel.tsx") },
+    { find: "@hub/advocacy-demo", replacement: path.join(repoRoot, "packages/advocacy/src/reports/demo.ts") },
+  ]);
 
 /** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
 function buildManifest(): Plugin {
@@ -109,7 +161,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
-        globIgnores: ["data/**", "**/*.pmtiles", "**/maplibre-*.js"],
+        // The /dev/narrow audit page is a developer tool: its chunk is built, and fetched when the page is opened,
+        // but it is not precached, so it is not part of the first install. It does not work offline.
+        globIgnores: ["data/**", "**/*.pmtiles", "**/maplibre-*.js", "**/NarrowAuditPage-*.js"],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/packs\//, dataPath],
         cleanupOutdatedCaches: true,
@@ -138,6 +192,7 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
     alias: [
       { find: "@access/shared", replacement: path.resolve(root, "../../packages/shared/src/index.ts") },
+      ...slimLaneAliases,
       ...laneAliases,
       ...hubAliases,
       dataClientAlias,

@@ -1,24 +1,12 @@
-import { useRef } from "react";
-import { useTranslation } from "react-i18next";
 import { HousingFinder } from "@access-tools/housing";
-import { HubLayout } from "./HubLayout";
-import { ToolBoundary } from "./PackageView";
-import { shellLanguage, useAdoptToolLanguage } from "./shellLanguage";
+import { HousingLanguageBoundary } from "./HousingLanguageBoundary";
+import { PackageView } from "./PackageView";
 
-/** HousingFinder starts in English and renders its own h1. */
+/** Wrap only the housing embed; do not alter the shared shell or other tools. */
+function HousingWithLanguageBoundary() {
+  return <HousingLanguageBoundary><HousingFinder /></HousingLanguageBoundary>;
+}
+
 export default function HousingPage() {
-  const { t, i18n } = useTranslation("hub");
-  const language = shellLanguage(i18n);
-  const hostRef = useRef<HTMLDivElement>(null);
-  useAdoptToolLanguage(hostRef, language);
-  return (
-    <HubLayout>
-      <p>{t("demonstration")}</p>
-      <ToolBoundary fallback={<p role="alert">{t("error")}</p>}>
-        <div ref={hostRef}>
-          <HousingFinder />
-        </div>
-      </ToolBoundary>
-    </HubLayout>
-  );
+  return <PackageView page="housing" component={HousingWithLanguageBoundary} />;
 }

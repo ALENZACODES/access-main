@@ -1,31 +1,29 @@
-# EN/FR axe route sweep
+# Accessibility sweeps
 
-`axe-sweep.spec.ts` is a Playwright-discovered test. It runs axe with WCAG
-2.0/2.1 A/AA and 2.2 AA rule tags on every live app route, in English and in
-French, at 320px and at 1280px. The route list comes from P16's `appRoutes()`
-in `e2e/a11y-input/helpers.ts`, which reads `router.tsx` plus the Settings and
-More tables the router mounts, so a new page is included without copying a
-path list. A link crawl is not a substitute, because unlinked or not-found
-paths would be missed or scanned by accident. Parameter routes `/places/:id`
-and `/help/:id` are added from real ids in the bundled Toronto pack
-(`apps/web/public/packs/toronto/content.json`), in English and French at 320
-and 1280, and use the same fail-on-violation rule. Each parameterized route must show the packed place or help name, so a not-found page cannot pass.
+Playwright specs in this folder run with the rest of `npm run test:e2e`.
 
-Language is forced by writing `access.language` and `access.language.set` in
-`localStorage` before navigation (the keys `detectLanguage()` actually reads).
-Path prefixes such as `/fr` and `?lang=fr` are not used, because the shell
-ignores them. Each French run also asserts `html[lang]` and visible French
-copy (the skip link, Accueil, and the English language button) so a single
-French page cannot pass the suite. Each run also asserts `window.innerWidth`
-so a missed 320px viewport fails.
+## Live sweeps (open the built app)
 
-Failures include the route, language, viewport, axe rule, and target. An
-explicit, documented allowlist may waive a known leftover when each entry has
-a reason; an empty allowlist means every violation fails CI. These checks do
-not prove WCAG 2.2 AA and are not a substitute for keyboard, switch, or
-assistive-technology testing.
+- `axe-sweep.spec.ts`: axe on every route, in English and French, at 320 and 1280 CSS px.
+- `p20g-live.spec.ts`: for every route, language and viewport, checks landmarks, control names
+  and 44 px targets, form fields, live regions, links, dialogs, media and tables, then runs axe.
+  It also walks keyboard focus forward and back, runs a search, and switches language with the
+  header button. Language is chosen with the real button, never by URL.
+  Two tests are marked `fixme`: following a place link and a help article link. On a fresh
+  visit `/places` lists nothing until a region pack is saved and `/help` lists articles only
+  after a search, so those tests need that set-up first.
+- `p20g-offline.spec.ts`, `p20g-browser.spec.ts`: offline and browser-helper checks.
 
-**Run:** From the repository root, `npm run test:e2e -w @access/web -- e2e/axe-sweep/axe-sweep.spec.ts`
-(or the workspace's existing Playwright command with that path). Playwright's
-`use.baseURL` must point at the local App, and `@playwright/test` and
-`@axe-core/playwright` must be installed in that workspace.
+## Policy checks (no app needed)
+
+`*-contracts.spec.ts`, `p20e-policy.spec.ts`, `p20e-contrast.spec.ts`, `p20e-journeys.spec.ts`,
+`p20f-resilience.spec.ts` and `sweep-contracts.spec.ts` test the rule functions in the matching
+`.ts` modules with hand-made snapshots: what counts as a finding and what does not.
+
+## Rules worth knowing
+
+- A control is named by `aria-label`, `aria-labelledby`, its `<label>` (input, select and
+  textarea), `title`, or its text.
+- `tel:` and `mailto:` links are allowed; script and data schemes are findings.
+- A route whose main region has nothing that can take focus is not a keyboard failure.
+  A route with focusable controls that the Tab walk never reaches is.

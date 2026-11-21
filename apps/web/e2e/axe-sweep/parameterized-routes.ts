@@ -43,10 +43,6 @@ function titleOf(name: unknown, kind: string): { en: string; fr: string } {
   throw new Error(`bundled Toronto pack ${kind} is missing a name`);
 }
 
-export function bundledTorontoPackPath(): string {
-  return PACK_PATH;
-}
-
 export function parameterizedRouteCases(): ParameterizedRoute[] {
   if (!existsSync(PACK_PATH)) {
     throw new Error(`bundled Toronto pack is missing at ${PACK_PATH}`);
@@ -58,8 +54,4 @@ export function parameterizedRouteCases(): ParameterizedRoute[] {
     { route: `/places/${encodeURIComponent(place.id as string)}`, title: titleOf(place.name, "place") },
     { route: `/help/${encodeURIComponent(help.id as string)}`, title: titleOf(help.name, "help") },
   ];
-}
-
-export function parameterizedRoutes(): string[] {
-  return parameterizedRouteCases().map((entry) => entry.route);
 }

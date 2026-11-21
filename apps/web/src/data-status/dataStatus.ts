@@ -3,6 +3,9 @@
  * Pure functions, no I/O. Unknown stays UNKNOWN: nothing here infers a value.
  */
 
+import { parseRetrieved, readRetrieved } from './dateRules';
+import { cleanValue } from './unknownTokens';
+
 export type Locale = 'en' | 'fr';
 
 /** Minimum touch target (CSS px) for any interactive badge built from these helpers. */
@@ -55,10 +58,10 @@ export function licenceKind(licence: string | null | undefined): LicenceKind {
 }
 
 export interface Provenance {
-  source?: string | null;
-  licence?: string | null;
+  source?: string | null | undefined;
+  licence?: string | null | undefined;
   /** ISO 8601 date (YYYY-MM-DD) or date-time the data was retrieved. */
-  retrievedAt?: string | null;
+  retrievedAt?: string | null | undefined;
 }
 
 export type ProvenanceIssue =
@@ -90,36 +93,34 @@ export interface DataBadge {
 }
 
 const NBSP = '\u00A0';
-const DAY_MS = 86_400_000;
 
 const STRINGS = {
   en: {
-    unknown: 'Unknown',
-    rateUnknown: 'Unknown',
-    rateUnknownSpoken: 'unknown',
+    unknown: 'UNKNOWN',
+    rateUnknown: 'UNKNOWN',
+    rateUnknownSpoken: 'UNKNOWN',
     rate: 'Rate',
     today: 'Retrieved today',
     oneDay: 'Retrieved 1 day ago',
     days: 'Retrieved {n} days ago',
     stale: 'May be out of date.',
-    noDate: 'Retrieval date unknown',
+    noDate: 'Retrieval date UNKNOWN',
     source: 'Source',
     licence: 'Licence',
     retrieved: 'Retrieved',
     colon: ': ',
   },
   fr: {
-    // Source, licence and date are feminine in French: « Inconnue ».
-    unknown: 'Inconnue',
-    // Taux is masculine: « Taux : inconnu ».
-    rateUnknown: 'Inconnu',
-    rateUnknownSpoken: 'inconnu',
+    // The token is the same in both languages and does not take a gender.
+    unknown: 'UNKNOWN',
+    rateUnknown: 'UNKNOWN',
+    rateUnknownSpoken: 'UNKNOWN',
     rate: 'Taux',
     today: 'Récupéré aujourd’hui',
     oneDay: 'Récupéré il y a 1 jour',
     days: 'Récupéré il y a {n} jours',
     stale: 'Possiblement périmé.',
-    noDate: 'Date de récupération inconnue',
+    noDate: 'Date de récupération UNKNOWN',
     source: 'Source',
     licence: 'Licence',
     retrieved: 'Date de récupération',
@@ -127,11 +128,8 @@ const STRINGS = {
   },
 } as const;
 
-function clean(v: string | null | undefined): string | null {
-  if (typeof v !== 'string') return null;
-  const t = v.trim();
-  return t === '' ? null : t;
-}
+/** Trimmed text, or null when missing, empty or a placeholder such as N/A, TBD or inconnu. */
+const clean = cleanValue;
 
 /**
  * Format a percentage rate. Anything that is not a finite number in 0..100
@@ -147,54 +145,49 @@ export function formatRate(value: unknown, locale: Locale): RateDisplay {
   return { known: true, text, ariaLabel: `${s.rate}${s.colon}${text}` };
 }
 
-/** Parse an ISO date; returns epoch ms or null if not a strict ISO date. */
+/**
+ * Parse a retrieved date; returns epoch ms or null. Strict: real calendar dates only (no
+ * February 31), and a date-time must state its own offset. See dateRules.ts for the full rule.
+ */
 export function parseIsoDate(value: string | null | undefined): number | null {
-  const v = clean(value);
-  if (v === null || !/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2})?)?$/.test(v)) return null;
-  const t = Date.parse(v);
-  return Number.isNaN(t) ? null : t;
+  return parseRetrieved(value)?.ms ?? null;
 }
 
-/** Whole days since retrieval, or null when unknown (missing, invalid or future date). */
+/** Whole calendar days (UTC) since the retrieved day, or null when unknown (missing, invalid or future date). */
 export function ageInDays(retrievedAt: string | null | undefined, now: Date): number | null {
-  const t = parseIsoDate(retrievedAt);
-  if (t === null) return null;
-  const age = Math.floor((now.getTime() - t) / DAY_MS);
-  return age < 0 ? null : age;
+  const r = readRetrieved(retrievedAt, now);
+  return r.kind === 'ok' ? r.ageDays : null;
 }
 
-/** Freshness: invalid or future dates are 'unknown', never 'fresh'. */
+/** Freshness: missing, invalid or future dates are 'unknown', never 'fresh'. Stale means MORE than staleAfterDays days old. */
 export function freshness(
   retrievedAt: string | null | undefined,
   now: Date,
   staleAfterDays: number = DEFAULT_STALE_AFTER_DAYS,
 ): FreshnessState {
-  const t = parseIsoDate(retrievedAt);
-  if (t === null) return 'unknown';
-  const age = Math.floor((now.getTime() - t) / DAY_MS);
-  if (age < 0) return 'unknown';
-  return age > staleAfterDays ? 'stale' : 'fresh';
+  const r = readRetrieved(retrievedAt, now);
+  if (r.kind !== 'ok') return 'unknown';
+  return r.ageDays > staleAfterDays ? 'stale' : 'fresh';
 }
 
+/** Every issue that makes a record's status Unknown or flagged. A future date is always reported, never silently Unknown. */
 export function checkProvenance(p: Provenance, now: Date): ProvenanceIssue[] {
   const issues: ProvenanceIssue[] = [];
   if (clean(p.source) === null) issues.push('missing-source');
   const lic = clean(p.licence);
   if (lic === null) issues.push('missing-licence');
   else if (licenceKind(lic) === 'unrecognised') issues.push('licence-unrecognised');
-  if (clean(p.retrievedAt) === null) issues.push('missing-date');
-  else {
-    const t = parseIsoDate(p.retrievedAt);
-    if (t === null) issues.push('invalid-date');
-    else if (t > now.getTime() + DAY_MS) issues.push('future-date');
-  }
+  const r = readRetrieved(p.retrievedAt, now);
+  if (r.kind === 'missing') issues.push('missing-date');
+  else if (r.kind === 'invalid') issues.push('invalid-date');
+  else if (r.kind === 'future') issues.push('future-date');
   return issues;
 }
 
 /** One consistent provenance line; missing parts show as Unknown, never blank or guessed. */
 export function provenanceLine(p: Provenance, locale: Locale): string {
   const s = STRINGS[locale];
-  const date = parseIsoDate(p.retrievedAt) === null ? null : (clean(p.retrievedAt) as string).slice(0, 10);
+  const date = parseRetrieved(p.retrievedAt)?.day ?? null;
   const part = (label: string, v: string | null) => `${label}${s.colon}${v ?? s.unknown}`;
   return [
     part(s.source, clean(p.source)),

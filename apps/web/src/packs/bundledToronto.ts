@@ -1,64 +1,23 @@
-/** The Toronto pack shipped at /packs/toronto, used when a route id matches a record in that file. */
+import type { PackContent } from "@access/shared";
+import { downloadPack, fetchManifest } from "../offline/download.ts";
+import { getPack } from "../storage/repository.ts";
 
-export interface BundledPlace {
-  id: string;
-  name: string;
-}
+// A deep link can arrive before a regional pack has been installed. Read the
+// shipped snapshot on demand and verify it using the same checks as an install.
+// Visiting a detail never writes a pack or replaces the person's saved copy.
+let bundled: Promise<PackContent | null> | undefined;
 
-export interface BundledHelp {
-  id: string;
-  name: { en: string; fr: string };
-}
-
-interface PackFile {
-  places?: Array<{ id?: unknown; name?: unknown }>;
-  help_numbers?: Array<{ id?: unknown; name?: unknown }>;
-}
-
-let pending: Promise<PackFile | null> | undefined;
-
-function packUrl(): string {
-  const base = import.meta.env.BASE_URL ?? "/";
-  const prefix = base.endsWith("/") ? base : `${base}/`;
-  return `${prefix}packs/toronto/content.json`;
-}
-
-async function loadPack(): Promise<PackFile | null> {
-  pending ??= (async () => {
-    try {
-      const response = await fetch(packUrl());
-      if (!response.ok) return null;
-      return (await response.json()) as PackFile;
-    } catch {
+export async function torontoContent(): Promise<PackContent | null> {
+  const saved = await getPack("toronto");
+  if (saved) return saved.content;
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const fetchLocal = (path: string, init?: RequestInit) => fetch(`${base}${path}`, init);
+  bundled ??= fetchManifest(fetchLocal)
+    .then((manifest) => downloadPack(manifest, { fetcher: fetchLocal, nowIso: new Date().toISOString() }))
+    .then((pack) => pack.content)
+    .catch(() => {
+      bundled = undefined;
       return null;
-    }
-  })();
-  return pending;
-}
-
-function bilingualName(value: unknown): { en: string; fr: string } | null {
-  if (typeof value === "string" && value.trim()) return { en: value, fr: value };
-  if (value && typeof value === "object") {
-    const record = value as { en?: unknown; fr?: unknown };
-    const en = typeof record.en === "string" ? record.en.trim() : "";
-    const fr = typeof record.fr === "string" ? record.fr.trim() : "";
-    if (en && fr) return { en, fr };
-  }
-  return null;
-}
-
-export async function bundledPlace(id: string): Promise<BundledPlace | null> {
-  if (!id) return null;
-  const pack = await loadPack();
-  const row = pack?.places?.find((place) => place.id === id);
-  const name = bilingualName(row?.name);
-  return row && typeof row.id === "string" && name ? { id: row.id, name: name.en } : null;
-}
-
-export async function bundledHelp(id: string): Promise<BundledHelp | null> {
-  if (!id) return null;
-  const pack = await loadPack();
-  const row = pack?.help_numbers?.find((item) => item.id === id);
-  const name = bilingualName(row?.name);
-  return row && typeof row.id === "string" && name ? { id: row.id, name } : null;
+    });
+  return bundled;
 }

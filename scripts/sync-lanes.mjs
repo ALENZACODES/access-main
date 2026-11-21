@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Pulls the sibling packages listed in lanes.lock.json into .lanes/<repo>/.
 // Node 22, no dependencies. Each repo is fetched at one pinned commit with a
-// sparse checkout of only the listed package folders; the .git folder is then
-// deleted. Running it again rebuilds the same result.
+// sparse checkout of the listed package folders and tsconfig.base.json when it
+// exists (packages often extend it). The .git folder is then deleted. Running
+// it again rebuilds the same result.
 import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";

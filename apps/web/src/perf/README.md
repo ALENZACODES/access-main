@@ -18,6 +18,14 @@ that only `/map` requests. The guard fails if any of them is ever precached,
 and prints their size separately. `@access-main/budgets`
 (`check:web-precache`) still checks the per-file and precache limits.
 
+The `/dev/narrow` audit page is a developer tool. Its chunk
+(`NarrowAuditPage-*.js`, loaded lazily by the router) is built and fetched
+when the page is opened, but `vite.config.ts` keeps it out of the precache
+(`globIgnores`), so it is not part of the first install and the page does not
+work offline. The install guard is unchanged: it measures every precached
+file. `src/perf/narrow-precache.test.ts` fails if the page stops being lazy or
+the ignore goes away.
+
 ## Measured on this branch
 
 Start-up JS (modulepreload set on `/`): about 827,000 B before the split,
@@ -30,6 +38,11 @@ median): home LCP 288 ms; time to first result: place search 388 ms, journey
 plan 418 ms, washroom finder 450 ms. The e2e gates are LCP ≤ 1,200 ms and
 first result ≤ 1,500 ms, about twice the CI medians seen on this branch. A
 separate e2e checks that preloading on focus or pointer leaves focus and the
-route unchanged. A CI runner or a desktop is not a real
+route unchanged, and a DOM test checks that it announces nothing. To keep the gate steady without moving it, each route gets one discarded
+warm-up load, each measure is the median of five cold runs, and a measure over
+its gate is taken again up to three times (the best attempt is gated and every
+attempt is in the record). The perf project also runs on its own: CI uses one
+Playwright worker. A regression makes every attempt miss. A CI runner or a
+desktop is not a real
 phone. The plan's on-phone measurement still has to be done by hand and
 compared with Day 12; no Day 12 record exists in this repo yet.

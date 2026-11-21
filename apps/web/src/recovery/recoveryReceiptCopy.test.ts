@@ -1,0 +1,45 @@
+import { describe, expect, it } from "vitest";
+import { recoveryReceiptCopy } from "./recoveryReceiptCopy";
+import { RECEIPT_ACTIONS, RECEIPT_CONDITIONS, RECEIPT_OPERATIONS, RECEIPT_STAGES, RECEIPT_TIERS } from "./recoveryReceiptLedger";
+
+const en = recoveryReceiptCopy("en");
+const fr = recoveryReceiptCopy("fr");
+
+describe("recovery receipt bilingual copy", () => {
+  it("has an English heading", () => { expect(en.heading).toContain("Recovery"); });
+  it("has a French heading", () => { expect(fr.heading).toContain("récupération"); });
+  it("keeps the literal UNKNOWN in English", () => { expect(en.unknown).toBe("UNKNOWN"); });
+  it("keeps the literal UNKNOWN in French", () => { expect(fr.unknown).toBe("UNKNOWN"); });
+  it("does not translate unknown conditions", () => { expect(fr.conditions.UNKNOWN).toBe("UNKNOWN"); });
+  it("does not translate unknown tiers", () => { expect(fr.tiers.UNKNOWN).toBe("UNKNOWN"); });
+  it("has every operation in English", () => { expect(RECEIPT_OPERATIONS.every((v) => en.operations[v].length > 0)).toBe(true); });
+  it("has every operation in French", () => { expect(RECEIPT_OPERATIONS.every((v) => fr.operations[v].length > 0)).toBe(true); });
+  it("has every condition in English", () => { expect(RECEIPT_CONDITIONS.every((v) => en.conditions[v].length > 0)).toBe(true); });
+  it("has every condition in French", () => { expect(RECEIPT_CONDITIONS.every((v) => fr.conditions[v].length > 0)).toBe(true); });
+  it("has every tier in English", () => { expect(RECEIPT_TIERS.every((v) => en.tiers[v].length > 0)).toBe(true); });
+  it("has every tier in French", () => { expect(RECEIPT_TIERS.every((v) => fr.tiers[v].length > 0)).toBe(true); });
+  it("has every stage in English", () => { expect(RECEIPT_STAGES.every((v) => en.stages[v].length > 0)).toBe(true); });
+  it("has every stage in French", () => { expect(RECEIPT_STAGES.every((v) => fr.stages[v].length > 0)).toBe(true); });
+  it("has every action in English", () => { expect(RECEIPT_ACTIONS.every((v) => en.actions[v].length > 0)).toBe(true); });
+  it("has every action in French", () => { expect(RECEIPT_ACTIONS.every((v) => fr.actions[v].length > 0)).toBe(true); });
+  it("discloses that receipts are documentation only", () => { expect(en.caution).toContain("documentation only"); });
+  it("discloses non-usage in French", () => { expect(fr.caution).toContain("ne confirme pas"); });
+  it("uses French typographic apostrophes", () => { expect(fr.description).toContain("’"); });
+  it("uses a narrow French nonbreaking semicolon", () => { expect(fr.caution).toContain("\u202f;"); });
+  it("does not contain medical advice", () => { expect(JSON.stringify({ en, fr })).not.toMatch(/diagnos|treatment|eligibility guaranteed/i); });
+  it("does not claim partnerships or endorsement", () => { expect(JSON.stringify({ en, fr })).not.toMatch(/\bverified\b|\bguarantee\b|\bpartnership\b|endorsed by/i); });
+  it("has a bounded-import message", () => { expect(en.issues.limit.length).toBeGreaterThan(0); });
+  it("has a merge conflict message", () => { expect(en.issues.conflict.length).toBeGreaterThan(0); });
+  it("has a French merge conflict message", () => { expect(fr.issues.conflict.length).toBeGreaterThan(0); });
+  it("has a source-validation message", () => { expect(en.issues.source.length).toBeGreaterThan(0); });
+  it("has a source-validation message in French", () => { expect(fr.issues.source.length).toBeGreaterThan(0); });
+  it("has a document review heading", () => { expect(en.review.length).toBeGreaterThan(0); });
+  it("has a local import label", () => { expect(en.open).toContain("Choose"); });
+  it("has a local import label in French", () => { expect(fr.open).toContain("Choisir"); });
+  it("does not include scheduling promises", () => { expect(JSON.stringify({ en, fr })).not.toMatch(/every hour|scheduled task|daily automation/i); });
+  it("has clear source labels", () => { expect(en.source.length).toBeGreaterThan(0); expect(fr.source.length).toBeGreaterThan(0); });
+  it("has clear licence labels", () => { expect(en.licence.length).toBeGreaterThan(0); expect(fr.licence.length).toBeGreaterThan(0); });
+  it("has clear retrieval date labels", () => { expect(en.retrievedOn.length).toBeGreaterThan(0); expect(fr.retrievedOn.length).toBeGreaterThan(0); });
+  it("has explicit local status copy", () => { expect(en.status.length).toBeGreaterThan(0); expect(fr.status.length).toBeGreaterThan(0); });
+  it("does not invent facts about real places", () => { expect(JSON.stringify({ en, fr })).not.toContain("all places accessible"); });
+});

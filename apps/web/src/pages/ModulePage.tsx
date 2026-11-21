@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FINDER_KINDS, type FinderKind, type ModuleId, type ModuleResult, type PlaceHit } from "@access/shared";
+import { FINDER_KINDS, type FinderKind, type JourneyPlan, type ModuleId, type ModuleResult, type PlaceHit } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { ResultItems, statusKey } from "../modules/ResultItems.tsx";
@@ -11,7 +11,8 @@ import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
-import { StateNotice, ERROR_KINDS, getRouteEmpty, getRouteError, getState, type EmptyKind, type ErrorKind } from "../states/index.ts";
+import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm.tsx";
+import { DataCredits, PackCompare, PackFreshness, PackPlaces, PackReport, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -21,6 +22,13 @@ const COPY: Record<ModuleId, { title: string; body: string }> = {
   games: { title: "modules.gamesTitle", body: "modules.gamesBody" },
   help: { title: "modules.helpTitle", body: "help.privacyBody" },
 };
+
+/**
+ * Empty journey results that are not "no route": the adapter's own sentence
+ * (lane-adapters.ts) says why nothing was planned, so the Day 22 no-route
+ * notice is not added on top of it.
+ */
+const JOURNEY_NOT_PLANNED = new Set(["journey.awaiting", "journey.needBoth", "journey.notFound", "journey.ambiguous", "journey.noCoordinates", "journey.noArea"]);
 
 /** The pack the Offline pack page downloads. */
 const OFFLINE_PACK_ID = "toronto";
@@ -39,10 +47,8 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   const { profile } = useProfileState();
   const online = useOnline();
   const [text, setText] = useState("");
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
   const [kind, setKind] = useState<FinderKind>("washroom");
-  const [submitted, setSubmitted] = useState({ text: "", origin: "", destination: "", kind: "washroom" as FinderKind });
+  const [submitted, setSubmitted] = useState({ text: "", origin: "", destination: "", originId: null as string | null, destinationId: null as string | null, kind: "washroom" as FinderKind });
   const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
   // Day 22 states: whether the person has asked for something, and a retry counter.
   const [asked, setAsked] = useState(false);
@@ -56,6 +62,18 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
     void getPack(OFFLINE_PACK_ID).then((pack) => { if (active) setPackStored(pack !== null); });
     return () => { active = false; };
   }, [online]);
+  // Places in the pack stored on this device. A missing, unreadable or unsupported pack shows nothing here.
+  const [packPlaces, setPackPlaces] = useState<unknown>(null);
+  useEffect(() => {
+    if (id !== "places") return;
+    let active = true;
+    getPack(OFFLINE_PACK_ID).then(
+      (pack) => { if (active) setPackPlaces(pack?.content?.places ?? null); },
+      () => { if (active) setPackPlaces(null); },
+    );
+    return () => { active = false; };
+  }, [id]);
+  const packCredits = useMemo(() => creditRecordsFromPack(packPlaces), [packPlaces]);
   const copy = COPY[id];
   useDocumentTitle(t(copy.title));
 
@@ -76,6 +94,8 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
               {
                 originLabel: submitted.origin || null,
                 destinationLabel: submitted.destination || null,
+                originId: submitted.originId,
+                destinationId: submitted.destinationId,
                 routingPreference: profile?.routing_preference ?? null,
                 offline: !online,
               },
@@ -98,15 +118,25 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   const canSearch = result?.availability === "ready";
   const hasSearch = id === "places" || id === "finders" || id === "journey";
   const locale = i18n.language.startsWith("fr") ? "fr" as const : "en" as const;
-  const stateKind: ErrorKind | EmptyKind | null = !result
-    ? null
-    : hasSearch && !online && packStored === false && result.availability !== "ready"
-      ? "offline-no-pack"
-      : id === "games" && result.availability === "error"
-        ? "game-load-failed"
-        : asked && result.availability === "ready" && result.items.length === 0
-          ? id === "places" ? "search-no-results" : id === "finders" ? "finder-no-results" : id === "journey" ? "journey-no-route" : null
-          : null;
+  // A trip that was not planned (no start, no end, not found) is not "no route": only a planned trip with no items is.
+  const tripAsked = asked && !(id === "journey" && result !== null && JOURNEY_NOT_PLANNED.has(result.messageKey));
+  const choice = moduleStateFor({
+    module: id,
+    availability: result ? (result.availability as ModuleAvailability) : "loading",
+    itemCount: result?.items.length ?? 0,
+    asked: tripAsked,
+    online,
+    packStored,
+  });
+  const failures = useFailureStreak(result, result?.availability === "error");
+  // The /journey place pickers use the same place search as /places.
+  const placeSearch = (query: string) => getModules().places.search({ text: query }, {
+    locale,
+    offline: !online,
+    profile,
+    nowIso: new Date().toISOString(),
+    query,
+  });
   const clearSearch = () => {
     setText("");
     setAsked(false);
@@ -150,37 +180,22 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
         </form>
       ) : null}
       {id === "journey" ? (
-        <form
-          ref={tripForm}
-          className="stack"
-          aria-describedby={result?.availability === "stub" ? `${id}-search-unavailable` : undefined}
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!canSearch) return;
+        <JourneyForm
+          canPlan={canSearch}
+          formRef={tripForm}
+          describedBy={result?.availability === "stub" ? `${id}-search-unavailable` : undefined}
+          search={placeSearch}
+          onPlan={(trip: TripRequest) => {
             setAsked(true);
-            setSubmitted((current) => ({ ...current, origin, destination }));
+            setSubmitted((current) => ({ ...current, ...trip }));
           }}
-        >
-          <TextInput label={t("modules.origin")} value={origin} onChange={setOrigin} isDisabled={!canSearch} />
-          <TextInput label={t("modules.destination")} value={destination} onChange={setDestination} isDisabled={!canSearch} />
-          <div className="button-row">
-            <Button type="submit" isDisabled={!canSearch}>{t("modules.plan")}</Button>
-          </div>
-        </form>
+        />
       ) : null}
       <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
-      {stateKind ? (
+      {choice ? (
         <StateNotice
           lang={locale}
-          view={
-            (id === "places" || id === "finders" || id === "journey")
-              ? (
-                  (ERROR_KINDS as string[]).includes(stateKind)
-                    ? getRouteError(id === "places" ? "search" : id, stateKind as ErrorKind, locale)
-                    : getRouteEmpty(id === "places" ? "search" : id, locale) ?? getState(stateKind, locale)
-                )
-              : getState(stateKind, locale)
-          }
+          view={escalateView(moduleStateView(choice, locale), { failures, online, packStored }, locale)}
           onAction={{
             retry: () => setAttempt((count) => count + 1),
             "clear-search": clearSearch,
@@ -189,6 +204,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
         />
       ) : null}
       {result ? <ResultItems id={id} items={result.items} /> : null}
+      {id === "journey" && result?.availability === "ready" ? <JourneyPlanDetails items={result.items as JourneyPlan[]} /> : null}
       {id === "places" && result && result.items.length > 0 ? (
         <ul className="stack">
           {(result.items as PlaceHit[]).map((item) => (
@@ -198,6 +214,11 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
           ))}
         </ul>
       ) : null}
+      {id === "places" && packPlaces !== null ? <PackPlaces places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packPlaces !== null ? <PackFreshness places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packPlaces !== null ? <PackReport places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packPlaces !== null ? <PackCompare places={packPlaces} locale={locale} today={new Date().toISOString().slice(0, 10)} /> : null}
+      {id === "places" && packCredits.length > 0 ? <DataCredits records={packCredits} locale={locale} showOsmCredit={false} /> : null}
       <p>{t("data.liveBody")}</p>
     </div>
   );

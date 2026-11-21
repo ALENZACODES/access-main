@@ -1,5 +1,6 @@
 import { Component, Suspense, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { StateNotice, getRouteError } from "../states/index.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useLaneStrings } from "./strings.ts";
 
@@ -10,8 +11,10 @@ export function SectionLoading() {
 }
 
 function SectionFailed() {
-  const { t } = useLaneStrings();
-  return <p role="alert">{t("lanes.loadFailed")}</p>;
+  const { i18n } = useLaneStrings();
+  const locale = i18n.language.startsWith("fr") ? ("fr" as const) : ("en" as const);
+  // A lazy page that failed to load stays failed until it is requested again, so the retry reloads the page.
+  return <StateNotice lang={locale} view={getRouteError("page", "page-load-failed", locale)} onAction={{ retry: () => window.location.reload() }} />;
 }
 
 /**

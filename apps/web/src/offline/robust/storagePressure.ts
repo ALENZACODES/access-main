@@ -1,4 +1,4 @@
-import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload.ts";
+import { downloadRegion, type DownloadDependencies, type DownloadResult, type Language, type RegionManifest } from "./regionDownload";
 
 /** User-facing download state. Cells not downloaded are named as such, never as available and never as UNKNOWN. */
 export type PressureState =
@@ -45,10 +45,10 @@ export function pressureView(state: PressureState, language: Language): Pressure
   if (state.phase === "working") {
     return { message: copy.working, details: "", action: copy.retry, disabled: true };
   }
-  if (state.phase === "idle" || state.result === null) {
+  if (state.phase !== "stopped" || state.result === null) {
     return { message: "", details: "", action: copy.start, disabled: false };
   }
-  const result = state.result;
+  const result: DownloadResult = state.result;
   const message = result.completed ? copy.complete : result.reason === "quota" ? copy.quota :
     result.reason === "interrupted" ? copy.interrupted : copy.error;
   const separator = language === "fr" ? "\u00a0:" : ":";
@@ -118,8 +118,9 @@ export function createPressureController(
 }
 
 /**
- * Explicit opt-in UI: hosts mount this panel beside their offline download control.
- * The host is responsible for first-party fetching and open-licence data selection.
+ * The full offline dashboard owns several substantial optional subpanels.
+ * Load them as a separate chunk only when this view is mounted, keeping the
+ * public synchronous teardown contract and preventing a late mount after exit.
  */
 export function mountStoragePressurePanel(
   root: HTMLElement,
@@ -127,35 +128,26 @@ export function mountStoragePressurePanel(
   dependencies: DownloadDependencies,
   language: Language,
 ): () => void {
-  const controller = createPressureController(manifest, dependencies);
-  const panel = document.createElement("section");
-  panel.setAttribute("aria-label", language === "fr" ? "Téléchargement hors ligne" : "Offline download");
-  const status = document.createElement("p");
+  let disposed = false;
+  let unmount: (() => void) | null = null;
+  const status = root.ownerDocument.createElement("p");
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
-  status.setAttribute("aria-atomic", "true");
-  const details = document.createElement("p");
-  const button = document.createElement("button");
-  button.type = "button";
-  button.style.minWidth = "44px";
-  button.style.minHeight = "44px";
-  panel.append(status, details, button);
-  root.append(panel);
-  const render = (state: PressureState): void => {
-    const view = pressureView(state, language);
-    status.textContent = view.message;
-    details.textContent = view.details;
-    button.textContent = view.action;
-    button.disabled = view.disabled;
-  };
-  const onClick = (): void => { void controller.retry(); };
-  button.addEventListener("click", onClick);
-  const unsubscribe = controller.subscribe(render);
-  render(controller.getState());
+  status.textContent = language === "fr" ? "Chargement des renseignements hors ligne…" : "Loading offline details…";
+  root.append(status);
+  void import("./offlineDashboard").then(({ mountOfflineDashboard }) => {
+    if (disposed) return;
+    unmount = mountOfflineDashboard(root, manifest, dependencies, language);
+    status.remove();
+  }).catch(() => {
+    if (disposed) return;
+    status.textContent = language === "fr"
+      ? "Les renseignements hors ligne sont indisponibles. État UNKNOWN."
+      : "Offline details are unavailable. Status UNKNOWN.";
+  });
   return () => {
-    unsubscribe();
-    controller.dispose();
-    button.removeEventListener("click", onClick);
-    panel.remove();
+    disposed = true;
+    unmount?.();
+    status.remove();
   };
 }

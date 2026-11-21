@@ -1,9 +1,7 @@
 import { createPackSource, fieldValue, type PackSource } from "@access-main/data-client";
-import { createJourneyModule } from "@access-maps/journey-data";
 import { createPlacesModule } from "@access-maps/places-shell";
-import { createFindersModule } from "@access-tools/finders";
-import { helpShellModule } from "@access/help";
-import type { ModuleRegistry, ModuleResult } from "@access/shared";
+import { emptyModuleResult, type FindersModule, type GamesModule, type HelpModule, type ModuleRegistry, type ModuleResult, type NavigatorModule, type PlacesModule } from "@access/shared";
+import { createJourneyModule } from "./lane-adapters.ts";
 import { createModules } from "./stubs.ts";
 import type { PackRecord, PlaceDetail } from "./types.ts";
 
@@ -43,17 +41,97 @@ export async function getPlaceDetail(source: PackSource, id: string): Promise<Mo
   }
 }
 
+/**
+ * Load finders and help only when those modules run. A static import of the
+ * package entry points pulled the help article corpus, the finders React
+ * pages, and Ajv onto every ModulePage visit, including place search and
+ * journey plan (Day 22 first-result path).
+ */
+function deferredFinders(source: PackSource): FindersModule {
+  let pending: Promise<FindersModule> | undefined;
+  const load = () => {
+    pending ??= import("@access-tools/finders/shell").then((mod) => ({
+      id: "finders" as const,
+      search: (query: Parameters<FindersModule["search"]>[0], ctx: Parameters<FindersModule["search"]>[1]) =>
+        mod.searchFindersForShell(source, query, ctx),
+    }));
+    return pending;
+  };
+  return {
+    id: "finders",
+    search: async (query, ctx) => (await load()).search(query, ctx),
+  };
+}
+
+function deferredHelp(): HelpModule {
+  let pending: Promise<HelpModule> | undefined;
+  const load = () => {
+    pending ??= import("@access/help/shell").then((mod) => mod.helpShellModule);
+    return pending;
+  };
+  return {
+    id: "help",
+    list: async (ctx) => (await load()).list(ctx),
+  };
+}
+
+/**
+ * The games list: every game in the pinned package's library, through the package's own shell adapter.
+ * Only the list code is loaded here. The games themselves are played at /more/games.
+ */
+function deferredGames(): GamesModule {
+  let pending: Promise<GamesModule["list"]> | undefined;
+  const load = () => {
+    pending ??= Promise.all([import("@access-tools/games/shell"), import("@access-tools/games/library")]).then(
+      ([shell, library]) => async () => shell.listGamesForShell(library.GAME_LIBRARY),
+    );
+    return pending;
+  };
+  return { id: "games", list: async (ctx) => (await load())(ctx) };
+}
+
+/** The services directory: the pinned package's dated records, as the package's shell adapter returns them. */
+function deferredNavigator(): NavigatorModule {
+  let pending: Promise<NavigatorModule["list"]> | undefined;
+  const load = () => {
+    pending ??= import("@access-tools/navigator/shell").then((mod) => async (ctx: Parameters<NavigatorModule["list"]>[0]) => mod.listForShell(ctx));
+    return pending;
+  };
+  return { id: "navigator", list: async (ctx) => (await load())(ctx) };
+}
+
+/** The places package is only ready when the data pack can be read. A missing or broken pack stays unavailable, with no invented records. */
+async function packIsAvailable(source: PackSource): Promise<boolean> {
+  try {
+    await source.manifest();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function placesWithPack(source: PackSource, places: PlacesModule): PlacesModule {
+  return {
+    ...places,
+    search: async (query, ctx) => (await packIsAvailable(source) ? places.search(query, ctx) : emptyModuleResult("places", "modules.unavailable")),
+    get: async (id, ctx) => (await packIsAvailable(source) ? places.get(id, ctx) : emptyModuleResult("places", "modules.unavailable")),
+  };
+}
+
 /** The six real modules over one shared data source. Every result goes through guardModules in createModules. */
 export function createLinkedModules(source: PackSource): ModuleRegistry {
   const get = (id: string) => getPlaceDetail(source, id);
+  const places = placesWithPack(source, { ...createPlacesModule(source), get });
   const guarded = createModules({
-    places: { ...createPlacesModule(source), get },
+    places,
     journey: createJourneyModule(source),
-    finders: createFindersModule(source),
-    help: helpShellModule,
+    finders: deferredFinders(source),
+    navigator: deferredNavigator(),
+    games: deferredGames(),
+    help: deferredHelp(),
   });
-  // `get` is checked by getPlaceDetail, so it is set again here in case the guard rebuilt the places module.
-  return { ...guarded, places: { ...guarded.places, get } };
+  // `get` is checked by getPlaceDetail, so it is set again in case the guard rebuilt the places module.
+  return { ...guarded, places: { ...guarded.places, get: places.get } };
 }
 
 let sharedSource: PackSource | null = null;

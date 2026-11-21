@@ -20,8 +20,8 @@ function read(file: string): string {
 /** Child paths of a route table, from `path: "name"` entries. Parameter and splat paths are skipped. */
 function tablePaths(source: string): string[] {
   return [...source.matchAll(/path:\s*"([^"]+)"/g)]
-    .map((match) => match[1])
-    .filter((path) => !path.includes(":") && !path.includes("*"));
+    .map((match) => match[1] ?? "")
+    .filter((path) => path.length > 0 && !path.includes(":") && !path.includes("*"));
 }
 
 /**
@@ -34,12 +34,15 @@ export function appRoutes(): string[] {
   const router = read("router.tsx");
   for (const match of router.matchAll(/path:\s*"([^"]+)"/g)) {
     const path = match[1];
+    if (!path) continue;
     if (path === "/" || path === "*" || path.includes(":")) continue;
     found.add(`/${path.replace(/^\//, "").replace(/\/\*$/, "")}`);
   }
   const features = read("features/routes.tsx");
   const entries = /const entries = \[([^\]]*)\]/.exec(features)?.[1] ?? "";
-  for (const match of entries.matchAll(/"([a-z0-9-]+)"/g)) found.add(`/settings/${match[1]}`);
+  for (const match of entries.matchAll(/"([a-z0-9-]+)"/g)) {
+    if (match[1]) found.add(`/settings/${match[1]}`);
+  }
   for (const path of tablePaths(features)) found.add(`/settings/${path}`);
   for (const path of tablePaths(read("hub/routes.tsx"))) found.add(`/more/${path}`);
   return [...found];
@@ -79,10 +82,23 @@ export async function chooseLanguage(page: Page, language: Language): Promise<vo
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 }
 
-export async function visit(page: Page, route: string, language: Language): Promise<void> {
+export async function visit(
+  page: Page,
+  route: string,
+  languageOrBaseURL: Language | string = "en",
+): Promise<void> {
+  // Call sites pass either a language ("en" | "fr") or Playwright's baseURL.
+  // Only the language tokens request a document-language assertion other than English.
+  const language: Language = languageOrBaseURL === "fr" ? "fr" : "en";
   const response = await page.goto(route, { waitUntil: "domcontentloaded" });
   expect(response, `Missing HTTP response for ${route}`).not.toBeNull();
   expect(response?.ok(), `Route ${route} did not load`).toBe(true);
+  if (language === "fr") {
+    const lang = (await page.locator("html").getAttribute("lang")) ?? "";
+    if (!lang.toLowerCase().startsWith("fr")) {
+      await page.getByRole("button", { name: "Français" }).first().click();
+    }
+  }
   await expect(page.locator("html")).toHaveAttribute("lang", language);
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.locator("main [role='status']").filter({ hasText: /^(Loading|Chargement)/ })).toHaveCount(0);

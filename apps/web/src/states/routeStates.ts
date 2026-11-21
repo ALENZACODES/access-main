@@ -54,7 +54,9 @@ export function createRouteStates<R extends string>(
     getRouteError(route, kind, locale) {
       if (!isRouteId(route)) return withRoute(getErrorState("offline-no-pack", locale), null, locale);
       // ErrorKind has no "unknown"; use the route's first listed kind instead.
-      const allowed = routes[route].errors.includes(kind) ? kind : (routes[route].errors[0] ?? "offline-no-pack");
+      // A generic load failure uses the data wording on routes that list it, so it is not shown as "offline".
+      const wanted = kind === "load-failed" && !routes[route].errors.includes(kind) && routes[route].errors.includes("data-load-failed") ? "data-load-failed" : kind;
+      const allowed = routes[route].errors.includes(wanted) ? wanted : (routes[route].errors[0] ?? "offline-no-pack");
       return withRoute(getErrorState(allowed, locale), route, locale);
     },
     getRouteEmpty(route, locale) {
@@ -65,35 +67,67 @@ export function createRouteStates<R extends string>(
   };
 }
 
-export type RouteId = "search" | "place" | "journey" | "finders" | "map";
+export type RouteId = "search" | "place" | "journey" | "finders" | "map" | "saved" | "help" | "navigator" | "games" | "offline" | "page";
 
 /** Default route set; replace the ids with the app's real route ids via createRouteStates. */
 export const ROUTE_STATES: Readonly<Record<RouteId, RouteStateConfig>> = {
   search: {
     label: { en: "Search", fr: "Recherche" },
     empty: "search-no-results",
-    errors: ["offline-no-pack", "pack-download-failed"],
+    errors: ["offline-no-pack", "pack-download-failed", "data-load-failed", "pack-unreadable", "module-load-failed"],
   },
   place: {
     label: { en: "Place details", fr: "Fiche du lieu" },
     // Missing accessibility data is shown as UNKNOWN, never inferred.
     empty: "accessibility-unknown",
-    errors: ["offline-no-pack", "pack-download-failed"],
+    errors: ["offline-no-pack", "pack-download-failed", "not-found", "load-failed", "offline"],
   },
   journey: {
     label: { en: "Journey", fr: "Itinéraire" },
     empty: "journey-no-route",
-    errors: ["offline-no-pack", "pack-download-failed"],
+    errors: ["offline-no-pack", "pack-download-failed", "module-load-failed"],
   },
   finders: {
     label: { en: "Finders", fr: "Repérages" },
     empty: "finder-no-results",
-    errors: ["offline-no-pack", "pack-download-failed"],
+    errors: ["offline-no-pack", "pack-download-failed", "module-load-failed"],
   },
   map: {
     label: { en: "Map", fr: "Carte" },
     empty: "map-no-places",
-    errors: ["offline-no-pack"],
+    errors: ["offline-no-pack", "data-load-failed", "module-load-failed"],
+  },
+  saved: {
+    label: { en: "Saved places", fr: "Lieux enregistrés" },
+    empty: "no-saved-places",
+    // An online failure with no listed kind falls back to the first one.
+    errors: ["offline-no-pack", "offline", "data-load-failed"],
+  },
+  help: {
+    label: { en: "Help", fr: "Aide" },
+    empty: "help-no-results",
+    errors: ["module-load-failed"],
+  },
+  navigator: {
+    label: { en: "Navigator", fr: "Navigateur" },
+    empty: "nothing-listed",
+    errors: ["module-load-failed"],
+  },
+  games: {
+    label: { en: "Games", fr: "Jeux" },
+    empty: "nothing-listed",
+    errors: ["game-load-failed", "module-load-failed"],
+  },
+  offline: {
+    label: { en: "Offline packs", fr: "Packs hors ligne" },
+    empty: "no-regions",
+    errors: ["region-list-unavailable", "pack-download-failed"],
+  },
+  // Any lazy page of the App that fails to load (see modules/Section.tsx).
+  page: {
+    label: { en: "Page", fr: "Page" },
+    empty: null,
+    errors: ["page-load-failed"],
   },
 };
 

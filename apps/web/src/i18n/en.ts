@@ -54,7 +54,7 @@ export const en = {
   },
   areas: {
     places: "Place pages will list only records that carry a source, a licence, a date, and a tier.",
-    journey: "Door-to-door planning is not connected. Live elevator status is not available in this shell.",
+    journey: "Plans a rolling route between two places in the data pack, where its recorded paths cover the area. Live elevator status is not available in this shell.",
     finders: "Washroom, parking, charging, and repair search will not treat a municipal flag as a measurement.",
     navigator: "A services directory of links. It will not say whether you qualify for a program.",
     games: "Games hub. Not therapy, not an assessment, and not medical advice.",
@@ -160,6 +160,7 @@ export const en = {
   },
   modules: {
     ready: "These records come from the linked part of the App. Each one shows its source, licence, date, and tier. Unknown stays unknown.",
+    gamesReady: "These games come from the linked part of the App. A game is not a record of a place, so it has no source or tier.",
     empty: "No records are shown.",
     noMatches: "No matching records were found. The search ran on the linked part of the App. Unknown stays unknown.",
     error: "This part of the App could not load. No records are shown. Try again later.",
@@ -196,16 +197,16 @@ export const en = {
       "Place pages will show a source, a licence, a date, and a verification tier on every record. Nothing is loaded. Unknown stays unknown.",
     journeyTitle: "Journey",
     journeyBody:
-      "Door-to-door planning for travel in Ontario is not connected. Route preferences in settings stay on this device and are not sent anywhere. Live elevator status is unavailable. An offline plan, when one exists, will show an as-of time.",
+      "Plans a rolling route between two places in the data pack on this device, using only the paths that pack records. Route preferences in settings stay on this device and are not sent anywhere. Live elevator status is unavailable. A plan shows its source, its date and what is Unknown.",
     findersTitle: "Finders",
     findersBody:
       "Washrooms, parking, charging, repair, and adult change tables are not listed, because no records are loaded. A municipal accessible flag is not a measurement of turning space, transfer side, or a hoist.",
     navigatorTitle: "Services directory",
     navigatorBody:
-      "The directory will link to official program pages and show the date of the link. It does not decide eligibility. Nothing from a benefits site is copied here.",
+      "The directory lists programs by name, with the source, the date the official page was read, and the tier of each entry. It does not decide eligibility. Nothing from a benefits site is copied here.",
     gamesTitle: "Games",
     gamesBody:
-      "The games hub is not connected. Games are not therapy, not a test of ability, and not medical advice. Games that flash are out of scope.",
+      "This page lists the games in this build. To play them, open More, then Games. Games are not therapy, not a test of ability, and not medical advice. Games that flash are out of scope.",
     helpTitle: "Help",
     helpArticles: "Articles from the help centre are not connected yet.",
   },
