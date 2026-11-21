@@ -107,7 +107,7 @@ describe("the on-its-own section in the live panel", () => {
 
   it("states the counts from the list and nothing it did not count", async () => {
     const { html } = await build(SETUPS[0]!, "en", "none");
-    expect(html).toContain("19 rows are listed, at 28 places in 17 files.");
+    expect(html).toContain("20 rows are listed, at 31 places in 18 files.");
     expect(html).not.toMatch(/\b(?:never|nothing else|only these)\b[^<]*(?:runs|starts)/i);
   });
 

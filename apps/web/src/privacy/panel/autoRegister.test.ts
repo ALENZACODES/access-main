@@ -146,4 +146,14 @@ describe("ordering and labels", () => {
     expect(new Set(AUTO_KINDS).size).toBe(AUTO_KINDS.length);
     expect(new Set(AUTO_EFFECTS).size).toBe(AUTO_EFFECTS.length);
   });
+  it("leaves no placeholder in any row text, and the French is not a shortened copy of the English", () => {
+    for (const r of AUTO_REGISTER) {
+      for (const text of [r.when.en, r.when.fr, r.does.en, r.does.fr]) {
+        expect(text, r.path).not.toMatch(/\b(?:X{2,}|TODO|TBD|FIXME)\b/u);
+        expect(text.trim().split(/\s+/u).length, `${r.path}: ${text}`).toBeGreaterThanOrEqual(3);
+      }
+      expect(r.when.fr, r.path).not.toBe(r.when.en);
+      expect(r.does.fr, r.path).not.toBe(r.does.en);
+    }
+  });
 });
