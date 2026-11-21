@@ -17,6 +17,13 @@ const URL_ATTRIBUTES = new Map([
 const OFFLINE_SHELL = new Set(['index.html', '/', './', '']);
 const EXTERNAL = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i;
 const ABSOLUTE_SCHEMES = /^(?:https?:|data:|blob:|mailto:|tel:|javascript:)/i;
+const hasControlCharacter = (value) => {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) return true;
+  }
+  return false;
+};
 
 export function isRemoteReference(value) {
   return /^(?:https?:)?\/\//i.test(value.trim());
@@ -39,7 +46,7 @@ export function localPath(from, reference) {
   try { decoded = decodeURIComponent(stripUrlFragment(trimmed)); } catch {
     return { error: 'Invalid percent encoding' };
   }
-  if (/[\\\x00-\x1f]/.test(decoded)) return { error: 'Unsafe path characters' };
+  if (hasControlCharacter(decoded)) return { error: 'Unsafe path characters' };
   if (decoded.startsWith('///')) return { error: 'Ambiguous absolute path' };
   const path = decoded.startsWith('/') ? decoded.slice(1) :
     posix.join(posix.dirname(from), decoded);
