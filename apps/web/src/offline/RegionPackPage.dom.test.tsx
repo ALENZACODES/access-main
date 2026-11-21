@@ -147,6 +147,9 @@ describe("offline region integrity re-check", { timeout: 30000 }, () => {
     const { container } = await view(language, source);
     const c = offlineCatalog[language];
     expect(await screen.findByText("© OpenStreetMap contributors")).toBeTruthy();
+    expect(screen.getByText(c.odbl)).toBeTruthy();
+    expect(c.odbl).toContain("ODbL");
+    if (language === "fr") expect(c.odbl).toBe("Les données OpenStreetMap sont disponibles sous licence Open Database License (ODbL).");
     const separator = language === "fr" ? "\u00a0: " : ": ";
     expect(container.textContent).toContain(c.built + separator + "2026-11-01");
     expect(container.textContent).toContain(c.retrieved + separator + "2026-11-01");
