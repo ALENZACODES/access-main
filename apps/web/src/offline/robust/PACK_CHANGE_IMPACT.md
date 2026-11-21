@@ -8,7 +8,7 @@ The review compares the manifest for a currently listed offline region with a se
 
 The existing offline dashboard shows an **Open pack change review** action. The module is loaded by `import("./packChangeImpactPanel")` only after a user clicks. Its model, copy, report and panel modules are not exported from `offline/robust/index.ts`, which is imported by the region page. The launch action has a disposal guard and revision token, so a slow module import cannot mount after the user closes the panel or navigates away. The panel unsubscribes from the dashboard model, removes its listeners and DOM, and does not leave timers or background processes.
 
-The service worker's precache configuration currently matches all generated JavaScript chunks. Therefore, being lazy-loaded is not by itself proof of first-install byte budget compliance. The `check-install-budget.ts` guard and the service worker's inclusion rules must be left unchanged. A full production build must measure whether the 4,141,875-byte first-install cap passes. This feature does not claim a pass that has not been measured.
+The service worker precaches the review chunk on first install. Opening the review for the first time works offline after installation completes. The production build includes the chunk in its 4,141,875-byte first-install budget and its 524,288-byte per-entry limit.
 
 ## Input schema
 

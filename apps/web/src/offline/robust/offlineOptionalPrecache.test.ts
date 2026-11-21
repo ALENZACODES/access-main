@@ -7,14 +7,24 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.
 const read = (file: string): string => readFileSync(path.join(root, file), "utf8");
 const robust = (name: string): string => read(`apps/web/src/offline/robust/${name}`);
 
-/** Optional, explicitly launched features must not enlarge the initial precache. */
+// This unit test checks which hashed assets the production Workbox globs select.
+function patterns(config: string, key: "globPatterns" | "globIgnores"): string[] {
+  const values = new RegExp(`\\b${key}:\\s*(\\[[^\\]]+\\])`).exec(config)?.[1];
+  if (!values) throw new Error(`Missing Workbox ${key}`);
+  return JSON.parse(values) as string[];
+}
+
 describe("optional offline panels and the install cap", () => {
-  it("keeps three heavyweight panels out of Workbox precache", () => {
+  it.each([
+    "offlineQuestionSheetPanel",
+    "coordinationBriefPanel",
+    "snapshotComparisonPanel",
+    "packChangeImpactPanel",
+  ])("includes the lazy %s chunk in the first install", (panel) => {
     const config = read("apps/web/vite.config.ts");
-    for (const chunk of ["offlineQuestionSheetPanel", "coordinationBriefPanel", "snapshotComparisonPanel"]) {
-      expect(config).toContain(`"**/${chunk}-*.js"`);
-    }
-    expect(config).toContain('"**/NarrowAuditPage-*.js"');
+    const asset = `assets/${panel}-Xb73Ks92.js`;
+    expect(patterns(config, "globPatterns").some((glob) => path.posix.matchesGlob(asset, glob))).toBe(true);
+    expect(patterns(config, "globIgnores").some((glob) => path.posix.matchesGlob(asset, glob))).toBe(false);
   });
   it("keeps the first-install checker and cap unchanged", () => {
     const guard = read("apps/web/scripts/check-install-budget.ts");

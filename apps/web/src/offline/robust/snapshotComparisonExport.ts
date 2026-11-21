@@ -35,7 +35,7 @@ export function formatSnapshotReport(report: SnapshotReport, language: Language)
   const rows = [c.title, c.notProof, line(c.status, report.state), line("Region", oneLine(report.regionId)),
     line(c.listed, report.rows.length), line(c.changed, report.reviewCount), line(c.physical, "UNKNOWN")];
   for (const row of report.rows) {
-    rows.push(`${oneLine(row.cellId)} | A: ${SNAPSHOT_CHANGE_LABELS[language][row.optionA.kind]} | B: ${SNAPSHOT_CHANGE_LABELS[language][row.optionB.kind]} | ${c.statusLabel}${colon}${row.localState}`);
+    rows.push(`${oneLine(row.cellId)} | A${colon}${SNAPSHOT_CHANGE_LABELS[language][row.optionA.kind]} | B${colon}${SNAPSHOT_CHANGE_LABELS[language][row.optionB.kind]} | ${c.statusLabel}${colon}${row.localState}`);
     if (row.attention === "review") {
       rows.push(line(c.question, oneLine(row.optionA.kind === "same" ? row.optionB.question : row.optionA.question)));
     }

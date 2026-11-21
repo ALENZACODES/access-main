@@ -26,7 +26,7 @@ All controls are native HTML inputs, selects, buttons and labelled textareas, wi
 
 ## Build budget and deployment
 
-The feature remains outside the eager `robust/index.ts` export graph. The existing dashboard offers an explicit button and calls `import("./offlineQuestionSheetPanel")` only after user interaction. **This does not guarantee first-install budget compliance:** the current service-worker configuration may still precache the emitted chunk. The 4,141,875-byte first-install limit must be tested by the unmodified production build. Do not change `check-install-budget.ts`, its list of included files, timeouts, thresholds, or test exclusions. The separate budget repair PR must land and the build must pass before this change is merged.
+The service worker includes the question sheet in the first install. The dashboard imports its module when the user opens the sheet, so someone who installed the app online can open it for the first time offline. The production build counts the emitted chunk toward the 4,141,875-byte install budget and the 524,288-byte per-entry cap.
 
 ## Testing
 

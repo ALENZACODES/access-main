@@ -79,7 +79,7 @@ function clean(value: string, limit: number): string {
   const result = [...value].map((char) => {
     const code = char.charCodeAt(0);
     return code < 32 && code !== 9 && code !== 10 && code !== 13 || code >= 0x202a && code <= 0x202e || code >= 0x2066 && code <= 0x2069 ? " " : char;
-  }).join("").replace(/\s+/gu, " ").trim();
+  }).join("").replace(/[^\S\u00a0\u202f]+/gu, " ").trim();
   if (!result || result.length > limit) throw new RangeError("Invalid sheet text");
   return result;
 }
@@ -93,10 +93,11 @@ function validCategory(value: unknown): value is SheetCategory { return typeof v
 function validPriority(value: unknown): value is SheetPriority { return typeof value === "string" && SHEET_PRIORITIES.some((c) => c === value); }
 function validReply(value: unknown): value is SheetReply { return typeof value === "string" && SHEET_REPLIES.some((c) => c === value); }
 function validPosition(value: unknown): value is number { return Number.isSafeInteger(value) && (value as number) >= 0 && (value as number) < SHEET_MAX_ITEMS; }
-function knownCell(manifest: RegionManifest, cellId: string | null): boolean {
-  return cellId === null || manifest.cells.some((cell) => cell.id === cellId);
+function knownCell(manifest: RegionManifest | null, cellId: string | null): boolean {
+  return cellId === null || (manifest !== null && manifest.cells.some((cell) => cell.id === cellId));
 }
-function checkRegion(manifest: RegionManifest): void {
+function checkRegion(manifest: RegionManifest | null): void {
+  if (manifest === null) return;
   if (!manifest.regionId || manifest.regionId.length > 256) throw new TypeError("Invalid region");
   const ids = new Set<string>();
   for (const cell of manifest.cells) {
@@ -104,15 +105,15 @@ function checkRegion(manifest: RegionManifest): void {
     ids.add(cell.id);
   }
 }
-export function emptyQuestionSheet(manifest: RegionManifest, title = "Personal offline questions"): QuestionSheet {
+export function emptyQuestionSheet(manifest: RegionManifest | null, title = "Personal offline questions"): QuestionSheet {
   checkRegion(manifest);
-  return { schema: SHEET_VERSION, regionId: manifest.regionId, title: clean(title, SHEET_MAX_TEXT), items: [] };
+  return { schema: SHEET_VERSION, regionId: manifest?.regionId ?? "UNKNOWN", title: clean(title, SHEET_MAX_TEXT), items: [] };
 }
 export function changeSheetTitle(sheet: QuestionSheet, title: string): QuestionSheet {
   return { ...sheet, title: clean(title, SHEET_MAX_TEXT) };
 }
-export function addSheetItem(sheet: QuestionSheet, manifest: RegionManifest, input: ItemInput): QuestionSheet {
-  if (sheet.regionId !== manifest.regionId) throw new TypeError("Region mismatch");
+export function addSheetItem(sheet: QuestionSheet, manifest: RegionManifest | null, input: ItemInput): QuestionSheet {
+  if (sheet.regionId !== (manifest?.regionId ?? "UNKNOWN")) throw new TypeError("Region mismatch");
   if (sheet.items.length >= SHEET_MAX_ITEMS) throw new RangeError("Sheet capacity reached");
   if (!validCategory(input.category) || !validPriority(input.priority) || !knownCell(manifest, input.cellId ?? null)) throw new TypeError("Invalid question");
   const used = new Set(sheet.items.map((item) => item.id));
@@ -155,7 +156,7 @@ export function moveSheetItem(sheet: QuestionSheet, id: string, direction: "up" 
   items.splice(target, 0, item);
   return { ...sheet, items: items.map((row, position) => ({ ...row, position })) };
 }
-function validImportedItem(value: unknown, position: number, manifest: RegionManifest): value is SheetItem {
+function validImportedItem(value: unknown, position: number, manifest: RegionManifest | null): value is SheetItem {
   if (!record(value) || !exactKeys(value, ["id", "cellId", "category", "priority", "question", "note", "reply", "replyText", "position"])) return false;
   if (typeof value.id !== "string" || !validId(value.id) || !validPosition(value.position) || value.position !== position) return false;
   if (!(value.cellId === null || typeof value.cellId === "string") || !knownCell(manifest, value.cellId)) return false;
@@ -168,12 +169,12 @@ function validImportedItem(value: unknown, position: number, manifest: RegionMan
     return value.reply === "reply-noted" ? value.replyText.length > 0 : value.replyText.length === 0;
   } catch { return false; }
 }
-export function parseQuestionSheet(json: string, manifest: RegionManifest): QuestionSheet {
+export function parseQuestionSheet(json: string, manifest: RegionManifest | null): QuestionSheet {
   if (new TextEncoder().encode(json).byteLength > SHEET_MAX_BYTES) throw new RangeError("Sheet too large");
   checkRegion(manifest);
   const value: unknown = JSON.parse(json);
   if (!record(value) || !exactKeys(value, ["schema", "regionId", "title", "items"]) ||
-    value.schema !== SHEET_VERSION || value.regionId !== manifest.regionId || typeof value.title !== "string" ||
+    value.schema !== SHEET_VERSION || value.regionId !== (manifest?.regionId ?? "UNKNOWN") || typeof value.title !== "string" ||
     !Array.isArray(value.items) || value.items.length > SHEET_MAX_ITEMS) throw new TypeError("Invalid sheet structure");
   if (clean(value.title, SHEET_MAX_TEXT) !== value.title) throw new TypeError("Invalid sheet title");
   const used = new Set<string>();
@@ -183,13 +184,13 @@ export function parseQuestionSheet(json: string, manifest: RegionManifest): Ques
   }
   return value as unknown as QuestionSheet;
 }
-export function encodeQuestionSheet(sheet: QuestionSheet, manifest: RegionManifest): string {
+export function encodeQuestionSheet(sheet: QuestionSheet, manifest: RegionManifest | null): string {
   return JSON.stringify(parseQuestionSheet(JSON.stringify(sheet), manifest), null, 2) + "\n";
 }
-export function assessQuestionSheet(sheet: QuestionSheet, manifest: RegionManifest, inventory: RegionInventory | null): readonly SheetAssessment[] {
-  if (sheet.regionId !== manifest.regionId) throw new TypeError("Region mismatch");
-  const listed = new Map(manifest.cells.map((cell) => [cell.id, cell]));
-  const observations = inventory?.regionId === manifest.regionId ? new Map(inventory.cells.map((cell) => [cell.id, cell])) : null;
+export function assessQuestionSheet(sheet: QuestionSheet, manifest: RegionManifest | null, inventory: RegionInventory | null): readonly SheetAssessment[] {
+  if (sheet.regionId !== (manifest?.regionId ?? "UNKNOWN")) throw new TypeError("Region mismatch");
+  const listed = new Map(manifest?.cells.map((cell) => [cell.id, cell]));
+  const observations = inventory && manifest && inventory.regionId === manifest.regionId ? new Map(inventory.cells.map((cell) => [cell.id, cell])) : null;
   return sheet.items.map((item): SheetAssessment => {
     const declared = item.cellId === null ? undefined : listed.get(item.cellId);
     const observed = item.cellId === null ? undefined : observations?.get(item.cellId);

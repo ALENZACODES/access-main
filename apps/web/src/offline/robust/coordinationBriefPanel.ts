@@ -51,9 +51,10 @@ function dateToday(): string { return new Date().toISOString().slice(0, 10); }
  * A standalone, in-memory view. No timers, accounts, network, storage writes, or pack mutation.
  * Unmount releases every handler, including handlers added for paginated rows.
  */
-export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: RegionManifest, language: Language): () => void {
+export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: RegionManifest | null, language: Language): () => void {
   const doc = root.ownerDocument;
   const c = COORDINATION_COPY[language];
+  const colon = language === "fr" ? "\u00a0: " : ": ";
   const section = node(doc, "section");
   section.className = "panel stack";
   section.setAttribute("aria-label", c.title);
@@ -64,8 +65,9 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
   const announcement = node(doc, "p", c.empty);
   announcement.setAttribute("role", "status");
   announcement.setAttribute("aria-live", "polite");
-  const regionId = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/u.test(manifest.regionId) ? manifest.regionId : "local-region";
-  let brief: CoordinationBrief = createCoordinationBrief(regionId, regionId, dateToday());
+  const regionId = manifest && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/u.test(manifest.regionId) ? manifest.regionId : "UNKNOWN";
+  const initialTitle = manifest ? regionId : c.title;
+  let brief: CoordinationBrief = createCoordinationBrief(regionId, initialTitle, dateToday());
   let nonce = 0;
   let selected: string | null = null;
   let pendingImport: CoordinationBrief | null = null;
@@ -97,7 +99,7 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
   }
   const info = node(doc, "p", c.effect);
   const title = field(doc, c.brief, "input", 140);
-  title.control.value = regionId;
+  title.control.value = initialTitle;
   const context = field(doc, c.context, "textarea", 2000);
   const label = field(doc, c.name, "input", 140);
   const question = field(doc, c.question, "textarea", 1000);
@@ -210,13 +212,13 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
     sourceDate.control.value = item.provenance?.date ?? "";
     statusChoice.control.value = item.status;
     save.textContent = c.editStep;
-    announcement.textContent = `${c.opened}: ${item.label}`;
+    announcement.textContent = `${c.opened}${colon}${item.label}`;
   };
   const update = (): void => {
     if (disposed) return;
     clearRowListeners();
     const stats = summarizeBrief(brief);
-    summary.textContent = `${c.count}: ${stats.total}. ${c.unanswered}: ${stats.unanswered}. ${c.replies}: ${stats.replies}. ${c.essentials}: ${stats.essential}. ${c.physicalUnknown}`;
+    summary.textContent = `${c.count}${colon}${stats.total}. ${c.unanswered}${colon}${stats.unanswered}. ${c.replies}${colon}${stats.replies}. ${c.essentials}${colon}${stats.essential}. ${c.physicalUnknown}`;
     const options = { search: search.control.value, filter: filter.control.value as keyof typeof COORDINATION_FILTERS.en,
       sort: sort.control.value as keyof typeof COORDINATION_SORTS.en, offset, limit: 10 };
     const page = pageBriefSteps(brief, options);
@@ -232,14 +234,14 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
     for (const item of page.rows) {
       const row = node(doc, "li");
       const name = node(doc, "span", `${item.order + 1}. ${item.label} — ${COORDINATION_STATUSES[language][item.status]}. ${c.physicalUnknown}`);
-      const edit = button(doc, `${c.edit}: ${item.label}`);
+      const edit = button(doc, `${c.edit}${colon}${item.label}`);
       listenRow(edit, "click", () => showSelected(item.id));
       row.append(name, edit);
       list.append(row);
     }
     historyList.replaceChildren();
     for (const event of brief.events.slice(-12)) {
-      historyList.append(node(doc, "li", `${event.at}: ${event.stepId} — ${event.kind}`));
+      historyList.append(node(doc, "li", `${event.at}${colon}${event.stepId} — ${event.kind}`));
     }
     const chosen = brief.steps.find((step) => step.id === selected);
     remove.disabled = chosen === undefined;
@@ -341,7 +343,7 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
     if (!doc.defaultView?.confirm(c.confirmation)) return;
     pendingImport = null;
     importPreview.hidden = true;
-    brief = createCoordinationBrief(regionId, title.control.value.trim() || regionId, dateToday(), context.control.value);
+    brief = createCoordinationBrief(regionId, title.control.value.trim() || initialTitle, dateToday(), context.control.value);
     nonce = 0;
     clearEditor();
     offset = 0;

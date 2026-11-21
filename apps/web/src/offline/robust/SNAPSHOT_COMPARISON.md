@@ -30,7 +30,7 @@ All UI text has English and French variants. French copy uses typographic apostr
 
 The new panel is dynamically imported from an explicit click in `offlineDashboard.ts`; it is deliberately not exported as a runtime value from `robust/index.ts`. The dashboard's existing preparation, inquiry, contingency, continuity, handoff, timeline, workbook, casebook, recovery, and other mounts and cleanup remain intact.
 
-The repository's `check-install-budget.ts` and its 4,141,875-byte limit are unchanged. **Lazy chunks may still enter the service-worker precache.** The separately pending #284 fix is not included here or assumed merged. The production build and precache checker must pass before merging. Do not add exclusions or adjust budgets to make this feature pass.
+The service worker precaches the comparison chunk during installation. A user can open the comparison offline even on its first use. The emitted JavaScript counts toward the 4,141,875-byte first-install budget and the 524,288-byte per-entry cap.
 
 ## Tests
 

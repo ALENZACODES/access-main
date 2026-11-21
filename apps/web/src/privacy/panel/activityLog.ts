@@ -13,6 +13,8 @@ export type ActivityKind =
   | "features-export"
   | "addresses-export"
   | "glance-export"
+  | "receipt-export"
+  | "statements-export"
   | "consent-granted"
   | "consent-declined"
   | "language"
@@ -45,6 +47,8 @@ const KINDS: readonly ActivityKind[] = [
   "features-export",
   "addresses-export",
   "glance-export",
+  "receipt-export",
+  "statements-export",
   "consent-granted",
   "consent-declined",
   "language",

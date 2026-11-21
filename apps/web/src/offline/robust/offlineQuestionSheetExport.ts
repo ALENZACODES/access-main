@@ -36,7 +36,7 @@ function rowText(row: SheetAssessment, language: Language, includePrivate: boole
     ...(includePrivate ? [line(c.note, row.note || c.noteEmpty), line(c.replyText, row.replyText || c.replyEmpty)] : []),
   ].join("\n");
 }
-export function createQuestionHandout(sheet: QuestionSheet, manifest: RegionManifest, inventory: RegionInventory | null, language: Language, includePrivate: boolean): SheetHandout {
+export function createQuestionHandout(sheet: QuestionSheet, manifest: RegionManifest | null, inventory: RegionInventory | null, language: Language, includePrivate: boolean): SheetHandout {
   const rows = assessQuestionSheet(sheet, manifest, inventory);
   const summary = summarizeQuestionSheet(rows);
   const c = questionSheetCopy(language);
@@ -46,7 +46,7 @@ export function createQuestionHandout(sheet: QuestionSheet, manifest: RegionMani
     ...(includePrivate ? [c.privacy] : []), "", ...rows.map((row) => rowText(row, language, includePrivate)), ""];
   return { language, content: lines.join("\n"), filename: friendlyFileName(sheet.regionId, "text"), mime: "text/plain;charset=utf-8", summary };
 }
-export function createQuestionBackup(sheet: QuestionSheet, manifest: RegionManifest, language: Language): SheetHandout {
+export function createQuestionBackup(sheet: QuestionSheet, manifest: RegionManifest | null, language: Language): SheetHandout {
   const content = encodeQuestionSheet(sheet, manifest);
   const summary = summarizeQuestionSheet(assessQuestionSheet(sheet, manifest, null));
   return { language, content, filename: friendlyFileName(sheet.regionId, "json"), mime: "application/json;charset=utf-8", summary };

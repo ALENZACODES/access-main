@@ -5,6 +5,7 @@ export const SNAPSHOT_COPY = {
   en: {
     title: "Compare local region listings", intro: "Compare up to three data snapshots. These are source listings, not a survey of physical accessibility.",
     open: "Open snapshot comparison", close: "Close snapshot comparison", baseline: "Current region listing",
+    baselineInput: "Baseline snapshot", baselineMissing: "Paste a baseline snapshot to compare the listings.",
     optionA: "Comparison A JSON", optionB: "Comparison B JSON", compare: "Compare snapshots", clearA: "Clear comparison A", clearB: "Clear comparison B",
     invalid: "The supplied snapshot could not be read. No comparison was changed.", mismatch: "The comparison must use the same region identifier.",
     paste: "Paste a snapshot exported in the versioned format. No network request is made.",
@@ -21,6 +22,7 @@ export const SNAPSHOT_COPY = {
   fr: {
     title: "Comparer les listes régionales locales", intro: "Comparez jusqu’à trois instantanés de données. Il s’agit de listes de sources, pas d’une enquête sur l’accessibilité physique.",
     open: "Ouvrir la comparaison des instantanés", close: "Fermer la comparaison des instantanés", baseline: "Liste régionale actuelle",
+    baselineInput: "Instantané de référence", baselineMissing: "Collez un instantané de référence pour comparer les listes.",
     optionA: "JSON de comparaison A", optionB: "JSON de comparaison B", compare: "Comparer les instantanés", clearA: "Effacer la comparaison A", clearB: "Effacer la comparaison B",
     invalid: "L’instantané fourni est illisible. La comparaison n’a pas changé.", mismatch: "La comparaison doit utiliser le même identifiant régional.",
     paste: "Collez un instantané exporté dans le format versionné. Aucune demande réseau n’est envoyée.",

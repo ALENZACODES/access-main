@@ -44,6 +44,7 @@ export function mountPackChangeImpact(root: HTMLElement, manifest: RegionManifes
   model: DashboardModel, language: Language): () => void {
   const doc = root.ownerDocument;
   const copy = packChangeCopy(language);
+  const colon = language === "fr" ? "\u00a0: " : ": ";
   const section = node(doc, "section");
   section.className = "panel stack";
   const title = node(doc, "h3", copy.title);
@@ -162,7 +163,7 @@ export function mountPackChangeImpact(root: HTMLElement, manifest: RegionManifes
     }
     previous.disabled = !page.previous;
     next.disabled = !page.next;
-    counter.textContent = `${copy.rowCount}: ${page.total}`;
+    counter.textContent = `${copy.rowCount}${colon}${page.total}`;
   }
   function refreshResult(): void {
     if (disposed || submitted === null) return;

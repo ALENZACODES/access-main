@@ -115,3 +115,30 @@ describe("offline question sheet state and provenance", () => {
     expect(SHEET_REPLY_COPY.fr[reply].length > 0).toBe(true);
   });
 });
+
+describe("personal question sheets without a region pack", () => {
+  const draft = { category: "arrival", priority: "essential", question: "Where is the entrance?" } as const;
+
+  it("retains a personal question through a backup without claiming a region or cell", () => {
+    const sheet = addSheetItem(emptyQuestionSheet(null), null, draft);
+    const restored = parseQuestionSheet(createQuestionBackup(sheet, null, "en").content, null);
+    expect(restored.regionId).toBe("UNKNOWN");
+    expect(restored.items[0]?.cellId).toBeNull();
+    expect(assessQuestionSheet(restored, null, inventory)[0]).toMatchObject({
+      question: draft.question, storage: "UNKNOWN", source: "UNKNOWN", physical: "UNKNOWN",
+    });
+  });
+
+  it("preserves French punctuation spacing across a question and its exported handout", () => {
+    const question = "Entrée\u00a0: où se trouve la rampe\u202f?";
+    const sheet = addSheetItem(emptyQuestionSheet(null), null, { ...draft, question });
+    expect(sheet.items[0]?.question).toBe(question);
+    expect(createQuestionHandout(sheet, null, null, "fr", false).content).toContain(question);
+  });
+
+  it("rejects a cell association unless the catalogue supplies that cell", () => {
+    expect(() => addSheetItem(emptyQuestionSheet(null), null, { ...draft, cellId: "first" })).toThrow();
+    expect(() => parseQuestionSheet(encodeQuestionSheet(one(), manifest), null)).toThrow();
+    expect(() => parseQuestionSheet(encodeQuestionSheet(emptyQuestionSheet(null), null), manifest)).toThrow();
+  });
+});

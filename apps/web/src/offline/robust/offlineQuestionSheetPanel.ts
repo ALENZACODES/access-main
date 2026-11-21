@@ -59,9 +59,10 @@ function memo(doc: Document, maxLength: number): HTMLTextAreaElement {
 }
 
 /** Explicitly mounted after a user action. Never edits the region manifest or stored cells. */
-export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionManifest, model: DashboardModel, language: Language): () => void {
+export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionManifest | null, model: DashboardModel | null, language: Language): () => void {
   const doc = root.ownerDocument;
   const c = questionSheetCopy(language);
+  const colon = language === "fr" ? "\u00a0: " : ": ";
   const section = node(doc, "section");
   section.className = "panel stack";
   section.setAttribute("aria-label", c.title);
@@ -80,7 +81,7 @@ export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionMan
   const question = memo(doc, 400);
   const category = menu(doc, SHEET_CATEGORIES, (value) => SHEET_TOPIC_COPY[language][value]);
   const priority = menu(doc, SHEET_PRIORITIES, (value) => SHEET_PRIORITY_COPY[language][value]);
-  const cellOptions = ["", ...manifest.cells.map((item) => item.id)];
+  const cellOptions = ["", ...(manifest?.cells ?? []).map((item) => item.id)];
   const cell = menu(doc, cellOptions, (value) => value || c.noCell);
   const note = memo(doc, 1200);
   const add = action(doc, c.add);
@@ -153,9 +154,9 @@ export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionMan
   const draw = (): void => {
     if (disposed) return;
     clearRows();
-    const rows = assessQuestionSheet(sheet, manifest, model.getState().inventory);
+    const rows = assessQuestionSheet(sheet, manifest, model?.getState().inventory ?? null);
     const total = summarizeQuestionSheet(rows);
-    summary.textContent = `${c.totals}: ${total.total}. ${c.unanswered}: ${total.unanswered}. ${c.recorded}: ${total.repliesNoted}. ${c.physical}: UNKNOWN.`;
+    summary.textContent = `${c.totals}${colon}${total.total}. ${c.unanswered}${colon}${total.unanswered}. ${c.recorded}${colon}${total.repliesNoted}. ${c.physical}${colon}UNKNOWN.`;
     const result = pageQuestionSheet(rows, { filter: filter.value as SheetFilter, sort: sort.value as SheetSort, query: search.value, offset, limit: SHEET_PAGE_SIZE });
     if (offset >= result.total && offset > 0) { offset = 0; draw(); return; }
     if (!result.rows.length) list.append(node(doc, "li", sheet.items.length ? c.noRows : c.empty));
@@ -163,8 +164,8 @@ export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionMan
       const item = node(doc, "li");
       item.className = "stack";
       const titleNode = node(doc, "strong", row.question);
-      const explanation = node(doc, "p", `${SHEET_PRIORITY_COPY[language][row.priority]} · ${SHEET_TOPIC_COPY[language][row.category]} · ${c.cell}: ${row.cellId ?? "UNKNOWN"}`);
-      const conditions = node(doc, "p", `${c.storage}: ${row.storage}. ${c.physical}: UNKNOWN. ${c.source}: ${row.source}. ${c.licence}: ${row.licence}. ${c.date}: ${row.date}.`);
+      const explanation = node(doc, "p", `${SHEET_PRIORITY_COPY[language][row.priority]} · ${SHEET_TOPIC_COPY[language][row.category]} · ${c.cell}${colon}${row.cellId ?? "UNKNOWN"}`);
+      const conditions = node(doc, "p", `${c.storage}${colon}${row.storage}. ${c.physical}${colon}UNKNOWN. ${c.source}${colon}${row.source}. ${c.licence}${colon}${row.licence}. ${c.date}${colon}${row.date}.`);
       const replyState = menu(doc, ["not-asked", "asked", "reply-noted"] as const, (v) => SHEET_REPLY_COPY[language][v]);
       replyState.value = row.reply;
       const answer = memo(doc, 1200);
@@ -208,7 +209,7 @@ export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionMan
   listen(previous, "click", () => { offset = Math.max(0, offset - SHEET_PAGE_SIZE); draw(); });
   listen(next, "click", () => { offset += SHEET_PAGE_SIZE; draw(); });
   listen(textButton, "click", () => {
-    try { saveQuestionHandout(doc, createQuestionHandout(sheet, manifest, model.getState().inventory, language, includeNotes.checked)); status.textContent = c.privacy; }
+    try { saveQuestionHandout(doc, createQuestionHandout(sheet, manifest, model?.getState().inventory ?? null, language, includeNotes.checked)); status.textContent = c.privacy; }
     catch { status.textContent = c.failed; }
   });
   listen(jsonButton, "click", () => {
@@ -217,7 +218,7 @@ export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionMan
   });
   listen(printButton, "click", () => {
     try {
-      printHolder.replaceChildren(makePrintHandout(doc, createQuestionHandout(sheet, manifest, model.getState().inventory, language, includeNotes.checked)));
+      printHolder.replaceChildren(makePrintHandout(doc, createQuestionHandout(sheet, manifest, model?.getState().inventory ?? null, language, includeNotes.checked)));
       printHolder.hidden = false;
       status.textContent = c.printGuide;
       doc.defaultView?.print();
@@ -239,11 +240,11 @@ export function mountOfflineQuestionSheet(root: HTMLElement, manifest: RegionMan
     offset = 0; status.textContent = c.imported; draw();
   });
   listen(cancelButton, "click", () => { pending = null; applyButton.disabled = true; preview.hidden = true; jsonArea.value = ""; });
-  const unsubscribe = model.subscribe(() => draw());
+  const unsubscribe = model?.subscribe(() => draw());
   draw();
   return () => {
     disposed = true;
-    unsubscribe();
+    if (unsubscribe) unsubscribe();
     clearRows();
     for (const stop of permanentListeners) stop();
     section.remove();

@@ -17,7 +17,7 @@ export const SHEET_COPY = {
     failed: "The change could not be completed. Your current questions were not replaced.", imported: "Backup imported. Physical conditions remain UNKNOWN.",
     review: "Import preview", printGuide: "A printed copy is a personal planning aid, not evidence of current access conditions.",
     includeNotes: "Include personal notes in export", noCell: "No linked cell", readOnly: "This is a manually prepared question, not a source claim.",
-    choiceAll: "All questions", choiceUnknown: "Unknown local data", choiceSaved: "Saved local data", choiceNeeds: "Needs reply", choiceEssential: "Essential questions",
+    choiceAll: "All questions", choiceUnknown: "Local data UNKNOWN", choiceSaved: "Saved local data", choiceNeeds: "Needs reply", choiceEssential: "Essential questions",
     sortOrdered: "Your order", sortPriority: "Importance", sortCategory: "Topic", sortCell: "Cell reference",
     noteEmpty: "No personal note", replyEmpty: "No reply recorded", requested: "Asked", notAsked: "Not asked", replied: "Reply recorded",
     fileProblem: "Backup cannot be read.", format: "Export format", region: "Region", copy: "Copy handout text",

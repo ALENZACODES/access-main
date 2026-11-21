@@ -38,9 +38,10 @@ function select<T extends string>(doc: Document, options: Readonly<Record<T, str
 }
 
 /** Optional, explicitly opened region-list comparison. Never changes downloaded data. */
-export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManifest, model: DashboardModel, language: Language): () => void {
+export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManifest | null, model: DashboardModel | null, language: Language): () => void {
   const doc = root.ownerDocument;
   const c = snapshotCopy(language);
+  const colon = language === "fr" ? "\u00a0: " : ": ";
   const section = node(doc, "section");
   section.className = "panel stack";
   const heading = node(doc, "h3", c.title);
@@ -49,7 +50,8 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
   const paste = node(doc, "p", c.paste);
   const aInput = node(doc, "textarea");
   const bInput = node(doc, "textarea");
-  for (const area of [aInput, bInput]) {
+  const baselineInput = manifest === null ? node(doc, "textarea") : null;
+  for (const area of baselineInput ? [baselineInput, aInput, bInput] : [aInput, bInput]) {
     area.rows = 4;
     area.style.minHeight = "88px";
     area.style.minWidth = "44px";
@@ -65,7 +67,7 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
   const controls = node(doc, "div");
   controls.className = "button-row";
   controls.append(compare, clearA, clearB);
-  const status = node(doc, "p", c.optionsMissing);
+  const status = node(doc, "p", baselineInput ? c.baselineMissing : c.optionsMissing);
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
   const summary = node(doc, "dl");
@@ -88,9 +90,12 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
   const exportJson = action(doc, c.exportJson);
   const exportControls = node(doc, "div");
   exportControls.className = "button-row";
-  exportControls.append(exportBaseline, exportText, exportJson);
+  if (manifest !== null) exportControls.append(exportBaseline);
+  exportControls.append(exportText, exportJson);
   const privacy = node(doc, "p", c.privacy);
-  section.append(heading, intro, warning, paste, aLabel, bLabel, controls, status, summary, searchControls, results, navigation, privacy, exportControls);
+  section.append(heading, intro, warning, paste);
+  if (baselineInput) section.append(field(doc, c.baselineInput, baselineInput));
+  section.append(aLabel, bLabel, controls, status, summary, searchControls, results, navigation, privacy, exportControls);
   root.append(section);
   let disposed = false;
   let page = 0;
@@ -131,9 +136,9 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
     for (const row of view.rows) {
       const item = node(doc, "li");
       const title = node(doc, "strong", row.cellId);
-      const saved = node(doc, "p", `${c.statusLabel}${language === "fr" ? "\u00a0: " : ": "}${row.localState}`);
-      const a = node(doc, "p", `A: ${SNAPSHOT_CHANGE_LABELS[language][row.optionA.kind]}`);
-      const b = node(doc, "p", `B: ${SNAPSHOT_CHANGE_LABELS[language][row.optionB.kind]}`);
+      const saved = node(doc, "p", `${c.statusLabel}${colon}${row.localState}`);
+      const a = node(doc, "p", `A${colon}${SNAPSHOT_CHANGE_LABELS[language][row.optionA.kind]}`);
+      const b = node(doc, "p", `B${colon}${SNAPSHOT_CHANGE_LABELS[language][row.optionB.kind]}`);
       const details = node(doc, "details");
       const detailsTitle = node(doc, "summary", c.detail);
       detailsTitle.style.minHeight = "44px";
@@ -162,8 +167,12 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
       const newA = aInput.value.trim() ? parseSnapshot(aInput.value) : null;
       const newB = bInput.value.trim() ? parseSnapshot(bInput.value) : null;
       const today = new Date().toISOString().slice(0, 10);
-      const baseline = fromRegionManifest(manifest, today);
-      const nextMatrix = compareSnapshots(baseline, newA, newB, model.getState().inventory);
+      if (manifest === null && !baselineInput?.value.trim()) {
+        status.textContent = c.baselineMissing;
+        return;
+      }
+      const baseline = manifest ? fromRegionManifest(manifest, today) : parseSnapshot(baselineInput?.value ?? "");
+      const nextMatrix = compareSnapshots(baseline, newA, newB, model?.getState().inventory ?? null);
       candidateA = newA;
       candidateB = newB;
       matrix = nextMatrix;
@@ -195,7 +204,7 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
   listen(order, "change", onFilter);
   listen(next, "click", onNext);
   listen(previous, "click", onPrevious);
-  listen(exportBaseline, "click", () => {
+  if (manifest !== null) listen(exportBaseline, "click", () => {
     try {
       saveSnapshotDocument(fromRegionManifest(manifest, new Date().toISOString().slice(0, 10)), doc);
       status.textContent = c.exported;
@@ -203,11 +212,11 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
   });
   listen(exportText, "click", () => onExport("txt"));
   listen(exportJson, "click", () => onExport("json"));
-  const unsubscribe = model.subscribe(() => { if (candidateA !== null || candidateB !== null) refresh(); });
+  const unsubscribe = model?.subscribe(() => { if (candidateA !== null || candidateB !== null) refresh(); });
   draw();
   return () => {
     disposed = true;
-    unsubscribe();
+    unsubscribe?.();
     for (const off of listenerDisposers) off();
     listenerDisposers.length = 0;
     section.remove();

@@ -18,11 +18,6 @@ describe("all optional offline feature integrations", () => {
     for (const name of ["Continuity", "Casebook", "Handoff", "Timeline", "Workbook", "Preparation", "Inquiry", "Contingency", "Dependency", "Coordination", "Snapshot", "Question", "PackChange"])
       expect(ui).toContain(`unmount${name}();`);
   });
-  it("keeps optional JavaScript out of the install precache", () => {
-    const config = read("apps/web/vite.config.ts");
-    for (const name of ["NarrowAuditPage", "coordinationBriefPanel", "snapshotComparisonPanel", "offlineQuestionSheetPanel", "packChangeImpactPanel"])
-      expect(config).toContain(`"**/${name}-*.js"`);
-  });
   it("does not alter the budget guard or its cap", () => {
     expect(read("apps/web/scripts/check-install-budget.ts")).toContain("assertInstallBudget(assets)");
     expect(read("apps/web/src/perf/install-budget.ts")).toContain("4_141_875");

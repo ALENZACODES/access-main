@@ -34,7 +34,7 @@ function row(id: string, kind: SheetChangeKind, oldItem: SheetItem | undefined, 
     notesAffected: oldItem !== undefined && (newItem === undefined || oldItem.note !== newItem.note) };
 }
 /** The preview describes only user notes and their order, never an accessibility assessment. */
-export function compareQuestionSheets(current: QuestionSheet, incoming: QuestionSheet, manifest: RegionManifest): SheetDiff {
+export function compareQuestionSheets(current: QuestionSheet, incoming: QuestionSheet, manifest: RegionManifest | null): SheetDiff {
   // Validate both complete documents before presenting a preview or allowing replacement.
   encodeQuestionSheet(current, manifest);
   encodeQuestionSheet(incoming, manifest);

@@ -53,6 +53,7 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
   model: DashboardModel, language: Language): () => void {
   const doc = root.ownerDocument;
   const copy = DEPENDENCY_COPY[language];
+  const colon = language === "fr" ? "\u00a0: " : ": ";
   const section = el(doc, "section");
   section.className = "panel stack";
   section.setAttribute("aria-label", copy.title);
@@ -148,7 +149,7 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
     if (disposed) return;
     const assessments = assessDependency(book, manifest, model.getState().inventory);
     const stats = summarizeDependencies(assessments);
-    summary.textContent = `${copy.summary}: ${stats.total}. ${copy.essentials}: ${stats.essentials}. ${copy.saved}: ${stats.savedInformation}. ${copy.unknown}: ${stats.unknownInformation}. ${copy.followUp}: ${stats.requireFollowUp}. ${copy.unknownPhysical}`;
+    summary.textContent = `${copy.summary}${colon}${stats.total}. ${copy.essentials}${colon}${stats.essentials}. ${copy.saved}${colon}${stats.savedInformation}. ${copy.unknown}${colon}${stats.unknownInformation}. ${copy.followUp}${colon}${stats.requireFollowUp}. ${copy.unknownPhysical}`;
     const page = pageDependencies(assessments, { filter: filter.control.value as DependencyFilter,
       sort: sort.control.value as DependencySort, query: search.control.value, offset: currentPage * 10, limit: 10 });
     if (currentPage > 0 && page.rows.length === 0) {
@@ -165,7 +166,7 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
       const name = el(doc, "h4", item.title);
       const state = el(doc, "p", `${DEPENDENCY_PRIORITIES[language][item.priority]} — ${item.availability}. ${copy.unknownPhysical}`);
       const followUp = el(doc, "p", item.followUp ? copy.followUp : copy.dataOnly);
-      const edit = action(doc, `${copy.edit}: ${item.title}`);
+      const edit = action(doc, `${copy.edit}${colon}${item.title}`);
       listenRow(edit, "click", () => {
         const original = book.items.find((value) => value.id === item.itemId);
         if (!original) return;
@@ -183,7 +184,7 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
       });
       entry.append(name, state, followUp);
       for (const cell of item.cells) {
-        const details = el(doc, "p", `${copy.cellId}: ${cell.cellId} — ${cell.availability}. ${copy.reason}: ${dependencyReason(cell.reason, language)}. ${copy.source}: ${cell.source?.source ?? "UNKNOWN"}. ${copy.licence}: ${cell.source?.licence ?? "UNKNOWN"}. ${copy.date}: ${cell.source?.date ?? "UNKNOWN"}.`);
+        const details = el(doc, "p", `${copy.cellId}${colon}${cell.cellId} — ${cell.availability}. ${copy.reason}${colon}${dependencyReason(cell.reason, language)}. ${copy.source}${colon}${cell.source?.source ?? "UNKNOWN"}. ${copy.licence}${colon}${cell.source?.licence ?? "UNKNOWN"}. ${copy.date}${colon}${cell.source?.date ?? "UNKNOWN"}.`);
         entry.append(details);
       }
       if (!item.cells.length) entry.append(el(doc, "p", copy.emptyCell));
@@ -192,7 +193,7 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
     }
     previous.disabled = !page.previous;
     next.disabled = !page.next;
-    pageMessage.textContent = `${copy.page}: ${page.rows.length} / ${page.total}`;
+    pageMessage.textContent = `${copy.page}${colon}${page.rows.length} / ${page.total}`;
   };
   const onSave = (): void => {
     try {
