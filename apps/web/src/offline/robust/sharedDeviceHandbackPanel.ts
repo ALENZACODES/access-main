@@ -94,6 +94,7 @@ export function mountSharedDeviceHandback(
   const boundary = element(doc, "p", c.boundary);
   const privacy = element(doc, "p", c.privacy);
   const history = element(doc, "p", c.history);
+  const resetBoundary = element(doc, "p", c.resetDoesNotDelete);
   const status = element(doc, "p");
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
@@ -149,7 +150,7 @@ export function mountSharedDeviceHandback(
   pageHost.append(list, pager);
 
   section.append(
-    heading, intro, boundary, privacy, history, status, controls,
+    heading, intro, boundary, privacy, history, resetBoundary, status, controls,
     importLabel, importHint, importButton, summaryHeading, summary,
     filterControls, pageHost,
   );
