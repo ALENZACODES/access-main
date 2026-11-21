@@ -93,7 +93,7 @@ test('plain text includes a review counter rather than claiming a pass', () => {
 
 test('plain text prints each required source dimension', () => {
   const value = report('text', 'en');
-  for (const term of ['Source:', 'Licence:', 'Retrieved:', 'Verification tier:', 'Test run:', 'Artifact SHA-256:']) {
+  for (const term of ['Source:', 'Licence:', 'Retrieved:', 'Source review tier:', 'Test run:', 'Artifact SHA-256:']) {
     assert.ok(value.text.includes(term), term);
   }
 });
