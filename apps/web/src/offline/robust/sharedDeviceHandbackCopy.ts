@@ -2,7 +2,6 @@ import type { Language } from "./regionDownload";
 import type {
   HandbackCategory,
   HandbackFilter,
-  HandbackItemState,
   HandbackOrder,
 } from "./sharedDeviceHandback";
 
