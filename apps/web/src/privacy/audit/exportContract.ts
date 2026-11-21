@@ -91,6 +91,15 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
       fr: ["Groupe", "Quoi", "Combien", "Non confirmé par l’App"],
     },
   },
+  {
+    id: "handoffs",
+    kind: "csv",
+    stem: { en: "the-app-links-to-other-apps", fr: "l-app-liens-vers-d-autres-applications" },
+    header: {
+      en: ["What it is", "What opens", "What the App passes on", "Where in the code", "Places", "Recorded on"],
+      fr: ["De quoi il s’agit", "Ce qui s’ouvre", "Ce que l’App transmet", "Où dans le code", "Endroits", "Date d’inscription"],
+    },
+  },
 ];
 
 export const TEXT_CONTRACTS: readonly TextContract[] = [
@@ -129,6 +138,12 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     kind: "text",
     stem: { en: "the-app-privacy-at-a-glance", fr: "l-app-vie-privee-en-un-coup-d-oeil" },
     title: { en: "Privacy at a glance", fr: "La vie privée en un coup d’œil" },
+  },
+  {
+    id: "handoffs",
+    kind: "text",
+    stem: { en: "the-app-links-to-other-apps", fr: "l-app-liens-vers-d-autres-applications" },
+    title: { en: "Links that open another app", fr: "Liens qui ouvrent une autre application" },
   },
 ];
 
