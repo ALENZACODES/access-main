@@ -1,0 +1,12 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import * as P20AG from "./p20ag-index.ts";
+test("P20AG barrel exports focus state factory",()=>assert.equal(typeof P20AG.emptyDialogState,"function"));
+test("P20AG barrel exports dialog event reducer",()=>assert.equal(typeof P20AG.dialogEvent,"function"));
+test("P20AG barrel exports focus observer",()=>assert.equal(typeof P20AG.observeDialog,"function"));
+test("P20AG barrel exports keyboard sequence evaluator",()=>assert.equal(typeof P20AG.focusSequenceFindings,"function"));
+test("P20AG barrel exports nested dialog state",()=>assert.equal(typeof P20AG.nestedDialogStep,"function"));
+test("P20AG barrel exports disclosure keyboard model",()=>assert.equal(typeof P20AG.disclosureKeyResult,"function"));
+test("P20AG barrel exports modal semantics evaluator",()=>assert.equal(typeof P20AG.modalSemanticsFindings,"function"));
+test("P20AG barrel exports a focus audit policy",()=>assert.equal(P20AG.DEFAULT_FOCUS_POLICY.minimumTarget,44));
+test("P20AG barrel exports no default side-effect runner",()=>assert.equal(P20AG.run,undefined));
