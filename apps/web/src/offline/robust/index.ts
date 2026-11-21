@@ -105,3 +105,11 @@ export * from "./accessInquiryPanel";
 export * from "./contingencyPlan";
 export * from "./contingencyCopy";
 export * from "./contingencyExport";
+
+export * from "./dependencyPlanner";
+export * from "./dependencyPlannerCopy";
+export * from "./dependencyPlannerExport";
+// Type-only coordination API keeps the initial offline bundle unchanged.
+export type { CoordinationBrief, BriefStep, BriefProvenance, BriefStatus, BriefPriority,
+  BriefTopic, BriefEvent, BriefSummary, StepDraft, BriefPageOptions } from "./coordinationBrief";
+export type { BriefChange, BriefDiff, BriefChangeKind } from "./coordinationBriefDiff";
