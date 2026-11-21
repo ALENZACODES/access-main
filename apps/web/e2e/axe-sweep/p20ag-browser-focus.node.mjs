@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-const source=readFileSync(new URL("./p20ag-browser-focus.ts",import.meta.url),"utf8");
+const source=readFileSync(new globalThis.URL("./p20ag-browser-focus.ts",import.meta.url),"utf8");
 test("P20AG browser observer exports dialog inspection",()=>assert.match(source,/export async function observeDialog/));
 test("P20AG browser observer exports active focus snapshot",()=>assert.match(source,/export async function activeFocusSnapshot/));
 test("P20AG browser observer exports Tab interaction",()=>assert.match(source,/export async function pressTabAndObserve/));
