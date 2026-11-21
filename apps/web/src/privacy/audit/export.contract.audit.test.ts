@@ -10,6 +10,20 @@ import { addressesAsCsv, addressesAsText } from "../panel/addressExport";
 import { featuresAsCsv, featuresAsText } from "../panel/featureExport";
 import { FIXTURE } from "../panel/fixtures.test-util";
 import { glanceAsCsv, glanceAsText } from "../panel/glanceSection";
+import { HANDOFF_REGISTER } from "../panel/handoffRegister";
+import { QUERY_REGISTER } from "../panel/queryRegister";
+import { queryAsCsv, queryAsText } from "../panel/querySection";
+import { handoffAsCsv, handoffAsText } from "../panel/handoffSection";
+import { PICK_REGISTER } from "../panel/pickRegister";
+import { picksAsCsv, picksAsText } from "../panel/pickSection";
+import { BROWSER_REGISTER } from "../panel/browserRegister";
+import { browserAsCsv, browserAsText } from "../panel/browserSection";
+import { SAVE_REGISTER } from "../panel/saveRegister";
+import { saveAsCsv, saveAsText } from "../panel/saveSection";
+import { RETENTION_REGISTER } from "../panel/retentionRegister";
+import { AUTO_REGISTER } from "../panel/autoRegister";
+import { autoAsCsv, autoAsText } from "../panel/autoSection";
+import { retentionAsCsv, retentionAsText } from "../panel/retentionSection";
 import { inventoryAsCsv, inventoryAsText } from "../panel/inventoryExport";
 import { keptAsCsv, keptAsText } from "../panel/keptExport";
 import { exportLocalData, type ExportFile } from "../panel/localData";
@@ -41,12 +55,26 @@ function build(locale: Locale): Array<{ id: string; kind: ExportContract["kind"]
     { id: "features", kind: "csv", file: featuresAsCsv(locale, FEATURE_REGISTER, null, NOW, d) },
     { id: "addresses", kind: "csv", file: addressesAsCsv(locale, { addresses: ADDRESS_REGISTER, calls: CALL_REGISTER }, NOW, d) },
     { id: "glance", kind: "csv", file: glanceAsCsv(locale, GLANCE, NOW, d) },
+    { id: "handoffs", kind: "csv", file: handoffAsCsv(locale, HANDOFF_REGISTER, NOW, d) },
+    { id: "query", kind: "csv", file: queryAsCsv(locale, QUERY_REGISTER, NOW, d) },
+    { id: "picks", kind: "csv", file: picksAsCsv(locale, PICK_REGISTER, NOW, d) },
+    { id: "browser", kind: "csv", file: browserAsCsv(locale, BROWSER_REGISTER, NOW, d) },
+    { id: "save", kind: "csv", file: saveAsCsv(locale, SAVE_REGISTER, NOW, d) },
+    { id: "retention", kind: "csv", file: retentionAsCsv(locale, RETENTION_REGISTER, NOW, d) },
+    { id: "auto", kind: "csv", file: autoAsCsv(locale, AUTO_REGISTER, NOW, d) },
     { id: "inventory", kind: "text", file: inventoryAsText(locale, FIXTURE, NOW) },
     { id: "register", kind: "text", file: registerAsText(locale, STORAGE_REGISTER, UNSCANNED, NOW) },
     { id: "kept", kind: "text", file: keptAsText(locale, KEPT, NOW) },
     { id: "features", kind: "text", file: featuresAsText(locale, FEATURE_REGISTER, null, NOW) },
     { id: "addresses", kind: "text", file: addressesAsText(locale, { addresses: ADDRESS_REGISTER, calls: CALL_REGISTER }, NOW) },
     { id: "glance", kind: "text", file: glanceAsText(locale, GLANCE, NOW) },
+    { id: "handoffs", kind: "text", file: handoffAsText(locale, HANDOFF_REGISTER, NOW) },
+    { id: "query", kind: "text", file: queryAsText(locale, QUERY_REGISTER, NOW) },
+    { id: "picks", kind: "text", file: picksAsText(locale, PICK_REGISTER, NOW) },
+    { id: "browser", kind: "text", file: browserAsText(locale, BROWSER_REGISTER, NOW) },
+    { id: "save", kind: "text", file: saveAsText(locale, SAVE_REGISTER, NOW) },
+    { id: "retention", kind: "text", file: retentionAsText(locale, RETENTION_REGISTER, NOW) },
+    { id: "auto", kind: "text", file: autoAsText(locale, AUTO_REGISTER, NOW) },
     { id: "local-data", kind: "json", file: exportLocalData(storage(), "access.", NOW, locale) },
   ];
 }
@@ -65,8 +93,8 @@ describe("the contracts", () => {
     const built = build("en").map((b) => `${b.kind}:${b.id}`).sort();
     expect(ALL_CONTRACTS.map((c) => `${c.kind}:${c.id}`).sort()).toEqual(built);
   });
-  it("number six spreadsheet files, six text files and one data file", () => {
-    expect([CSV_CONTRACTS.length, TEXT_CONTRACTS.length, JSON_CONTRACTS.length]).toEqual([6, 6, 1]);
+  it("number thirteen spreadsheet files, thirteen text files and one data file", () => {
+    expect([CSV_CONTRACTS.length, TEXT_CONTRACTS.length, JSON_CONTRACTS.length]).toEqual([13, 13, 1]);
   });
 });
 

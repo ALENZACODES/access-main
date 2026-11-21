@@ -2,6 +2,11 @@
 // stores: that comes from the inventory the caller passes in.
 // FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
 
+import { workerSummary } from "./autoLive";
+import { browserSummary } from "./browserLive";
+import { saveSummary } from "./saveLive";
+import { liveSummary } from "./retentionLive";
+import { addressSummary } from "./queryLive";
 import type { Locale } from "./copyLint";
 import { DEVICE_STRINGS, isDeviceStatus, type DeviceStatus } from "./copyDevice";
 import { MORE_STRINGS, type MoreStatus } from "./copyMore";
@@ -26,6 +31,19 @@ export type Status =
   | { kind: "addresses-exported"; format: "csv" | "text" }
   | { kind: "glance-exported"; format: "csv" | "text" }
   | { kind: "receipt-exported"; format: "csv" | "text" }
+  | { kind: "handoff-exported"; format: "csv" | "text" }
+  | { kind: "retention-exported"; format: "csv" | "text" }
+  | { kind: "browser-exported"; format: "csv" | "text" }
+  | { kind: "browser-checked"; answered: number; asked: number }
+  | { kind: "save-exported"; format: "csv" | "text" }
+  | { kind: "save-checked"; answered: number; asked: number }
+  | { kind: "retention-checked"; compared: number; differences: number }
+  | { kind: "query-exported"; format: "csv" | "text" }
+  | { kind: "query-checked"; params: number; findings: number }
+  | { kind: "query-unreadable" }
+  | { kind: "auto-exported"; format: "csv" | "text" }
+  | { kind: "workers-checked"; registered: number | null; differences: number }
+  | { kind: "picks-exported"; format: "csv" | "text" }
   | { kind: "statements-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
@@ -131,6 +149,32 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Privacy counts prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "receipt-exported":
           return `Record of your choices prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "handoff-exported":
+          return `List of links that open another app prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "query-checked":
+          return addressSummary("en", s.params, s.findings);
+        case "query-unreadable":
+          return "The address of this page could not be read, so nothing was examined.";
+        case "query-exported":
+          return `List of what a web address can carry prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "retention-checked":
+          return liveSummary("en", s.compared, s.differences);
+        case "workers-checked":
+          return workerSummary("en", s.registered, s.differences);
+        case "auto-exported":
+          return `List of what the App does on its own prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "picks-exported":
+          return `List of files the App reads when you choose them prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "browser-checked":
+          return browserSummary("en", s.answered, s.asked);
+        case "browser-exported":
+          return `List of what the App asks your browser prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "save-checked":
+          return saveSummary("en", s.answered, s.asked);
+        case "save-exported":
+          return `List of where the App makes files for you to save prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "retention-exported":
+          return `List of how long the App keeps things prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "statements-exported":
           return `List of what the App says about your data prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
@@ -207,6 +251,32 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Chiffres sur la vie privée préparés ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "receipt-exported":
           return `Registre de vos choix préparé ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "handoff-exported":
+          return `Liste des liens qui ouvrent une autre application préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "query-checked":
+          return addressSummary("fr", s.params, s.findings);
+        case "query-unreadable":
+          return "L’adresse de cette page n’a pas pu être lue, donc rien n’a été examiné.";
+        case "query-exported":
+          return `Liste de ce qu’une adresse web peut contenir préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "retention-checked":
+          return liveSummary("fr", s.compared, s.differences);
+        case "workers-checked":
+          return workerSummary("fr", s.registered, s.differences);
+        case "auto-exported":
+          return `Liste de ce que l’App fait d’elle-même préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "picks-exported":
+          return `Liste des fichiers que l’App lit quand vous les choisissez préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "browser-checked":
+          return browserSummary("fr", s.answered, s.asked);
+        case "browser-exported":
+          return `Liste de ce que l’App demande au navigateur préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "save-checked":
+          return saveSummary("fr", s.answered, s.asked);
+        case "save-exported":
+          return `Liste des endroits où l’App fabrique des fichiers à enregistrer préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "retention-exported":
+          return `Liste de la durée de conservation de l’App préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "statements-exported":
           return `Liste de ce que l’App dit de vos données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":

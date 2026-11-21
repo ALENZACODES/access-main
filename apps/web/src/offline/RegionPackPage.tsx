@@ -1,6 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { PackingListLauncher } from "./packing/PackingListLauncher";
+import { PersonalOfflineTools } from "./PersonalOfflineTools";
 import { offlineCatalog } from "./catalog.ts";
 import {
   cellStatusText,
@@ -84,7 +86,7 @@ export function RegionFailsafeNotes({ region, language }: { region: RegionStatus
     {unavailable.size > 0 && <div className="stack">
       <p>{c.failsafeUnavailableIntro}</p>
       <ul>{[...unavailable].map(([cell, reasons]) => <li key={cell} data-failsafe="unavailable">
-        <span lang="und">{cell}</span> — <strong>{c.failsafeUnavailable}</strong>. {c.failsafeReason}{reasons.map((reason, index) => <span key={reason}>{index > 0 ? "; " : ""}<span lang="und">{reason}</span></span>)}
+        <span lang="und">{cell}</span> — <strong>{c.failsafeUnavailable}</strong>. {c.failsafeReason}{reasons.map((reason, index) => <span key={reason}>{index > 0 ? (language === "fr" ? "\u202f; " : "; ") : ""}<span lang="und">{reason}</span></span>)}
       </li>)}</ul>
     </div>}
     {stale.length > 0 && <div className="stack">
@@ -141,11 +143,13 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   const c = offlineCatalog[language];
   const r = OFFLINE_STRINGS[language];
   const online = useOnline();
+  const colon = language === "fr" ? "\u00a0:" : ":";
   useDocumentTitle(c.title);
   const [manifest, setManifest] = useState<PackManifest | null>(null);
   const [regions, setRegions] = useState<RegionStatus[]>([]);
   const [error, setError] = useState("");
   const [listFailed, setListFailed] = useState(false);
+  const [startedWithoutRegions, setStartedWithoutRegions] = useState(false);
   const [listAttempt, setListAttempt] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -171,8 +175,16 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     source.manifest().then(async (value) => {
       const statuses = await source.regions();
       const reports = await cellReports(value, statuses);
-      if (active) { setListFailed(false); setManifest(value); setRegions(statuses); setCells(reports); }
-    }).catch(() => { if (active) setListFailed(true); });
+      if (active) {
+        if (statuses.length === 0) setStartedWithoutRegions(true);
+        setListFailed(false); setManifest(value); setRegions(statuses); setCells(reports);
+      }
+    }).catch(() => {
+      if (active) {
+        setStartedWithoutRegions(true);
+        setListFailed(true);
+      }
+    });
     return () => { active = false; };
   }, [source, listAttempt]);
   async function refresh() {
@@ -309,8 +321,10 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   return <div className="stack">
     <h1>{c.title}</h1>
     <p>{c.intro}</p>
+    <PackingListLauncher language={language} />
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {listFailed ? <StateNotice lang={language} view={getRouteError("offline", "region-list-unavailable", language)} onAction={{ retry: () => { setListFailed(false); setListAttempt((n) => n + 1); } }} /> : null}
+    {startedWithoutRegions && <PersonalOfflineTools language={language} />}
     {error && <p role="alert">{error}</p>}
     {packStatus ? (
       <CorruptPackNotice
@@ -323,9 +337,9 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     ) : null}
     {message && <p role="status" tabIndex={-1}>{message}</p>}
     {manifest && <>
-      <p>{c.built}: <time dateTime={manifest.builtAt}>{manifest.builtAt.slice(0, 10)}</time>. {c.counts}: {manifest.counts.records.toLocaleString(language)}.</p>
+      <p>{c.built}{colon} <time dateTime={manifest.builtAt}>{manifest.builtAt.slice(0, 10)}</time>. {c.counts}{colon} {manifest.counts.records.toLocaleString(language)}.</p>
       <section className="panel stack" aria-labelledby="offline-sources"><h2 id="offline-sources">{c.sources}</h2>
-        <ul>{manifest.sources.filter((entry) => entry.inWebPack).map((entry) => <li key={entry.sourceId}>{entry.name} — {entry.licence} — {c.retrieved}: {entry.retrieved}</li>)}</ul>
+        <ul>{manifest.sources.filter((entry) => entry.inWebPack).map((entry) => <li key={entry.sourceId}>{entry.name} — {entry.licence} — {c.retrieved}{colon} {entry.retrieved}</li>)}</ul>
         {manifest.sources.some((entry) => entry.sourceId.includes("osm") && entry.inWebPack) && <p>{c.credit}</p>}
       </section>
       {regions.length === 0 ? <StateNotice lang={language} view={getRouteEmpty("offline", language)!} /> : null}
@@ -336,7 +350,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         const result = results[region.id];
         return <li key={region.id} className="panel stack">
         <h2>{region.label[language]}</h2>
-        <p>{c.size}: {formatBytes(region.bytes, language)}. {c.counts}: {region.count.toLocaleString(language)}.</p>
+        <p>{c.size}{colon} {formatBytes(region.bytes, language)}. {c.counts}{colon} {region.count.toLocaleString(language)}.</p>
         <p data-testid="region-state">{checkedStatuses[region.id] === "corrupt" ? packIntegrityCopy(language, "corrupt").title : checkedStatuses[region.id] === "unknown" ? c.unknown : region.downloaded ? c.downloaded : statuses.includes("stale") ? r.staleRegion : partial ? r.partial : c.notDownloaded}</p>
         <RegionFailsafeNotes region={region} language={language} />
         {report.length > 0 && <details className="region-cells">
@@ -356,7 +370,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
           {(region.downloaded || statuses.some((status) => status === "available" || status === "stale")) && <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => setConfirmation(region.id)}>{c.delete}</button>}
         </div>
         {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
-        {busy === region.id && progress && <div className="stack"><label id={`${progressTitle}-${region.id}`}>{c.progress}: {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={`${progressTitle}-${region.id}`} value={progress.done} max={progress.total || 1}/></div>}
+        {busy === region.id && progress && <div className="stack"><label id={`${progressTitle}-${region.id}`}>{c.progress}{colon} {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={`${progressTitle}-${region.id}`} value={progress.done} max={progress.total || 1}/></div>}
         {manifest && <RegionInventoryDashboard source={source} pack={manifest} regionId={region.id} language={language} />}
       </li>; })}</ul>
     </>}

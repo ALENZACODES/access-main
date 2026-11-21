@@ -8,22 +8,45 @@ import { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, liveRefused } from "
 import { DEVICE_REGISTER } from "./deviceRegister";
 import { ADDRESS_REGISTER, CALL_REGISTER } from "./addressRegister";
 import { FEATURE_REGISTER } from "./featureRegister";
+import { AUTO_REGISTER } from "./autoRegister";
+import { browserWorkerHost } from "./autoLive";
+import { HANDOFF_REGISTER } from "./handoffRegister";
+import { PICK_REGISTER } from "./pickRegister";
+import { BROWSER_REGISTER } from "./browserRegister";
+import { browserHost } from "./browserLive";
+import { SAVE_REGISTER } from "./saveRegister";
+import { saveHost } from "./saveLive";
+import { RETENTION_REGISTER } from "./retentionRegister";
+import { QUERY_REGISTER } from "./queryRegister";
 import { STATEMENT_REGISTER } from "./statementRegister";
 import { browserFeatureHost } from "./permissions";
 import { outsideItemsForScope } from "./outsideSection";
 import { STORAGE_REGISTER, UNSCANNED, panelExtraKeys, type RegisterRow, type UnscannedRow } from "./storageRegister";
 
-export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside" | "deviceRegister" | "kept" | "features" | "addresses" | "glance" | "receipt" | "statements">;
+export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside" | "deviceRegister" | "kept" | "features" | "addresses" | "glance" | "receipt" | "handoffs" | "retention" | "queries" | "picks" | "browser" | "save" | "address" | "auto" | "statements">;
 
 export interface LiveControllerOptions {
   /** For tests: other registers. Defaults to the App's own. */
   register?: readonly RegisterRow[];
   unscanned?: readonly UnscannedRow[];
+  /** Reads the query part of this page's address. Defaults to the page the code runs in, when there is one. */
+  address?: () => string;
+}
+
+/** Reads the query part of the address of the page the code runs in, or nothing when there is no page. */
+function browserAddress(): (() => string) | undefined {
+  const host = globalThis as { location?: { search?: unknown } };
+  if (host.location === undefined || typeof host.location.search !== "string") return undefined;
+  return () => {
+    const search = (globalThis as { location?: { search?: unknown } }).location?.search;
+    return typeof search === "string" ? search : "";
+  };
 }
 
 export function liveControllerDeps(options: LiveControllerOptions = {}): LiveControllerDeps {
   const register = options.register ?? STORAGE_REGISTER;
   const unscanned = options.unscanned ?? UNSCANNED;
+  const address = options.address ?? browserAddress();
   const extraKeys = panelExtraKeys(register, PRIVACY_STORAGE_PREFIX);
   return {
     prefix: PRIVACY_STORAGE_PREFIX,
@@ -37,6 +60,14 @@ export function liveControllerDeps(options: LiveControllerOptions = {}): LiveCon
     addresses: { addresses: ADDRESS_REGISTER, calls: CALL_REGISTER },
     glance: true,
     receipt: true,
+    handoffs: HANDOFF_REGISTER,
+    retention: RETENTION_REGISTER,
+    queries: QUERY_REGISTER,
+    picks: PICK_REGISTER,
+    browser: { register: BROWSER_REGISTER, host: browserHost() },
+    save: { register: SAVE_REGISTER, host: saveHost() },
+    ...(address === undefined ? {} : { address }),
+    auto: { register: AUTO_REGISTER, host: browserWorkerHost() },
     statements: STATEMENT_REGISTER,
     outside: outsideItemsForScope(register, unscanned, { prefix: PRIVACY_STORAGE_PREFIX, keys: extraKeys }),
   };
