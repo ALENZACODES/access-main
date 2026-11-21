@@ -142,20 +142,20 @@ export function mountOfflinePackReceipts(
     summary.replaceChildren();
     if (totals) {
       summary.append(
-        definition(c.region, manifest.regionId),
-        definition(c.captures, String(totals.captures)),
-        definition(c.saved, String(totals.saved)),
-        definition(c.unknown, String(totals.unknown)),
-        definition(c.changed, String(totals.changed)),
-        definition(c.bytes, totals.totalBytes === null ? "UNKNOWN" : String(totals.totalBytes)),
-        definition(c.capturedAt, totals.latestAt ?? "UNKNOWN"),
-        definition(c.status, book?.receipts.at(-1)?.status ?? "UNKNOWN"),
+        definition(doc, c.region, manifest.regionId),
+        definition(doc, c.captures, String(totals.captures)),
+        definition(doc, c.saved, String(totals.saved)),
+        definition(doc, c.unknown, String(totals.unknown)),
+        definition(doc, c.changed, String(totals.changed)),
+        definition(doc, c.bytes, totals.totalBytes === null ? "UNKNOWN" : String(totals.totalBytes)),
+        definition(doc, c.capturedAt, totals.latestAt ?? "UNKNOWN"),
+        definition(doc, c.status, book?.receipts.at(-1)?.status ?? "UNKNOWN"),
       );
       const latest = book?.receipts.at(-1);
-      if (latest) summary.append(definition(c.digest, latest.digest.slice(0, 20) + "…"));
+      if (latest) summary.append(definition(doc, c.digest, latest.digest.slice(0, 20) + "…"));
     } else {
-      summary.append(definition(c.region, manifest.regionId), definition(c.captures, "0"),
-        definition(c.saved, "0"), definition(c.unknown, "UNKNOWN"));
+      summary.append(definition(doc, c.region, manifest.regionId), definition(doc, c.captures, "0"),
+        definition(doc, c.saved, "0"), definition(doc, c.unknown, "UNKNOWN"));
     }
     diff = book && comparisonVisible ? latestReceiptDiff(book) : null;
     rows.replaceChildren();
@@ -176,12 +176,12 @@ export function mountOfflinePackReceipts(
         const source = sourceOf(row);
         const details = node(doc, "dl");
         details.append(
-          definition(c.source, source?.source ?? "UNKNOWN"),
-          definition(c.licence, source?.licence ?? "UNKNOWN"),
-          definition(c.date, source?.date ?? "UNKNOWN"),
-          definition(c.size, String(row.after?.bytes ?? row.before?.bytes ?? "UNKNOWN")),
-          definition(c.earlierState, localState(row, "before")),
-          definition(c.laterState, localState(row, "after")),
+          definition(doc, c.source, source?.source ?? "UNKNOWN"),
+          definition(doc, c.licence, source?.licence ?? "UNKNOWN"),
+          definition(doc, c.date, source?.date ?? "UNKNOWN"),
+          definition(doc, c.size, String(row.after?.bytes ?? row.before?.bytes ?? "UNKNOWN")),
+          definition(doc, c.earlierState, localState(row, "before")),
+          definition(doc, c.laterState, localState(row, "after")),
         );
         item.append(details);
         rows.append(item);
