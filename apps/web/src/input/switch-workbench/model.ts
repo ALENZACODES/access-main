@@ -6,49 +6,16 @@ export type ControlKind = 'button' | 'link' | 'checkbox' | 'radio' | 'tab' | 'fi
 export type Activation = 'ENTER' | 'SPACE' | 'BOTH' | 'ARROWS' | 'NONE';
 export type Severity = 'error' | 'review';
 export interface Copy { readonly en: string; readonly fr: string }
-export interface Source {
-  readonly title: string;
-  readonly url: string;
-  readonly licence: string;
-  readonly accessed: string;
-}
+export interface Source { readonly title: string; readonly url: string; readonly licence: string; readonly accessed: string }
 export interface Control {
-  readonly id: string;
-  readonly kind: ControlKind;
-  readonly name: Copy;
-  readonly description: Copy;
-  readonly group: string | null;
-  readonly refs: readonly string[];
-  readonly activation: Activation;
-  readonly visible: boolean;
-  readonly disabled: boolean;
-  readonly width: number;
-  readonly height: number;
-  readonly tabIndex: number;
-  readonly evidence: Evidence;
-  readonly source: Source | null;
-  readonly reviewed: boolean;
+  readonly id: string; readonly kind: ControlKind; readonly name: Copy; readonly description: Copy;
+  readonly group: string | null; readonly refs: readonly string[]; readonly activation: Activation;
+  readonly visible: boolean; readonly disabled: boolean; readonly width: number; readonly height: number;
+  readonly tabIndex: number; readonly evidence: Evidence; readonly source: Source | null; readonly reviewed: boolean;
 }
-export interface Project {
-  readonly id: string;
-  readonly title: Copy;
-  readonly controls: readonly Control[];
-  readonly focusOrder: readonly string[];
-  readonly locale: Language;
-}
-export interface Finding {
-  readonly code: string;
-  readonly path: string;
-  readonly severity: Severity;
-}
-export interface Review {
-  readonly decision: Decision;
-  readonly issues: readonly Finding[];
-  readonly errors: number;
-  readonly reviews: number;
-  readonly controls: number;
-  readonly focusStops: number;
-}
+export interface Project { readonly id: string; readonly title: Copy; readonly controls: readonly Control[]; readonly focusOrder: readonly string[]; readonly locale: Language }
+export interface Finding { readonly code: string; readonly path: string; readonly severity: Severity }
+export interface Review { readonly decision: Decision; readonly issues: readonly Finding[]; readonly errors: number; readonly reviews: number; readonly controls: number; readonly focusStops: number }
 export const KINDS: readonly ControlKind[] = Object.freeze(['button','link','checkbox','radio','tab','field','switch']);
 export const ACTIVATIONS: readonly Activation[] = Object.freeze(['ENTER','SPACE','BOTH','ARROWS','NONE']);
 export const EVIDENCE: readonly Evidence[] = Object.freeze(['UNKNOWN','OBSERVED','DOCUMENTED']);
@@ -57,7 +24,7 @@ const MAX_CONTROLS = 80;
 const ID_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-/** Detect C0 and DEL controls without control-character regex literals. */
+/** Check C0 and DEL characters without control-character regex literals. */
 export function hasControlCharacter(value: string): boolean {
   for (let index = 0; index < value.length; index += 1) {
     const code = value.charCodeAt(index);
@@ -65,15 +32,12 @@ export function hasControlCharacter(value: string): boolean {
   }
   return false;
 }
-
-/** CSV formula protection without embedding control characters in a regex. */
 function startsWithFormulaMarker(value: string): boolean {
   let index = 0;
   while (index < value.length && /\s/u.test(value[index] ?? '')) index += 1;
   const first = value[index] ?? '';
   return first === '=' || first === '+' || first === '@' || first === '-';
 }
-
 export function isPlainObject(input: unknown): input is Record<string, unknown> {
   return typeof input === 'object' && input !== null && !Array.isArray(input);
 }
@@ -81,8 +45,7 @@ export function isId(input: unknown): input is string {
   return typeof input === 'string' && input.length <= 70 && ID_RE.test(input);
 }
 export function isText(input: unknown, limit = 240): input is string {
-  return typeof input === 'string' && input.trim().length > 0 &&
-    input.length <= limit && !hasControlCharacter(input);
+  return typeof input === 'string' && input.trim().length > 0 && input.length <= limit && !hasControlCharacter(input);
 }
 export function isCopy(input: unknown, limit = 240): input is Copy {
   if (!isPlainObject(input)) return false;
@@ -92,9 +55,7 @@ export function isDate(input: unknown): input is string {
   if (typeof input !== 'string') return false;
   const match = DATE_RE.exec(input);
   if (!match) return false;
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
+  const year = Number(match[1]); const month = Number(match[2]); const day = Number(match[3]);
   const date = new Date(Date.UTC(year, month - 1, day));
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
@@ -102,15 +63,11 @@ export function isSafeUrl(input: unknown): input is string {
   if (typeof input !== 'string' || input.length > 1400 || hasControlCharacter(input)) return false;
   try {
     const url = new URL(input);
-    return url.protocol === 'https:' && !!url.hostname && !url.username &&
-      !url.password && !url.hash && !/\s/u.test(input);
-  } catch {
-    return false;
-  }
+    return url.protocol === 'https:' && !!url.hostname && !url.username && !url.password && !url.hash && !/\s/u.test(input);
+  } catch { return false; }
 }
 export function isSafeFile(input: unknown): input is string {
-  return typeof input === 'string' && input.length > 0 && input.length <= 100 &&
-    isId(input.replace(/\.json$/u, ''));
+  return typeof input === 'string' && input.length > 0 && input.length <= 100 && isId(input.replace(/\.json$/u, ''));
 }
 export function frenchIssues(input: string): string[] {
   const errors: string[] = [];
@@ -134,12 +91,9 @@ export function safeCsvCell(input: unknown): string {
   const guarded = startsWithFormulaMarker(normalized) ? `'${normalized}` : normalized;
   return `"${guarded.replace(/"/gu, '""')}"`;
 }
-export function finding(code: string, path: string, severity: Severity = 'error'): Finding {
-  return { code, path, severity };
-}
+export function finding(code: string, path: string, severity: Severity = 'error'): Finding { return { code, path, severity }; }
 export function sortFindings(issues: readonly Finding[]): Finding[] {
-  return [...issues].sort((a,b) =>
-    a.path.localeCompare(b.path) || a.code.localeCompare(b.code) || a.severity.localeCompare(b.severity));
+  return [...issues].sort((a,b) => a.path.localeCompare(b.path) || a.code.localeCompare(b.code) || a.severity.localeCompare(b.severity));
 }
 export function controlIssues(value: unknown, index = 0): Finding[] {
   const path = `controls[${index}]`;
@@ -148,16 +102,12 @@ export function controlIssues(value: unknown, index = 0): Finding[] {
   if (!isId(value.id)) issues.push(finding('control.id',`${path}.id`));
   if (!KINDS.includes(value.kind as ControlKind)) issues.push(finding('control.kind',`${path}.kind`));
   if (!isCopy(value.name)) issues.push(finding('control.name',`${path}.name`));
-  if (!isCopy(value.description, 600)) issues.push(finding('control.description',`${path}.description`));
+  if (!isCopy(value.description,600)) issues.push(finding('control.description',`${path}.description`));
   if (value.group !== null && !isId(value.group)) issues.push(finding('control.group',`${path}.group`));
   if (!Array.isArray(value.refs) || value.refs.some(ref => !isId(ref))) issues.push(finding('control.refs',`${path}.refs`));
   if (!ACTIVATIONS.includes(value.activation as Activation)) issues.push(finding('control.activation',`${path}.activation`));
   if (typeof value.visible !== 'boolean' || typeof value.disabled !== 'boolean') issues.push(finding('control.flags',path));
-  if (typeof value.width !== 'number' || typeof value.height !== 'number' ||
-      !Number.isFinite(value.width) || !Number.isFinite(value.height) ||
-      value.width < MINIMUM_TARGET || value.height < MINIMUM_TARGET) {
-    issues.push(finding('control.target-size',`${path}.size`));
-  }
+  if (typeof value.width !== 'number' || typeof value.height !== 'number' || !Number.isFinite(value.width) || !Number.isFinite(value.height) || value.width < MINIMUM_TARGET || value.height < MINIMUM_TARGET) issues.push(finding('control.target-size',`${path}.size`));
   if (!Number.isInteger(value.tabIndex) || (value.tabIndex as number) < -1) issues.push(finding('control.tabindex',`${path}.tabIndex`));
   else if ((value.tabIndex as number) > 0) issues.push(finding('control.positive-tabindex',`${path}.tabIndex`));
   if (value.visible === false && value.tabIndex !== -1) issues.push(finding('control.hidden-tabbable',path));
@@ -202,8 +152,7 @@ export function projectIssues(input: unknown): Finding[] {
     if (typeof control.group === 'string' && !ids.has(control.group)) issues.push(finding('project.missing-group',`controls[${index}].group`,'review'));
   });
   if (!Array.isArray(input.focusOrder) || input.focusOrder.some(id => typeof id !== 'string')) {
-    issues.push(finding('project.focus-order','project.focusOrder'));
-    return issues;
+    issues.push(finding('project.focus-order','project.focusOrder')); return issues;
   }
   const focused = new Set<string>();
   for (const [index,id] of input.focusOrder.entries()) {
@@ -225,10 +174,8 @@ export function reviewProject(project: Project): Review {
   const errors=issues.filter(i => i.severity==='error').length;
   const reviews=issues.filter(i => i.severity==='review').length;
   const unknown=project.controls.some(c => c.evidence==='UNKNOWN' || !c.reviewed);
-  return {
-    decision: errors ? 'REVIEW' : reviews || unknown || project.controls.length===0 ? 'UNKNOWN' : 'READY',
-    issues, errors, reviews, controls:project.controls.length, focusStops:project.focusOrder.length,
-  };
+  return { decision: errors ? 'REVIEW' : reviews || unknown || project.controls.length===0 ? 'UNKNOWN' : 'READY',
+    issues, errors, reviews, controls:project.controls.length, focusStops:project.focusOrder.length };
 }
 export function defaultControl(id='first'): Control {
   return { id, kind:'button', name:{en:'Continue',fr:'Continuer'},description:{en:'Move to the next item',fr:'Passer à l’élément suivant'},

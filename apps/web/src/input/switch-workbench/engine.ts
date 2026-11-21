@@ -1,44 +1,44 @@
 import { type Control, type Finding, type Project, finding, sortFindings } from './model.ts';
-export type Command = 'NEXT' | 'PREVIOUS' | 'SELECT' | 'BACK' | 'CANCEL' | 'RESET' | 'HOME' | 'END' | 'GROUP_NEXT' | 'GROUP_PREVIOUS';
-export type Mode = 'LINEAR' | 'GROUPED' | 'DIRECT';
-export type Phase = 'IDLE' | 'FOCUSED' | 'SELECTED' | 'CANCELLED' | 'UNKNOWN';
-export interface Event { readonly sequence:number; readonly command:Command; readonly from:string|null; readonly to:string|null; readonly accepted:boolean; readonly reason:string|null }
-export interface Machine { readonly mode:Mode; readonly phase:Phase; readonly focus:string|null; readonly selected:string|null; readonly history:readonly string[]; readonly events:readonly Event[]; readonly group:string|null; readonly wrap:boolean }
-export interface Transition { readonly machine:Machine; readonly last:Event; readonly issues:readonly Finding[] }
-export interface Pattern { readonly sequence:readonly Command[]; readonly expectedFocus:string|null; readonly expectedSelected:string|null }
-export interface Audit { readonly total:number; readonly accepted:number; readonly rejected:number; readonly selected:number; readonly issues:readonly Finding[] }
+export type Command='NEXT'|'PREVIOUS'|'SELECT'|'BACK'|'CANCEL'|'RESET'|'HOME'|'END'|'GROUP_NEXT'|'GROUP_PREVIOUS';
+export type Mode='LINEAR'|'GROUPED'|'DIRECT';
+export type Phase='IDLE'|'FOCUSED'|'SELECTED'|'CANCELLED'|'UNKNOWN';
+export interface Event{readonly sequence:number;readonly command:Command;readonly from:string|null;readonly to:string|null;readonly accepted:boolean;readonly reason:string|null}
+export interface Machine{readonly mode:Mode;readonly phase:Phase;readonly focus:string|null;readonly selected:string|null;readonly history:readonly string[];readonly events:readonly Event[];readonly group:string|null;readonly wrap:boolean}
+export interface Transition{readonly machine:Machine;readonly last:Event;readonly issues:readonly Finding[]}
+export interface Pattern{readonly sequence:readonly Command[];readonly expectedFocus:string|null;readonly expectedSelected:string|null}
+export interface Audit{readonly total:number;readonly accepted:number;readonly rejected:number;readonly selected:number;readonly issues:readonly Finding[]}
 export const COMMANDS:readonly Command[]=Object.freeze(['NEXT','PREVIOUS','SELECT','BACK','CANCEL','RESET','HOME','END','GROUP_NEXT','GROUP_PREVIOUS']);
 export const MODES:readonly Mode[]=Object.freeze(['LINEAR','GROUPED','DIRECT']);
-const MAX_EVENTS=250; const MAX_HISTORY=100;
+const MAX_EVENTS=250,MAX_HISTORY=100;
 function eligible(control:Control):boolean{return control.visible&&!control.disabled&&control.tabIndex===0;}
 export function eligibleIds(project:Project):string[]{const byId=new Map(project.controls.map(c=>[c.id,c]));return project.focusOrder.filter(id=>{const control=byId.get(id);return control!==undefined&&eligible(control);});}
-export function groups(project:Project):Array<{id:string;controls:string[]}>{const byId=new Map(project.controls.map(c=>[c.id,c]));const ordered=new Map<string,string[]>();for(const id of eligibleIds(project)){const control=byId.get(id);const group=control?.group??'ungrouped';if(!ordered.has(group))ordered.set(group,[]);ordered.get(group)?.push(id);}return Array.from(ordered,([id,controls])=>({id,controls}));}
+export function groups(project:Project):Array<{id:string;controls:string[]}>{const byId=new Map(project.controls.map(c=>[c.id,c]));const ordered=new Map<string,string[]>();for(const id of eligibleIds(project)){const group=byId.get(id)?.group??'ungrouped';if(!ordered.has(group))ordered.set(group,[]);ordered.get(group)?.push(id);}return Array.from(ordered,([id,controls])=>({id,controls}));}
 export function initialMachine(mode:Mode='LINEAR',wrap=true):Machine{return {mode,phase:'IDLE',focus:null,selected:null,history:[],events:[],group:null,wrap};}
 function errorEvent(state:Machine,command:Command,reason:string):Event{return {sequence:state.events.length+1,command,from:state.focus,to:state.focus,accepted:false,reason};}
 function successful(state:Machine,command:Command,to:string|null):Event{return {sequence:state.events.length+1,command,from:state.focus,to,accepted:true,reason:null};}
 function pushEvent(machine:Machine,event:Event):Machine{return {...machine,events:[...machine.events,event].slice(-MAX_EVENTS)};}
-function travel(available:readonly string[],focus:string|null,direction:-1|1,wrap:boolean):string|null{if(!available.length)return null;const index=focus===null?-1:available.indexOf(focus);if(index<0)return direction===1?available[0]??null:available.at(-1)??null;const next=index+direction;if(next>=0&&next<available.length)return available[next]??null;if(!wrap)return focus;return direction===1?available[0]??null:available.at(-1)??null;}
+function travel(items:readonly string[],focus:string|null,direction:-1|1,wrap:boolean):string|null{if(!items.length)return null;const index=focus===null?-1:items.indexOf(focus);if(index<0)return direction===1?items[0]??null:items[items.length-1]??null;const next=index+direction;if(next>=0&&next<items.length)return items[next]??null;if(!wrap)return focus;return direction===1?items[0]??null:items[items.length-1]??null;}
 export function stepMachine(machine:Machine,command:Command,project:Project):Transition{
  const available=eligibleIds(project);
- if(!COMMANDS.includes(command)){const event=errorEvent(machine,command,'command.unsupported');return {machine:pushEvent(machine,event),last:event,issues:[finding('scan.invalid-command','command')]};}
- if(command==='RESET'){const event=successful(machine,command,null);return {machine:pushEvent({...machine,phase:'IDLE',focus:null,selected:null,history:[],group:null},event),last:event,issues:[]};}
- if(command==='CANCEL'){const event=successful(machine,command,machine.focus);return {machine:pushEvent({...machine,phase:'CANCELLED',selected:null},event),last:event,issues:[]};}
- if(!available.length){const event=errorEvent(machine,command,'scan.no-controls');return {machine:pushEvent({...machine,phase:'UNKNOWN',focus:null,selected:null},event),last:event,issues:[finding('scan.no-controls','controls','review')]};}
+ if(!COMMANDS.includes(command)){const last=errorEvent(machine,command,'command.unsupported');return {machine:pushEvent(machine,last),last,issues:[finding('scan.invalid-command','command')]};}
+ if(command==='RESET'){const last=successful(machine,command,null);return {machine:pushEvent({...machine,phase:'IDLE',focus:null,selected:null,history:[],group:null},last),last,issues:[]};}
+ if(command==='CANCEL'){const last=successful(machine,command,machine.focus);return {machine:pushEvent({...machine,phase:'CANCELLED',selected:null},last),last,issues:[]};}
+ if(!available.length){const last=errorEvent(machine,command,'scan.no-controls');return {machine:pushEvent({...machine,phase:'UNKNOWN',focus:null,selected:null},last),last,issues:[finding('scan.no-controls','controls','review')]};}
  let focus=machine.focus,selected=machine.selected,group=machine.group,phase:Phase='FOCUSED',history=[...machine.history],problem:string|null=null;
  switch(command){
  case 'NEXT':focus=travel(available,focus,1,machine.wrap);break;
  case 'PREVIOUS':focus=travel(available,focus,-1,machine.wrap);break;
  case 'HOME':focus=available[0]??null;break;
- case 'END':focus=available.at(-1)??null;break;
+ case 'END':focus=available[available.length-1]??null;break;
  case 'SELECT':if(focus===null||!available.includes(focus)){problem='scan.nothing-focused';break;}selected=focus;phase='SELECTED';break;
  case 'BACK':if(!history.length){problem='scan.no-history';break;}focus=history.pop()??null;break;
  case 'GROUP_NEXT':case 'GROUP_PREVIOUS':{const entries=groups(project);if(!entries.length){problem='scan.no-groups';break;}const index=entries.findIndex(entry=>entry.id===group);const next=travel(entries.map(entry=>entry.id),index>=0?group:null,command==='GROUP_NEXT'?1:-1,machine.wrap);const chosen=entries.find(entry=>entry.id===next);if(!chosen){problem='scan.no-groups';break;}group=chosen.id;focus=chosen.controls[0]??null;break;}
  default:problem='scan.unsupported';
  }
- if(problem){const event=errorEvent(machine,command,problem);return {machine:pushEvent(machine,event),last:event,issues:[finding(problem,'scan','review')]};}
+ if(problem){const last=errorEvent(machine,command,problem);return {machine:pushEvent(machine,last),last,issues:[finding(problem,'scan','review')]};}
  if(command!=='BACK'&&focus!==machine.focus&&machine.focus!==null)history=[...history,machine.focus].slice(-MAX_HISTORY);
  if(command!=='SELECT')selected=null;
- const event=successful(machine,command,focus);const result=pushEvent({...machine,focus,selected,group,phase,history},event);return {machine:result,last:event,issues:[]};
+ const last=successful(machine,command,focus);const next=pushEvent({...machine,focus,selected,group,phase,history},last);return {machine:next,last,issues:[]};
 }
 export function replay(project:Project,commands:readonly Command[],mode:Mode='LINEAR'):Machine{let state=initialMachine(mode);for(const command of commands)state=stepMachine(state,command,project).machine;return state;}
 export function replaySafely(project:Project,commands:readonly string[]):{state:Machine;issues:Finding[]}{let state=initialMachine();const issues:Finding[]=[];commands.forEach((value,index)=>{if(!COMMANDS.includes(value as Command)){issues.push(finding('scan.unsupported-command',`commands[${index}]`));return;}const result=stepMachine(state,value as Command,project);issues.push(...result.issues);state=result.machine;});return {state,issues:sortFindings(issues)};}
