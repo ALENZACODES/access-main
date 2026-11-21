@@ -113,3 +113,9 @@ export * from "./dependencyPlannerExport";
 export type { CoordinationBrief, BriefStep, BriefProvenance, BriefStatus, BriefPriority,
   BriefTopic, BriefEvent, BriefSummary, StepDraft, BriefPageOptions } from "./coordinationBrief";
 export type { BriefChange, BriefDiff, BriefChangeKind } from "./coordinationBriefDiff";
+
+// Shared-device handback is loaded on demand from the offline dashboard.
+export * from "./sharedDeviceHandback";
+export * from "./sharedDeviceHandbackCopy";
+export * from "./sharedDeviceHandbackExport";
+export * from "./sharedDeviceHandbackPanel";
