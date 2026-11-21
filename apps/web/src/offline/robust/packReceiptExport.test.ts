@@ -115,9 +115,9 @@ describe("offline receipt export text", () => {
     const captured = await createPackReceipt(manifest, local, firstTime, cryptoProvider);
     const book = appendPackReceipt(emptyReceiptBook("central"), captured);
     const text = receiptBookText(book, "fr");
-    expect(text).toContain("Région\\u00a0: central");
-    expect(text).toContain("Heure de lecture\\u00a0:");
-    expect(text).toContain("Source\\u00a0:");
+    expect(text).toContain("Région\u00a0: central");
+    expect(text).toContain("Heure de lecture\u00a0:");
+    expect(text).toContain("Source\u00a0:");
     expect(text).not.toMatch(/ [;:!?]/u);
   });
 
