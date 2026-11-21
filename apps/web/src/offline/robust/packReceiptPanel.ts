@@ -148,6 +148,7 @@ export function mountOfflinePackReceipts(
         definition(c.changed, String(totals.changed)),
         definition(c.bytes, totals.totalBytes === null ? "UNKNOWN" : String(totals.totalBytes)),
         definition(c.capturedAt, totals.latestAt ?? "UNKNOWN"),
+        definition(c.status, book?.receipts.at(-1)?.status ?? "UNKNOWN"),
       );
       const latest = book?.receipts.at(-1);
       if (latest) summary.append(definition(c.digest, latest.digest.slice(0, 20) + "…"));
@@ -233,7 +234,7 @@ export function mountOfflinePackReceipts(
       const later = book.receipts[book.receipts.length - 1]!;
       diff = comparePackReceipts(earlier, later);
       offset = 0;
-      status.textContent = c.digestMatches;
+      status.textContent = c.compared;
       render();
     } catch {
       status.textContent = c.error;
