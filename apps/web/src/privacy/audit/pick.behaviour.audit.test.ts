@@ -58,6 +58,21 @@ describe("a row limited before reading compares the size before any read", () =>
   });
 });
 
+describe("a row with no check found in its own file", () => {
+  it("is the packing list backup, which hands the file to a function that compares the size before reading it", () => {
+    const rows = PICK_REGISTER.filter((r) => r.limit === "none-found");
+    expect(rows.map((r) => r.path)).toEqual(["apps/web/src/offline/packing/PackingTransfer.tsx"]);
+    const pick = text("apps/web/src/offline/packing/PackingTransfer.tsx");
+    expect(sizeCheckLines(pick), "the row says no check is found in the file").toEqual([]);
+    expect(pick).toMatch(/readPackingBackup\(file\)/);
+    const reader = text("apps/web/src/offline/packing/transfer.ts");
+    const size = reader.indexOf("file.size >");
+    const read = reader.indexOf("file.arrayBuffer()");
+    expect(size, "a size comparison before the read").toBeGreaterThan(-1);
+    expect(size).toBeLessThan(read);
+  });
+});
+
 describe("a row limited after reading names a file with a byte limit", () => {
   const rows = PICK_REGISTER.filter((r) => r.limit === "after-read");
 

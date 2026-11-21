@@ -73,6 +73,7 @@ const J: readonly PickAccept[] = ["json"];
 export const PICK_REGISTER: readonly PickRow[] = [
   row("pick", `${WEB}contribute/ContributePage.tsx`, 2, ["Photos for a contribution, or a contribution file", "Des photos pour une contribution, ou un fichier de contribution"], ["image", "json", "geojson"], "mixed"),
   row("pick", `${WEB}offline/evidence-workbench/EvidenceWorkbench.tsx`, 1, ["Notes for the evidence workbench", "Des notes pour l’atelier de preuves"], J, "before-read"),
+  row("pick", `${WEB}offline/packing/PackingTransfer.tsx`, 1, ["A packing list backup", "Une copie de sauvegarde d’une liste de bagages"], J, "none-found"),
   row("pick", `${ROBUST}accessInquiryPanel.ts`, 1, ["An access inquiry", "Une demande de renseignements sur l’accès"], J, "before-read"),
   row("pick", `${ROBUST}accessPreparationPanel.ts`, 1, ["An access preparation notebook", "Un cahier de préparation de l’accès"], J, "before-read"),
   row("pick", `${ROBUST}contingencyPanel.ts`, 1, ["A contingency plan", "Un plan de secours"], J, "before-read"),

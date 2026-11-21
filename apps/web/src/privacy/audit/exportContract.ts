@@ -110,6 +110,24 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
     },
   },
   {
+    id: "picks",
+    kind: "csv",
+    stem: { en: "the-app-files-you-choose", fr: "l-app-fichiers-que-vous-choisissez" },
+    header: {
+      en: ["What you give", "How", "Kinds offered", "Size limit", "Checked in", "In the code", "Places", "Recorded on"],
+      fr: ["Ce que vous donnez", "Comment", "Types proposés", "Limite de taille", "Contrôlée dans", "Dans le code", "Endroits", "Date d’inscription"],
+    },
+  },
+  {
+    id: "browser",
+    kind: "csv",
+    stem: { en: "the-app-browser-questions", fr: "l-app-questions-au-navigateur" },
+    header: {
+      en: ["About", "What it asks", "What it is used for", "In the code", "Places", "Recorded on"],
+      fr: ["Sujet", "Ce qu’elle demande", "À quoi cela sert", "Dans le code", "Endroits", "Date d’inscription"],
+    },
+  },
+  {
     id: "save",
     kind: "csv",
     stem: { en: "the-app-files-it-makes", fr: "l-app-fichiers-qu-elle-fabrique" },
@@ -125,6 +143,15 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
     header: {
       en: ["Stored under", "What is kept", "How long", "How much", "Files read", "Recorded on"],
       fr: ["Enregistré sous", "Ce qui est gardé", "Combien de temps", "Quelle quantité", "Fichiers lus", "Date d’inscription"],
+    },
+  },
+  {
+    id: "auto",
+    kind: "csv",
+    stem: { en: "the-app-work-on-its-own", fr: "l-app-travail-lance-d-elle-meme" },
+    header: {
+      en: ["What it is", "In the code", "Places", "Kind of start", "When it runs", "What it does", "Recorded on"],
+      fr: ["De quoi il s’agit", "Dans le code", "Endroits", "Type de lancement", "Quand cela s’exécute", "Ce que cela fait", "Date d’inscription"],
     },
   },
 ];
@@ -179,6 +206,18 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     title: { en: "What a web address can carry", fr: "Ce qu’une adresse web peut contenir" },
   },
   {
+    id: "picks",
+    kind: "text",
+    stem: { en: "the-app-files-you-choose", fr: "l-app-fichiers-que-vous-choisissez" },
+    title: { en: "Where the App reads a file you choose", fr: "Où l’App lit un fichier que vous choisissez" },
+  },
+  {
+    id: "browser",
+    kind: "text",
+    stem: { en: "the-app-browser-questions", fr: "l-app-questions-au-navigateur" },
+    title: { en: "What the App asks your browser", fr: "Ce que l’App demande à votre navigateur" },
+  },
+  {
     id: "save",
     kind: "text",
     stem: { en: "the-app-files-it-makes", fr: "l-app-fichiers-qu-elle-fabrique" },
@@ -189,6 +228,12 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     kind: "text",
     stem: { en: "the-app-how-long-kept", fr: "l-app-duree-de-conservation" },
     title: { en: "How long the App keeps things", fr: "Combien de temps l’App garde les choses" },
+  },
+  {
+    id: "auto",
+    kind: "text",
+    stem: { en: "the-app-work-on-its-own", fr: "l-app-travail-lance-d-elle-meme" },
+    title: { en: "What the App does on its own", fr: "Ce que l’App fait d’elle-même" },
   },
 ];
 
