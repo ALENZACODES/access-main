@@ -12,7 +12,14 @@ const DOWNLOAD_SCHEME = /^(?:mailto|tel|sms):/i;
 const REMOTE = /^(?:https?:)?\/\//i;
 const LANGUAGE = /^(en|fr)(?:-[a-z]{2,8})?$/i;
 const FRAGMENT = /#([^#]*)$/;
-const VALID_ID = /^[^\s\u0000-\u001f]+$/;
+const VALID_ID = /^[^\s]+$/;
+const hasControlCharacter = (value) => {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) return true;
+  }
+  return false;
+};
 const URL_ATTRS = new Map([
   ['a', 'href'], ['area', 'href'], ['form', 'action'],
 ]);
