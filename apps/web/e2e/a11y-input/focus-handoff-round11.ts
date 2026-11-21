@@ -34,8 +34,14 @@ export interface HandoffSnapshot {
   readonly findings: readonly HandoffFinding[];
 }
 
-export async function observeHandoffFocusRound11(page: Page): Promise<HandoffSnapshot> {
-  return page.evaluate(() => {
+/**
+ * Snapshot the focused element. With inertSelector, that element is made inert inside the same
+ * evaluation, so no frame runs between the change and the reading: a current Chromium moves focus
+ * off an inert subtree on the next frame, which made a separate step race the browser.
+ */
+export async function observeHandoffFocusRound11(page: Page, inertSelector?: string): Promise<HandoffSnapshot> {
+  return page.evaluate((inertTarget) => {
+    if (inertTarget) document.querySelector(inertTarget)?.setAttribute("inert", "");
     type Code = HandoffCode;
     const findings: HandoffFinding[] = [];
     const active = document.activeElement;
@@ -87,7 +93,7 @@ export async function observeHandoffFocusRound11(page: Page): Promise<HandoffSna
       visible: !hidden && !inert,
       interactive, findings,
     };
-  });
+  }, inertSelector ?? null);
 }
 
 export interface FocusHandoffResult {

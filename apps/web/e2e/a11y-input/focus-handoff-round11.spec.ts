@@ -39,11 +39,18 @@ test("focused control hidden from assistive technology is rejected", async ({ pa
 });
 
 test("focused control in inert subtree is rejected", async ({ page }) => {
-  await mount(page, `<div><button id="action">Action</button></div>`);
+  await mount(page, `<div id="wrap"><button id="action">Action</button></div>`);
   await page.locator("#action").focus();
-  await page.locator("#action").evaluate((node) => node.parentElement?.setAttribute("inert", ""));
-  const state = await observeHandoffFocusRound11(page);
+  const state = await observeHandoffFocusRound11(page, "#wrap");
   expect(state.findings.map((issue) => issue.code)).toContain("focus-inert");
+});
+
+test("focus left on a control that became inert is reported as inert or as gone, never as fine", async ({ page }) => {
+  await mount(page, `<div id="wrap"><button id="action">Action</button></div>`);
+  await page.locator("#action").focus();
+  await page.locator("#wrap").evaluate((node) => node.setAttribute("inert", ""));
+  const codes = (await observeHandoffFocusRound11(page)).findings.map((issue) => issue.code);
+  expect(codes.includes("focus-inert") || codes.includes("focus-disappeared"), JSON.stringify(codes)).toBe(true);
 });
 
 test("positive tabindex changes keyboard order and is reported", async ({ page }) => {
