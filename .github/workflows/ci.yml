@@ -40,6 +40,7 @@ jobs:
           cache: npm
       - run: npm install -g npm@11.6.2
       - run: npm ci
+      - run: npm run lanes:ensure && npm run hub:sync && npm run build -w @access-main/schema
       - run: npm exec -w @access/web -- playwright install chromium
       - run: npm exec -w @access/web -- playwright test --project=perf --workers=1
 
@@ -60,5 +61,28 @@ jobs:
           cache: npm
       - run: npm install -g npm@11.6.2
       - run: npm ci
+      - run: npm run lanes:ensure && npm run hub:sync && npm run build -w @access-main/schema
       - run: npm exec -w @access/web -- playwright install chromium
       - run: npm exec -w @access/web -- playwright test --project=chromium --shard=${{ matrix.shard }}/3
+
+  # The Playwright suites of the workspaces other than @access/web (the old root `npm run test:e2e`
+  # ran every workspace that has the script). The list is read from the workspace manifests, so a new
+  # package with a test:e2e script is picked up without editing this file.
+  e2e-packages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+      - run: npm run lanes:ensure && npm run hub:sync && npm run build -w @access-main/schema
+      - run: npm exec -w @access/web -- playwright install chromium
+      - run: |
+          flags=$(node -e 'const fs=require("fs");const out=[];for(const base of ["apps","packages"])for(const d of fs.readdirSync(base)){let p;try{p=JSON.parse(fs.readFileSync(`${base}/${d}/package.json`,"utf8"))}catch{continue}if(p.scripts&&p.scripts["test:e2e"]&&p.name!=="@access/web")out.push("-w",p.name)}console.log(out.join(" "))')
+          echo "workspaces: $flags"
+          test -n "$flags"
+          npm run test:e2e $flags
