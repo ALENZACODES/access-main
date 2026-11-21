@@ -2,6 +2,7 @@
 // stores: that comes from the inventory the caller passes in.
 // FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
 
+import { workerSummary } from "./autoLive";
 import { liveSummary } from "./retentionLive";
 import { addressSummary } from "./queryLive";
 import type { Locale } from "./copyLint";
@@ -34,6 +35,8 @@ export type Status =
   | { kind: "query-exported"; format: "csv" | "text" }
   | { kind: "query-checked"; params: number; findings: number }
   | { kind: "query-unreadable" }
+  | { kind: "auto-exported"; format: "csv" | "text" }
+  | { kind: "workers-checked"; registered: number | null; differences: number }
   | { kind: "statements-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
@@ -149,6 +152,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `List of what a web address can carry prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "retention-checked":
           return liveSummary("en", s.compared, s.differences);
+        case "workers-checked":
+          return workerSummary("en", s.registered, s.differences);
+        case "auto-exported":
+          return `List of what the App does on its own prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "retention-exported":
           return `List of how long the App keeps things prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "statements-exported":
@@ -237,6 +244,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Liste de ce qu’une adresse web peut contenir préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "retention-checked":
           return liveSummary("fr", s.compared, s.differences);
+        case "workers-checked":
+          return workerSummary("fr", s.registered, s.differences);
+        case "auto-exported":
+          return `Liste de ce que l’App fait d’elle-même préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "retention-exported":
           return `Liste de la durée de conservation de l’App préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "statements-exported":

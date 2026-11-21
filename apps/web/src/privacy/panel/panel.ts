@@ -25,6 +25,9 @@ import { renderHandoffHtml } from "./handoffSection";
 import type { QueryRow } from "./queryRegister";
 import type { AddressCheck } from "./queryLive";
 import { renderQueryHtml } from "./querySection";
+import type { AutoRow } from "./autoRegister";
+import type { WorkerCheckView } from "./autoLive";
+import { renderAutoHtml } from "./autoSection";
 import type { RetentionRow } from "./retentionRegister";
 import { renderRetentionHtml, type RetentionCheckView } from "./retentionSection";
 import type { StatementResult } from "./statementRegister";
@@ -80,6 +83,10 @@ export interface PanelView {
   queryCheck?: AddressCheck;
   /** Whether the check button is shown. Off when the page cannot read its own address. */
   queryCanCheck?: boolean;
+  /** The places that start work on their own. Leave undefined to hide the section. */
+  auto?: readonly AutoRow[];
+  /** What the browser said about offline workers. Leave undefined before the person asks. */
+  workerCheck?: WorkerCheckView;
   /** Where the App says data stays on the device or is not sent. Leave undefined to hide the section. */
   statements?: readonly StatementResult[];
   /** Show the buttons that download everything the App keeps on this device. */
@@ -167,6 +174,7 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.handoffs === undefined ? "" : renderHandoffHtml(view.locale, view.handoffs)}` +
     `${view.queries === undefined ? "" : renderQueryHtml(view.locale, view.queries, view.queryCheck ?? null, view.queryCanCheck !== false)}` +
     `${view.retention === undefined ? "" : renderRetentionHtml(view.locale, view.retention, view.retentionCheck ?? null)}` +
+    `${view.auto === undefined ? "" : renderAutoHtml(view.locale, view.auto, view.workerCheck ?? null)}` +
     `${view.statements === undefined ? "" : renderStatementsHtml(view.locale, view.statements)}` +
     `${view.glance === undefined ? "" : renderGlanceHtml(view.locale, view.glance)}` +
     `${view.addresses === undefined ? "" : renderAddressesHtml(view.locale, view.addresses)}` +

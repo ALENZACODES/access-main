@@ -118,6 +118,15 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
       fr: ["Enregistré sous", "Ce qui est gardé", "Combien de temps", "Quelle quantité", "Fichiers lus", "Date d’inscription"],
     },
   },
+  {
+    id: "auto",
+    kind: "csv",
+    stem: { en: "the-app-work-on-its-own", fr: "l-app-travail-lance-d-elle-meme" },
+    header: {
+      en: ["What it is", "In the code", "Places", "Kind of start", "When it runs", "What it does", "Recorded on"],
+      fr: ["De quoi il s’agit", "Dans le code", "Endroits", "Type de lancement", "Quand cela s’exécute", "Ce que cela fait", "Date d’inscription"],
+    },
+  },
 ];
 
 export const TEXT_CONTRACTS: readonly TextContract[] = [
@@ -174,6 +183,12 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     kind: "text",
     stem: { en: "the-app-how-long-kept", fr: "l-app-duree-de-conservation" },
     title: { en: "How long the App keeps things", fr: "Combien de temps l’App garde les choses" },
+  },
+  {
+    id: "auto",
+    kind: "text",
+    stem: { en: "the-app-work-on-its-own", fr: "l-app-travail-lance-d-elle-meme" },
+    title: { en: "What the App does on its own", fr: "Ce que l’App fait d’elle-même" },
   },
 ];
 

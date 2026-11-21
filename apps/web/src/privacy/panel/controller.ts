@@ -27,6 +27,9 @@ import { retentionAsCsv, retentionAsText, type RetentionCheckView } from "./rete
 import type { QueryRow } from "./queryRegister";
 import { checkAddress, type AddressCheck } from "./queryLive";
 import { queryAsCsv, queryAsText } from "./querySection";
+import type { AutoRow } from "./autoRegister";
+import { readWorkers, workerCheck, differenceCount, type WorkerCheckView, type WorkerHost } from "./autoLive";
+import { autoAsCsv, autoAsText } from "./autoSection";
 import { glanceFigures, type GlanceSources } from "./glance";
 import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
@@ -88,6 +91,8 @@ export interface ControllerDeps {
   queries?: readonly QueryRow[];
   /** Reads the part of this page's address after the question mark, for example `() => window.location.search`. With it and `queries`, the panel can examine the address. Nothing is stored or changed. */
   address?: () => string;
+  /** The places in the App that start work on their own, and the browser to ask about offline workers. With it, the panel shows the list, offers a download and can ask. */
+  auto?: { register: readonly AutoRow[]; host: WorkerHost };
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -135,6 +140,8 @@ export interface PrivacyState {
   retentionCheck: RetentionCheckView | null;
   /** What reading the address of this page found, or null before the person asks */
   queryCheck: AddressCheck | null;
+  /** What the browser said about offline workers, or null before the person asks */
+  workerCheck: WorkerCheckView | null;
   confirmingClearDevice: boolean;
 }
 
@@ -159,6 +166,8 @@ export type PrivacyAction =
   | { type: "export-receipt-text" }
   | { type: "export-handoff-csv" }
   | { type: "export-handoff-text" }
+  | { type: "export-auto-csv" }
+  | { type: "export-auto-text" }
   | { type: "check-retention" }
   | { type: "check-query" }
   | { type: "export-query-csv" }
@@ -180,13 +189,15 @@ export type PrivacyAction =
   | { type: "publish"; file: ExportFile; status: Status }
   | { type: "signals-read"; signals: Signals }
   | { type: "device-scanned"; scan: DeviceScan }
-  | { type: "features-read"; states: FeatureStates };
+  | { type: "features-read"; states: FeatureStates }
+  | { type: "workers-read"; check: WorkerCheckView };
 
 /** Actions that wait for the browser. Passphrases are used once and never kept. */
 export type PrivacyAsyncAction =
   | { type: "read-signals" }
   | { type: "scan-device" }
   | { type: "check-features" }
+  | { type: "check-workers" }
   | { type: "clear-device-confirm" }
   | { type: "protected-export"; passphrase: string; confirm: string }
   | { type: "protected-import"; text: string; passphrase: string };
@@ -288,6 +299,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     featureStates: null,
     retentionCheck: null,
     queryCheck: null,
+    workerCheck: null,
     confirmingClearDevice: false,
   };
   let plan: ImportPlan | null = null;
@@ -431,6 +443,20 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "handoff-exported", format: csv ? "csv" : "text" } };
         break;
       }
+      case "export-auto-csv":
+      case "export-auto-text": {
+        if (deps.auto === undefined || deps.auto.register.length === 0) break;
+        const csv = action.type === "export-auto-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? autoAsCsv(loc, deps.auto.register, deps.now(), loc === "fr" ? ";" : ",") : autoAsText(loc, deps.auto.register, deps.now());
+        log({ kind: "auto-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "auto-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "workers-read":
+        if (deps.auto === undefined || deps.auto.register.length === 0) break;
+        state = { ...state, workerCheck: action.check, confirmingErase: false, lastExport: null, status: { kind: "workers-checked", registered: action.check.registered, differences: differenceCount(action.check.findings) } };
+        break;
       case "check-retention": {
         if (deps.retention === undefined || deps.retention.length === 0) break;
         if (storage === null) {
@@ -686,6 +712,10 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         if (deps.signals === undefined) return state;
         return dispatch({ type: "signals-read", signals: await readSignals(deps.signals) });
       }
+      case "check-workers": {
+        if (deps.auto === undefined || deps.auto.register.length === 0) return state;
+        return dispatch({ type: "workers-read", check: workerCheck(await readWorkers(deps.auto.host), deps.auto.register) });
+      }
       case "check-features": {
         if (deps.features === undefined) return state;
         return dispatch({ type: "features-read", states: await readFeatureStates(deps.features.host, deps.features.register, deps.now()) });
@@ -774,6 +804,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         ...(deps.handoffs !== undefined && deps.handoffs.length > 0 ? { handoffs: deps.handoffs } : {}),
         ...(deps.queries !== undefined && deps.queries.length > 0 ? { queries: deps.queries, queryCanCheck: deps.address !== undefined, ...(state.queryCheck !== null ? { queryCheck: state.queryCheck } : {}) } : {}),
         ...(deps.retention !== undefined && deps.retention.length > 0 ? { retention: deps.retention, ...(state.retentionCheck !== null ? { retentionCheck: state.retentionCheck } : {}) } : {}),
+        ...(deps.auto !== undefined && deps.auto.register.length > 0 ? { auto: deps.auto.register, ...(state.workerCheck !== null ? { workerCheck: state.workerCheck } : {}) } : {}),
         ...(receiptFor(deps, state.consent) !== null ? { receipt: receiptFor(deps, state.consent) as ReceiptRow[] } : {}),
         ...(glanceSources(deps) !== null ? { glance: glanceSources(deps) as GlanceSources } : {}),
         ...(deps.kept !== undefined ? { keptList: true } : {}),

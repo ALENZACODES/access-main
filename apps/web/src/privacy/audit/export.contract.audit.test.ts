@@ -15,6 +15,8 @@ import { QUERY_REGISTER } from "../panel/queryRegister";
 import { queryAsCsv, queryAsText } from "../panel/querySection";
 import { handoffAsCsv, handoffAsText } from "../panel/handoffSection";
 import { RETENTION_REGISTER } from "../panel/retentionRegister";
+import { AUTO_REGISTER } from "../panel/autoRegister";
+import { autoAsCsv, autoAsText } from "../panel/autoSection";
 import { retentionAsCsv, retentionAsText } from "../panel/retentionSection";
 import { inventoryAsCsv, inventoryAsText } from "../panel/inventoryExport";
 import { keptAsCsv, keptAsText } from "../panel/keptExport";
@@ -50,6 +52,7 @@ function build(locale: Locale): Array<{ id: string; kind: ExportContract["kind"]
     { id: "handoffs", kind: "csv", file: handoffAsCsv(locale, HANDOFF_REGISTER, NOW, d) },
     { id: "query", kind: "csv", file: queryAsCsv(locale, QUERY_REGISTER, NOW, d) },
     { id: "retention", kind: "csv", file: retentionAsCsv(locale, RETENTION_REGISTER, NOW, d) },
+    { id: "auto", kind: "csv", file: autoAsCsv(locale, AUTO_REGISTER, NOW, d) },
     { id: "inventory", kind: "text", file: inventoryAsText(locale, FIXTURE, NOW) },
     { id: "register", kind: "text", file: registerAsText(locale, STORAGE_REGISTER, UNSCANNED, NOW) },
     { id: "kept", kind: "text", file: keptAsText(locale, KEPT, NOW) },
@@ -59,6 +62,7 @@ function build(locale: Locale): Array<{ id: string; kind: ExportContract["kind"]
     { id: "handoffs", kind: "text", file: handoffAsText(locale, HANDOFF_REGISTER, NOW) },
     { id: "query", kind: "text", file: queryAsText(locale, QUERY_REGISTER, NOW) },
     { id: "retention", kind: "text", file: retentionAsText(locale, RETENTION_REGISTER, NOW) },
+    { id: "auto", kind: "text", file: autoAsText(locale, AUTO_REGISTER, NOW) },
     { id: "local-data", kind: "json", file: exportLocalData(storage(), "access.", NOW, locale) },
   ];
 }
@@ -78,7 +82,7 @@ describe("the contracts", () => {
     expect(ALL_CONTRACTS.map((c) => `${c.kind}:${c.id}`).sort()).toEqual(built);
   });
   it("number six spreadsheet files, six text files and one data file", () => {
-    expect([CSV_CONTRACTS.length, TEXT_CONTRACTS.length, JSON_CONTRACTS.length]).toEqual([9, 9, 1]);
+    expect([CSV_CONTRACTS.length, TEXT_CONTRACTS.length, JSON_CONTRACTS.length]).toEqual([10, 10, 1]);
   });
 });
 
