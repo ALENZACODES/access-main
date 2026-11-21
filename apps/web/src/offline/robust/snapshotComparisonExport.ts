@@ -1,5 +1,5 @@
 import type { Language } from "./regionDownload";
-import { assertSnapshot, encodeSnapshot, type SnapshotDocument, type SnapshotMatrix, type SnapshotMatrixRow } from "./snapshotComparison";
+import { assertSnapshot, encodeSnapshot, rowHasDeclaredChange, type SnapshotDocument, type SnapshotMatrix, type SnapshotMatrixRow } from "./snapshotComparison";
 import { SNAPSHOT_CHANGE_LABELS, snapshotCopy } from "./snapshotComparisonCopy";
 
 /** Only provenance and identifiers; never actual cell bytes, coordinates, or personal identifiers. */
@@ -33,7 +33,7 @@ export function formatSnapshotReport(report: SnapshotReport, language: Language)
   const colon = language === "fr" ? "\u00a0: " : ": ";
   const line = (name: string, value: string | number) => `${name}${colon}${value}`;
   const rows = [c.title, c.notProof, line(c.status, report.state), line("Region", oneLine(report.regionId)),
-    line(c.listed, report.rows.length), line(c.changed, report.reviewCount), line(c.physical, "UNKNOWN")];
+    line(c.listed, report.rows.length), line(c.changed, report.rows.filter(rowHasDeclaredChange).length), line(c.physical, "UNKNOWN")];
   for (const row of report.rows) {
     rows.push(`${oneLine(row.cellId)} | A${colon}${SNAPSHOT_CHANGE_LABELS[language][row.optionA.kind]} | B${colon}${SNAPSHOT_CHANGE_LABELS[language][row.optionB.kind]} | ${c.statusLabel}${colon}${row.localState}`);
     if (row.attention === "review") {

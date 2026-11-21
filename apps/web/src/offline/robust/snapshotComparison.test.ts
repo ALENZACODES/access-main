@@ -42,7 +42,7 @@ describe("three-way local source comparison", () => {
     const matrix = compareSnapshots(base, next, base, inventory);
     const row = matrix.rows.find((item) => item.cellId === "arrival");
     expect(row?.optionA.kind).toBe("added");
-    expect(row?.optionB.kind).toBe("added");
+    expect(row?.optionB).toMatchObject({ kind: "same", before: null, after: null });
     expect(row?.localState).toBe("UNKNOWN");
   });
   it("classifies removal rather than no change", () => {
@@ -134,6 +134,32 @@ describe("three-way local source comparison", () => {
     const a = copy({ cells: [cell("entrance", 100, { ...provenance, licence: "CC BY" }), ...base.cells.slice(1)] });
     const m = compareSnapshots(base, a, base, inventory);
     expect(pageSnapshotMatrix(m, { search: "", filter: "metadata", order: "listed", offset: 0, limit: 10 }).rows.map((x) => x.cellId)).toEqual(["entrance"]);
+  });
+  for (const supplied of ["A", "B"] as const) {
+    it(`counts only declared changes when only ${supplied} is supplied`, () => {
+      const option = copy({ cells: [cell("entrance", 110), ...base.cells.slice(1)] });
+      const matrix = compareSnapshots(base, supplied === "A" ? option : null, supplied === "B" ? option : null);
+      const settings = { search: "", filter: "changed", order: "listed", offset: 0, limit: 10 } as const;
+      expect(pageSnapshotMatrix(matrix, settings).rows.map(row => row.cellId)).toEqual(["entrance"]);
+      expect(pageSnapshotMatrix(matrix, { ...settings, filter: "missing-snapshot" }).total).toBe(3);
+      expect(pageSnapshotMatrix(matrix, { ...settings, filter: "all", order: "largest-change" }).rows[0]?.cellId)
+        .toBe("entrance");
+    });
+  }
+  it("counts additions only in the snapshot that lists them", () => {
+    const a = copy({ cells: [...base.cells, cell("west", 50)] });
+    const b = copy({ cells: [...base.cells, cell("east", 25)] });
+    const matrix = compareSnapshots(base, a, b);
+    expect(matrix.optionAChanged).toBe(1);
+    expect(matrix.optionBChanged).toBe(1);
+    expect(matrix.rows.find(row => row.cellId === "west")?.optionB.kind).toBe("same");
+    expect(matrix.rows.find(row => row.cellId === "east")?.optionA.kind).toBe("same");
+  });
+  it("distinguishes an absent snapshot from removals in an explicitly empty listing", () => {
+    const settings = { search: "", filter: "changed", order: "largest-change", offset: 0, limit: 10 } as const;
+    expect(pageSnapshotMatrix(compareSnapshots(base, null, null), settings).total).toBe(0);
+    expect(pageSnapshotMatrix(compareSnapshots(base, null, copy({ cells: [] })), settings).rows.map(row => row.cellId))
+      .toEqual(["washroom", "lift", "entrance"]);
   });
   it("does not mutate matrix rows during alternate ordering", () => {
     const m = initial();
