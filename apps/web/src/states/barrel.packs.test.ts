@@ -22,6 +22,7 @@ describe("the states barrel exposes the pack tools", () => {
     "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
     "MeetUp", "buildMeetUp", "halfway", "meetUpPage", "MEET_UP_ORDERS", "MEET_UP_LIMITS", "isMeetUpOrder", "isMeetUpLimit", "meetUpToText", "meetUpToCsv", "meetUpRowText", "meetUpOrderLabel", "meetUpCaveat", "MEET_UP_FILENAMES", "MEET_UP_CSV_FILENAMES", "meetUpMinutes", "readPaces", "hasPace", "NO_PACES", "meetUpTimeText", "meetUpPaceNote", "meetUpMinutesCell", "meetUpToGeoJson", "MEET_UP_GEOJSON_FILENAMES",
+    "PointPaste", "readPoint", "normalisePointText", "MAX_POINT_TEXT", "formatPointAs", "POINT_STYLES", "isPointStyle", "splitDms", "splitDm", "pointProblemText", "pointReadText", "pointStatusText", "pointPasteHelp", "pointEquivalents", "pointFormatName", "pointStyleName",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
   ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
 });
