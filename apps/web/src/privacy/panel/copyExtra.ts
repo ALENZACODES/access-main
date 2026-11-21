@@ -153,6 +153,12 @@ export function activityText(
         return `Liste de tout ce qui est conservé téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "statements-export":
         return `Liste de ce que l’App dit des données téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "handoff-export":
+        return `Liste des liens vers d’autres applications téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "query-export":
+        return `Liste de ce qu’une adresse web peut contenir téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "retention-export":
+        return `Liste de la durée de conservation téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "receipt-export":
         return `Registre de vos choix téléchargé (${e.format === "csv" ? "CSV" : "texte"})`;
       case "glance-export":
@@ -192,6 +198,12 @@ export function activityText(
       return `Downloaded the list of everything kept (${e.format === "csv" ? "CSV" : "text"})`;
     case "statements-export":
       return `Downloaded the list of what the App says about data (${e.format === "csv" ? "CSV" : "text"})`;
+    case "handoff-export":
+      return `Downloaded the list of links to other apps (${e.format === "csv" ? "CSV" : "text"})`;
+    case "query-export":
+      return `Downloaded the list of what a web address can carry (${e.format === "csv" ? "CSV" : "text"})`;
+    case "retention-export":
+      return `Downloaded the list of how long the App keeps things (${e.format === "csv" ? "CSV" : "text"})`;
     case "receipt-export":
       return `Downloaded the record of your choices (${e.format === "csv" ? "CSV" : "text"})`;
     case "glance-export":

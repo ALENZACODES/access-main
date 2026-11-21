@@ -20,6 +20,13 @@ import { renderAddressesHtml } from "./addressSection";
 import { renderGlanceHtml } from "./glanceSection";
 import type { ReceiptRow } from "./receipt";
 import { renderReceiptHtml } from "./receiptSection";
+import type { HandoffRow } from "./handoffRegister";
+import { renderHandoffHtml } from "./handoffSection";
+import type { QueryRow } from "./queryRegister";
+import type { AddressCheck } from "./queryLive";
+import { renderQueryHtml } from "./querySection";
+import type { RetentionRow } from "./retentionRegister";
+import { renderRetentionHtml, type RetentionCheckView } from "./retentionSection";
 import type { StatementResult } from "./statementRegister";
 import { renderStatementsHtml } from "./statementSection";
 import type { GlanceSources } from "./glance";
@@ -63,6 +70,16 @@ export interface PanelView {
   glance?: GlanceSources;
   /** The record of the person's choices. Leave undefined to hide the section. */
   receipt?: readonly ReceiptRow[];
+  /** The links that open another app. Leave undefined to hide the section. */
+  handoffs?: readonly HandoffRow[];
+  /** What is kept, for how long and how much. Leave undefined to hide the section. */
+  retention?: readonly RetentionRow[];
+  /** The result of comparing the list with what is stored. Leave undefined before the person asks. */
+  retentionCheck?: RetentionCheckView;
+  queries?: readonly QueryRow[];
+  queryCheck?: AddressCheck;
+  /** Whether the check button is shown. Off when the page cannot read its own address. */
+  queryCanCheck?: boolean;
   /** Where the App says data stays on the device or is not sent. Leave undefined to hide the section. */
   statements?: readonly StatementResult[];
   /** Show the buttons that download everything the App keeps on this device. */
@@ -147,6 +164,9 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.deviceNames === undefined ? "" : renderDeviceKnownHtml(view.locale, view.deviceNames)}` +
     `${view.features === undefined ? "" : renderFeaturesHtml(view.locale, view.features)}` +
     `${view.receipt === undefined ? "" : renderReceiptHtml(view.locale, view.receipt)}` +
+    `${view.handoffs === undefined ? "" : renderHandoffHtml(view.locale, view.handoffs)}` +
+    `${view.queries === undefined ? "" : renderQueryHtml(view.locale, view.queries, view.queryCheck ?? null, view.queryCanCheck !== false)}` +
+    `${view.retention === undefined ? "" : renderRetentionHtml(view.locale, view.retention, view.retentionCheck ?? null)}` +
     `${view.statements === undefined ? "" : renderStatementsHtml(view.locale, view.statements)}` +
     `${view.glance === undefined ? "" : renderGlanceHtml(view.locale, view.glance)}` +
     `${view.addresses === undefined ? "" : renderAddressesHtml(view.locale, view.addresses)}` +

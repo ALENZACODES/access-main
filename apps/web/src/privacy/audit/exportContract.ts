@@ -91,6 +91,33 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
       fr: ["Groupe", "Quoi", "Combien", "Non confirmé par l’App"],
     },
   },
+  {
+    id: "handoffs",
+    kind: "csv",
+    stem: { en: "the-app-links-to-other-apps", fr: "l-app-liens-vers-d-autres-applications" },
+    header: {
+      en: ["What it is", "What opens", "What the App passes on", "Where in the code", "Places", "Recorded on"],
+      fr: ["De quoi il s’agit", "Ce qui s’ouvre", "Ce que l’App transmet", "Où dans le code", "Endroits", "Date d’inscription"],
+    },
+  },
+  {
+    id: "query",
+    kind: "csv",
+    stem: { en: "the-app-web-address-names", fr: "l-app-noms-de-l-adresse-web" },
+    header: {
+      en: ["Name in the address", "What it holds", "Kind", "What the App does", "Longest value read", "Where in the code", "Recorded on"],
+      fr: ["Nom dans l’adresse", "Ce qu’il contient", "Type", "Ce que l’App en fait", "Plus longue valeur lue", "Endroits dans le code", "Date d’inscription"],
+    },
+  },
+  {
+    id: "retention",
+    kind: "csv",
+    stem: { en: "the-app-how-long-kept", fr: "l-app-duree-de-conservation" },
+    header: {
+      en: ["Stored under", "What is kept", "How long", "How much", "Files read", "Recorded on"],
+      fr: ["Enregistré sous", "Ce qui est gardé", "Combien de temps", "Quelle quantité", "Fichiers lus", "Date d’inscription"],
+    },
+  },
 ];
 
 export const TEXT_CONTRACTS: readonly TextContract[] = [
@@ -129,6 +156,24 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     kind: "text",
     stem: { en: "the-app-privacy-at-a-glance", fr: "l-app-vie-privee-en-un-coup-d-oeil" },
     title: { en: "Privacy at a glance", fr: "La vie privée en un coup d’œil" },
+  },
+  {
+    id: "handoffs",
+    kind: "text",
+    stem: { en: "the-app-links-to-other-apps", fr: "l-app-liens-vers-d-autres-applications" },
+    title: { en: "Links that open another app", fr: "Liens qui ouvrent une autre application" },
+  },
+  {
+    id: "query",
+    kind: "text",
+    stem: { en: "the-app-web-address-names", fr: "l-app-noms-de-l-adresse-web" },
+    title: { en: "What a web address can carry", fr: "Ce qu’une adresse web peut contenir" },
+  },
+  {
+    id: "retention",
+    kind: "text",
+    stem: { en: "the-app-how-long-kept", fr: "l-app-duree-de-conservation" },
+    title: { en: "How long the App keeps things", fr: "Combien de temps l’App garde les choses" },
   },
 ];
 
