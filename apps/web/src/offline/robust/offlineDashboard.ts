@@ -23,6 +23,9 @@ import { mountStorageDurability } from "./storageDurabilityPanel";
 import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
+import { mountStorageScenarioPanel } from "./storageScenarioPanel";
+import { mountOfflineRecoveryJournal } from "./recoveryJournalPanel";
+import { mountOfflineRecoveryGuide } from "./recoveryGuidePanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
 import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
 import { mountOfflineCasebook } from "./offlineCasebookPanel";
@@ -258,6 +261,16 @@ export function mountOfflineDashboard(
   const recoveryHost = element("div");
   section.append(recoveryHost);
   const unmountRecovery = mountOfflineRecoveryBatches(recoveryHost, manifest, model, language, dependencies.estimateStorage);
+  const scenarioHost = element("div");
+  section.append(scenarioHost);
+  const unmountScenario = mountStorageScenarioPanel(scenarioHost, manifest, model, language, dependencies.estimateStorage);
+  const journalHost = element("div");
+  section.append(journalHost);
+  const unmountJournal = mountOfflineRecoveryJournal(journalHost, manifest, model, language);
+  const guideHost = element("div");
+  section.append(guideHost);
+  const unmountGuide = mountOfflineRecoveryGuide(guideHost, manifest, model, language, dependencies.estimateStorage);
+
   const sourceAgeHost = element("div");
   section.append(sourceAgeHost);
   const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
@@ -599,6 +612,9 @@ export function mountOfflineDashboard(
     unmountReadiness();
     unmountDiagnostics();
     unmountRecovery();
+    unmountScenario();
+    unmountJournal();
+    unmountGuide();
     unmountSourceAge();
     unmountContinuity();
     unmountCasebook();
