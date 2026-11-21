@@ -42,6 +42,7 @@ const row = (kind: SaveKind, path: string, uses: number, makes: [string, string]
 export const SAVE_REGISTER: readonly SaveRow[] = [
   row("json", "apps/web/src/features/featureScreens.tsx", 1, ["An evidence pack", "Un dossier de preuves"]),
   row("mixed", "apps/web/src/question-packet/QuestionPacketPage.tsx", 1, ["A question packet file", "Un fichier de fiche de questions"]),
+  row("mixed", "apps/web/src/question-packet/QuestionPacketPage.tsx", 1, ["A question packet file", "Un fichier de fiche de questions"]),
   row("none", "apps/web/src/hub/ReportsPage.tsx", 1, ["A report, in the format the report gives", "Un rapport, dans le format que le rapport indique"]),
   row("mixed", "apps/web/src/input/rehearsal/AccessRehearsalPage.tsx", 1, ["A file from the access rehearsal page", "Un fichier de la page de répétition de l’accès"]),
   row("mixed", "apps/web/src/data-status/standalone/main.ts", 1, ["A data status file", "Un fichier sur l’état des données"]),
