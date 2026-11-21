@@ -1,0 +1,93 @@
+.packing-list {
+  display: grid;
+  align-items: start;
+  gap: 1rem;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.packing-list :is(input, select, textarea, button) {
+  box-sizing: border-box;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  max-inline-size: 100%;
+  font: inherit;
+}
+
+.packing-list button {
+  justify-self: start;
+  white-space: normal;
+}
+
+.packing-list h3,
+.packing-list h4,
+.packing-list h5,
+.packing-list p,
+.packing-list dl {
+  margin: 0;
+}
+
+.packing-block,
+.packing-entry,
+.packing-form,
+.packing-field {
+  display: grid;
+  align-content: start;
+  gap: .5rem;
+  min-inline-size: 0;
+}
+
+.packing-form {
+  padding-block: .5rem;
+  max-inline-size: 36rem;
+}
+
+.packing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .5rem;
+}
+
+.packing-items {
+  display: grid;
+  gap: .75rem;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.packing-entry {
+  padding: .75rem;
+  border: 1px solid currentColor;
+  border-radius: .5rem;
+}
+
+.packing-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.5rem;
+}
+
+.packing-counts dd {
+  margin: 0;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.packing-note {
+  white-space: pre-wrap;
+}
+
+.packing-feedback:empty {
+  min-block-size: 0;
+  margin-block: -.5rem;
+}
+
+.packing-auxiliary {
+  display: grid;
+  gap: 1rem;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
