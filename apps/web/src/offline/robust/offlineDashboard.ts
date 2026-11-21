@@ -336,6 +336,39 @@ export function mountOfflineDashboard(
     // The original offline controls remain available when this optional view fails.
   });
 
+  // Optional private handout editor: load only on a deliberate user action.
+  const questionHost = element("div");
+  const questionLaunch = action(language === "fr" ? "Ouvrir la fiche de questions" : "Open question sheet");
+  questionHost.append(questionLaunch);
+  section.append(questionHost);
+  let questionDisposed = false;
+  let questionOpen = false;
+  let questionRevision = 0;
+  let unmountQuestion: () => void = () => undefined;
+  const onQuestionLaunch = (): void => {
+    if (questionDisposed) return;
+    if (questionOpen) {
+      questionOpen = false;
+      questionRevision += 1;
+      unmountQuestion();
+      unmountQuestion = () => undefined;
+      questionLaunch.textContent = language === "fr" ? "Ouvrir la fiche de questions" : "Open question sheet";
+      return;
+    }
+    questionOpen = true;
+    const token = ++questionRevision;
+    questionLaunch.textContent = language === "fr" ? "Fermer la fiche de questions" : "Close question sheet";
+    void import("./offlineQuestionSheetPanel").then(({ mountOfflineQuestionSheet }) => {
+      if (questionDisposed || !questionOpen || token !== questionRevision) return;
+      unmountQuestion = mountOfflineQuestionSheet(questionHost, manifest, model, language);
+    }).catch(() => {
+      if (questionDisposed || token !== questionRevision) return;
+      questionOpen = false;
+      questionLaunch.textContent = language === "fr" ? "Ouvrir la fiche de questions" : "Open question sheet";
+    });
+  };
+  questionLaunch.addEventListener("click", onQuestionLaunch);
+
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
     details.hidden = !state.expanded || state.inventory === null;
@@ -468,6 +501,10 @@ export function mountOfflineDashboard(
     unmountInquiry();
     contingencyDisposed = true;
     unmountContingency();
+    questionDisposed = true;
+    questionRevision += 1;
+    questionLaunch.removeEventListener("click", onQuestionLaunch);
+    unmountQuestion();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
