@@ -101,6 +101,15 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
     },
   },
   {
+    id: "query",
+    kind: "csv",
+    stem: { en: "the-app-web-address-names", fr: "l-app-noms-de-l-adresse-web" },
+    header: {
+      en: ["Name in the address", "What it holds", "Kind", "What the App does", "Longest value read", "Where in the code", "Recorded on"],
+      fr: ["Nom dans l’adresse", "Ce qu’il contient", "Type", "Ce que l’App en fait", "Plus longue valeur lue", "Endroits dans le code", "Date d’inscription"],
+    },
+  },
+  {
     id: "retention",
     kind: "csv",
     stem: { en: "the-app-how-long-kept", fr: "l-app-duree-de-conservation" },
@@ -153,6 +162,12 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     kind: "text",
     stem: { en: "the-app-links-to-other-apps", fr: "l-app-liens-vers-d-autres-applications" },
     title: { en: "Links that open another app", fr: "Liens qui ouvrent une autre application" },
+  },
+  {
+    id: "query",
+    kind: "text",
+    stem: { en: "the-app-web-address-names", fr: "l-app-noms-de-l-adresse-web" },
+    title: { en: "What a web address can carry", fr: "Ce qu’une adresse web peut contenir" },
   },
   {
     id: "retention",
