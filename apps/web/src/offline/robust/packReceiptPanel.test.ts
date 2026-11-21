@@ -184,8 +184,10 @@ describe("offline pack receipt panel", () => {
     expect(view.root.textContent).toContain(view.copy.captures);
     expect(view.root.textContent).toContain("2");
     expect(view.root.textContent).toContain(view.copy.saved);
-    expect(view.root.textContent).toContain("beta");
+    expect(view.root.textContent).toContain(view.copy.comparePrompt);
     expect(button(view.root, view.copy.compare).disabled).toBe(false);
+    button(view.root, view.copy.compare).click();
+    expect(view.root.textContent).toContain("beta");
     view.unmount();
   });
 
@@ -210,6 +212,7 @@ describe("offline pack receipt panel", () => {
     const view = mount();
     const textarea = view.root.querySelector("textarea")!;
     textarea.value = "x".repeat(524_289);
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
     button(view.root, view.copy.importJson).click();
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.tooLarge);
     view.unmount();
