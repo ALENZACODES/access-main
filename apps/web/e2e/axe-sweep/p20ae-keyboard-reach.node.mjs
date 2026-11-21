@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-const source = readFileSync(new URL("./p20ae-keyboard-reach.ts", import.meta.url), "utf8");
+const source = readFileSync(new globalThis.URL("./p20ae-keyboard-reach.ts", import.meta.url), "utf8");
 test("P20AE keyboard observer exports focus inspection", () => assert.match(source, /export async function inspectKeyboardReachability/));
 test("P20AE keyboard observer exports sequential Tab traversal", () => assert.match(source, /export async function tabThroughControls/));
 test("P20AE keyboard observer exports deterministic issue list", () => assert.match(source, /export function keyboardReachIssues/));
