@@ -699,9 +699,12 @@ describe("receipt pages and summaries", () => {
       id: cell.id, expectedBytes: cell.bytes, provenance: cell.provenance, cause: "present", state: "saved",
     }));
     const one = await receipt(inventory(rows), early, manyManifest);
-    const two = await receipt(inventory(rows.slice(0, 40).concat(rows.slice(40).map((row) => ({
-      ...row, cause: "missing" as const, state: "unknown" as const,
-    }))), middle, manyManifest);
+    const missingRows = rows.slice(0, 40).concat(rows.slice(40).map((row) => ({
+      ...row,
+      cause: "missing" as const,
+      state: "unknown" as const,
+    })));
+    const two = await receipt(inventory(missingRows), middle, manyManifest);
     const diff = comparePackReceipts(one, two);
     const firstPage = pageReceiptDiff(diff, {
       search: "", filter: "all", order: "listed", offset: 0, limit: 20,
