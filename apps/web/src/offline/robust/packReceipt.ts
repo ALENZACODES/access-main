@@ -348,11 +348,15 @@ function sameProvenance(a: Provenance, b: Provenance): boolean {
 function changeFor(before: PackReceiptCell | null, after: PackReceiptCell | null): ReceiptChange {
   if (!before) return after?.state === "UNKNOWN" ? "UNKNOWN" : "added";
   if (!after) return before.state === "UNKNOWN" ? "UNKNOWN" : "removed";
-  if (before.state === "UNKNOWN" || after.state === "UNKNOWN") return "UNKNOWN";
+  if (before.state === "saved" && after.state === "UNKNOWN") {
+    return after.cause === "missing" || after.cause === "stale" ? "lost" : "UNKNOWN";
+  }
+  if (before.state === "UNKNOWN" && after.state === "saved") {
+    return before.cause === "missing" || before.cause === "stale" ? "saved" : "UNKNOWN";
+  }
+  if (before.cause === "UNKNOWN" || after.cause === "UNKNOWN") return "UNKNOWN";
   if (!sameProvenance(before.source, after.source)) return "source-changed";
   if (before.bytes !== after.bytes) return "size-changed";
-  if (before.state === "saved" && after.state === "UNKNOWN") return "lost";
-  if (before.state === "UNKNOWN" && after.state === "saved") return "saved";
   return "unchanged";
 }
 
