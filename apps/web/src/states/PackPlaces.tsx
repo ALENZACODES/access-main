@@ -7,6 +7,7 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { NearGroups } from "./NearGroups.tsx";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
@@ -177,6 +178,15 @@ export function PackPlaces({ places, locale, today }: Props) {
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
       <TextMap places={view.shownPlaces} from={from} locale={locale} />
+      <NearGroups
+        places={view.shownPlaces}
+        locale={locale}
+        onUsePoint={(point) => {
+          setLat(String(point.lat));
+          setLon(String(point.lon));
+          setBand(null);
+        }}
+      />
       <PackBands places={view.beforeBand} shown={view.shownPlaces} from={from} locale={locale} today={day} selected={activeBand} onSelect={setBand} />
       <StreetIndex places={view.shownPlaces} locale={locale} onAdd={shortlist.add} />
       <p role="status">{view.announcement}</p>
