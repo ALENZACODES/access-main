@@ -22,7 +22,7 @@ export interface StatementRow {
   recordedOn: string;
 }
 
-const REVIEWED = "2026-11-20";
+const REVIEWED = "2026-11-21";
 const SOURCE = "Read from the source file named in the row";
 
 const row = (path: string, en: number, fr: number, whereEn: string, whereFr: string): StatementRow => ({ path, where: { en: whereEn, fr: whereFr }, en, fr, source: SOURCE, recordedOn: REVIEWED });
@@ -40,7 +40,9 @@ export const STATEMENT_REGISTER: readonly StatementRow[] = [
   row("apps/web/src/offline/robust/recoveryBatchesCopy.ts", 1, 1, "The recovery batches plan", "Le plan des lots de reprise"),
   row("apps/web/src/offline/robust/updateCopy.ts", 1, 1, "The offline update review", "L’examen de la mise à jour hors ligne"),
   row("apps/web/src/pages/AboutPage.tsx", 1, 0, "The About page", "La page À propos"),
+  row("apps/web/src/recovery/RecoveryPlanReview.tsx", 1, 1, "Recovery plan file review", "Examen d’un fichier de plan de récupération"),
   row("apps/web/src/recovery/recoveryLedger.ts", 1, 0, "The recovery ledger", "Le registre de reprise"),
+  row("apps/web/src/recovery/recoveryReconciliationCopy.ts", 1, 1, "Recovery reconciliation register", "Registre de rapprochement des récupérations"),
   row("apps/web/src/states/PackCompare.tsx", 1, 1, "Comparing a places file", "La comparaison d’un fichier de lieux"),
 ];
 
