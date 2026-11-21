@@ -155,15 +155,19 @@ function checkedEntries(entries: readonly HandbackEntry[]): HandbackEntry[] {
       !ITEM_BY_ID.has(entry.itemId) || seen.has(entry.itemId)) {
       throw new TypeError("Invalid or duplicate handback item");
     }
-    if (!HANDBACK_STATES.includes(entry.state)) throw new TypeError("Invalid handback state");
-    if (entry.updatedAt !== null && !validTimestamp(entry.updatedAt)) {
+    const state: unknown = entry.state;
+    if (typeof state !== "string" || !HANDBACK_STATES.some((candidate) => candidate === state)) {
+      throw new TypeError("Invalid handback state");
+    }
+    const updatedAt: unknown = entry.updatedAt;
+    if (updatedAt !== null && !validTimestamp(updatedAt)) {
       throw new TypeError("Invalid handback item timestamp");
     }
     seen.add(entry.itemId);
     normalized.push({
       itemId: entry.itemId,
-      state: entry.state,
-      updatedAt: entry.updatedAt,
+      state: state as HandbackItemState,
+      updatedAt: updatedAt as string | null,
     });
   }
   for (const item of HANDBACK_ITEMS) {
