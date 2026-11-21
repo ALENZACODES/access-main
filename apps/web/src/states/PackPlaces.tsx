@@ -26,6 +26,8 @@ import { Shortlist } from "./Shortlist.tsx";
 import { MAX_SHORTLIST, type AddResult, resolveShortlist } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
 import { useShortlist } from "./useShortlist.ts";
+import { useVisitMarks } from "./useVisitMarks.ts";
+import { VisitMarks } from "./VisitMarks.tsx";
 import type { Locale } from "./stateCopy.ts";
 import { t } from "./typography.ts";
 
@@ -94,6 +96,8 @@ export function PackPlaces({ places, locale, today }: Props) {
   const byId = useMemo(() => new Map(parsed.places.map((p) => [p.id, p] as const)), [parsed.places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
   const stops = useMemo(() => inputsFromPlaces(resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place)), [shortlist.list, parsed.places]);
+  const visitMarks = useVisitMarks(day);
+  const listedPlaces = useMemo(() => resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place), [shortlist.list, parsed.places]);
   const from = near.status === "ok" ? near.point : null;
   // A distance band means nothing without a point, so it is ignored (not forgotten) until a point is typed again.
   const activeBand = from === null ? null : band;
@@ -207,6 +211,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onRemove={shortlist.remove}
         onClear={shortlist.clear}
       />
+      <VisitMarks places={listedPlaces} packPlaces={parsed.places} state={visitMarks} locale={locale} today={day} />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
