@@ -21,6 +21,7 @@ describe("the states barrel exposes the pack tools", () => {
     "TextMap", "DistanceMatrix", "buildDistanceMatrix", "cellText", "matrixSummary", "matrixCaveat", "matrixToText", "matrixToCsv", "MAX_MATRIX_PLACES", "buildTextMap", "buildAround", "bearingDegrees", "compassOf", "compassName", "locate", "partOf", "tagMix", "cellSentence", "gridSummary", "directionLine", "textMapToText", "aroundToText", "textMapToCsv", "aroundToCsv", "GRID_SIZES", "COMPASS",
     "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
+    "SameName", "nameKey", "buildSameName", "listSameName", "sameNamePage", "SAME_NAME_ORDERS", "SAME_NAME_SIZES", "SAME_NAME_FILTERS", "SAME_NAME_LIMITS", "isSameNameOrder", "sameNameToText", "sameNameToCsv", "sameNameCaveat", "sameNameHeading", "SAME_NAME_FILENAMES", "SAME_NAME_CSV_FILENAMES", "findNearNames", "nearRelation", "NEAR_NAME_MAX_PAIRS", "nearNamesToCsv", "nearNamesToText", "nearPairText", "nearNamesSummary", "NEAR_NAMES_CSV_FILENAMES",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
   ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
 });
