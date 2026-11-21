@@ -75,8 +75,8 @@ describe("offline pack receipt integration", () => {
     const panel = read("apps/web/src/offline/robust/packReceiptPanel.ts");
     expect(panel).not.toContain("localStorage.setItem");
     expect(panel).not.toContain("indexedDB.open");
-    expect(panel).toContain('["capture"');
-    expect(panel).toContain('["importButton"');
+    expect(panel).toContain('[capture, "click"');
+    expect(panel).toContain('[importButton, "click"');
   });
 
   it("keeps receipt export behind explicit user controls", () => {
