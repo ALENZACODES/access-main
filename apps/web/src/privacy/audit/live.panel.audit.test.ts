@@ -128,8 +128,9 @@ describe("live panel states", () => {
 
   it("does not show the extra names it now covers in the outside section", () => {
     const html = build(SETUPS[0]!, "en").html;
-    expect(html).not.toContain("Your display preferences");
-    expect(html).toContain("The list of map tiles kept for offline use");
+    const o = html.slice(html.indexOf("data-privacy-outside"), html.indexOf("</div>", html.indexOf("data-privacy-outside")));
+    expect(o).not.toContain("Your display preferences");
+    expect(o).toContain("The list of map tiles kept for offline use");
   });
 });
 

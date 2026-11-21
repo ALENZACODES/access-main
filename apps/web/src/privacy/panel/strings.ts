@@ -2,6 +2,8 @@
 // stores: that comes from the inventory the caller passes in.
 // FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
 
+import { liveSummary } from "./retentionLive";
+import { addressSummary } from "./queryLive";
 import type { Locale } from "./copyLint";
 import { DEVICE_STRINGS, isDeviceStatus, type DeviceStatus } from "./copyDevice";
 import { MORE_STRINGS, type MoreStatus } from "./copyMore";
@@ -25,6 +27,14 @@ export type Status =
   | { kind: "features-exported"; format: "csv" | "text" }
   | { kind: "addresses-exported"; format: "csv" | "text" }
   | { kind: "glance-exported"; format: "csv" | "text" }
+  | { kind: "receipt-exported"; format: "csv" | "text" }
+  | { kind: "handoff-exported"; format: "csv" | "text" }
+  | { kind: "retention-exported"; format: "csv" | "text" }
+  | { kind: "retention-checked"; compared: number; differences: number }
+  | { kind: "query-exported"; format: "csv" | "text" }
+  | { kind: "query-checked"; params: number; findings: number }
+  | { kind: "query-unreadable" }
+  | { kind: "statements-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
   | DeviceStatus;
@@ -127,6 +137,22 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `List of web addresses and network requests prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "glance-exported":
           return `Privacy counts prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "receipt-exported":
+          return `Record of your choices prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "handoff-exported":
+          return `List of links that open another app prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "query-checked":
+          return addressSummary("en", s.params, s.findings);
+        case "query-unreadable":
+          return "The address of this page could not be read, so nothing was examined.";
+        case "query-exported":
+          return `List of what a web address can carry prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "retention-checked":
+          return liveSummary("en", s.compared, s.differences);
+        case "retention-exported":
+          return `List of how long the App keeps things prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "statements-exported":
+          return `List of what the App says about your data prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
           return "The list is marked as seen.";
         default:
@@ -199,6 +225,22 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Liste des adresses web et des requêtes réseau préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "glance-exported":
           return `Chiffres sur la vie privée préparés ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "receipt-exported":
+          return `Registre de vos choix préparé ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "handoff-exported":
+          return `Liste des liens qui ouvrent une autre application préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "query-checked":
+          return addressSummary("fr", s.params, s.findings);
+        case "query-unreadable":
+          return "L’adresse de cette page n’a pas pu être lue, donc rien n’a été examiné.";
+        case "query-exported":
+          return `Liste de ce qu’une adresse web peut contenir préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "retention-checked":
+          return liveSummary("fr", s.compared, s.differences);
+        case "retention-exported":
+          return `Liste de la durée de conservation de l’App préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "statements-exported":
+          return `Liste de ce que l’App dit de vos données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":
           return "La liste est marquée comme vue.";
         default:
