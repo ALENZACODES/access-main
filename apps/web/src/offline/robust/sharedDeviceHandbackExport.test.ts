@@ -71,17 +71,17 @@ describe("shared-device handback JSON and filenames", () => {
 
   it("sanitizes filenames and preserves the requested extension", () => {
     expect(sharedDeviceHandbackFilename("handback-1", "json")).toBe("shared-device-handback-handback-1.json");
-    expect(sharedDeviceHandbackFilename("../private id", "txt")).toBe("shared-device-handback----private-id.txt");
+    expect(sharedDeviceHandbackFilename("../private id", "txt")).toBe("shared-device-handback---private-id.txt");
     expect(sharedDeviceHandbackFilename(" ", "json")).toBe("shared-device-handback-review.json");
   });
 });
 
 describe("saveSharedDeviceHandback", () => {
-  it("creates a JSON blob and revokes its object URL after the explicit export", () => {
+  it("creates a JSON blob and revokes its object URL after the explicit export", async () => {
     const review = sample();
-    let captured = "";
+    let captured: Promise<string> | null = null;
     const createUrl = vi.fn((blob: Blob) => {
-      void blob.text().then((text) => { captured = text; });
+      captured = blob.text();
       return "blob:handback";
     });
     const revokeUrl = vi.fn();
@@ -92,7 +92,7 @@ describe("saveSharedDeviceHandback", () => {
     expect(click).toHaveBeenCalledOnce();
     expect(document.querySelector("a[download]")).toBeNull();
     click.mockRestore();
-    expect(captured).toBe("");
+    expect(await captured).toContain('"schema":"shared-device-handback-v1"');
   });
 
   it("creates a text blob with the selected language", () => {
