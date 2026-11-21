@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PRIORITY, RULES, priority, queue, routeMatrix, staleEvidence, comparePriorities, filterQueue, humanTasks } from './interaction-evidence-policy.mjs';
 import { KINDS, LANGUAGES, UNKNOWN } from './interaction-evidence-contract.mjs';
-import { DATE, check, route, snapshot, paired, measured } from './interaction-evidence-fixtures.mjs';
+import { DATE, HASH, check, route, snapshot, paired, measured } from './interaction-evidence-fixtures.mjs';
 const q = input => queue(input, { today: DATE });
 const matrix = input => routeMatrix(input, { today: DATE });
 const task = input => humanTasks(input, { today: DATE });
