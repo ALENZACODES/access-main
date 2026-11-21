@@ -31,11 +31,11 @@ export async function currentFocus(page: Page): Promise<FocusItem | null> {
     const selector = node.id ? `#${CSS.escape(node.id)}` : `${node.localName}[tabindex="${node.tabIndex}"]`;
     return {
       selector,
-      role: node.getAttribute("role") ?? node.localName,
+      role: node.getAttribute("role") ?? (node instanceof HTMLInputElement && node.type === "radio" ? "radio" : node.localName),
       name,
       tabIndex: node.tabIndex,
       disabled: node.matches(":disabled,[aria-disabled='true']"),
-      hidden: rect.width <= 0 || rect.height <= 0 || getComputedStyle(node).visibility === "hidden",
+      hidden: rect.width <= 0 || rect.height <= 0 || getComputedStyle(node).visibility === "hidden" || !!node.closest('[aria-hidden="true"],[inert]'),
       rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
     };
   });
@@ -65,11 +65,11 @@ export async function traceTabOrder(page: Page, max = 100): Promise<FocusTrace> 
           (node instanceof HTMLInputElement ? node.labels?.[0]?.textContent?.trim() ?? "" : "");
         return {
           selector: node.id ? `#${CSS.escape(node.id)}` : `[${key}="${node.getAttribute(key)}"]`,
-          role: node.getAttribute("role") ?? node.localName,
+          role: node.getAttribute("role") ?? (node instanceof HTMLInputElement && node.type === "radio" ? "radio" : node.localName),
           name,
           tabIndex: node.tabIndex,
           disabled: node.matches(":disabled,[aria-disabled='true']"),
-          hidden: rect.width <= 0 || rect.height <= 0 || getComputedStyle(node).visibility === "hidden",
+          hidden: rect.width <= 0 || rect.height <= 0 || getComputedStyle(node).visibility === "hidden" || !!node.closest('[aria-hidden="true"],[inert]'),
           rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
         };
       }, attribute);
@@ -77,7 +77,7 @@ export async function traceTabOrder(page: Page, max = 100): Promise<FocusTrace> 
       if (seen.has(item.selector)) { stop = "wrap"; break; }
       seen.add(item.selector);
       items.push(item);
-      if (item.hidden) issues.push({ code: "focus-hidden", selector: item.selector, detail: "Tab reached a hidden element" });
+      if (item.hidden) issues.push({ code: "focus-hidden", selector: item.selector, detail: "Tab reached a hidden or inert element" });
       if (item.disabled) issues.push({ code: "focus-disabled", selector: item.selector, detail: "Tab reached a disabled element" });
       if (item.tabIndex > 0) issues.push({ code: "focus-positive-tabindex", selector: item.selector, detail: "Positive tabindex changes order" });
       if (!item.name && ["button", "a", "input", "select", "textarea"].includes(item.role)) {

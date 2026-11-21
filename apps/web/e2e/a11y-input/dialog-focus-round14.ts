@@ -53,7 +53,7 @@ export async function exerciseEscapeAndRestore(page: Page, trigger: Locator): Pr
   await expect(trigger).toBeVisible();
   const id = await trigger.getAttribute("aria-controls");
   if (!id) throw new Error("Dialog trigger must provide aria-controls");
-  const dialog = page.locator(`#${CSS.escape(id)}`);
+  const dialog = page.locator(`[id=${JSON.stringify(id)}]`);
   await trigger.focus();
   await page.keyboard.press("Enter");
   await expect(dialog).toBeVisible();

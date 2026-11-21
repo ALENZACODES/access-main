@@ -9,12 +9,12 @@ test.describe("P16 round 14 form state transitions", () => {
     await setForm(page, `<form><label for="name">Name</label><input id="name" required><button type="submit">Continue</button></form>`);
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator("#name")).toBeFocused();
-    await expect(page.locator("#name")).toBeInvalid();
+    expect(await page.locator("#name").evaluate((node) => (node as HTMLInputElement).validity.valid)).toBe(false);
   });
   test("valid required field is not marked invalid", async ({ page }) => {
     await setForm(page, `<form><label for="name">Name</label><input id="name" required value="Alex"><button type="submit">Continue</button></form>`);
     expect((await inspectFormFeedback(page)).issues).toEqual([]);
-    await expect(page.locator("#name")).toBeValid();
+    expect(await page.locator("#name").evaluate((node) => (node as HTMLInputElement).validity.valid)).toBe(true);
   });
   test("required custom textbox exposes required state", async ({ page }) => {
     await setForm(page, `<div role="textbox" aria-label="Name" aria-required="true" contenteditable="true"></div>`);

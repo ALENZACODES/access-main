@@ -115,6 +115,20 @@ export async function inspectSemanticSurface(page: Page): Promise<SemanticSnapsh
       }
       return { selector, role, name, description, hidden: isHidden, tag: node.localName };
     });
+    const referenceNodes = Array.from(document.querySelectorAll<HTMLElement>(
+      "[aria-labelledby],[aria-describedby],[aria-controls],[aria-owns]",
+    ));
+    referenceNodes.forEach((node, index) => {
+      const selector = selectorFor(node, index + nodes.length + 1000);
+      for (const attribute of ["aria-labelledby", "aria-describedby", "aria-controls", "aria-owns"]) {
+        const ids = (node.getAttribute(attribute) ?? "").split(/\\s+/).filter(Boolean);
+        for (const id of ids) {
+          if (!document.getElementById(id)) {
+            issues.push({ code: "id-reference-missing", selector, detail: `${attribute} references missing id ${id}` });
+          }
+        }
+      }
+    });
     const headingNodes = Array.from(document.querySelectorAll<HTMLElement>("h1,h2,h3,h4,h5,h6"));
     const headings = headingNodes.map((node) => ({
       level: Number(node.localName.slice(1)),
@@ -136,9 +150,11 @@ export async function inspectSemanticSurface(page: Page): Promise<SemanticSnapsh
     )).map((node, index): SemanticNode => {
       const selector = selectorFor(node, index + nodes.length);
       const role = node.getAttribute("role") ?? node.localName;
-      const name = accessibleName(node);
+      const ariaLabel = node.getAttribute("aria-label")?.trim() ?? "";
+      const labelledBy = referencedText(node, "aria-labelledby");
+      const name = ariaLabel || labelledBy;
       if (["navigation", "region", "complementary"].includes(role) && !name) {
-        issues.push({ code: "landmark-name-empty", selector, detail: `${role} landmark needs a name` });
+        issues.push({ code: "landmark-name-empty", selector, detail: `${role} landmark needs an explicit accessible name` });
       }
       return { selector, role, name, description: "", hidden: hidden(node), tag: node.localName };
     });
