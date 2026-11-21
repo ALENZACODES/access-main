@@ -21,6 +21,9 @@ import { statementsAsCsv, statementsAsText } from "./statementSection";
 import { receiptAsCsv, receiptAsText } from "./receiptSection";
 import type { HandoffRow } from "./handoffRegister";
 import { handoffAsCsv, handoffAsText } from "./handoffSection";
+import type { RetentionRow } from "./retentionRegister";
+import { comparedCount, checkStored } from "./retentionLive";
+import { retentionAsCsv, retentionAsText, type RetentionCheckView } from "./retentionSection";
 import { glanceFigures, type GlanceSources } from "./glance";
 import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
@@ -76,6 +79,8 @@ export interface ControllerDeps {
   receipt?: boolean;
   /** The links in the App that open another app. With it, the panel lists them and offers a download. */
   handoffs?: readonly HandoffRow[];
+  /** What the App keeps, for how long and how much, as read from its code. With it, the panel shows the list and offers a download. */
+  retention?: readonly RetentionRow[];
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -119,6 +124,8 @@ export interface PrivacyState {
   scan: DeviceScan | null;
   /** The browser's answers about features, or null before the check */
   featureStates: FeatureStates | null;
+  /** What comparing the retention list with the stored values found, or null before the person asks */
+  retentionCheck: RetentionCheckView | null;
   confirmingClearDevice: boolean;
 }
 
@@ -143,6 +150,9 @@ export type PrivacyAction =
   | { type: "export-receipt-text" }
   | { type: "export-handoff-csv" }
   | { type: "export-handoff-text" }
+  | { type: "check-retention" }
+  | { type: "export-retention-csv" }
+  | { type: "export-retention-text" }
   | { type: "export-statements-csv" }
   | { type: "export-statements-text" }
   | { type: "mark-seen" }
@@ -264,6 +274,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     signals: null,
     scan: null,
     featureStates: null,
+    retentionCheck: null,
     confirmingClearDevice: false,
   };
   let plan: ImportPlan | null = null;
@@ -405,6 +416,27 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const file = csv ? handoffAsCsv(loc, deps.handoffs, deps.now(), loc === "fr" ? ";" : ",") : handoffAsText(loc, deps.handoffs, deps.now());
         log({ kind: "handoff-export", format: csv ? "csv" : "text" });
         state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "handoff-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "check-retention": {
+        if (deps.retention === undefined || deps.retention.length === 0) break;
+        if (storage === null) {
+          state = unavailable();
+          break;
+        }
+        const findings = checkStored(storage, deps.retention, deps.now());
+        const compared = comparedCount(storage, deps.retention);
+        state = { ...state, confirmingErase: false, lastExport: null, retentionCheck: { compared, findings }, status: { kind: "retention-checked", compared, differences: findings.length } };
+        break;
+      }
+      case "export-retention-csv":
+      case "export-retention-text": {
+        if (deps.retention === undefined || deps.retention.length === 0) break;
+        const csv = action.type === "export-retention-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? retentionAsCsv(loc, deps.retention, deps.now(), loc === "fr" ? ";" : ",") : retentionAsText(loc, deps.retention, deps.now());
+        log({ kind: "retention-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "retention-exported", format: csv ? "csv" : "text" } };
         break;
       }
       case "export-receipt-csv":
@@ -704,6 +736,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
         ...(statementsFor(deps) !== null ? { statements: statementsFor(deps) as StatementResult[] } : {}),
         ...(deps.handoffs !== undefined && deps.handoffs.length > 0 ? { handoffs: deps.handoffs } : {}),
+        ...(deps.retention !== undefined && deps.retention.length > 0 ? { retention: deps.retention, ...(state.retentionCheck !== null ? { retentionCheck: state.retentionCheck } : {}) } : {}),
         ...(receiptFor(deps, state.consent) !== null ? { receipt: receiptFor(deps, state.consent) as ReceiptRow[] } : {}),
         ...(glanceSources(deps) !== null ? { glance: glanceSources(deps) as GlanceSources } : {}),
         ...(deps.kept !== undefined ? { keptList: true } : {}),
