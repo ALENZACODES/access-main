@@ -1,5 +1,5 @@
 /** Explicit manual CLI. No network, telemetry, credential handling or scheduling. */
-import { lstat, realpath, readFile, open } from 'node:fs/promises';
+import { lstat, realpath, open } from 'node:fs/promises';
 import { dirname, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_BYTES, validDay, parseLedger } from './review-ledger-contract.mjs';

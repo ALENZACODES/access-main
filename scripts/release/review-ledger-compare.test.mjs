@@ -11,7 +11,6 @@ import {
 } from './review-ledger-fixtures.mjs';
 const diff = (before, after) => compareLedgers(before, after, { today: TODAY });
 const reconciliation = ledger => evidenceReconciliation(ledger, { today: TODAY });
-function keys(rows) { return rows.map(x => `${x.id}:${x.kind}`); }
 function codes(rows) { return rows.map(x => x.code); }
 
 test('identical empty ledgers produce no changes', () => {
