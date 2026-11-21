@@ -166,6 +166,25 @@ test.describe("P16 round eight route continuity", () => {
       .toContain("language-selection-mismatch");
   });
 
+  test("a standalone French switch is checked against the page language", async ({ page }) => {
+    await fixture(page, `<main><h1>Home</h1></main>
+      <div role="group" aria-label="Language">
+        <button lang="en" aria-pressed="false">English</button>
+        <button lang="fr" aria-pressed="true">Français</button>
+      </div>`);
+    expect((await inspectLanguageButtons(page)).map((item) => item.code))
+      .toContain("language-selection-mismatch");
+  });
+
+  test("a standalone matching French switch passes", async ({ page }) => {
+    await fixture(page, `<main><h1>Accueil</h1></main>
+      <div role="group" aria-label="Langue">
+        <button lang="en" aria-pressed="false">English</button>
+        <button lang="fr" aria-pressed="true">Français</button>
+      </div>`, "fr");
+    expect(await inspectLanguageButtons(page)).toEqual([]);
+  });
+
   test("shell and embedded language groups can each select one option", async ({ page }) => {
     await fixture(page, `<header class="site-header"><div role="group" aria-label="Language">
       <button lang="en" aria-pressed="true">English</button>

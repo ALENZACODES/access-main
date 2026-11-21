@@ -196,9 +196,13 @@ export async function inspectLanguageButtons(page: Page): Promise<RouteFinding[]
         findings.push({ code: "language-selection-count", target,
           detail: `Exactly one language choice must be pressed; found ${selected.length}` });
       }
-      // Only the shell switch controls html[lang]. An embedded control may
-      // select its own localized view without changing the page language.
-      if (group.closest(".site-header") && selected.length === 1) {
+      // The shell controls the document language. A standalone switch on a
+      // fixture or minimal page also controls it when no shell switch exists.
+      // Embedded controls must not be compared with html[lang] when the shell
+      // has its own language group (they can select a local content language).
+      const ownsDocumentLanguage = Boolean(group.closest(".site-header")) ||
+        (groups.size === 1 && choices.length >= 2);
+      if (ownsDocumentLanguage && selected.length === 1) {
         const current = document.documentElement.lang.toLowerCase().slice(0, 2);
         if (selected[0]?.lang !== current) {
           findings.push({ code: "language-selection-mismatch", target,
