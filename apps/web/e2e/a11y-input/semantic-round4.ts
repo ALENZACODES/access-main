@@ -163,8 +163,33 @@ export async function assertSemantics(page: Page): Promise<void> {
   expect(await auditSemantics(page), "Interactive semantics and references").toEqual([]);
 }
 
+/**
+ * Resolve once the document has had no DOM change for `quietMs`, or after `capMs`. A route that is
+ * still re-rendering replaces buttons between the count and the read, and an element that was
+ * replaced reads as having no name, which is a page still settling and not an unnamed control.
+ * The cap only bounds the wait; it does not let the audit pass or skip anything.
+ */
+export async function waitForQuietDom(page: Page, quietMs = 300, capMs = 5000): Promise<void> {
+  await page.evaluate(({ quiet, cap }) => new Promise<void>((resolve) => {
+    let timer = window.setTimeout(done, quiet);
+    const capTimer = window.setTimeout(done, cap);
+    const observer = new MutationObserver(() => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(done, quiet);
+    });
+    observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
+    function done(): void {
+      observer.disconnect();
+      window.clearTimeout(timer);
+      window.clearTimeout(capTimer);
+      resolve();
+    }
+  }), { quiet: quietMs, cap: capMs });
+}
+
 /** Assert accessibility tree names using Playwright's accessible-name engine. */
 export async function auditRoleNames(page: Page): Promise<AuditFinding[]> {
+  await waitForQuietDom(page);
   const roles = ["button", "link", "checkbox", "switch", "radio", "tab"] as const;
   const findings: AuditFinding[] = [];
   for (const role of roles) {
