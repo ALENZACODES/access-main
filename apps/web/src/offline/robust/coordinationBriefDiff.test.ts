@@ -1,0 +1,41 @@
+import { describe, expect, it } from "vitest";
+import { addBriefStep, createCoordinationBrief, editBriefStep, moveBriefStep, removeBriefStep, setBriefStatus, type StepDraft } from "./coordinationBrief";
+import { compareCoordinationBrief, coordinationDiffText } from "./coordinationBriefDiff";
+const at = (hour: number): string => `2026-11-20T${String(hour).padStart(2, "0")}:00:00.000Z`;
+const sample: StepDraft = { label: "Arrival enquiry", topic: "arrival", priority: "essential",
+  question: "What information is available about arrival?", fallbackQuestion: "Who else can we ask?",
+  contactMethod: "", note: "", provenance: null };
+const empty = createCoordinationBrief("ontario", "Enquiries", "2026-11-20");
+const one = addBriefStep(empty, "arrival", "event1", at(10), sample);
+const two = addBriefStep(one, "rest", "event2", at(11), { ...sample, label: "Rest enquiry", topic: "rest" });
+describe("offline user-authored coordination diff preview", () => {
+  it("compares empty briefs without guessing", () => { expect(compareCoordinationBrief(empty, empty).status).toBe("ready"); });
+  it("does not report false additions", () => { expect(compareCoordinationBrief(one, one).added).toBe(0); });
+  it("reports one unchanged checkpoint", () => { expect(compareCoordinationBrief(one, one).unchanged).toBe(1); });
+  it("reports a newly added checkpoint", () => { expect(compareCoordinationBrief(one, two).added).toBe(1); });
+  it("reports a removed checkpoint", () => { expect(compareCoordinationBrief(two, one).removed).toBe(1); });
+  it("reports an entirely new brief", () => { expect(compareCoordinationBrief(empty, two).added).toBe(2); });
+  it("reports removal of all steps", () => { expect(compareCoordinationBrief(two, empty).removed).toBe(2); });
+  it("counts changed wording", () => { const edited = editBriefStep(one, "arrival", "event2", at(11), { ...sample, question: "A revised question" }); expect(compareCoordinationBrief(one, edited).changed).toBe(1); });
+  it("marks wording in change kind", () => { const edited = editBriefStep(one, "arrival", "event2", at(11), { ...sample, label: "Changed" }); expect(compareCoordinationBrief(one, edited).rows[0]?.kinds).toContain("wording"); });
+  it("does not report changes merely for a new timestamp when contents match", () => { const edited = editBriefStep(one, "arrival", "event2", at(11), sample); expect(compareCoordinationBrief(one, edited).unchanged).toBe(1); });
+  it("reports movement distinctly", () => { const moved = moveBriefStep(two, "rest", 0, "event3", at(12)); expect(compareCoordinationBrief(two, moved).moved).toBe(2); });
+  it("reports change to conversation status", () => { const changed = setBriefStatus(one, "arrival", "event2", at(11), "asked"); expect(compareCoordinationBrief(one, changed).rows[0]?.kinds).toContain("status"); });
+  it("counts first recorded reply", () => { const changed = setBriefStatus(one, "arrival", "event2", at(11), "reply-recorded"); expect(compareCoordinationBrief(one, changed).newReplies).toBe(1); });
+  it("does not count other statuses as replies", () => { const changed = setBriefStatus(one, "arrival", "event2", at(11), "follow-up"); expect(compareCoordinationBrief(one, changed).newReplies).toBe(0); });
+  it("reports new source metadata", () => { const changed = editBriefStep(one, "arrival", "event2", at(11), { ...sample, provenance: { source: "User note", licence: "Personal", date: "2026-11-01" } }); expect(compareCoordinationBrief(one, changed).sourceChanges).toBe(1); });
+  it("reports source removal", () => { const withSource = editBriefStep(one, "arrival", "event2", at(11), { ...sample, provenance: { source: "User note", licence: "Personal", date: "2026-11-01" } }); expect(compareCoordinationBrief(withSource, one).sourceChanges).toBe(1); });
+  it("does not invent source changes when both are unknown", () => { expect(compareCoordinationBrief(two, two).sourceChanges).toBe(0); });
+  it("reports different regions as UNKNOWN", () => { const different = createCoordinationBrief("another", "Enquiries", "2026-11-20"); expect(compareCoordinationBrief(empty, different).status).toBe("UNKNOWN"); });
+  it("does not invent a difference listing for unrelated regions", () => { const different = createCoordinationBrief("another", "Enquiries", "2026-11-20"); expect(compareCoordinationBrief(empty, different).rows).toHaveLength(0); });
+  it("English preview lists additions", () => { expect(coordinationDiffText(compareCoordinationBrief(one, two), "en")).toContain("Added: 1"); });
+  it("French preview lists additions with nonbreaking colon", () => { expect(coordinationDiffText(compareCoordinationBrief(one, two), "fr")).toContain("Ajoutés\u00A0: 1"); });
+  it("English preview labels UNKNOWN region mismatch", () => { const d = compareCoordinationBrief(empty, createCoordinationBrief("elsewhere", "Brief", "2026-11-20")); expect(coordinationDiffText(d, "en")).toContain("UNKNOWN"); });
+  it("French preview labels UNKNOWN region mismatch", () => { const d = compareCoordinationBrief(empty, createCoordinationBrief("elsewhere", "Brief", "2026-11-20")); expect(coordinationDiffText(d, "fr")).toContain("UNKNOWN"); });
+  it("keeps incoming current count independent of event count", () => { const changed = setBriefStatus(one, "arrival", "event2", at(11), "asked"); expect(compareCoordinationBrief(one, changed).incomingCount).toBe(1); });
+  it("does not mutate original on compare", () => { compareCoordinationBrief(one, two); expect(one.steps).toHaveLength(1); });
+  it("retains deterministic row order", () => { expect(compareCoordinationBrief(one, two).rows.map((row) => row.id)).toEqual(["arrival", "rest"]); });
+  it("matches current-only removed row label", () => { const after = removeBriefStep(one, "arrival", "event2", at(11)); expect(compareCoordinationBrief(one, after).rows[0]?.previousLabel).toBe("Arrival enquiry"); });
+  it("matches incoming-only added row label", () => { expect(compareCoordinationBrief(empty, one).rows[0]?.incomingLabel).toBe("Arrival enquiry"); });
+  it("does not transform reply into verified access", () => { const changed = setBriefStatus(one, "arrival", "event2", at(11), "reply-recorded"); expect(changed.steps[0]?.physicalCondition).toBe("UNKNOWN"); });
+});
