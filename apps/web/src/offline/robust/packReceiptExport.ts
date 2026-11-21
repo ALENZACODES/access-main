@@ -49,7 +49,42 @@ export function receiptComparisonText(diff: ReceiptDiff | null, language: Langua
   return out.join("\n") + "\n";
 }
 
+export function receiptSingleText(receipt: PackReceipt, language: Language): string {
+  const fr = language === "fr";
+  const label = (en: string, french: string): string => fr ? french : en;
+  const colon = fr ? "\\u00a0:" : ":";
+  const out = [
+    label("Offline pack receipt", "Reçu de pack hors ligne"),
+    label("Region", "Région") + colon + " " + receipt.regionId,
+    label("Reading time", "Heure de lecture") + colon + " " + receipt.capturedAt,
+    label("Status", "État") + colon + " " + receipt.status,
+    label("Cells", "Cellules") + colon + " " + receipt.cells.length,
+    label("Saved copies", "Copies enregistrées") + colon + " " + receipt.savedCount,
+    label("UNKNOWN copies", "Copies UNKNOWN") + colon + " " + receipt.unknownCount,
+    label("Listed bytes", "Octets répertoriés") + colon + " " + receipt.totalBytes,
+    label("SHA-256 digest", "Empreinte SHA-256") + colon + " " + receipt.digest,
+    "",
+  ];
+  for (const cell of receipt.cells) {
+    out.push(cell.id + " — " + cell.state);
+    out.push(label("Source", "Source") + colon + " " + cell.source.source);
+    out.push(label("Licence", "Licence") + colon + " " + cell.source.licence);
+    out.push(label("Source date", "Date de la source") + colon + " " + cell.source.date);
+    out.push(label("Listed bytes", "Octets répertoriés") + colon + " " + cell.bytes);
+    out.push(label("Local cause", "Raison locale") + colon + " " + cell.cause);
+    out.push("");
+  }
+  out.push(label(
+    "This is a historical device reading. It does not establish current storage or physical access.",
+    "Cette lecture est historique. Elle n’établit ni le stockage actuel ni l’accès physique.",
+  ));
+  return out.join("\\n") + "\\n";
+}
+
 export function receiptBookText(book: ReceiptBook, language: Language): string {
+  const latest = book.receipts.at(-1);
+  if (!latest) return receiptComparisonText(null, language);
+  if (book.receipts.length === 1) return receiptSingleText(latest, language);
   return receiptComparisonText(latestReceiptDiff(book), language);
 }
 
