@@ -97,7 +97,6 @@ const TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
 const STATES: readonly ReceiptCellState[] = ["saved", "UNKNOWN"];
 const CAUSES: readonly ReceiptCellCause[] = ["present", "missing", "stale", "unreadable", "UNKNOWN"];
 const STATUSES: readonly ReceiptStatus[] = ["recorded", "UNKNOWN"];
-const CHANGES: readonly ReceiptChange[] = ["unchanged", "saved", "lost", "source-changed", "size-changed", "added", "removed", "UNKNOWN"];
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
