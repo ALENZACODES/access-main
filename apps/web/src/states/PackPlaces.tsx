@@ -7,6 +7,7 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { PackSpotCheck } from "./PackSpotCheck.tsx";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
@@ -211,6 +212,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
+      <PackSpotCheck places={view.shownPlaces} locale={locale} today={day} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
