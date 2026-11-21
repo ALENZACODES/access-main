@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { PackFootprintLauncher } from "./robust/PackFootprintLauncher";
 import { PackingListLauncher } from "./packing/PackingListLauncher";
 import { PersonalOfflineTools } from "./PersonalOfflineTools";
 import { offlineCatalog } from "./catalog.ts";
@@ -190,6 +191,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   async function refresh() {
     const pack = await source.manifest();
     const statuses = await source.regions();
+    setManifest(pack);
     setRegions(statuses);
     setCells(await cellReports(pack, statuses));
   }
@@ -253,6 +255,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
       const snapshot = await source.storedRegionIntegrity(id);
       const pack = await source.manifest();
       const statuses = await source.regions();
+      setManifest(pack);
       setRegions(statuses);
       setCells(await cellReports(pack, statuses));
       // The row keeps the result of the last check, also after the notice is closed.
@@ -337,6 +340,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     ) : null}
     {message && <p role="status" tabIndex={-1}>{message}</p>}
     {manifest && <>
+      <PackFootprintLauncher pack={manifest} statuses={regions} language={language} estimateStorage={estimateStorage} />
       <p>{c.built}{colon} <time dateTime={manifest.builtAt}>{manifest.builtAt.slice(0, 10)}</time>. {c.counts}{colon} {manifest.counts.records.toLocaleString(language)}.</p>
       <section className="panel stack" aria-labelledby="offline-sources"><h2 id="offline-sources">{c.sources}</h2>
         <ul>{manifest.sources.filter((entry) => entry.inWebPack).map((entry) => <li key={entry.sourceId}>{entry.name} — {entry.licence} — {c.retrieved}{colon} {entry.retrieved}</li>)}</ul>
