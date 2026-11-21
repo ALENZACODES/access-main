@@ -176,6 +176,8 @@ export * from "./handoutHtml.ts";
 export { Handout } from "./Handout.tsx";
 export * from "./listTransfer.ts";
 export { ListTransfer } from "./ListTransfer.tsx";
+export * from "./letterIndex.ts";
+export { LetterJump, focusPlaceAt } from "./LetterJump.tsx";
 export * from "./streetAddress.ts";
 export * from "./streetIndex.ts";
 export * from "./streetIndexExport.ts";
