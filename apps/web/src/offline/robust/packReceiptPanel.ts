@@ -5,7 +5,7 @@ import {
   appendPackReceipt, comparePackReceipts, createPackReceipt,
   emptyReceiptBook, encodeReceiptBook, latestReceiptDiff, pageReceiptDiff,
   parseReceiptBook, summarizeReceiptBook, RECEIPT_MAX_BYTES, RECEIPT_MAX_CAPTURES,
-  RECEIPT_PAGE_SIZE, type PackReceipt, type ReceiptBook, type ReceiptDiffRow,
+  RECEIPT_PAGE_SIZE, type ReceiptBook, type ReceiptDiffRow,
   type ReceiptFilter, type ReceiptOrder,
 } from "./packReceipt";
 import {
