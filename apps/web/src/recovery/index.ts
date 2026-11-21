@@ -368,3 +368,15 @@ export { recoverySourceRefreshCopy } from "./recoverySourceRefreshCopy";
 export type { RefreshCopy } from "./recoverySourceRefreshCopy";
 
 export { RecoveryTransferBundleDisclosure } from "./transferBundle/Disclosure";
+
+// Bounded multi-part transfer sets; each numbered part remains a regular bundle.
+export { createTransferSet, openTransferSet, transferSetMembers, transferSetReceipt, SET_LIMITS, SET_SCHEMA } from "./transferBundle/multipart/model";
+export type { SetProblem, SetProblemCode, SetResult, TransferPart, TransferSet } from "./transferBundle/multipart/model";
+export { planTransferParts, candidatesFromMembers, describePlan, planMatchesMembers } from "./transferBundle/multipart/planner";
+export type { TransferCandidate, PlannedPart, TransferPlan, PlanIssueCode, PlanResult } from "./transferBundle/multipart/planner";
+export { auditTransferSet, compareExpectedMembers, expectedMembersFromSet, summarizeAudit } from "./transferBundle/multipart/analysis";
+export type { KindCount, PartAuditRow, TransferSetAudit, ExpectedMember, MemberDifference, MemberComparison } from "./transferBundle/multipart/analysis";
+export { exportTransferReceipt, parseTransferReceipt, checkTransferReceipt, compareTransferReceipt, compareReceiptText, transferReceiptSummary, SET_RECEIPT_SCHEMA, RECEIPT_LIMIT_BYTES } from "./transferBundle/multipart/receipt";
+export type { TransferReceipt, TransferReceiptPart, ReceiptIssue, ReceiptResult, ReceiptComparison } from "./transferBundle/multipart/receipt";
+export { multipartCopy, multipartNumber, multipartFileName, multipartMemberName } from "./transferBundle/multipart/copy";
+export type { MultipartLocale, MultipartCopy } from "./transferBundle/multipart/copy";

@@ -10,6 +10,7 @@ import {
 } from "./copy";
 import { PackingListCheck, PackingListExport } from "./PackingListPanel";
 import "./panel.css";
+import { MultipartTransferPanel } from "./multipart/Panel";
 
 type Notice =
   | { type: "initial" | "cleared" | "closed" | "cancelled" | "checking" | "savedBundle" | "saveFailed" }
@@ -315,6 +316,7 @@ export function RecoveryTransferBundlePanel({ locale }: LocaleProps) {
       <p>{copy.privacy}</p>
       <CreateBundle locale={locale} />
       <OpenBundle locale={locale} />
+      <MultipartTransferPanel locale={locale} />
     </section>
   );
 }
