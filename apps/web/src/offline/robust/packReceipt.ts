@@ -157,10 +157,19 @@ function inventoryIndex(manifest: RegionManifest, inventory: RegionInventory | n
   const expected = new Set(manifest.cells.map((cell) => cell.id));
   const index = new Map<string, RegionInventory["cells"][number]>();
   for (const cell of inventory.cells) {
-    if (!safeText(cell.id, RECEIPT_MAX_ID) || !expected.has(cell.id) || index.has(cell.id)) return null;
+    if (!safeId(cell.id) || !expected.has(cell.id) || index.has(cell.id)) return null;
     index.set(cell.id, cell);
   }
-  return index.size === expected.size ? index : null;
+  if (index.size !== expected.size) return null;
+  const saved = inventory.cells.filter((cell) => cell.state === "saved");
+  const savedBytes = saved.reduce((sum, cell) => sum + cell.expectedBytes, 0);
+  const expectedBytes = inventory.cells.reduce((sum, cell) => sum + cell.expectedBytes, 0);
+  const unknownCount = inventory.cells.length - saved.length;
+  if (!safeBytes(savedBytes) || !safeBytes(expectedBytes) ||
+    inventory.savedCount !== saved.length || inventory.unknownCount !== unknownCount ||
+    inventory.savedBytes !== savedBytes || inventory.expectedBytes !== expectedBytes ||
+    inventory.complete !== (unknownCount === 0)) return null;
+  return index;
 }
 
 function receiptCell(cell: RegionManifest["cells"][number], observed: RegionInventory["cells"][number] | undefined): PackReceiptCell {
