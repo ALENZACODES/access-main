@@ -141,15 +141,21 @@ describe("offline region integrity re-check", { timeout: 30000 }, () => {
     expect(button.getAttribute("aria-busy")).toBe("false");
   });
 
-  it("treats a check that could not run as UNKNOWN, never as a pass", async () => {
+  it.each(["en", "fr"] as const)("keeps UNKNOWN and the map credit literal in the region list (%s)", async (language) => {
     const source = mockSource({ parts: [] });
     source.storedRegionIntegrity = vi.fn(async () => { throw new Error("storage unavailable"); });
-    await view("en", source);
-    fireEvent.click(await screen.findByRole("button", { name: offlineCatalog.en.recheck }));
-    const copy = packIntegrityCopy("en", "unknown");
+    const { container } = await view(language, source);
+    const c = offlineCatalog[language];
+    expect(await screen.findByText("© OpenStreetMap contributors")).toBeTruthy();
+    const separator = language === "fr" ? "\u00a0: " : ": ";
+    expect(container.textContent).toContain(c.built + separator + "2026-11-01");
+    expect(container.textContent).toContain(c.retrieved + separator + "2026-11-01");
+    fireEvent.click(await screen.findByRole("button", { name: c.recheck }));
+    const copy = packIntegrityCopy(language, "unknown");
     expect(await screen.findByRole("heading", { name: copy.title })).toBeTruthy();
-    expect(screen.queryByText(offlineCatalog.en.downloaded)).toBeNull();
-    await waitFor(() => expect((screen.getByRole("button", { name: offlineCatalog.en.recheck }) as HTMLButtonElement).disabled).toBe(false));
+    expect(screen.getByTestId("region-state").textContent).toBe("UNKNOWN");
+    expect(screen.queryByText(c.downloaded)).toBeNull();
+    await waitFor(() => expect((screen.getByRole("button", { name: c.recheck }) as HTMLButtonElement).disabled).toBe(false));
   });
 
   it("can check again after a check that could not run", async () => {
@@ -204,7 +210,8 @@ describe("offline region fail-safe states (docs/failsafe.md)", () => {
     const unavailable = notes.querySelectorAll('[data-failsafe="unavailable"]');
     // Two withheld parts in one cell read as one unavailable cell with both reasons.
     expect(unavailable).toHaveLength(1);
-    expect(unavailable[0]?.textContent).toBe(`n44.0_w079.5 — ${c.failsafeUnavailable}. ${c.failsafeReason}source-held; too-large`);
+    const semicolon = locale === "fr" ? "\u202f;" : ";";
+    expect(unavailable[0]?.textContent).toBe(`n44.0_w079.5 — ${c.failsafeUnavailable}. ${c.failsafeReason}source-held${semicolon} too-large`);
     expect(notes.textContent).toContain(c.failsafeStale);
     expect([...notes.querySelectorAll('[data-failsafe="stale"]')].map((item) => item.textContent)).toEqual(["n44.5_w079.5"]);
     expect(notes.querySelector('[data-failsafe="dropped"]')?.textContent).toBe(c.failsafeDroppedMany.replace("{count}", "3"));
