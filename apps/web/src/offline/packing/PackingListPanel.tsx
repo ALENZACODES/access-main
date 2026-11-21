@@ -83,8 +83,8 @@ export default function PackingListPanel({ language }: { language: PackingLangua
   }
 
   return <section className="packing-list" aria-labelledby={id + "mainHeading"}>
-    <h3 id={id + "mainHeading"} tabIndex={-1}>{c.heading}</h3>
-    <h4 dir="auto">{list.title}</h4>
+    <h2 id={id + "mainHeading"} tabIndex={-1}>{c.heading}</h2>
+    <h3 dir="auto">{list.title}</h3>
     {editor?.kind === "listName" ?
       <NameForm inputId={id + "listTitle"} initial={list.title} label={c.listTitle}
         limit={PACKING_LIMITS.title} submitText={c.save} language={language}
@@ -135,7 +135,7 @@ export default function PackingListPanel({ language }: { language: PackingLangua
     </div>
 
     {bag && <div role="group" aria-labelledby={id + "bagHeading"} className="packing-block">
-      <h4 dir="auto" id={id + "bagHeading"} tabIndex={-1}>{bagLabels.get(bag.id)}</h4>
+      <h3 dir="auto" id={id + "bagHeading"} tabIndex={-1}>{bagLabels.get(bag.id)}</h3>
       {editor?.kind === "bagName" && <NameForm inputId={id + "renameBagInput"} initial={bag.name}
         label={c.bagName} limit={PACKING_LIMITS.name} submitText={c.save} language={language}
         onSave={name => change(() => renameBag(list, bag.id, name), c.changedName, "renameBag")}
@@ -177,7 +177,7 @@ export default function PackingListPanel({ language }: { language: PackingLangua
           const deleteKey = "delete-" + item.id;
           return <li key={item.id}>
             <div role="group" aria-labelledby={itemHeading} className="packing-entry">
-              <h5 id={itemHeading} dir="auto">{itemLabel}</h5>
+              <h4 id={itemHeading} dir="auto">{itemLabel}</h4>
               <p>{statusLabel(stageStatus(item, stage), language)}</p>
               <dl className="packing-counts">
                 <Quantity label={c.planned} value={item.quantity} />
@@ -217,7 +217,7 @@ export default function PackingListPanel({ language }: { language: PackingLangua
       </ul>}
     </div>}
     {bag && <section aria-labelledby={id + "summary"}>
-      <h4 id={id + "summary"}>{c.summary}</h4>
+      <h3 id={id + "summary"}>{c.summary}</h3>
       <dl className="packing-counts">
         <Quantity label={c.summaryItems} value={summary.items} />
         <Quantity label={stage === "packing" ? c.expectedPacking : c.expectedReturn} value={summary.expectedCount} />

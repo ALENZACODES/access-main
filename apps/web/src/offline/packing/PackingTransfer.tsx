@@ -75,7 +75,7 @@ export function PackingTransfer({ list, language, onRestore }: TransferProps) {
 
   return (
     <section className="panel stack" aria-labelledby={sectionId}>
-      <h4 id={sectionId}>{w.title}</h4>
+      <h3 id={sectionId}>{w.title}</h3>
       <p>{w.backupDetails}</p>
       <button type="button" style={targetSize} onClick={() => download("json")}>
         {w.backup}

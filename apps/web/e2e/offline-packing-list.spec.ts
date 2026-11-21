@@ -79,6 +79,7 @@ for (const language of ["en", "fr"] as const) {
       await expectTarget(launcher);
       await launcher.click();
       const panel = offline.getByRole("region", { name: c.list, exact: true });
+      await expect(panel.getByRole("heading", { name: c.list, level: 2, exact: true })).toBeVisible();
       await expect(panel.getByText(c.empty, { exact: true })).toBeVisible();
       await panel.getByLabel(c.bagName, { exact: true }).fill(c.bag);
       await button(panel, c.addBag).click();
@@ -88,6 +89,8 @@ for (const language of ["en", "fr"] as const) {
       await panel.getByLabel(c.note, { exact: true }).fill(c.privateNote);
       await button(panel, c.saveItem).click();
       const item = panel.getByRole("group", { name: c.item, exact: true });
+      await expect(panel.getByRole("heading", { name: c.bag, level: 3, exact: true })).toBeVisible();
+      await expect(item.getByRole("heading", { name: c.item, level: 4, exact: true })).toBeVisible();
       await expectCount(item, c.packed, "UNKNOWN");
       await expectCount(item, c.returned, "UNKNOWN");
 

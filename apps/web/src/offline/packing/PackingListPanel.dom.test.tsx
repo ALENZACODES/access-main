@@ -168,7 +168,7 @@ describe("packing list editor", () => {
     item("Bell");
     expect(within(group("Lamp")).getByRole<HTMLButtonElement>("button", { name: "Move item earlier" }).disabled).toBe(true);
     press("Move item earlier", group("Bell"));
-    const rows = within(group("Handlebar bag")).getAllByRole("heading", { level: 5 }).map(node => node.textContent);
+    const rows = within(group("Handlebar bag")).getAllByRole("heading", { level: 4 }).map(node => node.textContent);
     expect(rows).toEqual(["Bell", "Lamp"]);
     expect(within(group("Lamp")).getByRole<HTMLButtonElement>("button", { name: "Move item later" }).disabled).toBe(true);
     bag("Seat bag");
