@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it } from "vitest";
 import { mountSharedDeviceHandback } from "./sharedDeviceHandbackPanel";
+import { createSharedDeviceHandback } from "./sharedDeviceHandback";
 import { HANDBACK_COPY } from "./sharedDeviceHandbackCopy";
 
 function mount(language: "en" | "fr" = "en", region: string | null = "north") {
@@ -183,14 +184,11 @@ describe("shared-device handback panel", () => {
   it("rejects an imported review for another region", () => {
     const view = mount();
     const text = view.root.querySelector("textarea")!;
-    text.value = JSON.stringify({
-      schema: "shared-device-handback-v1",
-      reviewId: "handback-import-2",
-      regionId: "south",
-      createdAt: "2026-11-21T10:00:00.000Z",
-      updatedAt: "2026-11-21T10:00:00.000Z",
-      entries: [],
-    });
+    text.value = JSON.stringify(createSharedDeviceHandback(
+      "handback-import-2",
+      "south",
+      "2026-11-21T10:00:00.000Z",
+    ));
     text.dispatchEvent(new Event("input", { bubbles: true }));
     button(view.root, view.copy.importJson).click();
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.regionMismatch);
