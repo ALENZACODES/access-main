@@ -15,6 +15,7 @@ export type ActivityKind =
   | "glance-export"
   | "receipt-export"
   | "handoff-export"
+  | "retention-export"
   | "statements-export"
   | "consent-granted"
   | "consent-declined"
@@ -50,6 +51,7 @@ const KINDS: readonly ActivityKind[] = [
   "glance-export",
   "receipt-export",
   "handoff-export",
+  "retention-export",
   "statements-export",
   "consent-granted",
   "consent-declined",

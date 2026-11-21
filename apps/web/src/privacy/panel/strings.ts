@@ -2,6 +2,7 @@
 // stores: that comes from the inventory the caller passes in.
 // FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
 
+import { liveSummary } from "./retentionLive";
 import type { Locale } from "./copyLint";
 import { DEVICE_STRINGS, isDeviceStatus, type DeviceStatus } from "./copyDevice";
 import { MORE_STRINGS, type MoreStatus } from "./copyMore";
@@ -27,6 +28,8 @@ export type Status =
   | { kind: "glance-exported"; format: "csv" | "text" }
   | { kind: "receipt-exported"; format: "csv" | "text" }
   | { kind: "handoff-exported"; format: "csv" | "text" }
+  | { kind: "retention-exported"; format: "csv" | "text" }
+  | { kind: "retention-checked"; compared: number; differences: number }
   | { kind: "statements-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
@@ -134,6 +137,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Record of your choices prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "handoff-exported":
           return `List of links that open another app prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "retention-checked":
+          return liveSummary("en", s.compared, s.differences);
+        case "retention-exported":
+          return `List of how long the App keeps things prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "statements-exported":
           return `List of what the App says about your data prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
@@ -212,6 +219,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Registre de vos choix préparé ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "handoff-exported":
           return `Liste des liens qui ouvrent une autre application préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "retention-checked":
+          return liveSummary("fr", s.compared, s.differences);
+        case "retention-exported":
+          return `Liste de la durée de conservation de l’App préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "statements-exported":
           return `Liste de ce que l’App dit de vos données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":

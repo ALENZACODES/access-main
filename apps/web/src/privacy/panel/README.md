@@ -253,3 +253,10 @@ UNKNOWN.
 `handoffSection.ts` shows the list in the panel and offers it as a CSV or text download (`export-handoff-csv`, `export-handoff-text`). The controller option is `handoffs`; the live controller passes `HANDOFF_REGISTER`. Nothing here opens a link or contacts anything.
 
 Known issue, outside this lane: `mailtoHref` in `states/visitMessage.ts` throws a `URIError` for text with a lone surrogate, which a place name from the data could hold. `fuzz.handoff.audit.test.ts` pins that behaviour and will fail when it is fixed.
+## How long things are kept (P10W)
+
+`retentionRegister.ts` lists, for each name the App stores under, what it holds and what the code that saves it sets: a number of days before it expires, a limit on how many items, or a limit on size, each pointing at the constant it was read from. A row with no limit says so, and the store the scanner could not read stays `UNKNOWN`; it is never shown as having no limit. `validateRetention` checks the list against the storage register, the unscanned list and the panel's own names.
+
+`audit/retentionScan.ts` reads the source and compares each number with the constant it names, finds limit-like constants no row claims, files that name a key but are not listed, and files that call `putExpiring` and are in no row. `audit/retention.repo.audit.test.ts` runs it against the repository and has mutation tests.
+
+`retentionSection.ts` renders the list in the panel and as a CSV or text download (`export-retention-csv`, `export-retention-text`). `retentionLive.ts` compares the list with what is stored on this device now: a value with no end date, kept longer than listed, over its limit, or not readable (`check-retention`). Values past their end date are removed when the panel opens, so they are not reported. The controller option is `retention`; the live controller passes `RETENTION_REGISTER`. The comparison reads storage and writes nothing.
