@@ -67,6 +67,8 @@ import {
   type Snapshot,
   type TextSpacingResult,
 } from './inpage.js';
+import { OVERFLOW_ARGS, overflowInPage, type OverflowFacts } from './overflow-inpage.js';
+import { withOverflow } from './overflow.js';
 import { auditKeyboard, probeKeyboard, type KeyboardPage, type KeyboardProbe } from './keyboard.js';
 import { auditLanguage, auditNames } from './names.js';
 import { checkOfflineReload, offlineCheckResult, type OfflineContext, type OfflinePage } from './offline.js';
@@ -130,6 +132,8 @@ export interface RouteInputs {
   readonly allowHosts?: readonly string[];
   /** True when the browser overrides colours, so contrast cannot be judged. */
   readonly skipContrast?: boolean;
+  /** Where sideways overflow starts, and the regions that scroll sideways on their own. */
+  readonly overflow?: OverflowFacts;
 }
 
 export function boxOf(e: ElSnap): Box {
@@ -152,7 +156,7 @@ export function auditSnapshot(route: string, viewportWidth: number, input: Route
   const { names, labels } = auditNames(snapshot.interactive);
   const kb = input.keyboard ? auditKeyboard(input.keyboard) : null;
   const results: Parameters<typeof buildRouteAudit>[2] = {
-    reflow: { checked: boxes.length + 1, entries: mapped.reflow },
+    reflow: withOverflow({ checked: boxes.length + 1, entries: mapped.reflow }, input.overflow),
     'target-size': { checked: boxes.length, entries: mapped.targets },
     'target-spacing': auditTargetSpacing(snapshot.interactive.map((e) => ({ id: e.id, ...e.rect }))),
     ...(input.skipContrast ? {} : { contrast: auditContrastWithFixes(snapshot.texts) }),
@@ -312,6 +316,7 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
   const structure = await page.evaluate(structureInPage, { maxElements: MAX_ELEMENTS });
   const prose = await page.evaluate(proseInPage, PROSE_ARGS);
   const textZoom = await page.evaluate(textSpacingProbeInPage, { css: TEXT_ZOOM_CSS, maxElements: MAX_ELEMENTS });
+  const overflow = await page.evaluate(overflowInPage, OVERFLOW_ARGS);
   // Each in-page function is sent to the browser on its own, so they cannot call one another.
   const layout: LayoutFacts = {
     typography: await page.evaluate(typographyInPage, { maxElements: MAX_ELEMENTS, maxBlocks: 300 }),
@@ -330,6 +335,7 @@ export async function collectLoadedPage(page: FullPage, label: string, opts: Loa
     prose,
     layout,
     textZoom,
+    overflow,
     ...(opts.allowHosts ? { allowHosts: opts.allowHosts } : {}),
     focus,
     textSpacing,
@@ -428,5 +434,5 @@ export function selfAudit(now: Date): AuditReport {
   const facts = probesInPage({ maxElements: MAX_ELEMENTS, helpPattern: HELP_WORDS.source });
   const resources = resourcesInPage({ max: 400 });
   const weight = { facts: weightInPage({ max: 400 }), options: {} };
-  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts, resources, weight, semantics: semanticsInPage({ maxElements: MAX_ELEMENTS }), langBlocks: langBlocksInPage({ maxElements: MAX_ELEMENTS, maxBlocks: 300 }), structure: structureInPage({ maxElements: MAX_ELEMENTS }), prose: proseInPage(PROSE_ARGS), layout: layoutInPage() })], now);
+  return makeReport([auditSnapshot(route, snapshot.doc.innerWidth, { snapshot, html, facts, resources, weight, overflow: overflowInPage(OVERFLOW_ARGS), semantics: semanticsInPage({ maxElements: MAX_ELEMENTS }), langBlocks: langBlocksInPage({ maxElements: MAX_ELEMENTS, maxBlocks: 300 }), structure: structureInPage({ maxElements: MAX_ELEMENTS }), prose: proseInPage(PROSE_ARGS), layout: layoutInPage() })], now);
 }

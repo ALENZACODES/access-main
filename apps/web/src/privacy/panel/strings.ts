@@ -2,6 +2,7 @@
 // stores: that comes from the inventory the caller passes in.
 // FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
 
+import { liveSummary } from "./retentionLive";
 import type { Locale } from "./copyLint";
 import { DEVICE_STRINGS, isDeviceStatus, type DeviceStatus } from "./copyDevice";
 import { MORE_STRINGS, type MoreStatus } from "./copyMore";
@@ -23,6 +24,13 @@ export type Status =
   | { kind: "list-exported"; format: "csv" | "text" }
   | { kind: "kept-exported"; format: "csv" | "text" }
   | { kind: "features-exported"; format: "csv" | "text" }
+  | { kind: "addresses-exported"; format: "csv" | "text" }
+  | { kind: "glance-exported"; format: "csv" | "text" }
+  | { kind: "receipt-exported"; format: "csv" | "text" }
+  | { kind: "handoff-exported"; format: "csv" | "text" }
+  | { kind: "retention-exported"; format: "csv" | "text" }
+  | { kind: "retention-checked"; compared: number; differences: number }
+  | { kind: "statements-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
   | DeviceStatus;
@@ -121,6 +129,20 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `List of everything the App keeps on this device prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "features-exported":
           return `List of what the App asks of your browser prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "addresses-exported":
+          return `List of web addresses and network requests prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "glance-exported":
+          return `Privacy counts prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "receipt-exported":
+          return `Record of your choices prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "handoff-exported":
+          return `List of links that open another app prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "retention-checked":
+          return liveSummary("en", s.compared, s.differences);
+        case "retention-exported":
+          return `List of how long the App keeps things prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "statements-exported":
+          return `List of what the App says about your data prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
           return "The list is marked as seen.";
         default:
@@ -189,6 +211,20 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Liste de tout ce que l’App conserve sur cet appareil préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "features-exported":
           return `Liste de ce que l’App demande à votre navigateur préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "addresses-exported":
+          return `Liste des adresses web et des requêtes réseau préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "glance-exported":
+          return `Chiffres sur la vie privée préparés ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "receipt-exported":
+          return `Registre de vos choix préparé ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "handoff-exported":
+          return `Liste des liens qui ouvrent une autre application préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "retention-checked":
+          return liveSummary("fr", s.compared, s.differences);
+        case "retention-exported":
+          return `Liste de la durée de conservation de l’App préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "statements-exported":
+          return `Liste de ce que l’App dit de vos données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":
           return "La liste est marquée comme vue.";
         default:

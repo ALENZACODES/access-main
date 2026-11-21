@@ -31,7 +31,7 @@ describe("the buttons and link are real, labelled controls", () => {
   it("reaches the controls in reading order: toggle, map link, then the three saves, as they are laid out", () => {
     const { container } = render(<PlaceSheet place={place("a")} locale="en" today={TODAY} />);
     fireEvent.click(screen.getByRole("button", { name: "Details and gaps" }));
-    expect(focusables(container).map((c) => c.textContent)).toEqual(["Hide details and gaps", "Open in your maps app", "Save as a contact card (.vcf)", "Save the details as text (.txt)", "Save as a waypoint (GPX)"]);
+    expect(focusables(container).map((c) => c.textContent)).toEqual(["Hide details and gaps", "Open in your maps app", "Save as a contact card (.vcf)", "Save the details as text (.txt)", "Save a large-print page (.html)", "Save as a waypoint (GPX)"]);
   });
   it("keeps focus on the toggle when it opens and closes", () => {
     render(<PlaceSheet place={place("a")} locale="en" today={TODAY} />);

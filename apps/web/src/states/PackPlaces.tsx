@@ -7,14 +7,23 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { TextMap } from "./TextMap.tsx";
+import { StreetIndex } from "./StreetIndex.tsx";
+import { ListTransfer } from "./ListTransfer.tsx";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
+import { OutingPlanner } from "./OutingPlanner.tsx";
+import { MeetUp } from "./MeetUp.tsx";
+import { NoteTopics } from "./NoteTopics.tsx";
+import { inputsFromPlaces } from "./outingPlan.ts";
+import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
+import { PackSearchWords, PackWordList } from "./PackWords.tsx";
 import { PlaceSheet } from "./PlaceSheet.tsx";
 import { Shortlist } from "./Shortlist.tsx";
-import { MAX_SHORTLIST, type AddResult } from "./shortlist.ts";
+import { MAX_SHORTLIST, type AddResult, resolveShortlist } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
 import { useShortlist } from "./useShortlist.ts";
 import type { Locale } from "./stateCopy.ts";
@@ -84,6 +93,7 @@ export function PackPlaces({ places, locale, today }: Props) {
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
   const byId = useMemo(() => new Map(parsed.places.map((p) => [p.id, p] as const)), [parsed.places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
+  const stops = useMemo(() => inputsFromPlaces(resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place)), [shortlist.list, parsed.places]);
   const from = near.status === "ok" ? near.point : null;
   // A distance band means nothing without a point, so it is ignored (not forgotten) until a point is typed again.
   const activeBand = from === null ? null : band;
@@ -138,6 +148,11 @@ export function PackPlaces({ places, locale, today }: Props) {
       <h2 id={headingId}>{message("pack.heading", locale)}</h2>
       <p>{message("pack.intro", locale)}</p>
       <TextInput label={message("pack.search", locale)} value={text} onChange={setText} />
+      <PackSearchEcho text={text} locale={locale} />
+      <PackSearchHelp places={parsed.places} locale={locale} onTry={setText} />
+      <PackSearchWhy places={parsed.places} text={text} locale={locale} onUse={setText} />
+      <PackSearchWords places={parsed.places} text={text} locale={locale} onUse={setText} />
+      <PackWordList places={parsed.places} locale={locale} onTry={setText} />
       <ChoiceGroup
         label={message("pack.tagLabel", locale)}
         value={tag}
@@ -162,7 +177,9 @@ export function PackPlaces({ places, locale, today }: Props) {
         <TextInput label={message("pack.lat", locale)} value={lat} onChange={setLat} error={view.nearError ?? undefined} />
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
+      <TextMap places={view.shownPlaces} from={from} locale={locale} />
       <PackBands places={view.beforeBand} shown={view.shownPlaces} from={from} locale={locale} today={day} selected={activeBand} onSelect={setBand} />
+      <StreetIndex places={view.shownPlaces} locale={locale} onAdd={shortlist.add} />
       <p role="status">{view.announcement}</p>
       {view.facetSummary ? <p>{view.facetSummary}</p> : null}
       {view.unknownHiddenNotice ? <p>{view.unknownHiddenNotice}</p> : null}
@@ -190,6 +207,10 @@ export function PackPlaces({ places, locale, today }: Props) {
         onRemove={shortlist.remove}
         onClear={shortlist.clear}
       />
+      <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
+      <OutingPlanner places={stops} locale={locale} today={day} start={from} />
+      <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
+      <NoteTopics places={view.shownPlaces} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
