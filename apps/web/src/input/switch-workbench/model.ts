@@ -56,8 +56,23 @@ export const MINIMUM_TARGET = 44;
 const MAX_CONTROLS = 80;
 const ID_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
-const CONTROL_RE = /[\u0000-\u001f\u007f]/;
-const FORMULA_RE = /^[\s\u0000-\u001f]*[=+@-]/;
+
+/** Detect C0 and DEL controls without control-character regex literals. */
+export function hasControlCharacter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x1f || code === 0x7f) return true;
+  }
+  return false;
+}
+
+/** CSV formula protection without embedding control characters in a regex. */
+function startsWithFormulaMarker(value: string): boolean {
+  let index = 0;
+  while (index < value.length && /\s/u.test(value[index] ?? '')) index += 1;
+  const first = value[index] ?? '';
+  return first === '=' || first === '+' || first === '@' || first === '-';
+}
 
 export function isPlainObject(input: unknown): input is Record<string, unknown> {
   return typeof input === 'object' && input !== null && !Array.isArray(input);
@@ -66,7 +81,8 @@ export function isId(input: unknown): input is string {
   return typeof input === 'string' && input.length <= 70 && ID_RE.test(input);
 }
 export function isText(input: unknown, limit = 240): input is string {
-  return typeof input === 'string' && input.trim().length > 0 && input.length <= limit && !CONTROL_RE.test(input);
+  return typeof input === 'string' && input.trim().length > 0 &&
+    input.length <= limit && !hasControlCharacter(input);
 }
 export function isCopy(input: unknown, limit = 240): input is Copy {
   if (!isPlainObject(input)) return false;
@@ -83,14 +99,18 @@ export function isDate(input: unknown): input is string {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 export function isSafeUrl(input: unknown): input is string {
-  if (typeof input !== 'string' || input.length > 1400 || CONTROL_RE.test(input)) return false;
+  if (typeof input !== 'string' || input.length > 1400 || hasControlCharacter(input)) return false;
   try {
     const url = new URL(input);
-    return url.protocol === 'https:' && !!url.hostname && !url.username && !url.password && !url.hash && !/\s/.test(input);
-  } catch { return false; }
+    return url.protocol === 'https:' && !!url.hostname && !url.username &&
+      !url.password && !url.hash && !/\s/u.test(input);
+  } catch {
+    return false;
+  }
 }
 export function isSafeFile(input: unknown): input is string {
-  return typeof input === 'string' && input.length > 0 && input.length <= 100 && isId(input.replace(/\.json$/, ''));
+  return typeof input === 'string' && input.length > 0 && input.length <= 100 &&
+    isId(input.replace(/\.json$/u, ''));
 }
 export function frenchIssues(input: string): string[] {
   const errors: string[] = [];
@@ -106,15 +126,20 @@ export function frenchIssues(input: string): string[] {
 }
 export function safeCsvCell(input: unknown): string {
   const value = typeof input === 'string' ? input : input == null ? '' : String(input);
-  const normalized = value.replace(CONTROL_RE, ' ').replace(/[\r\n]/g, ' ');
-  const guarded = FORMULA_RE.test(normalized) ? `'${normalized}` : normalized;
-  return `"${guarded.replace(/"/g, '""')}"`;
+  let normalized = '';
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    normalized += code <= 0x1f || code === 0x7f ? ' ' : value[index];
+  }
+  const guarded = startsWithFormulaMarker(normalized) ? `'${normalized}` : normalized;
+  return `"${guarded.replace(/"/gu, '""')}"`;
 }
 export function finding(code: string, path: string, severity: Severity = 'error'): Finding {
   return { code, path, severity };
 }
 export function sortFindings(issues: readonly Finding[]): Finding[] {
-  return [...issues].sort((a,b) => a.path.localeCompare(b.path) || a.code.localeCompare(b.code) || a.severity.localeCompare(b.severity));
+  return [...issues].sort((a,b) =>
+    a.path.localeCompare(b.path) || a.code.localeCompare(b.code) || a.severity.localeCompare(b.severity));
 }
 export function controlIssues(value: unknown, index = 0): Finding[] {
   const path = `controls[${index}]`;
@@ -128,7 +153,11 @@ export function controlIssues(value: unknown, index = 0): Finding[] {
   if (!Array.isArray(value.refs) || value.refs.some(ref => !isId(ref))) issues.push(finding('control.refs',`${path}.refs`));
   if (!ACTIVATIONS.includes(value.activation as Activation)) issues.push(finding('control.activation',`${path}.activation`));
   if (typeof value.visible !== 'boolean' || typeof value.disabled !== 'boolean') issues.push(finding('control.flags',path));
-  if (typeof value.width !== 'number' || typeof value.height !== 'number' || !Number.isFinite(value.width) || !Number.isFinite(value.height) || value.width < MINIMUM_TARGET || value.height < MINIMUM_TARGET) issues.push(finding('control.target-size',`${path}.size`));
+  if (typeof value.width !== 'number' || typeof value.height !== 'number' ||
+      !Number.isFinite(value.width) || !Number.isFinite(value.height) ||
+      value.width < MINIMUM_TARGET || value.height < MINIMUM_TARGET) {
+    issues.push(finding('control.target-size',`${path}.size`));
+  }
   if (!Number.isInteger(value.tabIndex) || (value.tabIndex as number) < -1) issues.push(finding('control.tabindex',`${path}.tabIndex`));
   else if ((value.tabIndex as number) > 0) issues.push(finding('control.positive-tabindex',`${path}.tabIndex`));
   if (value.visible === false && value.tabIndex !== -1) issues.push(finding('control.hidden-tabbable',path));
