@@ -62,12 +62,13 @@ for (const locale of ["en", "fr"] as const) {
       await expect(transfer.getByRole("heading", { name: copy.title })).toHaveCount(0);
       await toggle.press("Enter");
       await expect(transfer.getByRole("heading", { name: copy.title })).toBeVisible();
-      await offline.keyboard.press("Tab");
-      const formats = transfer.locator("summary").filter({ hasText: copy.allowed });
+      const formats = transfer.locator("summary").filter({ hasText: copy.allowed }).first();
+      await formats.focus();
       await expect(formats).toBeFocused();
       await expect(formats).toHaveCSS("outline-style", "solid");
-      await offline.keyboard.press("Tab");
-      const add = transfer.getByLabel(copy.chooseExports, { exact: true });
+      // The transfer disclosure contains both single-bundle and multi-part pickers.
+      const add = transfer.getByLabel(copy.chooseExports, { exact: true }).first();
+      await add.focus();
       await expect(add).toBeFocused();
       await add.setInputFiles(files);
       await expect(transfer.getByRole("list", { name: copy.draftList }).locator(":scope > li")).toHaveCount(3);

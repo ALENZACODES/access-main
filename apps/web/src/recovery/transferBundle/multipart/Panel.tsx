@@ -4,7 +4,7 @@ import { saveBlobFile } from "../../../states/downloadFile";
 import { inspectMember, type BundleMember } from "../model";
 import {
   createTransferSet, openTransferSet, transferSetReceipt, SET_LIMITS,
-  type SetProblem, type TransferSet,
+  type SetProblem, type SetProblemCode, type TransferSet,
 } from "./model";
 import {
   candidatesFromMembers, planTransferParts, type TransferPlan,
@@ -39,6 +39,13 @@ const control = {
   padding: "10px 12px", font: "inherit",
 } as const;
 const mono = { overflowWrap: "anywhere", wordBreak: "break-word" } as const;
+
+function mapMemberProblem(code: import("../model").BundleProblemCode): SetProblemCode {
+  if (code === "integrity") return "digest";
+  if (code === "native-format") return "native-bundle";
+  if (code === "bundle-size") return "part-size";
+  return code;
+}
 
 function statusText(locale: MultipartLocale, status: Status): string {
   const copy = multipartCopy(locale);
@@ -170,7 +177,7 @@ export function MultipartTransferPanel({ locale }: Props): ReactElement {
       const result = await inspectMember(file);
       if (run !== generation.current) return;
       if (!result.ok) {
-        setStatus({ type: "problem", problem: { ...result.problem, part: index + 1 } });
+        setStatus({ type: "problem", problem: { code: mapMemberProblem(result.problem.code), part: index + 1 } });
         return;
       }
       inspected.push(result.value);
