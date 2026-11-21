@@ -95,8 +95,10 @@ describe("shortlist on the places list", () => {
   });
   it("says the list is full at the limit and does not add the next place", () => {
     const many = Array.from({ length: MAX_SHORTLIST + 1 }, (_, i) => rec(`p${i}`, `Spot ${String(i).padStart(2, "0")}`, "yes"));
+    // Start from a stored full list: twelve clicks would re-render the whole page twelve times and say nothing the one click does not.
+    localStorage.setItem(SHORTLIST_KEY, JSON.stringify(many.slice(0, MAX_SHORTLIST).map((_, i) => ({ id: `p${i}`, addedOn: "2026-11-01" }))));
     show(many);
-    for (let i = 0; i < MAX_SHORTLIST; i++) fireEvent.click(addButton(`Spot ${String(i).padStart(2, "0")}`));
+    expect(screen.getByRole("heading", { level: 2, name: `Your list (${MAX_SHORTLIST} of ${MAX_SHORTLIST})` })).toBeTruthy();
     fireEvent.click(addButton(`Spot ${String(MAX_SHORTLIST).padStart(2, "0")}`));
     expect(screen.getByText(`The list is full (${MAX_SHORTLIST} places). Remove one to add another.`)).toBeTruthy();
     expect(stored()).toHaveLength(MAX_SHORTLIST);
