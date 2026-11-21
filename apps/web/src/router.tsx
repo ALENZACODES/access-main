@@ -63,6 +63,7 @@ export const routes: RouteObject[] = [
       { path: "build-card", element: <Section><BuildCardPage /></Section> },
       { path: "offline", element: <Section><OfflineWithEvidenceWorkbench /></Section> },
       { path: "access-rehearsal", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><AccessRehearsalPage /></Suspense></Section> },
+      { path: "input-workbench", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><InputWorkbenchPage /></Suspense></Section> },
       { path: "places", element: <Section><ModulePage id="places" /></Section> },
       { path: "places/:id", element: <Section><PlaceDetailPage /></Section> },
       { path: "map", element: <Section><MapPage /></Section> },
