@@ -9,7 +9,6 @@ import {
   createSharedDeviceHandback,
   pageHandback,
   parseSharedDeviceHandback,
-  resetHandbackEntry,
   summarizeHandback,
   updateHandbackEntry,
   type HandbackCategory,
