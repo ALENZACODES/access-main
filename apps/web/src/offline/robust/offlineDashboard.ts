@@ -26,6 +26,7 @@ import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
 import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
 import { mountOfflineCasebook } from "./offlineCasebookPanel";
+import { HANDBACK_COPY } from "./sharedDeviceHandbackCopy";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -464,6 +465,10 @@ export function mountOfflineDashboard(
       packChangeOpen = false;
       packChangeRevision += 1;
       unmountPackChange();
+    handbackDisposed = true;
+    handbackRevision += 1;
+    handbackLaunch.removeEventListener("click", onHandbackLaunch);
+    unmountHandback();
       unmountPackChange = () => undefined;
       packChangeLaunch.textContent = language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review";
       return;
@@ -481,6 +486,39 @@ export function mountOfflineDashboard(
     });
   };
   packChangeLaunch.addEventListener("click", onPackChangeLaunch);
+
+  const handbackHost = element("div");
+  const handbackCopy = HANDBACK_COPY[language];
+  const handbackLaunch = action(handbackCopy.open);
+  handbackHost.append(handbackLaunch);
+  section.append(handbackHost);
+  let handbackDisposed = false;
+  let handbackOpen = false;
+  let handbackRevision = 0;
+  let unmountHandback: () => void = () => undefined;
+  const onHandbackLaunch = (): void => {
+    if (handbackDisposed) return;
+    if (handbackOpen) {
+      handbackOpen = false;
+      handbackRevision += 1;
+      unmountHandback();
+      unmountHandback = () => undefined;
+      handbackLaunch.textContent = handbackCopy.open;
+      return;
+    }
+    handbackOpen = true;
+    const revision = ++handbackRevision;
+    handbackLaunch.textContent = handbackCopy.close;
+    void import("./sharedDeviceHandbackPanel").then(({ mountSharedDeviceHandback }) => {
+      if (handbackDisposed || !handbackOpen || revision !== handbackRevision) return;
+      unmountHandback = mountSharedDeviceHandback(handbackHost, manifest.regionId, language);
+    }).catch(() => {
+      if (handbackDisposed || revision !== handbackRevision) return;
+      handbackOpen = false;
+      handbackLaunch.textContent = handbackCopy.open;
+    });
+  };
+  handbackLaunch.addEventListener("click", onHandbackLaunch);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
