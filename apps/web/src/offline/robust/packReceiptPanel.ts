@@ -2,7 +2,7 @@ import { createOfflineAction } from "./accessibilityGuard";
 import type { DashboardModel } from "./offlineDashboard";
 import type { Language, RegionManifest } from "./regionDownload";
 import {
-  appendPackReceipt, comparePackReceipts, createPackReceipt,
+  appendPackReceipt, createPackReceipt,
   emptyReceiptBook, encodeReceiptBook, latestReceiptDiff, pageReceiptDiff,
   parseReceiptBook, summarizeReceiptBook, RECEIPT_MAX_BYTES, RECEIPT_MAX_CAPTURES,
   RECEIPT_PAGE_SIZE, type ReceiptBook, type ReceiptDiffRow,
@@ -129,6 +129,7 @@ export function mountOfflinePackReceipts(
 
   let book: ReceiptBook | null = null;
   let diff: ReturnType<typeof latestReceiptDiff> = null;
+  let comparisonVisible = false;
   let currentFilter: ReceiptFilter = "all";
   let currentOrder: ReceiptOrder = "listed";
   let offset = 0;
@@ -156,10 +157,10 @@ export function mountOfflinePackReceipts(
       summary.append(definition(c.region, manifest.regionId), definition(c.captures, "0"),
         definition(c.saved, "0"), definition(c.unknown, "UNKNOWN"));
     }
-    diff = book ? latestReceiptDiff(book) : null;
+    diff = book && comparisonVisible ? latestReceiptDiff(book) : null;
     rows.replaceChildren();
     if (!diff) {
-      rows.append(node(doc, "li", book ? c.one : c.empty));
+      rows.append(node(doc, "li", book ? (book.receipts.length > 1 ? c.comparePrompt : c.one) : c.empty));
     } else {
       const page = pageReceiptDiff(diff, {
         search: search.control.value,
@@ -217,6 +218,7 @@ export function mountOfflinePackReceipts(
     try {
       const receipt = await createPackReceipt(manifest, model.getState().inventory, new Date().toISOString());
       book = book ? appendPackReceipt(book, receipt) : { ...emptyReceiptBook(manifest.regionId), receipts: [receipt] };
+      comparisonVisible = false;
       offset = 0;
       status.textContent = c.captured;
     } catch {
@@ -230,9 +232,9 @@ export function mountOfflinePackReceipts(
   const onCompare = (): void => {
     if (!book || book.receipts.length < 2) return;
     try {
-      const earlier = book.receipts[book.receipts.length - 2]!;
-      const later = book.receipts[book.receipts.length - 1]!;
-      diff = comparePackReceipts(earlier, later);
+      diff = latestReceiptDiff(book);
+      if (!diff) return;
+      comparisonVisible = true;
       offset = 0;
       status.textContent = c.compared;
       render();
@@ -264,6 +266,7 @@ export function mountOfflinePackReceipts(
     try {
       const imported = await parseReceiptBook(source, manifest.regionId);
       book = imported;
+      comparisonVisible = false;
       importField.control.value = "";
       offset = 0;
       status.textContent = c.imported;
@@ -279,6 +282,7 @@ export function mountOfflinePackReceipts(
     if (busy || !book) return;
     book = null;
     diff = null;
+    comparisonVisible = false;
     offset = 0;
     importField.control.value = "";
     status.textContent = c.cleared;
@@ -298,6 +302,7 @@ export function mountOfflinePackReceipts(
     [exportText, "click", () => onExport("txt")],
     [clear, "click", onClear],
     [importButton, "click", () => { void onImport(); }],
+    [importField.control, "input", render],
     [search.control, "input", onSearch],
     [filter.control, "change", onFilter],
     [order.control, "change", onOrder],
