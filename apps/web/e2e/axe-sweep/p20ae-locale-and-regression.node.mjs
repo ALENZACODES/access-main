@@ -7,7 +7,7 @@ import { inspectBreakpointSeries } from "./p20ae-breakpoints.ts";
 const viewport = (patch = {}) => ({ width: 320, height: 640, clientWidth: 320, clientHeight: 640,
   scrollWidth: 320, scrollHeight: 800, scrollX: 0, scrollY: 0, deviceScaleFactor: 1,
   orientation: "portrait", rootFontSize: 16, ...patch });
-const control = (patch = {}) => ({ selector: "#action", name: "Action", kind: "button",
+const control = () => ({ selector: "#action", name: "Action", kind: "button",
   rect: { x: 0, y: 0, width: 44, height: 44, top: 0, right: 44, bottom: 44, left: 0 },
   visible: true, disabled: false, tabIndex: 0, fontSize: 16, lineHeight: 24, textLength: 6,
   scrollWidth: 44, clientWidth: 44, scrollHeight: 44, clientHeight: 44, fixed: false, sticky: false });
