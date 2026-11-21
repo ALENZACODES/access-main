@@ -18,6 +18,10 @@ import { renderDeviceKnownHtml } from "./deviceKnown";
 import { renderFeaturesHtml, type FeatureView } from "./featureSection";
 import { renderAddressesHtml } from "./addressSection";
 import { renderGlanceHtml } from "./glanceSection";
+import type { ReceiptRow } from "./receipt";
+import { renderReceiptHtml } from "./receiptSection";
+import type { StatementResult } from "./statementRegister";
+import { renderStatementsHtml } from "./statementSection";
 import type { GlanceSources } from "./glance";
 import type { AddressRegisterView } from "./addressView";
 import { renderRefusedHtml } from "./refusedSection";
@@ -57,6 +61,10 @@ export interface PanelView {
   addresses?: AddressRegisterView;
   /** The counts behind the lists. Leave undefined to hide the section. */
   glance?: GlanceSources;
+  /** The record of the person's choices. Leave undefined to hide the section. */
+  receipt?: readonly ReceiptRow[];
+  /** Where the App says data stays on the device or is not sent. Leave undefined to hide the section. */
+  statements?: readonly StatementResult[];
   /** Show the buttons that download everything the App keeps on this device. */
   keptList?: boolean;
   /** Show the protected copy section. */
@@ -138,6 +146,8 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.device === undefined ? "" : renderDeviceHtml(view.locale, view.device)}` +
     `${view.deviceNames === undefined ? "" : renderDeviceKnownHtml(view.locale, view.deviceNames)}` +
     `${view.features === undefined ? "" : renderFeaturesHtml(view.locale, view.features)}` +
+    `${view.receipt === undefined ? "" : renderReceiptHtml(view.locale, view.receipt)}` +
+    `${view.statements === undefined ? "" : renderStatementsHtml(view.locale, view.statements)}` +
     `${view.glance === undefined ? "" : renderGlanceHtml(view.locale, view.glance)}` +
     `${view.addresses === undefined ? "" : renderAddressesHtml(view.locale, view.addresses)}` +
     `${renderConsentHtml(view)}` +
