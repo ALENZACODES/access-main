@@ -1,7 +1,7 @@
 import type { Language } from "./regionDownload";
 import type { DataAvailability, DependencyCategory, DependencyFilter, DependencyPriority, DependencyProgress, DependencySort } from "./dependencyPlanner";
 export interface DependencyCopy {
-  readonly title: string; readonly intro: string; readonly caution: string; readonly outing: string;
+  readonly title: string; readonly intro: string; readonly personalIntro: string; readonly caution: string; readonly outing: string;
   readonly add: string; readonly addTitle: string; readonly purpose: string; readonly category: string;
   readonly priority: string; readonly progress: string; readonly note: string; readonly cellId: string;
   readonly addCell: string; readonly removeCell: string; readonly save: string; readonly cancel: string;
@@ -19,6 +19,7 @@ export const DEPENDENCY_COPY: Record<Language, DependencyCopy> = {
   en: {
     title: "Offline dependency planner",
     intro: "List the information you would want available for an outing. Compare the listed offline files with what this device reports saved.",
+    personalIntro: "List the information you need for an outing. Until a region listing is available, linked files stay UNKNOWN.",
     caution: "Saved information does not prove an entrance, route, transit service or facility is accessible. Physical access stays UNKNOWN.",
     outing: "Outing label", add: "Add checkpoint", addTitle: "Checkpoint name", purpose: "Why this information matters",
     category: "Topic", priority: "Importance", progress: "Contact or review progress", note: "Your note", cellId: "Offline cell ID",
@@ -36,6 +37,7 @@ export const DEPENDENCY_COPY: Record<Language, DependencyCopy> = {
   fr: {
     title: "Planificateur de dépendances hors ligne",
     intro: "Indiquez les renseignements utiles pour une sortie. Comparez les fichiers hors ligne répertoriés avec les copies enregistrées sur cet appareil.",
+    personalIntro: "Notez les renseignements utiles pour une sortie. Sans liste régionale, la disponibilité des fichiers associés reste UNKNOWN.",
     caution: "Une copie enregistrée ne prouve pas l’accessibilité d’une entrée, d’un trajet, d’un service de transport ou d’une installation. L’accessibilité physique reste UNKNOWN.",
     outing: "Nom de la sortie", add: "Ajouter un point à examiner", addTitle: "Nom du point", purpose: "Pourquoi ces renseignements sont utiles",
     category: "Sujet", priority: "Importance", progress: "État du suivi", note: "Votre note", cellId: "Identifiant de cellule hors ligne",
@@ -76,8 +78,8 @@ export const DEPENDENCY_AVAILABILITY: Record<Language, Record<DataAvailability, 
   fr: { saved: "Renseignements enregistrés", UNKNOWN: "UNKNOWN" },
 };
 export const DEPENDENCY_REASONS: Record<Language, Record<string, string>> = {
-  en: { present: "Local copy recorded", "not-listed": "Not listed in this region", "inventory-unavailable": "Local inventory unavailable", "source-conflict": "Local record differs from listed source", "source-invalid": "Listed source metadata is invalid", missing: "Not downloaded", stale: "Out of date", unreadable: "Local copy could not be read", UNKNOWN: "UNKNOWN" },
-  fr: { present: "Copie locale enregistrée", "not-listed": "Non répertorié dans cette région", "inventory-unavailable": "Inventaire local indisponible", "source-conflict": "Les métadonnées de la copie locale diffèrent", "source-invalid": "Les métadonnées de la source sont incorrectes", missing: "Non téléchargée", stale: "Périmée", unreadable: "Impossible de lire la copie locale", UNKNOWN: "UNKNOWN" },
+  en: { present: "Local copy recorded", "listing-unavailable": "Region listing unavailable", "not-listed": "Not listed in this region", "inventory-unavailable": "Local inventory unavailable", "source-conflict": "Local record differs from listed source", "source-invalid": "Listed source metadata is invalid", missing: "Not downloaded", stale: "Out of date", unreadable: "Local copy could not be read", UNKNOWN: "UNKNOWN" },
+  fr: { present: "Copie locale enregistrée", "listing-unavailable": "Liste régionale indisponible", "not-listed": "Non répertorié dans cette région", "inventory-unavailable": "Inventaire local indisponible", "source-conflict": "Les métadonnées de la copie locale diffèrent", "source-invalid": "Les métadonnées de la source sont incorrectes", missing: "Non téléchargée", stale: "Périmée", unreadable: "Impossible de lire la copie locale", UNKNOWN: "UNKNOWN" },
 };
 export interface DependencyPrompt { readonly key: string; readonly category: DependencyCategory; readonly en: string; readonly fr: string; }
 export const DEPENDENCY_PROMPTS: readonly DependencyPrompt[] = [
