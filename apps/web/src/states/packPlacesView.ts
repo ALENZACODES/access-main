@@ -6,7 +6,7 @@
  */
 import type { Locale } from "./stateCopy";
 import { MIN_TOUCH_TARGET_PX } from "./stateCopy";
-import { normalizeText } from "./filters";
+import { DEFAULT_PACK_SORT, type PackSort, cleanThen, sortPlaces } from "./packSort";
 import { filterBySearch } from "./packSearchMatch";
 import { parsePackSearch } from "./packSearchParse";
 import { message, type MessageId } from "./messages";
@@ -32,6 +32,10 @@ export interface PackQuery {
   readonly kind?: string | null;
   /** A distance band from packBands. Used only when a starting point is typed; left out or null means every distance. */
   readonly band?: BandKey | null;
+  /** The order of the list (see packSort). Left out means the default: nearest first when a point is typed, then by name. */
+  readonly sort?: PackSort;
+  /** A second order for places the first cannot tell apart. Left out, null, the default or the same order means none. */
+  readonly then?: PackSort | null;
 }
 
 export const EMPTY_PACK_QUERY: PackQuery = { text: "", tag: "any", near: { status: "none" } };
@@ -131,13 +135,6 @@ export function toCard(p: PackPlaceRecord, ctx: PackContext, from: Point | null)
   };
 }
 
-/** Name order, UNKNOWN names last, id as the tie-break so the order never changes between renders. */
-function byName(a: PackPlaceRecord, b: PackPlaceRecord): number {
-  if ((a.name === null) !== (b.name === null)) return a.name === null ? 1 : -1;
-  const n = normalizeText(a.name ?? "").localeCompare(normalizeText(b.name ?? ""));
-  return n !== 0 ? n : a.id.localeCompare(b.id);
-}
-
 export function packPlacesView(places: readonly PackPlaceRecord[], dropped: number, query: PackQuery, ctx: PackContext): PackView {
   const { locale } = ctx;
   const from = query.near.status === "ok" ? query.near.point : null;
@@ -151,14 +148,7 @@ export function packPlacesView(places: readonly PackPlaceRecord[], dropped: numb
   const shown = filterByBand(beforeBand, from, query.band ?? null);
   const hiddenUnknown = query.tag !== "any" && query.tag !== "unknown" ? byText.filter((p) => p.tag === "unknown").length : 0;
 
-  const ordered = [...shown].sort((a, b) => {
-    if (from) {
-      const da = a.location ? distanceMetres(from, a.location) : Number.POSITIVE_INFINITY;
-      const db = b.location ? distanceMetres(from, b.location) : Number.POSITIVE_INFINITY;
-      if (da !== db) return da - db;
-    }
-    return byName(a, b);
-  });
+  const ordered = sortPlaces(shown, query.sort ?? DEFAULT_PACK_SORT, from, cleanThen(query.sort ?? DEFAULT_PACK_SORT, query.then));
 
   const shared = {
     count: ordered.length,

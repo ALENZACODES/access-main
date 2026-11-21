@@ -7,6 +7,8 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { PackSort } from "./PackSort.tsx";
+import { DEFAULT_PACK_SORT, type PackSort as PackSortKey } from "./packSort.ts";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
@@ -84,6 +86,8 @@ export function PackPlaces({ places, locale, today }: Props) {
   const [facets, setFacets] = useState<FacetSelection>(EMPTY_FACETS);
   const [kind, setKind] = useState<string | null>(null);
   const [band, setBand] = useState<BandKey | null>(null);
+  const [sort, setSort] = useState<PackSortKey>(DEFAULT_PACK_SORT);
+  const [then, setThen] = useState<PackSortKey | null>(null);
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const day = today ?? new Date().toISOString().slice(0, 10);
@@ -98,8 +102,8 @@ export function PackPlaces({ places, locale, today }: Props) {
   // A distance band means nothing without a point, so it is ignored (not forgotten) until a point is typed again.
   const activeBand = from === null ? null : band;
   const view = useMemo(
-    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets, kind, band: activeBand }, { locale, today: day }),
-    [parsed, text, tag, near, facets, kind, activeBand, locale, day],
+    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets, kind, band: activeBand, sort, then }, { locale, today: day }),
+    [parsed, text, tag, near, facets, kind, activeBand, sort, then, locale, day],
   );
 
   // Other names to try when a typed search finds nothing. Only places the current filter allows are offered.
@@ -177,6 +181,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         <TextInput label={message("pack.lat", locale)} value={lat} onChange={setLat} error={view.nearError ?? undefined} />
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
+      <PackSort places={view.shownPlaces} sort={sort} onSort={setSort} then={then} onThen={setThen} locale={locale} />
       <TextMap places={view.shownPlaces} from={from} locale={locale} />
       <PackBands places={view.beforeBand} shown={view.shownPlaces} from={from} locale={locale} today={day} selected={activeBand} onSelect={setBand} />
       <StreetIndex places={view.shownPlaces} locale={locale} onAdd={shortlist.add} />
