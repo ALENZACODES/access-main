@@ -48,6 +48,10 @@ const RecoveryReceiptLedgerPanel = lazy(async () => ({
   default: (await import("./RecoveryReceiptLedgerPanel")).RecoveryReceiptLedgerPanel,
 }));
 
+const RecoverySupportBriefPanel = lazy(async () => ({
+  default: (await import("./RecoverySupportBriefPanel")).RecoverySupportBriefPanel,
+}));
+
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
   readonly locale: RecoveryLocale;
@@ -66,6 +70,7 @@ function initialDownload(): DownloadSnapshot {
   return { phase: "idle", received: 0, expected: null, percent: null };
 }
 export function RecoveryCenter({ locale, store, download, saveFile, onPackReady }: RecoveryCenterProps): ReactElement {
+  const [briefOpened, setBriefOpened] = useState(false);
   const inventoryHeading = useId();
   const transferHeading = useId();
   const exportHeading = useId();
@@ -214,6 +219,20 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         <RecoveryReceiptLedgerPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
+      <details style={section} onToggle={(event) => {
+        if (event.currentTarget.open) setBriefOpened(true);
+      }}>
+        <summary style={button}>
+          {locale === "fr" ? "Résumé de soutien à la récupération" : "Recovery support brief"}
+        </summary>
+        {briefOpened && (
+          <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du résumé local…" : "Loading local support brief…"}</p>}>
+            <RecoverySupportBriefPanel locale={locale} records={inventory}
+              inspected={hasInspected && !checking && !inventoryFailure}
+              onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          </Suspense>
+        )}
+      </details>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>
