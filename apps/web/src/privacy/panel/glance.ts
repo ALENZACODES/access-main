@@ -6,6 +6,7 @@
 import type { AddressRegisterView } from "./addressView";
 import type { DeviceRow } from "./deviceRegister";
 import type { FeatureRow } from "./featureRegister";
+import type { StatementResult } from "./statementRegister";
 import type { RegisterRow, UnscannedRow } from "./storageRegister";
 
 export interface GlanceSources {
@@ -17,11 +18,13 @@ export interface GlanceSources {
   features?: readonly FeatureRow[];
   /** The addresses and network requests in the App's code */
   addresses?: AddressRegisterView;
+  /** Where the App says data stays on the device or is not sent, set beside the network requests */
+  statements?: readonly StatementResult[];
 }
 
-export type GlanceId = "kept" | "kept-asked" | "kept-outside" | "kept-unread" | "caches" | "databases" | "features-used" | "features-asked" | "features-unconfirmed" | "features-unused" | "pages" | "names" | "request-places" | "request-unknown";
+export type GlanceId = "kept" | "kept-asked" | "kept-outside" | "kept-unread" | "caches" | "databases" | "features-used" | "features-asked" | "features-unconfirmed" | "features-unused" | "pages" | "names" | "request-places" | "request-unknown" | "statement-parts" | "statement-unconfirmed";
 
-export type GlanceGroup = "kept" | "device" | "features" | "addresses";
+export type GlanceGroup = "kept" | "device" | "features" | "addresses" | "statements";
 
 export interface GlanceFigure {
   id: GlanceId;
@@ -62,6 +65,11 @@ export function glanceFigures(src: GlanceSources): GlanceFigure[] {
     add("names", "addresses", countWhere(src.addresses.addresses, (a) => a.kind === "identifier"));
     add("request-places", "addresses", src.addresses.calls.length);
     add("request-unknown", "addresses", countWhere(src.addresses.calls, (c) => c.destination === "UNKNOWN"), true);
+  }
+  if (src.statements !== undefined) {
+    add("statement-parts", "statements", src.statements.length);
+    // A part that makes requests, or was not checked, is not a pass: it is counted as unconfirmed.
+    add("statement-unconfirmed", "statements", countWhere(src.statements, (r) => r.check !== "no-requests-in-file"), true);
   }
   return out;
 }
