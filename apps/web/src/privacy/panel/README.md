@@ -244,6 +244,15 @@ UNKNOWN.
 
 `statementRegister.ts` lists the files whose text says that data stays on the device or is not sent, with how many lines say it in each language. `audit/claimScan.ts` reads the source and `audit/statement.repo.audit.test.ts` fails when a statement appears, goes or changes count without a row. Only lines that hold a quoted string are read, and statements worded some other way are not found. The only check set beside each row is whether the file that holds the statement makes a network request itself (from `addressRegister.ts`). Code in other files is not covered, so a pass is not proof that a statement is true, and a file that does make requests, or a row checked without the list of requests, is shown as unknown. The controller option is `statements`. The counts section includes both.
 
+## Links that open another app (P10X)
+
+`handoffRegister.ts` lists the links in the App that open another app: an email draft, a place in a maps app and a help-line number in a dialler. Each row names the kind of link, the file that makes it, how many places in that file make one, which app opens and what the App passes on. `audit/handoffScan.ts` reads the source and fails CI when a link appears, goes or changes count without a row. It also finds navigation to an address built at run time (`location.assign`, `window.open` and the like), which has no row and so fails. A variable called `location` is not a hand-off.
+
+`handoffLink.ts` reads a mail, phone, text or map link and says what it carries: the addresses and the length of an email, the digits of a number, the place and how many decimal places it is written to. `audit/handoff.behaviour.audit.test.ts` builds the real links and checks that they carry what the register says, and `audit/fuzz.handoff.audit.test.ts` runs the reader and the builders over generated text.
+
+`handoffSection.ts` shows the list in the panel and offers it as a CSV or text download (`export-handoff-csv`, `export-handoff-text`). The controller option is `handoffs`; the live controller passes `HANDOFF_REGISTER`. Nothing here opens a link or contacts anything.
+
+Known issue, outside this lane: `mailtoHref` in `states/visitMessage.ts` throws a `URIError` for text with a lone surrogate, which a place name from the data could hold. `fuzz.handoff.audit.test.ts` pins that behaviour and will fail when it is fixed.
 ## How long things are kept (P10W)
 
 `retentionRegister.ts` lists, for each name the App stores under, what it holds and what the code that saves it sets: a number of days before it expires, a limit on how many items, or a limit on size, each pointing at the constant it was read from. A row with no limit says so, and the store the scanner could not read stays `UNKNOWN`; it is never shown as having no limit. `validateRetention` checks the list against the storage register, the unscanned list and the panel's own names.

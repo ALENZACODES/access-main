@@ -2,7 +2,7 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { initI18n } from "../i18n/index.ts";
 import { NarrowAuditPage } from "./NarrowAuditPage.tsx";
 
@@ -1162,5 +1162,348 @@ describe("NarrowAuditPage: my access summary", () => {
     expect(container.querySelector(".zones")?.innerHTML).toBe(zonesBefore);
     unmount();
     expect(document.querySelector(".summary")).toBeNull();
+  });
+});
+
+/** "Slips onto risky controls" sits before the summary. Every element is given a box, each 30 pixels further right than the one before. */
+describe("NarrowAuditPage: slips onto risky controls", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    const lefts = new WeakMap<Element, number>();
+    let next = 0;
+    Element.prototype.getBoundingClientRect = function box(this: Element): DOMRect {
+      let left = lefts.get(this);
+      if (left === undefined) {
+        left = next;
+        next += 30;
+        lefts.set(this, left);
+      }
+      return { x: left, y: 0, top: 0, left, right: left + 28, bottom: 28, width: 28, height: 28, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, before the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".slip")).toHaveLength(1);
+    const h2 = container.querySelector("#slip-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Slips onto risky controls");
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("reads the page with the App minimum when the tap test was not taken, and puts focus on the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.slip [data-action="slip-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#slip-result-h"));
+    expect(container.querySelector("#slip-result-h + p")?.textContent).toBe("Tap size used: 44 px, the App’s minimum, since the tap test was not taken. Yours stays UNKNOWN.");
+    expect(container.querySelector(".slip")?.textContent).toMatch(/Of \d+ controls, \d+ do(es)? something hard to take back\./);
+    // Every control here is 28 pixels, so each risky one is smaller than the tap size.
+    expect(container.querySelectorAll(".slip #slip-small-h + ul li").length).toBeGreaterThan(0);
+  });
+
+  it("follows the language of the audit panel and keeps what was read", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.slip [data-action="slip-read"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".slip")).toHaveLength(1);
+    expect(container.querySelector("#slip-h")?.textContent).toBe("Glissements vers des commandes à risque");
+    expect(container.querySelector(".slip")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#slip-result-h")?.textContent).toBe("Ce qui a été trouvé");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const tapBefore = container.querySelector(".tap")?.innerHTML;
+    await press(container, '.slip [data-action="slip-read"]');
+    expect(container.querySelector(".tap")?.innerHTML).toBe(tapBefore);
+    unmount();
+    expect(document.querySelector(".slip")).toBeNull();
+  });
+});
+
+/** "Pointer travel" sits after the slips. Every element is given a box, each 50 pixels further down than the one before. */
+describe("NarrowAuditPage: pointer travel", () => {
+  const original = Element.prototype.getBoundingClientRect;
+  const withBoxes = () => {
+    const tops = new WeakMap<Element, number>();
+    let next = 0;
+    Element.prototype.getBoundingClientRect = function box(this: Element): DOMRect {
+      let top = tops.get(this);
+      if (top === undefined) {
+        top = next;
+        next += 50;
+        tops.set(this, top);
+      }
+      return { x: 0, y: top, top, left: 0, right: 200, bottom: top + 44, width: 200, height: 44, toJSON: () => ({}) } as DOMRect;
+    };
+  };
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = original;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, between the slips and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".travel")).toHaveLength(1);
+    const h2 = container.querySelector("#travel-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Pointer travel");
+    expect((container.querySelector("#slip-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("counts the forms of the page and puts focus on the result", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.travel [data-action="travel-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#travel-result-h"));
+    const first = container.querySelector("#travel-result-h + p")?.textContent ?? "";
+    expect(first).toMatch(/^(\d+ forms? (was|were) counted, from each control to the next in page order\.|This page has no form with visible controls, so no path was counted\.)$/);
+    expect(container.querySelector(".travel [role=status]")?.textContent).toBe("The forms were counted.");
+  });
+
+  it("follows the language of the audit panel and keeps what was read", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.travel [data-action="travel-read"]');
+    await act(async () => {
+      (container.querySelector('[data-action="lang-fr"]') as HTMLElement).click();
+    });
+    expect(container.querySelectorAll(".travel")).toHaveLength(1);
+    expect(container.querySelector("#travel-h")?.textContent).toBe("Déplacement du pointeur");
+    expect(container.querySelector(".travel")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#travel-result-h")?.textContent).toBe("Ce qui a été compté");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    withBoxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const slipBefore = container.querySelector(".slip")?.innerHTML;
+    await press(container, '.travel [data-action="travel-read"]');
+    expect(container.querySelector(".slip")?.innerHTML).toBe(slipBefore);
+    unmount();
+    expect(document.querySelector(".travel")).toBeNull();
+  });
+});
+
+/** "My typing pace" sits after the pointer travel. jsdom stamps each event with Date.now(), which the tests set. */
+describe("NarrowAuditPage: my typing pace", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const typeAt = async (field: HTMLInputElement, value: string, at: number, inputType = "insertText") => {
+    vi.spyOn(Date, "now").mockReturnValue(at);
+    await act(async () => {
+      field.value = value;
+      field.dispatchEvent(new InputEvent("input", { bubbles: true, inputType }));
+    });
+  };
+  const practise = async (container: HTMLElement) => {
+    await press(container, '.typing [data-action="typing-start"]');
+    const name = container.querySelector("#typing-field-name") as HTMLInputElement;
+    const postal = container.querySelector("#typing-field-postal") as HTMLInputElement;
+    await typeAt(name, "A", 1_000);
+    await typeAt(name, "Alex Martin", 5_000);
+    await typeAt(postal, "K1A 0", 10_000);
+    await typeAt(postal, "K1A ", 11_000, "deleteContentBackward");
+    await typeAt(postal, "K1A 0B1", 13_000);
+    await press(container, '.typing [data-action="typing-done"]');
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The form timed out.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+
+  it("is on the page once, under an h2, between the pointer travel and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".typing")).toHaveLength(1);
+    const h2 = container.querySelector("#typing-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("My typing pace");
+    expect((container.querySelector("#travel-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("puts focus on the first field, keeps it there while typing, and shows the pace at the end", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.typing [data-action="typing-start"]');
+    const name = container.querySelector("#typing-field-name") as HTMLInputElement;
+    expect(document.activeElement).toBe(name);
+    expect(container.querySelector(".typing [role=status]")?.textContent).toBe("The practice has started. Focus is on the first field.");
+    await typeAt(name, "Al", 2_000);
+    expect(container.querySelector("#typing-field-name")).toBe(name);
+    expect(document.activeElement).toBe(name);
+    await press(container, '.typing [data-action="typing-stop"]');
+    expect(document.activeElement).toBe(container.querySelector("#typing-result-h"));
+  });
+
+  it("counts the text fields of the page without its own, and adds the pace to the barrier text", async () => {
+    // jsdom lays nothing out, so every element is given a box; otherwise no field would count as shown.
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, top: 0, left: 0, right: 200, bottom: 44, width: 200, height: 44, toJSON: () => ({}) } as DOMRect);
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(await barrierText(container)).not.toContain("My typing pace");
+    await practise(container);
+    const text = container.querySelector(".typing")?.textContent ?? "";
+    // 18 characters in 7 seconds; the middle of 4 and 3 seconds is 3.5.
+    expect(text).toContain("2 of 3 practice fields filled in. Your pace: about 154 characters a minute, and 3.5 s a field in the middle of your tries.");
+    expect(text).toContain("1 correction (deleting or undoing).");
+    expect(text).toMatch(/the \d+ text fields? of this page would take about [\d.]+ min\. This is an estimate from the practice, not a measure of the page\. No time limit was found in the text of the page\./);
+    expect(await barrierText(container)).toContain("My typing pace: about 154 characters a minute, 3.5 s a short field.");
+  });
+
+  it("keeps the result in French after a switch, and the line in the barrier text", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await practise(container);
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".typing")).toHaveLength(1);
+    expect(container.querySelector("#typing-h")?.textContent).toBe("Mon rythme de saisie");
+    expect(container.querySelector(".typing")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector(".typing")?.textContent).toContain("2 champs d’essai remplis sur 3.");
+    expect(await barrierText(container)).toContain("Mon rythme de saisie : environ 154 caractères par minute, 3,5 s par champ court.");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const travelBefore = container.querySelector(".travel")?.innerHTML;
+    await practise(container);
+    expect(container.querySelector(".travel")?.innerHTML).toBe(travelBefore);
+    unmount();
+    expect(document.querySelector(".typing")).toBeNull();
+  });
+});
+
+/** "Dragging and gestures" sits after the typing pace. jsdom lays nothing out: the track is given 300 pixels and the handle 44. */
+describe("NarrowAuditPage: dragging and gestures", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const boxes = () =>
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function box(this: Element): DOMRect {
+      const width = this.classList.contains("gest-handle") ? 44 : 300;
+      return { x: 0, y: 0, top: 0, left: 0, right: width, bottom: 44, width, height: 44, toJSON: () => ({}) } as DOMRect;
+    });
+  const pointer = async (container: HTMLElement, type: string, clientX: number, at: number) => {
+    const handle = container.querySelector(".gest-handle") as HTMLElement;
+    const e = new MouseEvent(type, { bubbles: true, cancelable: true, clientX });
+    Object.defineProperty(e, "pointerId", { value: 1 });
+    Object.defineProperty(e, "pointerType", { value: "mouse" });
+    Object.defineProperty(e, "timeStamp", { value: at });
+    await act(async () => {
+      handle.dispatchEvent(e);
+    });
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The list can only be sorted by dragging.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+
+  it("is on the page once, under an h2, between the typing pace and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".gest")).toHaveLength(1);
+    const h2 = container.querySelector("#gest-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Dragging and gestures");
+    expect((container.querySelector("#typing-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("runs the drag test with the pointer and puts the result in the barrier text", async () => {
+    boxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(await barrierText(container)).not.toContain("Dragging:");
+    await press(container, '.gest [data-action="gest-start"]');
+    expect(document.activeElement).toBe(container.querySelector("#gest-test-h"));
+    for (const [i, end] of [[0, 250], [1, 60], [2, 250]] as const) {
+      await pointer(container, "pointerdown", 10, 1_000 * i);
+      await pointer(container, i === 1 ? "pointerup" : "pointermove", 10 + end, 1_000 * i + 500);
+    }
+    expect(container.querySelector(".gest [role=status]")?.textContent).toBe("Try 3 reached the end. The drag test is over. The result follows.");
+    expect(document.activeElement).toBe(container.querySelector("#gest-test-h"));
+    expect(container.querySelector(".gest")?.textContent).toContain("2 of 3 tries reached the end of the track, with a mouse or similar pointer.");
+    expect(await barrierText(container)).toContain("Dragging: 2 of 3 tries made it. I need another way to do it, with a single tap or click.");
+  });
+
+  it("reads the page without its own handle and puts focus on the result", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.gest [data-action="gest-start"]');
+    await press(container, '.gest [data-action="gest-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#gest-result-h"));
+    expect(container.querySelector(".gest [role=status]")?.textContent).toBe("The page was read.");
+    expect(container.querySelector("#gest-result-h + p")?.textContent).toMatch(/^(\d+ controls? found|No drag or gesture control was found on this page)/);
+  });
+
+  it("says when the person cannot drag, keeps it in French after a switch, and in the barrier text", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.gest [data-action="gest-cannot"]');
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".gest")).toHaveLength(1);
+    expect(container.querySelector("#gest-h")?.textContent).toBe("Glisser et gestes");
+    expect(container.querySelector(".gest")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector(".gest")?.textContent).toContain("Vous avez indiqué ne pas pouvoir glisser ici.");
+    expect(await barrierText(container)).toContain("Glisser : je ne peux pas glisser.");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const typingBefore = container.querySelector(".typing")?.innerHTML;
+    await press(container, '.gest [data-action="gest-cannot"]');
+    expect(container.querySelector(".typing")?.innerHTML).toBe(typingBefore);
+    unmount();
+    expect(document.querySelector(".gest")).toBeNull();
   });
 });

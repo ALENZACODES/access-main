@@ -27,6 +27,7 @@ export type Status =
   | { kind: "addresses-exported"; format: "csv" | "text" }
   | { kind: "glance-exported"; format: "csv" | "text" }
   | { kind: "receipt-exported"; format: "csv" | "text" }
+  | { kind: "handoff-exported"; format: "csv" | "text" }
   | { kind: "retention-exported"; format: "csv" | "text" }
   | { kind: "retention-checked"; compared: number; differences: number }
   | { kind: "statements-exported"; format: "csv" | "text" }
@@ -134,6 +135,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Privacy counts prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "receipt-exported":
           return `Record of your choices prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "handoff-exported":
+          return `List of links that open another app prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "retention-checked":
           return liveSummary("en", s.compared, s.differences);
         case "retention-exported":
@@ -214,6 +217,8 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Chiffres sur la vie privée préparés ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "receipt-exported":
           return `Registre de vos choix préparé ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "handoff-exported":
+          return `Liste des liens qui ouvrent une autre application préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "retention-checked":
           return liveSummary("fr", s.compared, s.differences);
         case "retention-exported":
