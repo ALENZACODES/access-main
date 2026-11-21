@@ -1,9 +1,8 @@
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
-const read = (path: string): string => readFileSync(new URL(path, "file://" + ROOT + "/"), "utf8");
+const ROOT = new URL("../../../../../", import.meta.url);
+const read = (path: string): string => readFileSync(new URL(path, ROOT), "utf8");
 
 describe("offline pack receipt integration", () => {
   it("exports the receipt model from the offline robustness entry point", () => {
