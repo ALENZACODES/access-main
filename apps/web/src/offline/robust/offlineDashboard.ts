@@ -336,6 +336,18 @@ export function mountOfflineDashboard(
     // The original offline controls remain available when this optional view fails.
   });
 
+  const dependencyHost = element("div");
+  section.append(dependencyHost);
+  let dependencyDisposed = false;
+  let unmountDependency: () => void = () => undefined;
+  // Optional local information planner is not required for an offline download.
+  void import("./dependencyPlannerPanel").then(({ mountOfflineDependencyPlanner }) => {
+    if (dependencyDisposed) return;
+    unmountDependency = mountOfflineDependencyPlanner(dependencyHost, manifest, model, language);
+  }).catch(() => {
+    // All existing offline controls remain available if this optional chunk fails.
+  });
+
   const coordinationHost = element("div");
   const openCoordinationLabel = language === "fr" ? "Ouvrir la fiche de coordination" : "Open coordination brief";
   const closeCoordinationLabel = language === "fr" ? "Fermer la fiche de coordination" : "Close coordination brief";
@@ -437,6 +449,38 @@ export function mountOfflineDashboard(
     });
   };
   questionLaunch.addEventListener("click", onQuestionLaunch);
+
+  const packChangeHost = element("div");
+  const packChangeLaunch = action(language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review");
+  packChangeHost.append(packChangeLaunch);
+  section.append(packChangeHost);
+  let packChangeDisposed = false;
+  let packChangeOpen = false;
+  let packChangeRevision = 0;
+  let unmountPackChange: () => void = () => undefined;
+  const onPackChangeLaunch = (): void => {
+    if (packChangeDisposed) return;
+    if (packChangeOpen) {
+      packChangeOpen = false;
+      packChangeRevision += 1;
+      unmountPackChange();
+      unmountPackChange = () => undefined;
+      packChangeLaunch.textContent = language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review";
+      return;
+    }
+    packChangeOpen = true;
+    const revision = ++packChangeRevision;
+    packChangeLaunch.textContent = language === "fr" ? "Fermer l’examen des changements du pack" : "Close pack change review";
+    void import("./packChangeImpactPanel").then(({ mountPackChangeImpact }) => {
+      if (packChangeDisposed || !packChangeOpen || revision !== packChangeRevision) return;
+      unmountPackChange = mountPackChangeImpact(packChangeHost, manifest, model, language);
+    }).catch(() => {
+      if (packChangeDisposed || revision !== packChangeRevision) return;
+      packChangeOpen = false;
+      packChangeLaunch.textContent = language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review";
+    });
+  };
+  packChangeLaunch.addEventListener("click", onPackChangeLaunch);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -570,6 +614,8 @@ export function mountOfflineDashboard(
     unmountInquiry();
     contingencyDisposed = true;
     unmountContingency();
+    dependencyDisposed = true;
+    unmountDependency();
     coordinationDisposed = true;
     coordinationRevision += 1;
     coordinationLaunch.removeEventListener("click", onCoordinationLaunch);
@@ -582,6 +628,10 @@ export function mountOfflineDashboard(
     questionRevision += 1;
     questionLaunch.removeEventListener("click", onQuestionLaunch);
     unmountQuestion();
+    packChangeDisposed = true;
+    packChangeRevision += 1;
+    packChangeLaunch.removeEventListener("click", onPackChangeLaunch);
+    unmountPackChange();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
