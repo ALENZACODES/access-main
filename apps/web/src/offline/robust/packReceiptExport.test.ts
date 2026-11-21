@@ -84,7 +84,7 @@ describe("offline receipt export text", () => {
 
   it("returns a stable filename and sanitizes the region identifier", () => {
     expect(receiptFilename("central", "json")).toBe("offline-pack-receipts-central.json");
-    expect(receiptFilename("../private region", "txt")).toBe("offline-pack-receipts-------private-region.txt");
+    expect(receiptFilename("../private region", "txt")).toBe("offline-pack-receipts----private-region.txt");
     expect(receiptFilename(" ", "json")).toBe("offline-pack-receipts-region.json");
   });
 
