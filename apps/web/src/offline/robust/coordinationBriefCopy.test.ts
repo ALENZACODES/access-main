@@ -1,0 +1,42 @@
+import { describe, expect, it } from "vitest";
+import { forbiddenOrgNeedles } from "../../../../../packages/shared/test/forbiddenOrg";
+import { auditCoordinationCopy, COORDINATION_COPY, COORDINATION_FILTERS, COORDINATION_PRIORITIES,
+  COORDINATION_QUESTIONS, COORDINATION_SORTS, COORDINATION_STATUSES, COORDINATION_TOPICS, coordinationQuestion } from "./coordinationBriefCopy";
+const topics = ["arrival", "entrance", "route", "transfer", "washroom", "rest", "communication", "departure", "other"] as const;
+describe("coordination brief English and French copy", () => {
+  it("has matched copy fields", () => { expect(Object.keys(COORDINATION_COPY.en).sort()).toEqual(Object.keys(COORDINATION_COPY.fr).sort()); });
+  it("has no missing translation entries", () => { expect(auditCoordinationCopy()).toEqual([]); });
+  it("keeps UNKNOWN untranslated", () => { expect(COORDINATION_COPY.en.unknown).toBe("UNKNOWN"); expect(COORDINATION_COPY.fr.unknown).toBe("UNKNOWN"); });
+  it("never claims physical-condition certainty", () => { expect(COORDINATION_COPY.en.physicalUnknown).toContain("UNKNOWN"); });
+  it("explicitly warns notes are not app-confirmed facts", () => { expect(COORDINATION_COPY.en.caution).toContain("not app-confirmed facts"); });
+  it("explicitly warns in French", () => { expect(COORDINATION_COPY.fr.caution).toContain("UNKNOWN"); });
+  it("treats the brief as a question sequence", () => { expect(COORDINATION_COPY.en.intro).toContain("questions"); });
+  it("provides native-form-friendly field names", () => { expect(COORDINATION_COPY.en.question).toBeTruthy(); expect(COORDINATION_COPY.fr.question).toBeTruthy(); });
+  it("makes privacy warning visible", () => { expect(COORDINATION_COPY.en.importWarning).toContain("personal"); });
+  it("has a clear failed import message", () => { expect(COORDINATION_COPY.en.invalid).toContain("not changed"); });
+  it("does not silently send requests", () => { expect(COORDINATION_COPY.en.offline).toContain("No external requests"); });
+  it("uses French curly apostrophes", () => { for (const value of Object.values(COORDINATION_COPY.fr)) expect(value).not.toContain("'"); });
+  it("has exact French spacing before any colons", () => { for (const value of Object.values(COORDINATION_COPY.fr)) expect(value).not.toMatch(/(?<!\u00a0):/u); });
+  it("has French narrow spaces before question marks", () => { for (const value of Object.values(COORDINATION_COPY.fr)) expect(value).not.toMatch(/(?<!\u202f)[;!?]/u); });
+  it("has no missing topic labels", () => { expect(Object.keys(COORDINATION_TOPICS.en)).toEqual(Object.keys(COORDINATION_TOPICS.fr)); });
+  it("has no missing priority labels", () => { expect(Object.keys(COORDINATION_PRIORITIES.en)).toEqual(Object.keys(COORDINATION_PRIORITIES.fr)); });
+  it("has no missing status labels", () => { expect(Object.keys(COORDINATION_STATUSES.en)).toEqual(Object.keys(COORDINATION_STATUSES.fr)); });
+  it("has no missing filter labels", () => { expect(Object.keys(COORDINATION_FILTERS.en)).toEqual(Object.keys(COORDINATION_FILTERS.fr)); });
+  it("has no missing sort labels", () => { expect(Object.keys(COORDINATION_SORTS.en)).toEqual(Object.keys(COORDINATION_SORTS.fr)); });
+  it("preserves UNKNOWN when a reply is recorded", () => { expect(COORDINATION_STATUSES.en["reply-recorded"]).toContain("UNKNOWN"); });
+  it("does not reinterpret a reply as evidence in French", () => { expect(COORDINATION_STATUSES.fr["reply-recorded"]).toContain("UNKNOWN"); });
+  it("has one question for each topic", () => { expect(Object.keys(COORDINATION_QUESTIONS)).toHaveLength(9); });
+  it("questions have matched English and French variants", () => { for (const topic of topics) expect(COORDINATION_QUESTIONS[topic]).toHaveLength(2); });
+  it("English question selection is deterministic", () => { for (const topic of topics) expect(coordinationQuestion(topic, "en")).toBe(COORDINATION_QUESTIONS[topic][0]); });
+  it("French question selection is deterministic", () => { for (const topic of topics) expect(coordinationQuestion(topic, "fr")).toBe(COORDINATION_QUESTIONS[topic][1]); });
+  it("every question is phrased as an inquiry, not asserted access", () => { for (const topic of topics) expect(coordinationQuestion(topic, "en")).toContain("?"); });
+  it("every French question uses a nonbreaking space before its question mark", () => { for (const topic of topics) expect(coordinationQuestion(topic, "fr")).toContain("\u202f?"); });
+  it("does not mention agencies or endorsements", () => {
+    const value = JSON.stringify(COORDINATION_COPY).toLowerCase();
+    expect(value).not.toContain("partnership");
+    for (const name of forbiddenOrgNeedles()) expect(value).not.toContain(name.toLowerCase());
+  });
+  it("keeps physical status separate from handoff status", () => { expect(COORDINATION_COPY.en.status).not.toBe(COORDINATION_COPY.en.physicalUnknown); });
+  it("labels move actions in both languages", () => { expect(COORDINATION_COPY.en.moveUp).toBeTruthy(); expect(COORDINATION_COPY.fr.moveDown).toBeTruthy(); });
+  it("labels metadata without guessing a date", () => { expect(COORDINATION_COPY.fr.sourceDate).toBeTruthy(); });
+});

@@ -47,7 +47,7 @@ function read(storage: StorageLike, prefix: string, now: Date): Stored | null {
       if (x === null || typeof x !== "object") return null;
       if (typeof x.count !== "number" || !Number.isInteger(x.count) || x.count < 1) return null;
       if (typeof x.lastAt !== "string" || Number.isNaN(Date.parse(x.lastAt))) return null;
-      hosts[h] = { count: x.count, lastAt: x.lastAt };
+      Object.defineProperty(hosts, h, { value: { count: x.count, lastAt: x.lastAt }, enumerable: true, writable: true, configurable: true });
     }
     return { since: o.since, hosts };
   } catch {
@@ -70,8 +70,8 @@ export function recordBlocked(storage: StorageLike | null, prefix: string, b: Bl
   if (storage === null) return false;
   const cur = read(storage, prefix, now) ?? { since: b.at, hosts: {} };
   const host = b.host === "" ? "(invalid address)" : b.host;
-  const prev = cur.hosts[host];
-  cur.hosts[host] = { count: (prev?.count ?? 0) + 1, lastAt: b.at };
+  const prev = Object.hasOwn(cur.hosts, host) ? cur.hosts[host] : undefined;
+  Object.defineProperty(cur.hosts, host, { value: { count: (prev?.count ?? 0) + 1, lastAt: b.at }, enumerable: true, writable: true, configurable: true });
   const keep = Object.entries(cur.hosts)
     .sort((a, b2) => Date.parse(b2[1].lastAt) - Date.parse(a[1].lastAt))
     .slice(0, MAX_EGRESS_HOSTS);

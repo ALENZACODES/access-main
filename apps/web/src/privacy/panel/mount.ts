@@ -49,6 +49,10 @@ export function mountPrivacyPanel(
       case "export-addresses-text":
       case "export-glance-csv":
       case "export-glance-text":
+      case "export-handoff-csv":
+      case "export-handoff-text":
+      case "export-retention-csv":
+      case "export-retention-text":
       case "export-receipt-csv":
       case "export-receipt-text":
       case "export-statements-csv":
@@ -58,7 +62,7 @@ export function mountPrivacyPanel(
         const action = t.getAttribute("data-action");
         const before = controller.getState().lastExport;
         const type =
-          action === "export-list-csv" || action === "export-list-text" || action === "export-kept-csv" || action === "export-kept-text" || action === "export-features-csv" || action === "export-features-text" || action === "export-addresses-csv" || action === "export-addresses-text" || action === "export-glance-csv" || action === "export-glance-text" || action === "export-receipt-csv" || action === "export-receipt-text" || action === "export-statements-csv" || action === "export-statements-text" || action === "export-support" || action === "export-printable"
+          action === "export-list-csv" || action === "export-list-text" || action === "export-kept-csv" || action === "export-kept-text" || action === "export-features-csv" || action === "export-features-text" || action === "export-addresses-csv" || action === "export-addresses-text" || action === "export-glance-csv" || action === "export-glance-text" || action === "export-handoff-csv" || action === "export-retention-csv" || action === "export-retention-text" || action === "export-handoff-text" || action === "export-receipt-csv" || action === "export-receipt-text" || action === "export-statements-csv" || action === "export-statements-text" || action === "export-support" || action === "export-printable"
             ? action
             : "export";
         const after = controller.dispatch({ type }).lastExport;
@@ -66,6 +70,10 @@ export function mountPrivacyPanel(
         if (after !== null && after !== before) options.onExport?.(after);
         break;
       }
+      case "check-retention":
+        controller.dispatch({ type: "check-retention" });
+        render("[data-privacy-status]");
+        break;
       case "check-features":
         void controller.dispatchAsync({ type: "check-features" }).then(() => render("[data-privacy-status]"));
         break;
