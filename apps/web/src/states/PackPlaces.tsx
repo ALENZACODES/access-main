@@ -18,6 +18,7 @@ import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
 import { MeetUp } from "./MeetUp.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
+import { TagNoteReads } from "./TagNoteReads.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PackSearchWords, PackWordList } from "./PackWords.tsx";
@@ -211,6 +212,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
+      <TagNoteReads places={view.shownPlaces} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
