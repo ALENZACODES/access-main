@@ -87,8 +87,9 @@ test.describe("P20AG keyboard accordion and tablist journeys", () => {
   });
 
   test("P20AG accordion group reports matching controls and panels", async ({ page }) => {
-    const group = await page.locator("main").evaluate((element) => {
-      const items = Array.from(element.querySelectorAll<HTMLButtonElement>("[aria-controls]"));
+    const accordion = page.getByRole("region", { name: "Frequently asked questions" });
+    const group = await accordion.evaluate((element) => {
+      const items = Array.from(element.querySelectorAll<HTMLButtonElement>("button"));
       return items.map((item, index) => {
         const panel = document.getElementById(item.getAttribute("aria-controls") ?? "");
         return {
@@ -100,6 +101,7 @@ test.describe("P20AG keyboard accordion and tablist journeys", () => {
         };
       });
     });
+    expect(group.map((item) => item.id)).toEqual(["faq-one", "faq-two"]);
     expect(disclosureGroupIssues({ id: "faq", items: group, exclusive: false, orientation: "vertical" })).toEqual([]);
   });
 

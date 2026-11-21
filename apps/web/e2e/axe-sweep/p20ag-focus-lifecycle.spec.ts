@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { observeDialog, activeFocusSnapshot, pressTabAndObserve, dialogIsOpen } from "./p20ag-browser-focus.ts";
 import { focusIssues, disclosureIssues, dialogTabOrder, nextFocusId } from "./p20ag-focus-contracts.ts";
@@ -30,6 +30,19 @@ const customFixture = `<!doctype html><html lang="en"><head><title>Custom modal 
 <section id="custom-modal" role="dialog" aria-modal="true" aria-labelledby="custom-title" data-trigger-id="open-custom">
 <h2 id="custom-title">Confirm choice</h2><p>Review this local example.</p><button id="custom-action">Continue</button></section></body></html>`;
 
+async function expectDialogBoundary(page: Page, expectedId: string, backwards = false) {
+  const movement = await pressTabAndObserve(page, backwards);
+  if (movement.after === null) {
+    // Chromium can visit its own controls between the last and first page tab stops.
+    const inBrowserControls = await page.evaluate(() =>
+      document.activeElement === document.body && !document.hasFocus());
+    expect(inBrowserControls).toBe(true);
+    await expect(page.locator("#modal:modal")).toBeVisible();
+    await page.keyboard.press(backwards ? "Shift+Tab" : "Tab");
+  }
+  await expect(page.locator(`#${expectedId}`)).toBeFocused();
+}
+
 test.describe("P20AG native dialog focus lifecycle", () => {
   test.beforeEach(async ({ page }) => {
     await page.setContent(nativeFixture);
@@ -51,15 +64,13 @@ test.describe("P20AG native dialog focus lifecycle", () => {
     await expect(page.locator("#first")).toBeFocused();
     const first = await pressTabAndObserve(page);
     expect(first.after).toBe("close-dialog");
-    const wrap = await pressTabAndObserve(page);
-    expect(wrap.after).toBe("first");
+    await expectDialogBoundary(page, "first");
   });
 
   test("P20AG Shift Tab wraps from the first dialog control to the last", async ({ page }) => {
     await page.getByRole("button", { name: "Open dialog" }).click();
     await expect(page.locator("#first")).toBeFocused();
-    const movement = await pressTabAndObserve(page, true);
-    expect(movement.after).toBe("close-dialog");
+    await expectDialogBoundary(page, "close-dialog", true);
   });
 
   test("P20AG Escape closes the native dialog and restores focus to its trigger", async ({ page }) => {
