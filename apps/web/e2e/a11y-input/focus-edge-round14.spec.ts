@@ -53,10 +53,10 @@ test.describe("P16 round 14 focus edge matrix", () => {
     const items = (await traceTabOrder(page, 10)).items;
     expect(items.filter(x => x.role === "radio")).toHaveLength(1);
   });
-  test("button in aria-hidden subtree is not a valid target", async ({ page }) => {
+  test("focus in aria-hidden subtree is detected as an accessibility violation", async ({ page }) => {
     await pageWith(page, `<div aria-hidden="true"><button id="hidden">Hidden</button></div><button id="visible">Visible</button>`);
-    await page.keyboard.press("Tab");
-    expect(await page.locator("#visible").evaluate(node => node === document.activeElement)).toBe(true);
+    const trace = await traceTabOrder(page, 8);
+    expect(trace.issues.map(issue => issue.code)).toContain("focus-hidden");
   });
   test("fixed overlay does not change the active focus identity", async ({ page }) => {
     await pageWith(page, `<button id="action">Action</button><div style="position:fixed;right:0;bottom:0;width:10px;height:10px"></div>`);

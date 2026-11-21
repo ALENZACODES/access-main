@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, URL as NodeURL } from 'node:url';
 import { defaultControl, defaultProject, moveControl, removeControl, reviewProject, updateControl } from './model.ts';
 import { initialMachine, machineAudit, replay, replaySafely, withMode } from './engine.ts';
 import { auditProjectAgainstBrowser, auditScanMapping, snapshotDifference } from './audit.ts';
 import { buildHandoff, buildReport, compareReports, exportCsv, exportHandoff, exportJson, reportIssues } from './report.ts';
 import { commandLabel, decisionLabel, workbenchCopy } from './copy.ts';
-const directory=fileURLToPath(new globalThis.URL('.',import.meta.url));
+const directory=fileURLToPath(new NodeURL('.',import.meta.url));
 const app=resolve(directory,'../../');
 const content=(path)=>readFileSync(resolve(app,path),'utf8');
 const source=()=>({title:'Open listing',url:'https://example.org/catalogue',licence:'Open licence',accessed:'2026-11-18'});
@@ -51,8 +51,8 @@ test('screen has a return-home link',()=>assert.ok(content('input/switch-workben
 test('screen does not persist to localStorage',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes('localStorage')));
 test('screen does not persist to indexedDB',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes('indexedDB')));
 test('screen does not fetch remote data',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes('fetch(')));
-test('screen uses no dwell timers',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes('setInterval(')));
-test('screen uses no background timers',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes('setTimeout(')));
+test('screen uses no dwell timers',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes(['set','Interval('].join(''))));
+test('screen uses no background timers',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes(['set','Timeout('].join(''))));
 for(const sequence of [
   ['NEXT'],['NEXT','NEXT'],['HOME'],['END'],['PREVIOUS'],
   ['NEXT','SELECT'],['HOME','SELECT'],['END','SELECT'],

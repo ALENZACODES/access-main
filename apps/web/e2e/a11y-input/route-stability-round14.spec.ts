@@ -12,15 +12,10 @@ for (const route of routes()) {
       expect(state.mainCount).toBe(1);
     });
     test("focus does not navigate away from the current route", async ({ page }) => {
-      const candidate = page.locator("nav a[href]:not([href='/'])").first();
-      if (await candidate.count() === 0) {
-        const fallback = page.locator("nav a[href]").first();
-        if (await fallback.count() === 0) test.skip(true, "This shell route has no navigation link");
-        await fallback.evaluate((node) => node.setAttribute("data-p16-route-focus-candidate", "true"));
-      } else {
-        await candidate.evaluate((node) => node.setAttribute("data-p16-route-focus-candidate", "true"));
-      }
-      await assertFocusDoesNotNavigate(page, "[data-p16-route-focus-candidate='true']");
+      const candidate = page.locator("nav a[href]").first();
+      if (await candidate.count() === 0) test.skip(true, "This shell route has no navigation link");
+      const selector = await candidate.evaluate((node) => node.id ? `#${CSS.escape(node.id)}` : `a[href="${node.getAttribute("href")}"]`);
+      await assertFocusDoesNotNavigate(page, selector);
     });
     test("skip-link references resolve", async ({ page }) => {
       expect(await inspectSkipLinks(page)).toEqual([]);

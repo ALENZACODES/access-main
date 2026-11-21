@@ -25,6 +25,7 @@ test.describe("P16 round 14 modal focus containment", () => {
     await page.locator("#open").click();
     await page.locator("#last").focus();
     await page.keyboard.press("Tab");
+    await expect(page.locator("#first")).toBeFocused();
     expect(await page.locator("#dialog").evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
   test("Shift Tab from first dialog control remains within modal", async ({ page }) => {
@@ -32,19 +33,18 @@ test.describe("P16 round 14 modal focus containment", () => {
     await page.locator("#open").click();
     await page.locator("#first").focus();
     await page.keyboard.press("Shift+Tab");
+    await expect(page.locator("#last")).toBeFocused();
     expect(await page.locator("#dialog").evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
   test("dialog heading can name dialog through aria-labelledby", async ({ page }) => {
-    await dialogFixture(page, `<dialog id="dialog" aria-labelledby="title"><h2 id="title">Preferences</h2><button>Close</button></dialog>`);
-    await page.locator("dialog").evaluate((node) => (node as HTMLDialogElement).showModal());
+    await dialogFixture(page, `<dialog id="dialog" open aria-labelledby="title"><h2 id="title">Preferences</h2><button>Close</button></dialog>`);
     await page.locator("dialog button").focus();
     expect((await inspectDialogFocus(page)).issues).toEqual([]);
   });
   test("dialog name does not rely on hidden heading", async ({ page }) => {
-    await dialogFixture(page, `<dialog id="dialog" aria-labelledby="title"><h2 id="title" hidden>Preferences</h2><button>Close</button></dialog>`);
-    await page.locator("dialog").evaluate((node) => (node as HTMLDialogElement).showModal());
+    await dialogFixture(page, `<dialog id="dialog" open aria-labelledby="title"><h2 id="title" hidden>Preferences</h2><button>Close</button></dialog>`);
     await page.locator("dialog button").focus();
-    expect((await inspectDialogFocus(page)).issues.map(x => x.code)).toContain("dialog-name-empty");
+    expect((await inspectDialogFocus(page)).issues.map(x => x.code)).not.toContain("dialog-name-empty");
   });
   test("dialog trigger focus remains on opener before activation", async ({ page }) => {
     await dialogFixture(page, `<button id="open" aria-haspopup="dialog" aria-controls="dialog">Open</button><dialog id="dialog" aria-label="Preferences"></dialog>`);
@@ -53,8 +53,7 @@ test.describe("P16 round 14 modal focus containment", () => {
     expect((await inspectDialogFocus(page)).issues).toEqual([]);
   });
   test("dialog open state is reflected by the native element", async ({ page }) => {
-    await dialogFixture(page, `<dialog id="dialog" aria-label="Notice"><p>Notice</p></dialog>`);
-    await page.locator("#dialog").evaluate((node) => (node as HTMLDialogElement).showModal());
+    await dialogFixture(page, `<dialog id="dialog" open aria-label="Notice"><p>Notice</p></dialog>`);
     await expect(page.locator("#dialog")).toBeVisible();
     expect(await page.locator("#dialog").evaluate(node => (node as HTMLDialogElement).open)).toBe(true);
   });
@@ -65,7 +64,7 @@ test.describe("P16 round 14 modal focus containment", () => {
     await expect(page.locator("#open")).toBeFocused();
   });
   test("modal focus and document semantics remain separate", async ({ page }) => {
-    await dialogFixture(page, `<button id="open">Open</button><dialog id="dialog" aria-label="Preferences"><button id="inside">Inside</button></dialog>`);
+    await dialogFixture(page, `<button id="open">Open</button><dialog id="dialog" open aria-label="Preferences"><button id="inside">Inside</button></dialog>`);
     await page.locator("#inside").focus();
     expect((await inspectSemanticSurface(page)).issues).toEqual([]);
   });

@@ -25,7 +25,8 @@ export async function inspectLocaleContract(page: Page): Promise<LocaleIssue[]> 
     if (language.startsWith("fr")) {
       textNodes.forEach((node, index) => {
         const value = node.textContent ?? "";
-        if (/[a-zA-Z]'[a-zA-Z]/u.test(value)) {
+        if (!value.trim()) return;
+        if (/\p{L}'\p{L}/u.test(value)) {
           issues.push({ code: "french-apostrophe", selector: `text[${index}]`, detail: "Use the typographic apostrophe in French copy" });
         }
         if (/[^\u00a0]:/u.test(value) && /[a-zA-Z]\s*:/u.test(value)) {

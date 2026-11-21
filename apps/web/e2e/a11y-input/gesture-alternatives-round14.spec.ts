@@ -14,7 +14,7 @@ test.describe("P16 round 14 gesture alternatives", () => {
     expect((await inspectGestureAlternatives(page)).issues.map(x => x.code)).toContain("gesture-name-empty");
   });
   test("gesture action without keyboard alternative is rejected", async ({ page }) => {
-    await fixture(page, `<button data-gesture-action="drag">Move</button>`);
+    await fixture(page, `<div role="button" tabindex="0" data-gesture-action="drag" style="width:44px;height:44px">Move</div>`);
     expect((await inspectGestureAlternatives(page)).issues.map(x => x.code)).toContain("gesture-alternative-missing");
   });
   test("gesture action with keyboard alternative is accepted", async ({ page }) => {

@@ -32,7 +32,10 @@ export async function inspectFormFeedback(page: Page): Promise<FormSnapshot> {
       const labels = node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement
         ? Array.from(node.labels ?? []).map((label) => label.textContent?.trim() ?? "").join(" ").trim()
         : "";
-      const name = node.getAttribute("aria-label")?.trim() || labelled || labels || node.textContent?.trim() || "";
+      const isNativeField = node instanceof HTMLInputElement ||
+        node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement;
+      const name = node.getAttribute("aria-label")?.trim() || labelled || labels ||
+        (!isNativeField ? node.textContent?.trim() ?? "" : "");
       const invalid = node.getAttribute("aria-invalid") === "true";
       const errorText = ids.map((id) => document.getElementById(id)?.textContent?.trim() ?? "").filter(Boolean).join(" ");
       const required = node.hasAttribute("required") || node.getAttribute("aria-required") === "true";
