@@ -10,6 +10,7 @@ import { PackBands } from "./PackBands.tsx";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
+import { PackFingerprint } from "./PackFingerprint.tsx";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
@@ -208,6 +209,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onClear={shortlist.clear}
       />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
+      <PackFingerprint places={parsed.places} locale={locale} today={day} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteTopics places={view.shownPlaces} locale={locale} />

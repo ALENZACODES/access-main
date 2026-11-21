@@ -23,3 +23,25 @@ Day 22 error and empty states, EN + FR, wired into the live module pages.
 - The "accessibility unknown" state keeps UNKNOWN as UNKNOWN.
 - Tests: `states/stateCopy.test.ts`, `pages/ModulePage.states.dom.test.tsx`,
   `e2e/day22-states.spec.ts`.
+
+## Saved-places fingerprint (P4, round 7)
+
+Two devices can tell whether they hold the same saved places without sending
+the places anywhere.
+
+- `sha256.ts` is a plain SHA-256 (same answer on every device, no secure
+  context needed). `packCanonical.ts` gives each record one fixed text form;
+  `packFingerprint.ts` hashes the whole pack, the ids alone, and 16 groups
+  chosen by a hash of the id.
+- `packFingerprintCode.ts` writes and reads the `PACKFP v1` code. It has a
+  check value, so a mistyped or cut code is refused rather than compared.
+- `packFingerprintCompare.ts` says: same, same ids with different details, or
+  different places, and which groups differ.
+- `packGroupDetail.ts` narrows a difference to ids: a `PACKGRP v1` code lists
+  one short hash per place in the groups that differ, and pasting the other
+  device's code shows only-here, only-there and changed ids.
+- `PackFingerprint.tsx` and `PackGroupDetail.tsx` are closed by default and add
+  no heading. They are mounted in `PackPlaces.tsx` after the list transfer.
+- A match means the saved records are the same on both devices, as read. It
+  never says they are correct or up to date. Codes hold counts, ids and hashes:
+  no names, notes, addresses or locations. No new storage key is used.
