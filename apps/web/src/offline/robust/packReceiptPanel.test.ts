@@ -200,6 +200,7 @@ describe("offline pack receipt panel", () => {
     const view = mount();
     const textarea = view.root.querySelector("textarea")!;
     textarea.value = JSON.stringify(changed);
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
     button(view.root, view.copy.importJson).click();
     await flush();
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.invalid);
