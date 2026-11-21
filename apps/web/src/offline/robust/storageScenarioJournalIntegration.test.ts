@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { journalCopy } from "./recoveryJournalCopy";
+import { scenarioCopy } from "./storageScenarioCopy";
 
 const folder = new URL("./", import.meta.url);
 const read = (name: string): string => readFileSync(new URL(name, folder), "utf8");
@@ -66,10 +68,13 @@ describe("storage scenario and recovery journal coexistence", () => {
   });
 
   it("keeps UNKNOWN unchanged in both feature copy modules", () => {
-    for (const moduleName of ["storageScenarioCopy.ts", "recoveryJournalCopy.ts"]) {
-      const source = read(moduleName);
-      expect(source).toContain("UNKNOWN");
-      expect(source).not.toContain("INCONNU");
+    for (const language of ["en", "fr"] as const) {
+      for (const copy of [scenarioCopy(language), journalCopy(language)]) {
+        expect(copy.unknown).toBe("UNKNOWN");
+        for (const phrase of Object.values(copy)) {
+          expect(phrase).not.toMatch(/\binconnue?s?\b/iu);
+        }
+      }
     }
   });
 });
