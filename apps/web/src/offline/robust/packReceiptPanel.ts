@@ -159,9 +159,32 @@ export function mountOfflinePackReceipts(
     }
     diff = book && comparisonVisible ? latestReceiptDiff(book) : null;
     rows.replaceChildren();
+    let total = 0;
+    let start = 0;
     if (!diff) {
-      rows.append(node(doc, "li", book ? (book.receipts.length > 1 ? c.comparePrompt : c.one) : c.empty));
+      const latest = book?.receipts.at(-1);
+      const prompt = latest ? ((book?.receipts.length ?? 0) > 1 ? c.comparePrompt : c.one) : c.empty;
+      listStatus.textContent = c.currentUnavailable + " " + prompt;
+      if (latest) {
+        total = latest.cells.length;
+        start = offset;
+        for (const cell of latest.cells.slice(start, start + RECEIPT_PAGE_SIZE)) {
+          const item = node(doc, "li");
+          const details = node(doc, "dl");
+          details.append(
+            definition(doc, c.localState, cell.state === "saved" ? c.savedState : "UNKNOWN"),
+            definition(doc, c.source, cell.source.source),
+            definition(doc, c.licence, cell.source.licence),
+            definition(doc, c.date, cell.source.date),
+            definition(doc, c.size, String(cell.bytes)),
+          );
+          item.append(node(doc, "strong", cell.id), details);
+          rows.append(item);
+        }
+        if (!total) rows.append(node(doc, "li", c.noRows));
+      }
     } else {
+      listStatus.textContent = c.currentUnavailable;
       const page = pageReceiptDiff(diff, {
         search: search.control.value,
         filter: currentFilter,
@@ -187,17 +210,14 @@ export function mountOfflinePackReceipts(
         rows.append(item);
       }
       if (page.rows.length === 0) rows.append(node(doc, "li", c.noRows));
-      previous.disabled = !page.previous || busy;
-      next.disabled = !page.next || busy;
-      position.textContent = c.position + (language === "fr" ? "\u00a0: " : ": ") +
-        (page.total === 0 ? 0 : page.offset + 1) + "–" +
-        Math.min(page.offset + page.limit, page.total) + " / " + page.total;
+      total = page.total;
+      start = page.offset;
     }
-    if (!diff) {
-      previous.disabled = true;
-      next.disabled = true;
-      position.textContent = "0 / 0";
-    }
+    previous.disabled = busy || start === 0;
+    next.disabled = busy || start + RECEIPT_PAGE_SIZE >= total;
+    position.textContent = total === 0 ? "0 / 0" :
+      c.position + (language === "fr" ? "\u00a0: " : ": ") +
+      (start + 1) + "–" + Math.min(start + RECEIPT_PAGE_SIZE, total) + " / " + total;
     capture.disabled = busy || (book?.receipts.length ?? 0) >= RECEIPT_MAX_CAPTURES;
     compare.disabled = busy || (book?.receipts.length ?? 0) < 2;
     exportJson.disabled = busy || book === null;

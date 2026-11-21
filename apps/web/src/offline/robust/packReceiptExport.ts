@@ -1,3 +1,4 @@
+import { saveTextFile } from "../../states/downloadFile";
 import type { Language } from "./regionDownload";
 import {
   comparePackReceipts,
@@ -89,7 +90,7 @@ export function receiptBookText(book: ReceiptBook, language: Language): string {
 }
 
 export function receiptFilename(regionId: string, format: "json" | "txt"): string {
-  const safe = regionId.replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 80) || "region";
+  const safe = regionId.trim().replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 80) || "region";
   return "offline-pack-receipts-" + safe + "." + format;
 }
 
@@ -113,17 +114,10 @@ export function saveReceiptFile(
   doc: Document,
 ): void {
   const content = format === "json" ? receiptJson(book) : receiptBookText(book, language);
-  const blob = new Blob([content], {
-    type: format === "json" ? "application/json;charset=utf-8" : "text/plain;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
-  try {
-    const link = doc.createElement("a");
-    link.href = url;
-    link.download = receiptFilename(book.regionId, format);
-    link.rel = "noopener";
-    link.click();
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  const saved = saveTextFile({
+    name: receiptFilename(book.regionId, format),
+    content,
+    mime: format === "json" ? "application/json;charset=utf-8" : "text/plain;charset=utf-8",
+  }, doc);
+  if (!saved) throw new Error("File download unavailable");
 }

@@ -137,6 +137,51 @@ describe("offline pack receipt panel", () => {
     view.unmount();
   });
 
+  it("pages through a single imported reading and keeps comparison disabled", async () => {
+    vi.stubGlobal("crypto", webcrypto);
+    const largeManifest = {
+      ...manifest,
+      cells: Array.from({ length: 21 }, (_, index) => ({
+        id: "cell-" + index,
+        bytes: index,
+        provenance: source,
+      })),
+    };
+    const receipt = await createPackReceipt(largeManifest, null, "2026-11-21T10:00:00.000Z", cryptoProvider);
+    const book = appendPackReceipt(emptyReceiptBook("north"), receipt);
+    const view = mount();
+    const input = view.root.querySelector("textarea")!;
+    input.value = encodeReceiptBook(book);
+    input.dispatchEvent(new Event("input"));
+    button(view.root, view.copy.importJson).click();
+    await waitForStatus(view.root, view.copy.imported);
+
+    const ids = () => [...view.root.querySelectorAll("ol li strong")].map((item) => item.textContent);
+    expect(ids()).toEqual(largeManifest.cells.slice(0, 20).map((cell) => cell.id));
+    expect(button(view.root, view.copy.previous).disabled).toBe(true);
+    expect(button(view.root, view.copy.compare).disabled).toBe(true);
+    button(view.root, view.copy.next).click();
+    expect(ids()).toEqual(["cell-20"]);
+    expect(view.root.querySelector("nav")?.textContent).toContain("21–21 / 21");
+    expect(button(view.root, view.copy.next).disabled).toBe(true);
+    button(view.root, view.copy.previous).click();
+    expect(ids()).toHaveLength(20);
+    expect(view.root.querySelector("nav")?.textContent).toContain("1–20 / 21");
+    view.unmount();
+  });
+
+  it("announces failure when the browser cannot create the export", async () => {
+    vi.stubGlobal("crypto", webcrypto);
+    const view = mount();
+    button(view.root, view.copy.capture).click();
+    await waitForStatus(view.root, view.copy.captured);
+    vi.stubGlobal("URL", {});
+    button(view.root, view.copy.exportText).click();
+    await waitForStatus(view.root, view.copy.error);
+    expect(button(view.root, view.copy.exportJson).disabled).toBe(false);
+    view.unmount();
+  });
+
   it("records UNKNOWN when the dashboard inventory is unavailable", async () => {
     vi.stubGlobal("crypto", webcrypto);
     const view = mount("en", null);

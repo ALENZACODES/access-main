@@ -41,13 +41,15 @@ const firstTime = "2026-11-21T10:00:00.000Z";
 const secondTime = "2026-11-21T10:01:00.000Z";
 
 describe("offline receipt export text", () => {
-  it("states that no comparison is available when the book has one reading", () => {
+  it("describes an absent reading pair without fabricating either reading", () => {
     const text = receiptComparisonText(null, "en");
     expect(text).toContain("Offline pack receipt comparison");
     expect(text).toContain("Status: UNKNOWN");
-    expect(text).toContain("Offline pack receipt");
-    expect(text).toContain("one");
-    expect(text).toContain("Municipal open data");
+    expect(text).toContain("No pair of readings is available.");
+    expect(text).not.toContain("Earlier reading:");
+    expect(text).not.toContain("Later reading:");
+    expect(receiptBookText(emptyReceiptBook("central"), "en")).toBe(text);
+    expect(receiptComparisonText(null, "fr")).toContain("Aucune paire de lectures");
   });
 
   it("includes region, timestamps, status and cell provenance in English", async () => {
