@@ -235,7 +235,7 @@ describe("offline pack receipt panel", () => {
     document.body.append(root);
     const unmount = mountOfflinePackReceipts(root, manifest, sourceModel, "en");
     button(root, PACK_RECEIPT_COPY.en.capture).click();
-    await waitForStatus(view.root, view.copy.captured);
+    await waitForStatus(root, PACK_RECEIPT_COPY.en.captured);
     expect(root.textContent).toContain(PACK_RECEIPT_COPY.en.captured);
     unmount();
     expect(root.querySelector("section")).toBeNull();
