@@ -56,6 +56,12 @@ export function HomePage() {
             </li>
           ))}
           <li>
+            <Link className="card" to="/question-packet" style={{ minHeight: 44 }}>
+              <span className="card-title">{french ? "Fiche de questions sur l’accessibilité" : "Accessibility questions packet"}</span>
+              <span>{french ? "Préparez des questions et suivez les réponses consignées, sans envoi automatique." : "Prepare accessibility questions and record reported answers without automatic uploads."}</span>
+            </Link>
+          </li>
+          <li>
             <Link className="card" to="/access-rehearsal" style={{ minHeight: 44 }}>
               <span className="card-title">{french ? "Répétition d’accessibilité" : "Access rehearsal"}</span>
               <span>{french ? "Parcours au clavier et par balayage, sans transmission de données." : "Practice keyboard and switch journeys without sending data."}</span>

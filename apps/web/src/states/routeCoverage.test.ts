@@ -64,7 +64,7 @@ describe("route coverage table", () => {
       expect(c.stateRoute, path).toBeDefined();
       expect(ROUTE_STATES[c.stateRoute!], path).toBeDefined();
       const text = read(c.file!);
-      expect(text, `${path}: ${c.file} does not use the shared states`).toMatch(/from "(\.\.\/)+(states|\.\.\/states)\/index\.ts"|from "\.\.\/states\/index\.ts"/);
+      expect(text, `${path}: ${c.file} does not use shared states`).toMatch(/from "(?:\.\.\/)+states\/(?:index\.ts|StateNotice\.tsx)"/);
       expect(text, `${path}: ${c.file} has no StateNotice`).toContain("StateNotice");
     }
   });

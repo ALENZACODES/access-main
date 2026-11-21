@@ -199,6 +199,18 @@ export default defineConfig({
     ],
   },
   build: {
+    // Keep every production asset in the install accounting. Stronger minification
+    // reduces actual downloaded bytes; lazy route chunks remain independently loaded.
+    minify: "terser",
+    terserOptions: {
+      // All emitted JS chunks are ESM. Top-level symbol compression can safely
+      // shorten module-local names without changing the precache or budget guard.
+      module: true,
+      toplevel: true,
+      compress: { passes: 5, toplevel: true, pure_getters: "strict", hoist_funs: true },
+      mangle: { toplevel: true },
+      format: { comments: false },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
