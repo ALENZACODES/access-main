@@ -80,3 +80,40 @@ Credits are not endorsements. Notices are in `THIRD_PARTY_NOTICES.md`.
 Places, journeys, finders, the services directory, activities, and help-centre articles are typed stubs in `apps/web/src/modules/stubs.ts`. They return no records.
 
 No open data is ingested here. A later ingest still needs a licence check on the day it is downloaded.
+
+## Project structure
+
+```text
+access-main/
+├── .github/                # CI workflows (5 files)
+├── apps/
+│   └── web/                # 817 files
+├── deploy/                 # 2 files
+├── docs/                   # Documentation (8 files)
+├── packages/
+│   ├── advocacy/           # Aggregation and campaign evidence packs, on device (51 files)
+│   ├── budgets/            # 20 files
+│   ├── caregiver/          # Caregiver mode and scoped sharing (31 files)
+│   ├── consent/            # On-device consent engine (28 files)
+│   ├── contribute/         # Contribution drafts and file export, on device (10 files)
+│   ├── controls/           # Control-mode parity layer (26 files)
+│   ├── data-client/        # 6 files
+│   ├── freshness/          # 8 files
+│   ├── proposals/          # 15 files
+│   ├── schema/             # JSON schemas, validators and field-value counts (101 files)
+│   ├── shared/             # Typed contracts for the App shell (26 files)
+│   ├── source-status/      # 20 files
+│   ├── sr-switch/          # 17 files
+│   ├── sync/               # 18 files
+│   └── trip-check/         # 13 files
+├── scripts/                # Build and check scripts (62 files)
+├── .gitignore
+├── eslint.config.js        # Lint rules
+├── lanes.hub.json
+├── lanes.lock.json
+├── package-lock.json
+├── package.json            # npm scripts and dependencies
+├── README.md               # This file
+├── THIRD_PARTY_NOTICES.md  # Third-party notices
+└── vitest.config.ts        # Test runner settings
+```
