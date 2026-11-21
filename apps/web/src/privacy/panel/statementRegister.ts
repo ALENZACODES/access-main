@@ -40,6 +40,7 @@ export const STATEMENT_REGISTER: readonly StatementRow[] = [
   row("apps/web/src/offline/robust/recoveryBatchesCopy.ts", 1, 1, "The recovery batches plan", "Le plan des lots de reprise"),
   row("apps/web/src/offline/robust/updateCopy.ts", 1, 1, "The offline update review", "L’examen de la mise à jour hors ligne"),
   row("apps/web/src/pages/AboutPage.tsx", 1, 0, "The About page", "La page À propos"),
+  row("apps/web/src/question-packet/copy.ts", 0, 1, "Accessibility questions packet", "La fiche de questions sur l’accessibilité"),
   row("apps/web/src/recovery/recoveryLedger.ts", 1, 0, "The recovery ledger", "Le registre de reprise"),
   row("apps/web/src/states/PackCompare.tsx", 1, 1, "Comparing a places file", "La comparaison d’un fichier de lieux"),
 ];
