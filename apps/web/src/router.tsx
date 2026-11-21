@@ -33,7 +33,7 @@ function OfflineWithEvidenceWorkbench() {
     <OfflinePackPage />
     <section className="panel stack" aria-labelledby="offline-workbench-entry">
       <h2 id="offline-workbench-entry">{fr ? "Mes notes de preuves hors ligne" : "My offline evidence notes"}</h2>
-      <p>{fr ? "Examinez vos propres notes locales. Les observations manquantes restent UNKNOWN. Aucun renseignement n’est envoyé." : "Review your own local notes. Missing observations stay UNKNOWN. Nothing is uploaded."}</p>
+      <p>{fr ? "Examinez vos notes dans cet atelier. Les observations manquantes restent UNKNOWN. L’exportation est facultative." : "Review notes in this workbench. Missing observations stay UNKNOWN. Export is optional."}</p>
       <button type="button" style={{ minWidth: 44, minHeight: 44 }} aria-expanded={open} aria-controls="offline-evidence-workbench-host" onClick={() => setOpen(value => !value)}>
         {open ? (fr ? "Fermer l’atelier" : "Close workbench") : (fr ? "Ouvrir l’atelier" : "Open workbench")}
       </button>

@@ -193,3 +193,9 @@ test('the user must click before the async editor chunk renders',()=>{
 test('no new release budget gate or workaround is introduced',()=>{
  assert.doesNotMatch(router,/check-install-budget|globIgnores|INSTALL_BUDGET/u);
 });
+
+test('offline route does not make blanket upload or transmission claims',()=>{
+ assert.doesNotMatch(router,/Nothing is uploaded\.|Aucun renseignement n’est envoyé\./u);
+ assert.match(router,/Export is optional\./u);
+ assert.match(router,/L’exportation est facultative\./u);
+});
