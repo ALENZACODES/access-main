@@ -8,7 +8,7 @@ import type { RoutingPreference, UserProfile } from "./profile.ts";
  * finders, navigator, games: tools lane.
  * help: help lane.
  *
- * JSON Schemas are owned by Lane 2 in packages/schema. This file is the
+ * JSON Schemas live in packages/schema. This file is the
  * TypeScript contract the shell compiles against. Do not add schemas here.
  * Stubs return no records. Unknown stays unknown. The shell does not invent places.
  */

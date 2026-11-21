@@ -1,6 +1,6 @@
 /**
  * Classification and migration partition for access-maps records
- * (ALENZACODES/access-maps PR #1, branch cursor/ontario-open-data-pipeline-986f).
+ * (ALENZACODES/access-maps PR #1).
  * Every key in schema/import/fields.json is listed once.
  */
 
