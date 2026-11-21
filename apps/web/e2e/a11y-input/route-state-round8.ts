@@ -198,7 +198,7 @@ export async function inspectLanguageButtons(page: Page): Promise<RouteFinding[]
       }
       // Only the shell switch controls html[lang]. An embedded control may
       // select its own localized view without changing the page language.
-      if ((group.closest(".site-header") || groups.size === 1) && selected.length === 1) {
+      if (group.closest(".site-header") && selected.length === 1) {
         const current = document.documentElement.lang.toLowerCase().slice(0, 2);
         if (selected[0]?.lang !== current) {
           findings.push({ code: "language-selection-mismatch", target,
