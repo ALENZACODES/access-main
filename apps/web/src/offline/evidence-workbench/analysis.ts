@@ -8,7 +8,7 @@ export function sourceCount(rows:readonly EvidenceItem[]):number { return new Se
 export function stateSummary(rows:readonly EvidenceItem[]):string {
   if(rows.length===0)return UNKNOWN;
   const known = new Set(rows.map(row=>row.state));
-  if(known.size===1)return rows[0].state;
+  if(known.size===1)return rows[0]?.state ?? UNKNOWN;
   return UNKNOWN;
 }
 export function buildCoverage(document:WorkbenchDocument, selectedFeatures:readonly Feature[]=FEATURES):CoverageCell[] {

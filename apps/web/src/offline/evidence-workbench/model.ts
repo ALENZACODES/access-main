@@ -46,7 +46,10 @@ export function validId(value: unknown): value is string {
 }
 export function validDay(value: unknown): value is string {
   if (typeof value !== 'string' || !DAY.test(value)) return false;
-  const [year, month, day] = value.split('-').map(Number);
+  const parts = value.split('-').map(Number);
+  const year = parts[0] ?? 0;
+  const month = parts[1] ?? 0;
+  const day = parts[2] ?? 0;
   if (year < 1 || year > 9999) return false;
   const date = new Date(0);
   date.setUTCHours(0,0,0,0);

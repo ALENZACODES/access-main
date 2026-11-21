@@ -12,16 +12,17 @@ export function updateWorkspace(workspace: Workspace, edit: Edit, at: string, to
   const items = workspace.document.items.map(item => ({ ...item }));
   const id = edit.kind === 'add' ? edit.item.id : edit.id;
   const index = items.findIndex(item => item.id === id);
-  const before = index >= 0 ? { ...items[index] } : null;
+  const current = index >= 0 ? items[index] : undefined;
+  const before = current ? { ...current } : null;
   if (edit.kind === 'add') {
     if (index !== -1) return failure('ALREADY_EXISTS',id);
     items.push({ ...edit.item });
-  } else if (index === -1) return failure('NOT_FOUND',id);
+  } else if (!current) return failure('NOT_FOUND',id);
   else if (edit.kind === 'remove') items.splice(index,1);
-  else if (edit.kind === 'decision') items[index] = { ...items[index], decision: edit.decision };
+  else if (edit.kind === 'decision') items[index] = { ...current, decision: edit.decision };
   else {
     if (Object.hasOwn(edit.changes,'id') && edit.changes.id !== id) return failure('IMMUTABLE_ID',id);
-    items[index] = { ...items[index], ...edit.changes };
+    items[index] = { ...current, ...edit.changes };
   }
   const checked = validateDocument({ version: 1, items }, today);
   if (!checked.ok) return checked;
