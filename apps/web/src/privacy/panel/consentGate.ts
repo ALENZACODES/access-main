@@ -119,7 +119,8 @@ export function gateStorage(
   };
 }
 
-/** Removes what a purpose saved, for when the person withdraws their agreement. Returns the keys removed. */
+/** Removes what a purpose saved, for when the person withdraws their agreement. Returns the keys that are gone;
+ * a key the browser would not remove is left out, so the count is never higher than what was removed. */
 export function removeForPurpose(storage: StorageLike, rules: readonly GateRule[], purposeId: string): string[] {
   const mine = rules.filter((r) => r.purposeId === purposeId);
   const keys: string[] = [];
@@ -127,6 +128,14 @@ export function removeForPurpose(storage: StorageLike, rules: readonly GateRule[
     const k = storage.key(i);
     if (k !== null && mine.some((r) => matches(r, k)) && ruleFor(rules, k)?.purposeId === purposeId) keys.push(k);
   }
-  keys.forEach((k) => storage.removeItem(k));
-  return keys;
+  const gone: string[] = [];
+  for (const k of keys) {
+    try {
+      storage.removeItem(k);
+      if (storage.getItem(k) === null) gone.push(k);
+    } catch {
+      // The browser refused this one. It stays, and is not counted as removed.
+    }
+  }
+  return gone;
 }
