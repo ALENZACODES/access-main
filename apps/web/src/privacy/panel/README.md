@@ -253,6 +253,17 @@ UNKNOWN.
 `handoffSection.ts` shows the list in the panel and offers it as a CSV or text download (`export-handoff-csv`, `export-handoff-text`). The controller option is `handoffs`; the live controller passes `HANDOFF_REGISTER`. Nothing here opens a link or contacts anything.
 
 Known issue, outside this lane: `mailtoHref` in `states/visitMessage.ts` throws a `URIError` for text with a lone surrogate, which a place name from the data could hold. `fuzz.handoff.audit.test.ts` pins that behaviour and will fail when it is fixed.
+## CI workflows (P10AI)
+
+`audit/wf*.ts` reads the workflow files under `.github/workflows` (and the staged `deploy/` one) as text and applies 20 rules. It does not run any workflow and says nothing about what the jobs do; "no finding" means only that none of the rules matched the text.
+
+- Rules cover: schedule triggers, risky triggers, missing or broad permissions, write permissions, unpinned or moving action refs, owners and Docker actions outside the allow list, `continue-on-error`, swallowed failures, retries, missing job timeouts, expression injection, secret references, pipe-to-shell, unpinned global installs and hosts outside the allow list.
+- Some codes can never be accepted (schedule, secrets, pipe-to-shell, injection, `continue-on-error`, retries and similar).
+- `wfRegister.ts` lists every file with its triggers, permissions and job timeouts; a change to any of them fails the test until the register is updated.
+- Accepted findings (4): `schema.yml` has no `permissions` block and its test job has no timeout; the staged `deploy/pages.yml` asks for `pages: write` and `id-token: write` and is not run.
+- Actions in use are first-party and pinned by tag, not by commit SHA.
+- Network use by the steps is not checked.
+
 ## How long things are kept (P10W)
 
 `retentionRegister.ts` lists, for each name the App stores under, what it holds and what the code that saves it sets: a number of days before it expires, a limit on how many items, or a limit on size, each pointing at the constant it was read from. A row with no limit says so, and the store the scanner could not read stays `UNKNOWN`; it is never shown as having no limit. `validateRetention` checks the list against the storage register, the unscanned list and the panel's own names.
