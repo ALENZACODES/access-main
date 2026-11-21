@@ -22,6 +22,8 @@ import type { ReceiptRow } from "./receipt";
 import { renderReceiptHtml } from "./receiptSection";
 import type { HandoffRow } from "./handoffRegister";
 import { renderHandoffHtml } from "./handoffSection";
+import type { RetentionRow } from "./retentionRegister";
+import { renderRetentionHtml, type RetentionCheckView } from "./retentionSection";
 import type { StatementResult } from "./statementRegister";
 import { renderStatementsHtml } from "./statementSection";
 import type { GlanceSources } from "./glance";
@@ -67,6 +69,10 @@ export interface PanelView {
   receipt?: readonly ReceiptRow[];
   /** The links that open another app. Leave undefined to hide the section. */
   handoffs?: readonly HandoffRow[];
+  /** What is kept, for how long and how much. Leave undefined to hide the section. */
+  retention?: readonly RetentionRow[];
+  /** The result of comparing the list with what is stored. Leave undefined before the person asks. */
+  retentionCheck?: RetentionCheckView;
   /** Where the App says data stays on the device or is not sent. Leave undefined to hide the section. */
   statements?: readonly StatementResult[];
   /** Show the buttons that download everything the App keeps on this device. */
@@ -152,6 +158,7 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.features === undefined ? "" : renderFeaturesHtml(view.locale, view.features)}` +
     `${view.receipt === undefined ? "" : renderReceiptHtml(view.locale, view.receipt)}` +
     `${view.handoffs === undefined ? "" : renderHandoffHtml(view.locale, view.handoffs)}` +
+    `${view.retention === undefined ? "" : renderRetentionHtml(view.locale, view.retention, view.retentionCheck ?? null)}` +
     `${view.statements === undefined ? "" : renderStatementsHtml(view.locale, view.statements)}` +
     `${view.glance === undefined ? "" : renderGlanceHtml(view.locale, view.glance)}` +
     `${view.addresses === undefined ? "" : renderAddressesHtml(view.locale, view.addresses)}` +
