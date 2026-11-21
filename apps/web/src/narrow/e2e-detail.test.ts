@@ -4,7 +4,10 @@ import { PROFILES } from './profiles.js';
 import { found, reportOf, route } from './report-fixtures.js';
 import { totals, type AuditReport } from './report.js';
 import { runAudit, type FullPage } from './run.js';
+import { appendRun, EMPTY_HISTORY } from './history.js';
 import { parseManualLog, sampleManualLog } from './manual-log.js';
+import { renderIndexPage } from './outputs-index.js';
+import { renderTrendPage } from './trend-page.js';
 import { renderWorksheet } from './worksheet.js';
 
 /**
@@ -53,7 +56,17 @@ function worksheetWithLog(): string {
   return renderWorksheet(fullReport(), 'fr', { manual: { log: log.value, now } });
 }
 
+/** Five runs with counts that go up and down, so both lines of the chart cross. */
+function trendPage(lang: 'en' | 'fr'): string {
+  let history = EMPTY_HISTORY;
+  for (const day of [3, 7, 11, 15, 19]) history = appendRun(history, day % 2 === 1 ? { ...fullReport(), generatedAt: new Date(Date.UTC(2026, 10, day, 10)).toISOString() } : reportOf([], day));
+  return renderTrendPage(history, lang);
+}
+
 const SITE: Record<string, string> = {
+  '/trend-en': trendPage('en'),
+  '/trend-fr': trendPage('fr'),
+  '/index-en': renderIndexPage(fullReport(), ['narrow-audit.json', 'narrow-audit.en.html', 'narrow-audit.detail.en.html', 'narrow-audit.worksheet.en.html', 'narrow-audit.trend.en.html', 'narrow-audit.csv'], 'en'),
   '/worksheet-log': worksheetWithLog(),
   '/detail-en': renderDetail(fullReport(), 'en'),
   '/detail-fr': renderDetail(fullReport(), 'fr'),
@@ -156,6 +169,18 @@ describe.skipIf(!enabled)('the detailed report in a real browser', () => {
 
   it('the worksheet with by-hand notes has no measured failure', async () => {
     expect(failing(await run(['/worksheet-log'], PROFILES.slice(0, 1))).join('\n')).toBe('');
+  }, 180_000);
+
+  it('the runs-over-time page has no measured failure in English, in any profile', async () => {
+    expect(failing(await run(['/trend-en'])).join('\n')).toBe('');
+  }, 180_000);
+
+  it('the runs-over-time page has no measured failure in French, in the narrow and dark profiles', async () => {
+    expect(failing(await run(['/trend-fr'], PROFILES.filter((p) => p.id === 'narrow' || p.id === 'dark'))).join('\n')).toBe('');
+  }, 120_000);
+
+  it('the index page has no measured failure, in any profile', async () => {
+    expect(failing(await run(['/index-en'])).join('\n')).toBe('');
   }, 180_000);
 
   it('a short worksheet has no measured failure', async () => {

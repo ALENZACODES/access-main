@@ -58,14 +58,14 @@ describe('labels', () => {
     expect(kindLabel('open', 'en')).toBe('Open licence');
     expect(kindLabel('terms', 'fr')).toBe('Conditions du diffuseur acceptées');
     expect(kindLabel('unrecognised', 'en')).toBe('Not on the reference list');
-    expect(kindLabel('unknown', 'fr')).toBe('Inconnue');
+    expect(kindLabel('unknown', 'fr')).toBe('UNKNOWN');
   });
   it('shows the full name of a listed licence and the text as recorded otherwise', () => {
     expect(licenceDisplay('OGL-Ontario', 'en')).toBe('Open Government Licence – Ontario');
     expect(licenceDisplay('OGL-Ontario', 'fr')).toBe('Licence du gouvernement ouvert – Ontario');
     expect(licenceDisplay('Proprietary', 'en')).toBe('Proprietary');
-    expect(licenceDisplay(null, 'en')).toBe('Unknown');
-    expect(licenceDisplay(null, 'fr')).toBe('Inconnu');
+    expect(licenceDisplay(null, 'en')).toBe('UNKNOWN');
+    expect(licenceDisplay(null, 'fr')).toBe('UNKNOWN');
   });
   it('words the summary with the singular and plural', () => {
     expect(licenceSummary({ rows: [], total: 1, reusable: 1 }, 'en')).toBe('1 of 1 source is on an open licence or accepted terms.');
@@ -81,7 +81,7 @@ describe('renderLicenceBreakdownHtml', () => {
     expect(html.match(/<th scope="col">/g)).toHaveLength(3);
     expect(html.match(/<tr><th scope="row">/g)).toHaveLength(3);
     expect(html).toContain('<tr><th scope="row">Open Government Licence – Ontario</th><td>Open licence</td><td>1</td></tr>');
-    expect(html).toContain('<tr><th scope="row">Unknown</th><td>Unknown</td><td>1</td></tr>');
+    expect(html).toContain('<tr><th scope="row">UNKNOWN</th><td>UNKNOWN</td><td>1</td></tr>');
   });
   it('explains that not listed does not mean closed', () => {
     expect(html).toContain('not that it is closed');

@@ -13,6 +13,7 @@ import { t } from './i18n';
 import type { SortSpec } from './sorting';
 import { kindLabel } from './licenceBreakdown';
 import { factLabel } from './recordFacts';
+import { lowerKeepingToken } from './unknownWord';
 
 export interface ListState {
   shown: number;
@@ -62,7 +63,7 @@ const MESSAGES: Messages<Key> = {
     'an.filterState': 'status {value}',
     'an.filterKind': 'dataset type {value}',
     'an.filterTier': 'tier {value}',
-    'an.filterTierUnknown': 'tier unknown',
+    'an.filterTierUnknown': 'tier UNKNOWN',
     'an.filterLicence': 'licence type {value}',
     'an.filterDataset': 'dataset {value}',
     'an.filterGap': 'no {value}',
@@ -92,14 +93,14 @@ const MESSAGES: Messages<Key> = {
     'an.filterState': 'état {value}',
     'an.filterKind': 'type de jeu de données {value}',
     'an.filterTier': 'niveau {value}',
-    'an.filterTierUnknown': 'niveau inconnu',
+    'an.filterTierUnknown': 'niveau UNKNOWN',
     'an.filterLicence': 'type de licence {value}',
     'an.filterDataset': 'jeu de données {value}',
     'an.filterGap': 'sans {value}',
     'an.filterAge': 'âge de la date de récupération {value}',
     'an.filterDue': 'révision prévue d’ici {days} jours',
     'an.col.tier': 'niveau',
-    'an.filterQuery': 'le nom contient « {value} »',
+    'an.filterQuery': 'le nom contient «\u202F{value}\u202F»',
     'an.filterIssues': 'seulement les éléments à examiner',
     'an.filtersCleared': 'Filtres effacés.',
     'an.sorted': 'Tri par {column}, {direction}.',
@@ -121,17 +122,17 @@ const tx = createTranslator(MESSAGES);
 
 export function filterParts(f: Filters, locale: Locale): string[] {
   const parts: string[] = [];
-  if (f.state !== 'any') parts.push(tx(locale, 'an.filterState', { value: t(locale, `state.${f.state}`).toLowerCase() }));
-  if (f.kind !== 'any') parts.push(tx(locale, 'an.filterKind', { value: t(locale, `kind.${f.kind}`).toLowerCase() }));
+  if (f.state !== 'any') parts.push(tx(locale, 'an.filterState', { value: lowerKeepingToken(t(locale, `state.${f.state}`)) }));
+  if (f.kind !== 'any') parts.push(tx(locale, 'an.filterKind', { value: lowerKeepingToken(t(locale, `kind.${f.kind}`)) }));
   const q = f.query.trim();
   if (q !== '') parts.push(tx(locale, 'an.filterQuery', { value: q }));
   if (f.onlyIssues) parts.push(tx(locale, 'an.filterIssues'));
   if (f.tier !== undefined) parts.push(f.tier === 'unknown' ? tx(locale, 'an.filterTierUnknown') : tx(locale, 'an.filterTier', { value: f.tier }));
-  if (f.licence !== undefined) parts.push(tx(locale, 'an.filterLicence', { value: kindLabel(f.licence, locale).toLowerCase() }));
+  if (f.licence !== undefined) parts.push(tx(locale, 'an.filterLicence', { value: lowerKeepingToken(kindLabel(f.licence, locale)) }));
   if (f.dataset !== undefined) parts.push(tx(locale, 'an.filterDataset', { value: f.dataset }));
-  if (f.age !== undefined) parts.push(tx(locale, 'an.filterAge', { value: (ageValueLabel(f.age, locale) ?? f.age).toLowerCase() }));
+  if (f.age !== undefined) parts.push(tx(locale, 'an.filterAge', { value: lowerKeepingToken((ageValueLabel(f.age, locale) ?? f.age)) }));
   if (f.due !== undefined) parts.push(tx(locale, 'an.filterDue', { days: DUE_WINDOW_DAYS[f.due] }));
-  if (f.gap !== undefined) parts.push(tx(locale, 'an.filterGap', { value: factLabel(f.gap, locale).toLowerCase() }));
+  if (f.gap !== undefined) parts.push(tx(locale, 'an.filterGap', { value: lowerKeepingToken(factLabel(f.gap, locale)) }));
   return parts;
 }
 

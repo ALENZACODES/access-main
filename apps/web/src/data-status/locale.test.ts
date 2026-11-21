@@ -60,8 +60,8 @@ describe('formatDisplayDate', () => {
 
   it('shows Unknown for anything that is not a valid ISO date', () => {
     for (const v of [null, undefined, '', 'soon', '2026-13-45', '11/01/2026']) {
-      expect(formatDisplayDate(v, 'en')).toBe('Unknown');
-      expect(formatDisplayDate(v, 'fr')).toBe('Inconnu');
+      expect(formatDisplayDate(v, 'en')).toBe('UNKNOWN');
+      expect(formatDisplayDate(v, 'fr')).toBe('UNKNOWN');
     }
   });
 });

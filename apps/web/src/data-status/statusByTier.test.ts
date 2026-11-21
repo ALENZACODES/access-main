@@ -50,7 +50,7 @@ describe('renderStatusByTierHtml', () => {
   it('has a row for each tier, a column for each status and a totals row', () => {
     const html = renderStatusByTierHtml(build(RECORDS), 'en');
     expect(html).toContain('<th scope="row">Tier 0</th><td>1</td><td>0</td><td>0</td><td>1</td>');
-    expect(html).toContain('<th scope="row">Unknown</th><td>0</td><td>0</td><td>1</td><td>1</td>');
+    expect(html).toContain('<th scope="row">UNKNOWN</th><td>0</td><td>0</td><td>1</td><td>1</td>');
     expect(html).toContain('<tfoot><tr><th scope="row">All tiers</th><td>1</td><td>1</td><td>1</td><td>3</td></tr></tfoot>');
     expect(html.match(/<th scope="col">/g)).toHaveLength(5);
   });

@@ -210,3 +210,46 @@ both languages, a source and a date.
   button does. A cache or database line never claims a consent check: it says "Not confirmed". The controller
   offers the two download buttons when it is given `kept`; `liveControllerDeps()` supplies it.
 - Not covered: cookies and the browser's own storage are still only listed by name; Playwright e2e was not run.
+
+## Browser features (P10R)
+
+`featureRegister.ts` lists what the App asks of the browser: the features its code uses (a background page for
+offline copies, space checks, a request to keep offline data, copying text you chose, saving and reading files,
+printing, reading the language and display settings) and the powerful ones it does not use (location, camera and
+microphone, notifications, reading the clipboard, background sends, cookies, device connections, sensors, stored
+sign-in details). Each row says whether the browser asks the person first; what the App has not confirmed is
+UNKNOWN.
+
+- `../audit/featureScan.ts` holds the patterns that show each feature in the source. `feature.repo.audit.test.ts`
+  fails when a feature the register says is unused appears in the source, when a used row is no longer backed by
+  the source, when a row names the wrong file, and when a header claim is not in the header file. Tests, comments,
+  the audit folder and the network guard's own wrapping of the background send are skipped.
+- `permissions.ts` asks the browser what it has allowed, only when the person presses the check button, and only
+  reads. A browser that has no permission query, rejects the name or gives an answer the App does not know is shown
+  as unknown, never as a guess.
+- `featureSection.ts` shows two tables, "Used by the App" and "Not used by the App", and the check button. The
+  controller shows it when given `features`; `liveControllerDeps()` supplies the register and the page's browser.
+- Not covered: whether the site a person uses really sends the header settings (not checked); features reached
+  by a name built at run time; `packages/`; Playwright e2e was not run.
+
+## Addresses, network requests and counts (P10S)
+
+`addressRegister.ts` lists the web hosts the App's own code names (each marked as a page a person can open or a name inside a data format that is never contacted) and the files that make network requests, with where each request goes. A destination chosen by data, such as the offline map pack's file addresses, is `UNKNOWN`. `audit/addressScan.ts` reads the source and `audit/address.repo.audit.test.ts` fails when a host or a request appears, goes or moves without a row. Calls made through a name the code passes around are not found by the scan. Test scripts (`*.node.mjs`), the privacy folder's own code and the network guard in `egress.ts` are not scanned.
+
+`addressSection.ts` and `addressExport.ts` show and download those rows. `glance.ts` and `glanceSection.ts` count the rows of the storage, offline storage, browser feature and address lists into one short summary; a figure for things the App has not confirmed is shown as unknown, never as a yes or a no. Both sections are switched on by the controller options `addresses` and `glance`, and the live controller sets them.
+
+## Record of choices, statements about data (P10T)
+
+`receipt.ts` and `receiptSection.ts` build a record of the person's optional choices from the stored answers, the gate's rules and the App's own list of what it saves: the answer and its date, what the choice lets the App save, what is saved now, and what a no does. An answer given under older wording is shown as asked again, with its earlier date. The controller option is `receipt`.
+
+`statementRegister.ts` lists the files whose text says that data stays on the device or is not sent, with how many lines say it in each language. `audit/claimScan.ts` reads the source and `audit/statement.repo.audit.test.ts` fails when a statement appears, goes or changes count without a row. Only lines that hold a quoted string are read, and statements worded some other way are not found. The only check set beside each row is whether the file that holds the statement makes a network request itself (from `addressRegister.ts`). Code in other files is not covered, so a pass is not proof that a statement is true, and a file that does make requests, or a row checked without the list of requests, is shown as unknown. The controller option is `statements`. The counts section includes both.
+
+## Links that open another app (P10X)
+
+`handoffRegister.ts` lists the links in the App that open another app: an email draft, a place in a maps app and a help-line number in a dialler. Each row names the kind of link, the file that makes it, how many places in that file make one, which app opens and what the App passes on. `audit/handoffScan.ts` reads the source and fails CI when a link appears, goes or changes count without a row. It also finds navigation to an address built at run time (`location.assign`, `window.open` and the like), which has no row and so fails. A variable called `location` is not a hand-off.
+
+`handoffLink.ts` reads a mail, phone, text or map link and says what it carries: the addresses and the length of an email, the digits of a number, the place and how many decimal places it is written to. `audit/handoff.behaviour.audit.test.ts` builds the real links and checks that they carry what the register says, and `audit/fuzz.handoff.audit.test.ts` runs the reader and the builders over generated text.
+
+`handoffSection.ts` shows the list in the panel and offers it as a CSV or text download (`export-handoff-csv`, `export-handoff-text`). The controller option is `handoffs`; the live controller passes `HANDOFF_REGISTER`. Nothing here opens a link or contacts anything.
+
+Known issue, outside this lane: `mailtoHref` in `states/visitMessage.ts` throws a `URIError` for text with a lone surrogate, which a place name from the data could hold. `fuzz.handoff.audit.test.ts` pins that behaviour and will fail when it is fixed.

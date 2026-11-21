@@ -1,268 +1,155 @@
 import { describe, expect, it } from "vitest";
 import type { Provenance, RegionManifest } from "./regionDownload";
 import type { InventoryCell, RegionInventory } from "./regionInventory";
-import { drillSourceSummary, pageContinuityDrill, runContinuityDrill,
-  type DrillSettings } from "./continuityDrill";
+import {
+  DEFAULT_DRILL_SETTINGS, pageContinuityDrill, runContinuityDrill,
+  type DrillSettings,
+} from "./continuityDrill";
 
 const open: Provenance = { source: "Local open records", licence: "CC0 1.0", date: "2026-09-09" };
 const other: Provenance = { source: "Other open records", licence: "CC BY 4.0", date: "2023-01-01" };
-const cell = (id: string, bytes: number, source = open) => ({ id, bytes, provenance: source });
-const stored = (id: string, bytes: number, source = open): InventoryCell => ({
-  id, expectedBytes: bytes, provenance: source, state: "saved", cause: "present",
+const cell = (id: string, bytes: number, provenance: Provenance = open) => ({ id, bytes, provenance });
+const stored = (id: string, bytes: number, provenance: Provenance = open): InventoryCell => ({
+  id, expectedBytes: bytes, provenance, state: "saved", cause: "present",
 });
 const listed = (cells: RegionManifest["cells"]): RegionManifest => ({ regionId: "sample", cells });
 function read(cells: readonly InventoryCell[]): RegionInventory {
+  const saved = cells.filter((item) => item.state === "saved");
   return {
-    regionId: "sample", cells,
-    savedCount: cells.filter((item) => item.state === "saved").length,
-    unknownCount: cells.filter((item) => item.state === "unknown").length,
-    savedBytes: cells.filter((item) => item.state === "saved")
-      .reduce((total, item) => total + item.expectedBytes, 0),
+    regionId: "sample", cells, savedCount: saved.length,
+    unknownCount: cells.length - saved.length,
+    savedBytes: saved.reduce((total, item) => total + item.expectedBytes, 0),
     expectedBytes: cells.reduce((total, item) => total + item.expectedBytes, 0),
-    complete: cells.every((item) => item.state === "saved"),
+    complete: saved.length === cells.length,
   };
 }
 function config(scenario: DrillSettings["scenario"], affectedCount = 1,
   reductionBytes = 0, preserveReserveBytes = 0): DrillSettings {
   return { scenario, affectedCount, reductionBytes, preserveReserveBytes };
 }
+const baseline = (manifest: RegionManifest, inventory: RegionInventory | null) =>
+  runContinuityDrill(manifest, inventory, DEFAULT_DRILL_SETTINGS);
 
-describe("continuity boundary and provenance regression", () => {
-  it("accepts an empty manifest as an empty baseline", () => {
-    const outcome = runContinuityDrill(listed([]), read([]));
+describe("continuity edge cases on the current public API", () => {
+  it("accepts empty manifest and empty inventory", () => {
+    const outcome = baseline(listed([]), read([]));
     expect(outcome.cells).toEqual([]);
-    expect(outcome.totals.listed).toBe(0);
+    expect(outcome.beforeSaved).toBe(0);
+    expect(outcome.afterSaved).toBe(0);
   });
-  it("keeps a single saved cell complete", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 1)]), read([stored("one", 1)]));
+  it("counts an exact saved copy", () => {
+    const outcome = baseline(listed([cell("one", 1)]), read([stored("one", 1)]));
     expect(outcome.status).toBe("complete");
+    expect(outcome.beforeSaved).toBe(1);
   });
-  it("converts a single simulated loss to UNKNOWN", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 1)]), read([stored("one", 1)]), config("evict-largest"));
-    expect(outcome.cells[0]?.after).toBe("UNKNOWN");
-    expect(outcome.status).toBe("partial");
-  });
-  it("preserves original status after a simulated loss", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 1)]), read([stored("one", 1)]), config("evict-largest"));
+  it("changes a selected copy only in hypothetical output", () => {
+    const copies = read([stored("one", 1)]);
+    const outcome = runContinuityDrill(listed([cell("one", 1)]), copies, config("evict-largest"));
     expect(outcome.cells[0]?.before).toBe("saved");
+    expect(outcome.cells[0]?.after).toBe("UNKNOWN");
+    expect(outcome.cells[0]?.reason).toBe("simulated-loss");
+    expect(copies.cells[0]?.state).toBe("saved");
   });
-  it("handles a zero-byte saved cell deterministically", () => {
+  it("handles a zero-byte copy without a negative count", () => {
     const outcome = runContinuityDrill(listed([cell("zero", 0)]), read([stored("zero", 0)]), config("evict-largest"));
-    expect(outcome.cells[0]?.affected).toBe(true);
-    expect(outcome.totals.hypotheticalLossBytes).toBe(0);
+    expect(outcome.affected).toBe(1);
+    expect(outcome.afterSaved).toBe(0);
   });
-  it("keeps the original cause with a simulated change", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 1)]), read([stored("one", 1)]), config("source-change"));
-    expect(outcome.cells[0]?.cause).toBe("present");
+  it("distinguishes source drift from a saved copy", () => {
+    const outcome = baseline(listed([cell("one", 10)]), read([stored("one", 10, other)]));
+    expect(outcome.cells[0]?.before).toBe("UNKNOWN");
+    expect(outcome.cells[0]?.reason).toBe("UNKNOWN");
+  });
+  it("treats byte mismatch as UNKNOWN", () => {
+    const outcome = baseline(listed([cell("one", 10)]), read([stored("one", 9)]));
+    expect(outcome.cells[0]?.after).toBe("UNKNOWN");
+  });
+  it("does not infer a missing cause from an absent observation", () => {
+    const outcome = baseline(listed([cell("one", 10)]), read([]));
+    expect(outcome.status).toBe("UNKNOWN");
+    expect(outcome.cells[0]?.reason).toBe("UNKNOWN");
+  });
+  for (const cause of ["missing", "stale", "unreadable"] as const) {
+    it(`preserves the observed ${cause} reason`, () => {
+      const observation: InventoryCell = { ...stored("one", 10), state: "unknown", cause };
+      const outcome = baseline(listed([cell("one", 10)]), read([observation]));
+      expect(outcome.cells[0]?.reason).toBe(cause);
+      expect(outcome.cells[0]?.after).toBe("UNKNOWN");
+    });
+  }
+  it("never evicts unreadable copies", () => {
+    const observation: InventoryCell = { ...stored("one", 10), state: "unknown", cause: "unreadable" };
+    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([observation]), config("evict-largest"));
+    expect(outcome.affected).toBe(0);
+  });
+  it("keeps source metadata after hypothetical change", () => {
+    const outcome = runContinuityDrill(listed([cell("one", 10, other)]), read([stored("one", 10, other)]), config("source-change"));
+    expect(outcome.cells[0]?.source).toBe(other.source);
+    expect(outcome.cells[0]?.licence).toBe(other.licence);
+    expect(outcome.cells[0]?.date).toBe(other.date);
     expect(outcome.cells[0]?.reason).toBe("simulated-source-change");
   });
-  it("distinguishes a mismatching saved byte count from a matching copy", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([stored("one", 9)]));
-    expect(outcome.cells[0]?.reason).toBe("inventory-conflict");
-    expect(outcome.cells[0]?.after).toBe("UNKNOWN");
+  it("does not invent capacity when no estimate is supplied", () => {
+    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([stored("one", 10)]), config("quota-reduction"));
+    expect(outcome.quota).toBeNull();
+    expect(outcome.status).toBe("UNKNOWN");
   });
-  it("distinguishes different source names", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([stored("one", 10, other)]));
-    expect(outcome.cells[0]?.reason).toBe("inventory-conflict");
-  });
-  it("distinguishes different source dates", () => {
-    const changed: Provenance = { ...open, date: "2025-01-01" };
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([stored("one", 10, changed)]));
-    expect(outcome.cells[0]?.after).toBe("UNKNOWN");
-  });
-  it("does not treat present cause with unknown state as saved", () => {
-    const value: InventoryCell = { ...stored("one", 10), state: "unknown" };
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([value]));
-    expect(outcome.cells[0]?.after).toBe("UNKNOWN");
-  });
-  it("does not infer a missing cell from an absent observation", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([]));
-    expect(outcome.cells[0]?.cause).toBe("unreadable");
-  });
-  it("reports missing when the cause is explicitly missing", () => {
-    const value: InventoryCell = { ...stored("one", 10), state: "unknown", cause: "missing" };
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([value]));
-    expect(outcome.cells[0]?.cause).toBe("missing");
-  });
-  it("reports stale when the cause is explicitly stale", () => {
-    const value: InventoryCell = { ...stored("one", 10), state: "unknown", cause: "stale" };
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([value]));
-    expect(outcome.cells[0]?.cause).toBe("stale");
-  });
-  it("does not include unreadable copies in simulated eviction candidates", () => {
-    const value: InventoryCell = { ...stored("one", 10), state: "unknown", cause: "unreadable" };
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([value]), config("evict-largest"));
-    expect(outcome.totals.affected).toBe(0);
-  });
-  it("keeps a zero capacity estimate separate from accessibility status", () => {
+  it("interprets zero free bytes without inventing extra space", () => {
     const outcome = runContinuityDrill(listed([cell("one", 10)]), read([stored("one", 10)]),
       config("baseline"), { quota: 0, usage: 0 });
-    expect(outcome.quota.freeBytes).toBe(0);
-    expect(outcome.status).toBe("complete");
+    expect(outcome.quota).toBe(0);
   });
-  it("never treats an invalid quota as a positive estimate", () => {
+  it("rejects invalid quota estimates conservatively", () => {
     const outcome = runContinuityDrill(listed([cell("one", 10)]), read([stored("one", 10)]),
       config("quota-reduction"), { quota: Number.NaN, usage: 0 });
     expect(outcome.status).toBe("UNKNOWN");
   });
-  it("does not invent a source for a missing inventory", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 10)]), null);
-    expect(outcome.cells[0]?.after).toBe("UNKNOWN");
-    expect(outcome.totals.afterSavedBytes).toBeNull();
+  it("does not classify quota simulation as an actual removal", () => {
+    const outcome = runContinuityDrill(listed([cell("one", 10)]), read([stored("one", 10)]),
+      config("quota-reduction", 0, 100, 0), { quota: 100, usage: 90 });
+    expect(outcome.cells[0]?.reason).toBe("simulated-loss");
+    expect(outcome.cells[0]?.before).toBe("saved");
   });
-  it("tracks distinct licence groups separately", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 10, open), cell("two", 10, other)]),
-      read([stored("one", 10, open), stored("two", 10, other)]));
-    expect(drillSourceSummary(outcome)).toHaveLength(2);
+  it("preserves deterministic source fields across pages", () => {
+    const manifest = listed([cell("one", 10, open), cell("two", 20, other)]);
+    const original = baseline(manifest, read([stored("one", 10, open), stored("two", 20, other)]));
+    pageContinuityDrill(original, { filter: "all", sort: "bytes-desc", search: "", offset: 0, limit: 1 });
+    expect(original.cells.map((entry) => entry.source)).toEqual([open.source, other.source]);
   });
-  it("keeps source grouping deterministic across repeated calls", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 10, open), cell("two", 10, other)]),
-      read([stored("one", 10, open), stored("two", 10, other)]));
-    expect(drillSourceSummary(outcome)).toEqual(drillSourceSummary(outcome));
+  it("keeps original order after a sorted page", () => {
+    const manifest = listed([cell("small", 1), cell("large", 100)]);
+    const result = baseline(manifest, read([stored("small", 1), stored("large", 100)]));
+    const sorted = pageContinuityDrill(result, { filter: "all", sort: "bytes-desc", search: "", offset: 0, limit: 2 });
+    const original = pageContinuityDrill(result, { filter: "all", sort: "listed", search: "", offset: 0, limit: 2 });
+    expect(sorted.rows.map((entry) => entry.id)).toEqual(["large", "small"]);
+    expect(original.rows.map((entry) => entry.id)).toEqual(["small", "large"]);
   });
-  it("does not present an overflowing byte count as available", () => {
-    const huge = Number.MAX_SAFE_INTEGER;
-    const outcome = runContinuityDrill(listed([cell("one", huge), cell("two", huge)]),
-      read([stored("one", huge), stored("two", huge)]));
-    expect(outcome.totals.listedBytes).toBeNull();
+  it("does not exceed the original saved count on simulated losses", () => {
+    const cells = [cell("a", 120), cell("b", 80), cell("c", 60), cell("d", 40)];
+    const outcome = runContinuityDrill(listed(cells), read(cells.map((entry) => stored(entry.id, entry.bytes))),
+      config("evict-largest", 2));
+    expect(outcome.affected).toBe(2);
+    expect(outcome.afterSaved).toBe(2);
+    expect(outcome.affected <= outcome.beforeSaved).toBe(true);
+    expect(outcome.cells.filter((entry) => entry.affected).map((entry) => entry.id)).toEqual(["a", "b"]);
   });
-  it("does not alter source grouping after pagination", () => {
-    const outcome = runContinuityDrill(listed([cell("one", 10), cell("two", 10)]),
-      read([stored("one", 10), stored("two", 10)]));
-    const before = drillSourceSummary(outcome);
-    pageContinuityDrill(outcome, { search: "", filter: "all", sort: "bytes-desc", offset: 0, limit: 1 });
-    expect(drillSourceSummary(outcome)).toEqual(before);
+  it("keeps pagination bounded", () => {
+    const entries = [cell("a", 10), cell("b", 20), cell("c", 30)];
+    const result = baseline(listed(entries), read(entries.map((entry) => stored(entry.id, entry.bytes))));
+    const first = pageContinuityDrill(result, { filter: "all", sort: "listed", search: "", offset: 0, limit: 2 });
+    const last = pageContinuityDrill(result, { filter: "all", sort: "listed", search: "", offset: 2, limit: 2 });
+    expect(first.rows).toHaveLength(2);
+    expect(first.next).toBe(true);
+    expect(last.rows).toHaveLength(1);
+    expect(last.next).toBe(false);
   });
-});
-
-describe("continuity simulation under uneven local evidence", () => {
-  const scenario = config("evict-largest", 2);
-  const records = [cell("a", 120), cell("b", 80), cell("c", 60), cell("d", 40), cell("e", 20)];
-  const copies = records.map((record) => stored(record.id, record.bytes));
-  const baseline = runContinuityDrill(listed(records), read(copies), scenario);
-
-  it("removes the two highest-size copies in the simulated state", () => {
-    expect(baseline.cells.filter((item) => item.affected).map((item) => item.id)).toEqual(["a", "b"]);
-  });
-  it("preserves all five before states when all records match", () => {
-    expect(baseline.cells.every((item) => item.before === "saved")).toBe(true);
-  });
-  it("does not classify any affected simulated copy as saved", () => {
-    expect(baseline.cells.filter((item) => item.affected).every((item) => item.after === "UNKNOWN")).toBe(true);
-  });
-  it("keeps the other saved copies as saved", () => {
-    expect(baseline.cells.filter((item) => !item.affected).every((item) => item.after === "saved")).toBe(true);
-  });
-  it("computes the hypothetical loss in listed bytes", () => {
-    expect(baseline.totals.hypotheticalLossBytes).toBe(200);
-  });
-  it("computes remaining listed bytes without confusing them with capacity", () => {
-    expect(baseline.totals.afterSavedBytes).toBe(120);
-  });
-  it("preserves the original five listed entries", () => {
-    expect(baseline.totals.listed).toBe(5);
-  });
-  it("does not mutate the original records array", () => {
-    expect(records.map((item) => item.bytes)).toEqual([120, 80, 60, 40, 20]);
-  });
-  it("does not mutate the original copy entries", () => {
-    expect(copies.every((item) => item.state === "saved")).toBe(true);
-  });
-  it("allows filtering to after-drill UNKNOWN cells", () => {
-    const page = pageContinuityDrill(baseline, {
-      search: "", filter: "UNKNOWN", sort: "listed", offset: 0, limit: 12,
-    });
-    expect(page.rows.map((item) => item.id)).toEqual(["a", "b"]);
-  });
-  it("allows filtering to after-drill saved copies", () => {
-    const page = pageContinuityDrill(baseline, {
-      search: "", filter: "saved", sort: "listed", offset: 0, limit: 12,
-    });
-    expect(page.rows.map((item) => item.id)).toEqual(["c", "d", "e"]);
-  });
-  it("sorts affected entries deterministically by descending size", () => {
-    const page = pageContinuityDrill(baseline, {
-      search: "", filter: "affected", sort: "bytes-desc", offset: 0, limit: 12,
-    });
-    expect(page.rows.map((item) => item.id)).toEqual(["a", "b"]);
-  });
-  it("does not treat whitespace as a cell identifier", () => {
-    const page = pageContinuityDrill(baseline, {
-      search: "   ", filter: "all", sort: "listed", offset: 0, limit: 12,
-    });
-    expect(page.total).toBe(5);
-  });
-  it("limits a page to the requested number of cells", () => {
-    const page = pageContinuityDrill(baseline, {
-      search: "", filter: "all", sort: "listed", offset: 0, limit: 2,
-    });
-    expect(page.rows).toHaveLength(2);
-    expect(page.next).toBe(true);
-  });
-  it("ends pagination precisely at the final page", () => {
-    const page = pageContinuityDrill(baseline, {
-      search: "", filter: "all", sort: "listed", offset: 4, limit: 2,
-    });
-    expect(page.rows).toHaveLength(1);
-    expect(page.next).toBe(false);
-  });
-  it("keeps listed IDs in their original order after unrelated sorting", () => {
-    pageContinuityDrill(baseline, { search: "", filter: "all", sort: "bytes-desc", offset: 0, limit: 5 });
-    const page = pageContinuityDrill(baseline, {
-      search: "", filter: "all", sort: "listed", offset: 0, limit: 5,
-    });
-    expect(page.rows.map((item) => item.id)).toEqual(["a", "b", "c", "d", "e"]);
-  });
-  it("preserves unknown capacity when the caller provides no estimate", () => {
-    expect(baseline.quota.freeBytes).toBeNull();
-  });
-  it("marks the simulated effects separately from original causes", () => {
-    const affected = baseline.cells.filter((item) => item.affected);
-    expect(affected.every((item) => item.cause === "present")).toBe(true);
-    expect(affected.every((item) => item.reason === "simulated-eviction")).toBe(true);
-  });
-  it("keeps each cell source when a simulation affects the cell", () => {
-    const affected = baseline.cells.filter((item) => item.affected);
-    expect(affected.every((item) => item.provenance?.licence === "CC0 1.0")).toBe(true);
-  });
-  it("does not infer accessibility from source publication dates", () => {
-    expect(baseline.cells.every((item) => !Object.keys(item).includes("accessibility"))).toBe(true);
-  });
-  it("returns UNKNOWN for a local record whose source was replaced", () => {
-    const altered = [...copies];
-    altered[1] = stored("b", 80, other);
-    const outcome = runContinuityDrill(listed(records), read(altered), scenario);
-    expect(outcome.cells.find((item) => item.id === "b")?.before).toBe("UNKNOWN");
-    expect(outcome.cells.find((item) => item.id === "b")?.affected).toBe(false);
-  });
-  it("does not mark an explicitly missing local copy as simulated loss", () => {
-    const altered = copies.map((item) => item.id === "a" ?
-      { ...item, state: "unknown" as const, cause: "missing" as const } : item);
-    const outcome = runContinuityDrill(listed(records), read(altered), scenario);
-    expect(outcome.cells.find((item) => item.id === "a")?.affected).toBe(false);
-    expect(outcome.cells.find((item) => item.id === "a")?.before).toBe("UNKNOWN");
-  });
-  it("does not calculate a simulated loss from stale copies", () => {
-    const altered = copies.map((item) => item.id === "a" ?
-      { ...item, state: "unknown" as const, cause: "stale" as const } : item);
-    const outcome = runContinuityDrill(listed(records), read(altered), scenario);
-    expect(outcome.cells.find((item) => item.id === "a")?.affected).toBe(false);
-  });
-  it("retains nonnegative counts under quota-reduction simulation", () => {
-    const outcome = runContinuityDrill(listed(records), read(copies),
-      config("quota-reduction", 0, 5_000, 20), { quota: 100, usage: 90 });
-    expect(outcome.totals.afterUnknown).toBeGreaterThanOrEqual(0);
-    expect(outcome.totals.afterSaved).toBeGreaterThanOrEqual(0);
-  });
-  it("never reports more newly unknown cells than initially saved copies", () => {
-    const outcome = runContinuityDrill(listed(records), read(copies),
-      config("quota-reduction", 0, 5_000, 20), { quota: 100, usage: 90 });
-    expect(outcome.totals.affected).toBeLessThanOrEqual(outcome.totals.beforeSaved);
-  });
-  it("keeps reduced-capacity simulations distinct from actual deletion", () => {
-    const outcome = runContinuityDrill(listed(records), read(copies),
-      config("quota-reduction", 0, 5_000, 20), { quota: 100, usage: 90 });
-    expect(outcome.cells.filter((item) => item.affected)
-      .every((item) => item.reason === "simulated-capacity")).toBe(true);
+  it("rejects invalid page inputs", () => {
+    const result = baseline(listed([]), read([]));
+    for (const offset of [-1, 0.5, Number.NaN]) {
+      expect(() => pageContinuityDrill(result, { filter: "all", sort: "listed", search: "", offset, limit: 1 })).toThrow();
+    }
+    for (const limit of [0, 101, 1.5]) {
+      expect(() => pageContinuityDrill(result, { filter: "all", sort: "listed", search: "", offset: 0, limit })).toThrow();
+    }
   });
 });

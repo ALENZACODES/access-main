@@ -151,6 +151,18 @@ export function activityText(
         return `Liste des données téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "kept-export":
         return `Liste de tout ce qui est conservé téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "statements-export":
+        return `Liste de ce que l’App dit des données téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "handoff-export":
+        return `Liste des liens vers d’autres applications téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "receipt-export":
+        return `Registre de vos choix téléchargé (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "glance-export":
+        return `Chiffres sur la vie privée téléchargés (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "addresses-export":
+        return `Liste des adresses et requêtes réseau téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "features-export":
+        return `Liste des fonctions du navigateur téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "consent-granted":
         return `Autorisé${NBSP}: «${NNBSP}${label()}${NNBSP}»`;
       case "consent-declined":
@@ -180,6 +192,18 @@ export function activityText(
       return `Downloaded the data list (${e.format === "csv" ? "CSV" : "text"})`;
     case "kept-export":
       return `Downloaded the list of everything kept (${e.format === "csv" ? "CSV" : "text"})`;
+    case "statements-export":
+      return `Downloaded the list of what the App says about data (${e.format === "csv" ? "CSV" : "text"})`;
+    case "handoff-export":
+      return `Downloaded the list of links to other apps (${e.format === "csv" ? "CSV" : "text"})`;
+    case "receipt-export":
+      return `Downloaded the record of your choices (${e.format === "csv" ? "CSV" : "text"})`;
+    case "glance-export":
+      return `Downloaded the privacy counts (${e.format === "csv" ? "CSV" : "text"})`;
+    case "addresses-export":
+      return `Downloaded the list of addresses and network requests (${e.format === "csv" ? "CSV" : "text"})`;
+    case "features-export":
+      return `Downloaded the list of browser features (${e.format === "csv" ? "CSV" : "text"})`;
     case "consent-granted":
       return `Allowed: “${label()}”`;
     case "consent-declined":

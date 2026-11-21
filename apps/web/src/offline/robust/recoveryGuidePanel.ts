@@ -1,5 +1,5 @@
 import { createOfflineAction } from "./accessibilityGuard";
-import type { DashboardModel, DashboardState } from "./offlineDashboard";
+import type { DashboardModel } from "./offlineDashboard";
 import type { Language, RegionManifest, StorageEstimate } from "./regionDownload";
 import type { GuideFilter, GuideOrder, GuidePlan } from "./recoveryGuide";
 import { buildRecoveryPlan, pageRecoveryPlan, proposeRecoveryRequest, GUIDE_MAX_REQUEST_CELLS } from "./recoveryGuide";
@@ -268,7 +268,7 @@ export function mountOfflineRecoveryGuide(
   textReport.addEventListener("click", onText);
   jsonReport.addEventListener("click", onJson);
   retry.addEventListener("click", onRetry);
-  const unsubscribe = model.subscribe((_state: DashboardState) => {
+  const unsubscribe = model.subscribe(() => {
     if (expanded) render();
   });
   return () => {

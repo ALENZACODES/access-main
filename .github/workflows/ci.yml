@@ -9,6 +9,7 @@ permissions:
   contents: read
 
 jobs:
+  # Lint, typecheck, unit tests, build and the precache budget.
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -25,5 +26,63 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run check:web-precache -w @access-main/budgets
+
+  # The perf project (perf.spec.ts) alone, on one worker. It measures time under a CPU slowdown, so
+  # nothing else runs next to it. The Playwright web server builds the app for this job.
+  e2e-perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+      - run: npm run lanes:ensure && npm run hub:sync && npm run build -w @access-main/schema
       - run: npm exec -w @access/web -- playwright install chromium
-      - run: npm run test:e2e
+      - run: npm exec -w @access/web -- playwright test --project=perf --workers=1
+
+  # Every other e2e test (the chromium project), split into three shards that run side by side.
+  # Each shard has its own runner and its own build (made by the Playwright web server).
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+      - run: npm run lanes:ensure && npm run hub:sync && npm run build -w @access-main/schema
+      - run: npm exec -w @access/web -- playwright install chromium
+      - run: npm exec -w @access/web -- playwright test --project=chromium --shard=${{ matrix.shard }}/3
+
+  # The Playwright suites of the workspaces other than @access/web (the old root `npm run test:e2e`
+  # ran every workspace that has the script). The list is read from the workspace manifests, so a new
+  # package with a test:e2e script is picked up without editing this file.
+  e2e-packages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+      - run: npm run lanes:ensure && npm run hub:sync && npm run build -w @access-main/schema
+      - run: npm exec -w @access/web -- playwright install chromium
+      - run: |
+          flags=$(node -e 'const fs=require("fs");const out=[];for(const base of ["apps","packages"])for(const d of fs.readdirSync(base)){let p;try{p=JSON.parse(fs.readFileSync(`${base}/${d}/package.json`,"utf8"))}catch{continue}if(p.scripts&&p.scripts["test:e2e"]&&p.name!=="@access/web")out.push("-w",p.name)}console.log(out.join(" "))')
+          echo "workspaces: $flags"
+          test -n "$flags"
+          npm run test:e2e $flags

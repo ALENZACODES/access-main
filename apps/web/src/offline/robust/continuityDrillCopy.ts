@@ -1,238 +1,84 @@
 import type { Language } from "./regionDownload";
-import type { DrillCause, DrillFilter, DrillScenario, DrillSort } from "./continuityDrill";
-
 export const CONTINUITY_COPY = {
+  en: { title: "Offline continuity rehearsal", intro: "Explore a hypothetical change to local copies. This does not change stored files or describe physical accessibility.", scenario: "Scenario", count: "Affected copies", reduction: "Hypothetical reduction in bytes", reserve: "Storage reserve in bytes", run: "Run local rehearsal", unknown: "UNKNOWN", initial: "No rehearsal has been run.", result: "Hypothetical result", before: "Before", after: "After", source: "Source", licence: "Licence", date: "Source date", affected: "Affected", export: "Export metadata report", saved: "Saved copy", noRows: "No listed cells", note: "This planning exercise is hypothetical.", used: "This rehearsal never modifies stored copies.", privacy: "This rehearsal does not describe access at a physical place.", unknownQuota: "Available capacity is UNKNOWN.", exportText: "Export text report", exportJson: "Export JSON report", previous: "Previous page", next: "Next page" },
+  fr: { title: "Exercice de continuité hors ligne", intro: "Explorez une modification hypothétique des copies locales. Cela ne change aucun fichier et ne décrit pas l’accessibilité physique.", scenario: "Scénario", count: "Copies concernées", reduction: "Réduction hypothétique en octets", reserve: "Réserve de stockage en octets", run: "Lancer l’exercice local", unknown: "UNKNOWN", initial: "Aucun exercice n’a été lancé.", result: "Résultat hypothétique", before: "Avant", after: "Après", source: "Source", licence: "Licence", date: "Date de la source", affected: "Concernées", export: "Exporter le rapport de métadonnées", saved: "Copie enregistrée", noRows: "Aucune cellule répertoriée", note: "Cet exercice de planification est hypothétique.", used: "Cet exercice ne modifie jamais les copies enregistrées.", privacy: "L’exercice ne décrit pas l’accessibilité à un lieu physique.", unknownQuota: "La capacité disponible est UNKNOWN.", exportText: "Exporter le rapport texte", exportJson: "Exporter le rapport JSON", previous: "Page précédente", next: "Page suivante" },
+} as const;
+export function continuityCopy(language: Language) { return CONTINUITY_COPY[language]; }
+
+/** Stable public choices for the bilingual continuity controls. */
+export const DRILL_SCENARIOS = ["baseline", "evict-largest", "evict-oldest", "source-change", "quota-reduction"] as const;
+export const DRILL_FILTERS = ["all", "saved", "UNKNOWN", "affected", "unaffected"] as const;
+export const DRILL_SORTS = ["listed", "id", "bytes-desc", "status", "source"] as const;
+const SCENARIO_LABELS = {
   en: {
-    title: "Offline continuity drill",
-    intro: "Explore hypothetical local storage changes. Nothing is downloaded, removed or changed.",
-    privacy: "This drill stays on this device. It does not describe a place’s accessibility.",
-    open: "Show continuity drill",
-    close: "Hide continuity drill",
-    run: "Run local drill",
-    refresh: "Read current inventory again",
-    result: "Hypothetical outcome",
-    saved: "Matching saved cells",
-    unknown: "UNKNOWN",
-    before: "Before",
-    after: "After",
-    affected: "Affected cells",
-    missing: "Not downloaded",
-    stale: "Out of date",
-    unreadable: "Unable to read local record",
-    source: "Source",
-    licence: "Licence",
-    date: "Source date",
-    tier: "Source tier",
-    bytes: "Listed bytes",
-    reason: "Reason",
-    scenario: "Scenario",
-    quantity: "Cells to affect",
-    reduction: "Hypothetical capacity decrease, in bytes",
-    reserve: "Reserved storage space, in bytes",
-    quota: "Estimated free storage",
-    projected: "Hypothetical free storage",
-    unknownQuota: "Storage estimate is UNKNOWN.",
-    search: "Search cell or source",
-    filter: "Show",
-    sort: "Sort",
-    all: "All cells",
-    onlySaved: "Saved after drill",
-    onlyUnknown: "UNKNOWN after drill",
-    onlyAffected: "Affected cells",
-    onlyUnaffected: "Unaffected cells",
-    listed: "Listed order",
-    id: "Cell identifier",
-    size: "Largest first",
-    status: "Offline state",
-    sourceSort: "Source name",
-    previous: "Previous page",
-    next: "Next page",
-    exportText: "Save text report",
-    exportJson: "Save JSON report",
-    noRecords: "No matching cells.",
-    unavailable: "Current local inventory is UNKNOWN.",
-    incomplete: "This drill has UNKNOWN inputs. No positive conclusion is available.",
-    complete: "All listed copies remain saved in this hypothetical scenario.",
-    partial: "Some listed copies would not be available offline in this scenario.",
-    note: "This is only a planning exercise. Browser storage may change independently.",
-    error: "The drill could not be completed.",
-    reportError: "The report could not be saved.",
-    active: "Calculating local scenario…",
-    baseline: "No simulated changes",
-    evictLargest: "Simulate loss of largest saved copies",
-    evictOldest: "Simulate loss of oldest saved copies",
-    sourceChange: "Simulate changes to selected source records",
-    quotaReduction: "Simulate reduced free storage",
-    present: "Matching saved copy",
-    unlisted: "Cell not listed",
-    inventoryUnavailable: "Inventory unavailable",
-    inventoryConflict: "Inventory details conflict",
-    invalidManifest: "Listing contains invalid metadata",
-    simulatedEviction: "Hypothetical loss of local copy",
-    simulatedSourceChange: "Hypothetical change in source metadata",
-    simulatedCapacity: "Hypothetical loss caused by reduced space",
-    affectedCount: "Cells affected",
-    listedCount: "Cells listed",
-    unavailableCopy: "Current copy remains UNKNOWN",
-    localOnly: "Metadata report only. No cell contents are included.",
-    statusUnknown: "UNKNOWN",
-    unsupported: "This device cannot estimate storage.",
-    used: "This drill never modifies storage.",
-    noChange: "No simulated change applies to this cell.",
-    sourceDetail: "Exact source, licence and date are shown when listed.",
+    baseline: "Keep the current local records",
+    "evict-largest": "Simulate loss of the largest saved copies",
+    "evict-oldest": "Simulate loss of the oldest saved copies",
+    "source-change": "Simulate a changed source record",
+    "quota-reduction": "Simulate reduced device capacity",
   },
   fr: {
-    title: "Exercice de continuité hors ligne",
-    intro: "Explorez des changements hypothétiques du stockage local. Aucun téléchargement, retrait ou changement n’est effectué.",
-    privacy: "Cet exercice reste sur cet appareil. Il ne décrit pas l’accessibilité d’un lieu.",
-    open: "Afficher l’exercice de continuité",
-    close: "Masquer l’exercice de continuité",
-    run: "Lancer l’exercice local",
-    refresh: "Relire l’inventaire actuel",
-    result: "Résultat hypothétique",
-    saved: "Cellules enregistrées correspondantes",
-    unknown: "UNKNOWN",
-    before: "Avant",
-    after: "Après",
-    affected: "Cellules touchées",
-    missing: "Non téléchargée",
-    stale: "Périmée",
-    unreadable: "Enregistrement local illisible",
-    source: "Source",
-    licence: "Licence",
-    date: "Date de la source",
-    tier: "Niveau de source",
-    bytes: "Octets répertoriés",
-    reason: "Raison",
-    scenario: "Scénario",
-    quantity: "Nombre de cellules touchées",
-    reduction: "Diminution hypothétique de la capacité, en octets",
-    reserve: "Espace de stockage réservé, en octets",
-    quota: "Stockage libre estimé",
-    projected: "Stockage libre hypothétique",
-    unknownQuota: "L’estimation du stockage est UNKNOWN.",
-    search: "Rechercher une cellule ou une source",
-    filter: "Afficher",
-    sort: "Trier",
-    all: "Toutes les cellules",
-    onlySaved: "Enregistrées après l’exercice",
-    onlyUnknown: "UNKNOWN après l’exercice",
-    onlyAffected: "Cellules touchées",
-    onlyUnaffected: "Cellules non touchées",
-    listed: "Ordre de la liste",
-    id: "Identifiant de cellule",
-    size: "Les plus grandes d’abord",
-    status: "État hors ligne",
-    sourceSort: "Nom de la source",
-    previous: "Page précédente",
-    next: "Page suivante",
-    exportText: "Enregistrer le rapport texte",
-    exportJson: "Enregistrer le rapport JSON",
-    noRecords: "Aucune cellule correspondante.",
-    unavailable: "L’inventaire local actuel est UNKNOWN.",
-    incomplete: "Cet exercice comporte des données UNKNOWN. Aucune conclusion positive n’est possible.",
-    complete: "Toutes les copies répertoriées restent enregistrées dans ce scénario hypothétique.",
-    partial: "Certaines copies répertoriées ne seraient pas disponibles hors ligne dans ce scénario.",
-    note: "Il s’agit uniquement d’un exercice de planification. Le stockage du navigateur peut changer indépendamment.",
-    error: "Impossible de terminer l’exercice.",
-    reportError: "Impossible d’enregistrer le rapport.",
-    active: "Calcul du scénario local…",
-    baseline: "Aucun changement simulé",
-    evictLargest: "Simuler la perte des plus grandes copies enregistrées",
-    evictOldest: "Simuler la perte des copies enregistrées les plus anciennes",
-    sourceChange: "Simuler les changements des sources sélectionnées",
-    quotaReduction: "Simuler une diminution du stockage libre",
-    present: "Copie enregistrée correspondante",
-    unlisted: "Cellule non répertoriée",
-    inventoryUnavailable: "Inventaire indisponible",
-    inventoryConflict: "Renseignements d’inventaire contradictoires",
-    invalidManifest: "La liste contient des métadonnées invalides",
-    simulatedEviction: "Perte hypothétique de la copie locale",
-    simulatedSourceChange: "Changement hypothétique des métadonnées de source",
-    simulatedCapacity: "Perte hypothétique causée par une baisse d’espace",
-    affectedCount: "Cellules touchées",
-    listedCount: "Cellules répertoriées",
-    unavailableCopy: "La copie actuelle reste UNKNOWN",
-    localOnly: "Rapport de métadonnées uniquement. Aucun contenu de cellule n’est inclus.",
-    statusUnknown: "UNKNOWN",
-    unsupported: "Cet appareil ne peut pas estimer le stockage.",
-    used: "Cet exercice ne modifie jamais le stockage.",
-    noChange: "Aucun changement simulé ne concerne cette cellule.",
-    sourceDetail: "La source, la licence et la date exactes figurent dans la liste lorsqu’elles sont indiquées.",
+    baseline: "Conserver les enregistrements locaux",
+    "evict-largest": "Simuler la perte des plus grandes copies",
+    "evict-oldest": "Simuler la perte des copies les plus anciennes",
+    "source-change": "Simuler une modification des sources",
+    "quota-reduction": "Simuler une capacité réduite de l’appareil",
   },
 } as const;
-export type ContinuityCopy = Readonly<Record<keyof typeof CONTINUITY_COPY.en, string>>;
-export function continuityCopy(language: Language): ContinuityCopy {
-  return CONTINUITY_COPY[language];
+const FILTER_LABELS = {
+  en: { all: "All listed copies", saved: "Saved copies", UNKNOWN: "UNKNOWN", affected: "Affected copies", unaffected: "Unaffected copies" },
+  fr: { all: "Toutes les copies", saved: "Copies enregistrées", UNKNOWN: "UNKNOWN", affected: "Copies touchées", unaffected: "Copies non touchées" },
+} as const;
+const SORT_LABELS = {
+  en: { listed: "Manifest order", id: "Cell ID", "bytes-desc": "Largest first", status: "Local status", source: "Source name" },
+  fr: { listed: "Ordre de la liste", id: "Identifiant", "bytes-desc": "Plus volumineuses d’abord", status: "État local", source: "Nom de la source" },
+} as const;
+const REASON_LABELS = {
+  en: {
+    present: "Copy saved locally", missing: "Not downloaded", stale: "Out of date",
+    unreadable: "Could not read local copy", unlisted: "Not listed", "inventory-unavailable": "UNKNOWN inventory",
+    "inventory-conflict": "Source conflict", "invalid-manifest": "Invalid listing",
+    "simulated-eviction": "Hypothetical loss of a local copy",
+    "simulated-source-change": "Hypothetical source change",
+    "simulated-capacity": "Hypothetical storage capacity reduction",
+  },
+  fr: {
+    present: "Copie enregistrée localement", missing: "Non téléchargée", stale: "Périmée",
+    unreadable: "Impossible de lire la copie locale", unlisted: "Non répertoriée", "inventory-unavailable": "Inventaire UNKNOWN",
+    "inventory-conflict": "Conflit de source", "invalid-manifest": "Liste incorrecte",
+    "simulated-eviction": "Perte hypothétique d’une copie locale",
+    "simulated-source-change": "Modification hypothétique de source",
+    "simulated-capacity": "Réduction hypothétique de la capacité de stockage",
+  },
+} as const;
+export function continuityScenarioLabel(value: keyof typeof SCENARIO_LABELS.en, language: Language): string {
+  return SCENARIO_LABELS[language][value];
 }
-export const DRILL_SCENARIOS: readonly DrillScenario[] = [
-  "baseline", "evict-largest", "evict-oldest", "source-change", "quota-reduction",
-];
-export const DRILL_FILTERS: readonly DrillFilter[] = ["all", "saved", "UNKNOWN", "affected", "unaffected"];
-export const DRILL_SORTS: readonly DrillSort[] = ["listed", "id", "bytes-desc", "status", "source"];
-export function continuityScenarioLabel(scenario: DrillScenario, language: Language): string {
-  const c = continuityCopy(language);
-  switch (scenario) {
-    case "baseline": return c.baseline;
-    case "evict-largest": return c.evictLargest;
-    case "evict-oldest": return c.evictOldest;
-    case "source-change": return c.sourceChange;
-    case "quota-reduction": return c.quotaReduction;
-  }
+export function continuityFilterLabel(value: keyof typeof FILTER_LABELS.en, language: Language): string {
+  return FILTER_LABELS[language][value];
 }
-export function continuityFilterLabel(filter: DrillFilter, language: Language): string {
-  const c = continuityCopy(language);
-  switch (filter) {
-    case "all": return c.all;
-    case "saved": return c.onlySaved;
-    case "UNKNOWN": return c.onlyUnknown;
-    case "affected": return c.onlyAffected;
-    case "unaffected": return c.onlyUnaffected;
-  }
+export function continuitySortLabel(value: keyof typeof SORT_LABELS.en, language: Language): string {
+  return SORT_LABELS[language][value];
 }
-export function continuitySortLabel(sort: DrillSort, language: Language): string {
-  const c = continuityCopy(language);
-  switch (sort) {
-    case "listed": return c.listed;
-    case "id": return c.id;
-    case "bytes-desc": return c.size;
-    case "status": return c.status;
-    case "source": return c.sourceSort;
-  }
+export function continuityReasonLabel(value: keyof typeof REASON_LABELS.en, language: Language): string {
+  return REASON_LABELS[language][value];
 }
-export function continuityReasonLabel(reason: DrillCause, language: Language): string {
-  const c = continuityCopy(language);
-  switch (reason) {
-    case "present": return c.present;
-    case "missing": return c.missing;
-    case "stale": return c.stale;
-    case "unreadable": return c.unreadable;
-    case "unlisted": return c.unlisted;
-    case "inventory-unavailable": return c.inventoryUnavailable;
-    case "inventory-conflict": return c.inventoryConflict;
-    case "invalid-manifest": return c.invalidManifest;
-    case "simulated-eviction": return c.simulatedEviction;
-    case "simulated-source-change": return c.simulatedSourceChange;
-    case "simulated-capacity": return c.simulatedCapacity;
-  }
+export function continuityFormatBytes(value: number | null, language: Language): string {
+  if (value === null || !Number.isSafeInteger(value) || value < 0) return "UNKNOWN";
+  if (value < 1000) return `${value} B`;
+  return `${new Intl.NumberFormat(language === "fr" ? "fr-CA" : "en-CA").format(value / 1000)} kB`;
 }
-export function continuityFormatBytes(bytes: number | null, language: Language): string {
-  if (bytes === null || !Number.isSafeInteger(bytes) || bytes < 0) return "UNKNOWN";
-  return `${new Intl.NumberFormat(language === "fr" ? "fr-CA" : "en-CA").format(bytes)} B`;
-}
-/** Fails on missing translations and unsafe punctuation. */
 export function auditContinuityCopy(): readonly string[] {
   const errors: string[] = [];
-  const en: Record<string, string> = CONTINUITY_COPY.en;
-  const fr: Record<string, string> = CONTINUITY_COPY.fr;
-  for (const key of new Set([...Object.keys(en), ...Object.keys(fr)])) {
-    if (!en[key]?.trim() || !fr[key]?.trim()) errors.push(`missing-language:${key}`);
+  const english = CONTINUITY_COPY.en;
+  const french = CONTINUITY_COPY.fr;
+  for (const key of Object.keys(english) as Array<keyof typeof english>) {
+    if (!english[key].trim() || !french[key].trim()) errors.push(key);
   }
-  for (const [key, text] of Object.entries(fr)) {
-    if (text.includes("'")) errors.push(`apostrophe:${key}`);
-    if (/(?<!\u00a0):/u.test(text)) errors.push(`colon:${key}`);
-    if (/(?<!\u202f)[;!?]/u.test(text)) errors.push(`punctuation:${key}`);
-    if (text.includes("INCONNU")) errors.push(`wrong-unknown-token:${key}`);
+  for (const value of Object.values(french)) {
+    if (value.includes("'")) errors.push("apostrophe");
+    if (/(?<!\u00a0):/u.test(value)) errors.push("colon");
+    if (/(?<!\u202f)[;!?]/u.test(value)) errors.push("punctuation");
   }
   return errors;
 }

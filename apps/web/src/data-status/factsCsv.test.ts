@@ -12,7 +12,7 @@ describe('record facts CSV', () => {
     const r = rows(RECORDS);
     expect(r).toHaveLength(4);
     for (const row of r) expect(row).toHaveLength(FACTS_CSV_COLUMNS.length);
-    expect(r[0]).toEqual(['Dataset', 'Record ID', 'Record', 'Source', 'Source page', 'Licence', 'Retrieved (YYYY-MM-DD)', 'Status', 'Tier', 'Facts that are unknown']);
+    expect(r[0]).toEqual(['Dataset', 'Record ID', 'Record', 'Source', 'Source page', 'Licence', 'Retrieved (YYYY-MM-DD)', 'Status', 'Tier', 'Facts that are UNKNOWN']);
   });
   it('writes values as recorded', () => {
     expect(rows(RECORDS)[1]).toEqual(['Places <A>', 'a', 'Alpha', 'Publisher A', 'https://example.org/a', 'OGL-Ontario', '2026-11-01', 'Within its review period', '0', '0']);
@@ -20,19 +20,19 @@ describe('record facts CSV', () => {
   });
   it('writes Unknown for every missing value, never an empty cell', () => {
     const r = rows(RECORDS)[3] ?? [];
-    expect(r).toEqual(['Routes', 'c', 'Unknown', 'Unknown', 'Unknown', 'Unknown', 'Unknown', 'Update date unknown', 'Unknown', '4']);
+    expect(r).toEqual(['Routes', 'c', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'Update date UNKNOWN', 'UNKNOWN', '4']);
     for (const all of rows(RECORDS)) for (const cell of all) expect(cell).not.toBe('');
   });
   it('writes a future date as Unknown, as the panel does', () => {
     const r = rows([{ id: 'd', name: 'Set', kind: 'places', sources: [{ id: 's', source: 'P', licence: 'OGL-Ontario', retrievedAt: '2031-01-01', tier: 1 }] }]);
-    expect(r[1]?.[6]).toBe('Unknown');
+    expect(r[1]?.[6]).toBe('UNKNOWN');
     expect(r[1]?.[9]).toBe('1');
   });
   it('uses French headings and words in French', () => {
     const r = rows(RECORDS, 'fr');
     expect(r[0]?.[0]).toBe('Jeu de données');
     expect(r[0]?.[8]).toBe('Niveau');
-    expect(r[3]?.[8]).toBe('Inconnu');
+    expect(r[3]?.[8]).toBe('UNKNOWN');
   });
   it('guards cells a spreadsheet would run as a formula', () => {
     const csv = buildFactsCsv([{ id: 'd', name: '=SUM(A1)', kind: 'places', sources: [{ id: 's' }] }], auditRegistry([{ id: 'd', name: '=SUM(A1)', kind: 'places', sources: [{ id: 's' }] }], NOW, {}), 'en', false);

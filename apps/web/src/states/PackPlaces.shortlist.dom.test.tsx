@@ -118,7 +118,9 @@ describe("shortlist on the places list", () => {
     expect(screen.queryByRole("columnheader", { name: "Distance" })).toBeNull();
     fireEvent.change(screen.getByLabelText("Latitude"), { target: { value: "43.65" } });
     fireEvent.change(screen.getByLabelText("Longitude"), { target: { value: "-79.38" } });
-    expect(screen.getByRole("columnheader", { name: "Distance" })).toBeTruthy();
+    // The page also has the distance table, whose first column is called Distance too, so look in the list's own table.
+    const list = screen.getByRole("table", { name: /Shortlisted places/ });
+    expect(within(list).getByRole("columnheader", { name: "Distance" })).toBeTruthy();
   });
   it("does not store anything for a pack it cannot read", () => {
     show([null, 5]);
@@ -135,17 +137,15 @@ describe("shortlist in French and with the shipped pack", () => {
     expect(screen.getByText("Alpha Hall ajouté à la liste.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Retirer de la liste Alpha Hall" }).getAttribute("aria-pressed")).toBe("true");
   });
-  it("has no axe violations with places on the list, in both languages", async () => {
-    for (const locale of ["en", "fr"] as const) {
+  for (const locale of ["en", "fr"] as const) {
+    it(`has no axe violations with places on the list, in ${locale === "en" ? "English" : "French"}`, async () => {
       const { container } = show(realPlaces, locale);
       const buttons = screen.getAllByRole("button", { name: locale === "en" ? /^Add to list / : /^Ajouter à la liste / });
       fireEvent.click(buttons[0]!);
       fireEvent.click(buttons[1]!);
       expect((await axe.run(container, axeRules)).violations, locale).toEqual([]);
-      cleanup();
-      localStorage.clear();
-    }
-  });
+    });
+  }
   it("lets the person list the first two places of the shipped pack and see both in the table", () => {
     show(realPlaces);
     const buttons = screen.getAllByRole("button", { name: /^Add to list / });

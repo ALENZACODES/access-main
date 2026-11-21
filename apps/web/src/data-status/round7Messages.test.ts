@@ -30,6 +30,31 @@ import { LISTED_SUMMARY_MESSAGES } from './listedSummary';
 import { LIVE_LIST_MESSAGES } from './liveList';
 import { DRILL_DOWN_MESSAGES } from './drillDown';
 import { DUE_SUMMARY_MESSAGES } from './dueSummary';
+import { GROUPED_LIST_MESSAGES } from './groupedList';
+import { ROW_DETAIL_MESSAGES } from './rowDetail';
+import { CHECKLIST_MESSAGES } from './reviewChecklist';
+import { DATASET_CARD_MESSAGES } from './datasetCards';
+import { COLUMN_MESSAGES } from './columns';
+import { FACET_MESSAGES } from './facets';
+import { FILE_CHECK_MESSAGES } from './fileChecks';
+import { FILE_GUIDE_MESSAGES } from './fileGuide';
+import { FORECAST_MESSAGES } from './forecast';
+import { LISTED_TABLE_MESSAGES } from './listedTable';
+import { LISTED_JSON_MESSAGES } from './listedJson';
+import { NAME_SUGGESTION_MESSAGES } from './nameSuggestions';
+import { NOTES_FILE_MESSAGES } from './notesFile';
+import { ODDITY_MESSAGES } from './oddities';
+import { OUTLOOK_MESSAGES } from './outlookFile';
+import { PAGE_HOST_MESSAGES } from './pageHosts';
+import { PERIOD_DIFF_MESSAGES } from './periodDiff';
+import { RECENCY_MESSAGES } from './recency';
+import { PIVOT_MESSAGES } from './pivot';
+import { PUBLISHER_MESSAGES } from './publishers';
+import { QUERY_TOKEN_MESSAGES } from './queryTokens';
+import { REVIEW_BATCH_MESSAGES } from './reviewBatches';
+import { REVIEW_PERIOD_MESSAGES } from './reviewPeriods';
+import { SHARED_PAGE_MESSAGES } from './sharedPages';
+import { REVIEW_CALENDAR_MESSAGES } from './reviewCalendar';
 import * as extras from './extras';
 
 const TABLES: readonly [string, Messages<string>][] = [
@@ -60,6 +85,31 @@ const TABLES: readonly [string, Messages<string>][] = [
   ['liveList', LIVE_LIST_MESSAGES],
   ['drillDown', DRILL_DOWN_MESSAGES],
   ['dueSummary', DUE_SUMMARY_MESSAGES],
+  ['groupedList', GROUPED_LIST_MESSAGES],
+  ['rowDetail', ROW_DETAIL_MESSAGES],
+  ['reviewChecklist', CHECKLIST_MESSAGES],
+  ['datasetCards', DATASET_CARD_MESSAGES],
+  ['queryTokens', QUERY_TOKEN_MESSAGES],
+  ['facets', FACET_MESSAGES],
+  ['columns', COLUMN_MESSAGES],
+  ['pivot', PIVOT_MESSAGES],
+  ['outlookFile', OUTLOOK_MESSAGES],
+  ['periodDiff', PERIOD_DIFF_MESSAGES],
+  ['recency', RECENCY_MESSAGES],
+  ['forecast', FORECAST_MESSAGES],
+  ['pageHosts', PAGE_HOST_MESSAGES],
+  ['reviewPeriods', REVIEW_PERIOD_MESSAGES],
+  ['notesFile', NOTES_FILE_MESSAGES],
+  ['fileChecks', FILE_CHECK_MESSAGES],
+  ['oddities', ODDITY_MESSAGES],
+  ['publishers', PUBLISHER_MESSAGES],
+  ['fileGuide', FILE_GUIDE_MESSAGES],
+  ['reviewBatches', REVIEW_BATCH_MESSAGES],
+  ['sharedPages', SHARED_PAGE_MESSAGES],
+  ['listedTable', LISTED_TABLE_MESSAGES],
+  ['listedJson', LISTED_JSON_MESSAGES],
+  ['nameSuggestions', NAME_SUGGESTION_MESSAGES],
+  ['reviewCalendar', REVIEW_CALENDAR_MESSAGES],
 ];
 
 describe('fill and placeholders', () => {

@@ -23,7 +23,12 @@ import { mountStorageDurability } from "./storageDurabilityPanel";
 import { mountOfflineDiagnostics } from "./offlineDiagnosticsPanel";
 import { mountOfflineReadiness } from "./readinessPanel";
 import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
+import { mountStorageScenarioPanel } from "./storageScenarioPanel";
+import { mountOfflineRecoveryJournal } from "./recoveryJournalPanel";
+import { mountOfflineRecoveryGuide } from "./recoveryGuidePanel";
+import { mountOfflineSourceAge } from "./sourceAgePanel";
 import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
+import { mountOfflineCasebook } from "./offlineCasebookPanel";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -256,10 +261,239 @@ export function mountOfflineDashboard(
   const recoveryHost = element("div");
   section.append(recoveryHost);
   const unmountRecovery = mountOfflineRecoveryBatches(recoveryHost, manifest, model, language, dependencies.estimateStorage);
+  const scenarioHost = element("div");
+  section.append(scenarioHost);
+  const unmountScenario = mountStorageScenarioPanel(scenarioHost, manifest, model, language, dependencies.estimateStorage);
+  const journalHost = element("div");
+  section.append(journalHost);
+  const unmountJournal = mountOfflineRecoveryJournal(journalHost, manifest, model, language);
+  const guideHost = element("div");
+  section.append(guideHost);
+  const unmountGuide = mountOfflineRecoveryGuide(guideHost, manifest, model, language, dependencies.estimateStorage);
 
+  const sourceAgeHost = element("div");
+  section.append(sourceAgeHost);
+  const unmountSourceAge = mountOfflineSourceAge(sourceAgeHost, manifest, model, language);
   const continuityHost = element("div");
   section.append(continuityHost);
-  const unmountContinuity = mountOfflineContinuityDrill(continuityHost, manifest, model, language, dependencies.estimateStorage);
+  const unmountContinuity = mountOfflineContinuityDrill(
+    continuityHost, manifest, model, language, dependencies.estimateStorage,
+  );
+  const casebookHost = element("div");
+  section.append(casebookHost);
+  const unmountCasebook = mountOfflineCasebook(casebookHost, manifest, model, language);
+
+  const handoffHost = element("div");
+  section.append(handoffHost);
+  let disposedHandoff = false;
+  let unmountHandoff: () => void = () => undefined;
+  void import("./handoffRehearsalPanel").then(({ mountOfflineHandoffRehearsal }) => {
+    if (disposedHandoff) return;
+    unmountHandoff = mountOfflineHandoffRehearsal(handoffHost, manifest, model, language);
+  }).catch(() => {
+    // Keep the rest of the dashboard operational if optional code is unavailable.
+  });
+
+  const timelineHost = element("div");
+  section.append(timelineHost);
+  let timelineDisposed = false;
+  let unmountTimeline: () => void = () => undefined;
+  void import("./localEvidenceTimelinePanel").then(({ mountLocalEvidenceTimeline }) => {
+    if (timelineDisposed) return;
+    unmountTimeline = mountLocalEvidenceTimeline(timelineHost, manifest, model, language);
+  }).catch(() => {
+    // The timeline is an optional, read-only record of local observations.
+  });
+  const workbookHost = element("div");
+  section.append(workbookHost);
+  let disposedWorkbook = false;
+  let unmountWorkbook: () => void = () => undefined;
+  // Keep the substantial local workbook out of the initial offline page chunk.
+  void import("./reconciliationWorkbookPanel").then(({ mountOfflineReconciliationWorkbook }) => {
+    if (disposedWorkbook) return;
+    unmountWorkbook = mountOfflineReconciliationWorkbook(workbookHost, manifest, model, language);
+  }).catch(() => {
+    // The core offline dashboard remains usable if this optional panel fails.
+  });
+
+  const preparationHost = element("div");
+  section.append(preparationHost);
+  let disposedPreparation = false;
+  let unmountPreparation: () => void = () => undefined;
+  void import("./accessPreparationPanel").then(({ mountAccessPreparation }) => {
+    if (disposedPreparation) return;
+    unmountPreparation = mountAccessPreparation(preparationHost, manifest, model, language);
+  }).catch(() => {
+    // Existing offline controls remain usable when the optional module cannot load.
+  });
+
+  const inquiryHost = element("div");
+  section.append(inquiryHost);
+  let inquiryDisposed = false;
+  let unmountInquiry: () => void = () => undefined;
+  void import("./accessInquiryPanel").then(({ mountAccessInquiry }) => {
+    if (inquiryDisposed) return;
+    unmountInquiry = mountAccessInquiry(inquiryHost, manifest, model, language);
+  }).catch(() => {
+    // An optional personal notebook must not prevent use of saved offline copies.
+  });
+
+  const contingencyHost = element("div");
+  section.append(contingencyHost);
+  let contingencyDisposed = false;
+  let unmountContingency: () => void = () => undefined;
+  void import("./contingencyPanel").then(({ mountOfflineContingency }) => {
+    if (contingencyDisposed) return;
+    unmountContingency = mountOfflineContingency(contingencyHost, manifest, model, language);
+  }).catch(() => {
+    // The original offline controls remain available when this optional view fails.
+  });
+
+  const dependencyHost = element("div");
+  section.append(dependencyHost);
+  let dependencyDisposed = false;
+  let unmountDependency: () => void = () => undefined;
+  // Optional local information planner is not required for an offline download.
+  void import("./dependencyPlannerPanel").then(({ mountOfflineDependencyPlanner }) => {
+    if (dependencyDisposed) return;
+    unmountDependency = mountOfflineDependencyPlanner(dependencyHost, manifest, model, language);
+  }).catch(() => {
+    // All existing offline controls remain available if this optional chunk fails.
+  });
+
+  const coordinationHost = element("div");
+  const openCoordinationLabel = language === "fr" ? "Ouvrir la fiche de coordination" : "Open coordination brief";
+  const closeCoordinationLabel = language === "fr" ? "Fermer la fiche de coordination" : "Close coordination brief";
+  const coordinationLaunch = action(openCoordinationLabel);
+  coordinationLaunch.style.minHeight = "44px";
+  coordinationLaunch.style.minWidth = "44px";
+  section.append(coordinationLaunch, coordinationHost);
+  let coordinationDisposed = false;
+  let coordinationOpen = false;
+  let coordinationRevision = 0;
+  let unmountCoordination: () => void = () => undefined;
+  // Explicit user action: no additional visual panel is loaded during pack-page mount.
+  const onCoordinationLaunch = (): void => {
+    if (coordinationDisposed) return;
+    if (coordinationOpen) {
+      coordinationOpen = false;
+      coordinationRevision += 1;
+      unmountCoordination();
+      unmountCoordination = () => undefined;
+      coordinationLaunch.textContent = openCoordinationLabel;
+      return;
+    }
+    coordinationOpen = true;
+    const token = ++coordinationRevision;
+    coordinationLaunch.textContent = closeCoordinationLabel;
+    coordinationHost.replaceChildren();
+    void import("./coordinationBriefPanel").then(({ mountOfflineCoordinationBrief }) => {
+      if (coordinationDisposed || !coordinationOpen || token !== coordinationRevision) return;
+      unmountCoordination = mountOfflineCoordinationBrief(coordinationHost, manifest, language);
+    }).catch(() => {
+      if (coordinationDisposed || !coordinationOpen || token !== coordinationRevision) return;
+      coordinationOpen = false;
+      coordinationLaunch.textContent = openCoordinationLabel;
+      coordinationHost.textContent = "UNKNOWN";
+    });
+  };
+  coordinationLaunch.addEventListener("click", onCoordinationLaunch);
+
+  const snapshotHost = element("div");
+  const snapshotLaunch = action(language === "fr" ? "Ouvrir la comparaison des instantanés" : "Open snapshot comparison");
+  snapshotHost.append(snapshotLaunch);
+  section.append(snapshotHost);
+  let snapshotDisposed = false;
+  let snapshotOpen = false;
+  let snapshotRevision = 0;
+  let unmountSnapshot: () => void = () => undefined;
+  const onSnapshotLaunch = (): void => {
+    if (snapshotDisposed) return;
+    if (snapshotOpen) {
+      snapshotOpen = false;
+      snapshotRevision += 1;
+      unmountSnapshot();
+      unmountSnapshot = () => undefined;
+      snapshotLaunch.textContent = language === "fr" ? "Ouvrir la comparaison des instantanés" : "Open snapshot comparison";
+      return;
+    }
+    snapshotOpen = true;
+    const revision = ++snapshotRevision;
+    snapshotLaunch.textContent = language === "fr" ? "Fermer la comparaison des instantanés" : "Close snapshot comparison";
+    void import("./snapshotComparisonPanel").then(({ mountSnapshotComparison }) => {
+      if (snapshotDisposed || !snapshotOpen || revision !== snapshotRevision) return;
+      unmountSnapshot = mountSnapshotComparison(snapshotHost, manifest, model, language);
+    }).catch(() => {
+      if (snapshotDisposed || revision !== snapshotRevision) return;
+      snapshotOpen = false;
+      snapshotLaunch.textContent = language === "fr" ? "Ouvrir la comparaison des instantanés" : "Open snapshot comparison";
+    });
+  };
+  snapshotLaunch.addEventListener("click", onSnapshotLaunch);
+
+  const questionHost = element("div");
+  const questionLaunch = action(language === "fr" ? "Ouvrir la fiche de questions" : "Open question sheet");
+  questionHost.append(questionLaunch);
+  section.append(questionHost);
+  let questionDisposed = false;
+  let questionOpen = false;
+  let questionRevision = 0;
+  let unmountQuestion: () => void = () => undefined;
+  const onQuestionLaunch = (): void => {
+    if (questionDisposed) return;
+    if (questionOpen) {
+      questionOpen = false;
+      questionRevision += 1;
+      unmountQuestion();
+      unmountQuestion = () => undefined;
+      questionLaunch.textContent = language === "fr" ? "Ouvrir la fiche de questions" : "Open question sheet";
+      return;
+    }
+    questionOpen = true;
+    const token = ++questionRevision;
+    questionLaunch.textContent = language === "fr" ? "Fermer la fiche de questions" : "Close question sheet";
+    void import("./offlineQuestionSheetPanel").then(({ mountOfflineQuestionSheet }) => {
+      if (questionDisposed || !questionOpen || token !== questionRevision) return;
+      unmountQuestion = mountOfflineQuestionSheet(questionHost, manifest, model, language);
+    }).catch(() => {
+      if (questionDisposed || token !== questionRevision) return;
+      questionOpen = false;
+      questionLaunch.textContent = language === "fr" ? "Ouvrir la fiche de questions" : "Open question sheet";
+    });
+  };
+  questionLaunch.addEventListener("click", onQuestionLaunch);
+
+  const packChangeHost = element("div");
+  const packChangeLaunch = action(language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review");
+  packChangeHost.append(packChangeLaunch);
+  section.append(packChangeHost);
+  let packChangeDisposed = false;
+  let packChangeOpen = false;
+  let packChangeRevision = 0;
+  let unmountPackChange: () => void = () => undefined;
+  const onPackChangeLaunch = (): void => {
+    if (packChangeDisposed) return;
+    if (packChangeOpen) {
+      packChangeOpen = false;
+      packChangeRevision += 1;
+      unmountPackChange();
+      unmountPackChange = () => undefined;
+      packChangeLaunch.textContent = language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review";
+      return;
+    }
+    packChangeOpen = true;
+    const revision = ++packChangeRevision;
+    packChangeLaunch.textContent = language === "fr" ? "Fermer l’examen des changements du pack" : "Close pack change review";
+    void import("./packChangeImpactPanel").then(({ mountPackChangeImpact }) => {
+      if (packChangeDisposed || !packChangeOpen || revision !== packChangeRevision) return;
+      unmountPackChange = mountPackChangeImpact(packChangeHost, manifest, model, language);
+    }).catch(() => {
+      if (packChangeDisposed || revision !== packChangeRevision) return;
+      packChangeOpen = false;
+      packChangeLaunch.textContent = language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review";
+    });
+  };
+  packChangeLaunch.addEventListener("click", onPackChangeLaunch);
 
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
@@ -378,7 +612,42 @@ export function mountOfflineDashboard(
     unmountReadiness();
     unmountDiagnostics();
     unmountRecovery();
+    unmountScenario();
+    unmountJournal();
+    unmountGuide();
+    unmountSourceAge();
     unmountContinuity();
+    unmountCasebook();
+    disposedHandoff = true;
+    unmountHandoff();
+    timelineDisposed = true;
+    unmountTimeline();
+    disposedWorkbook = true;
+    unmountWorkbook();
+    disposedPreparation = true;
+    unmountPreparation();
+    inquiryDisposed = true;
+    unmountInquiry();
+    contingencyDisposed = true;
+    unmountContingency();
+    dependencyDisposed = true;
+    unmountDependency();
+    coordinationDisposed = true;
+    coordinationRevision += 1;
+    coordinationLaunch.removeEventListener("click", onCoordinationLaunch);
+    unmountCoordination();
+    snapshotDisposed = true;
+    snapshotRevision += 1;
+    snapshotLaunch.removeEventListener("click", onSnapshotLaunch);
+    unmountSnapshot();
+    questionDisposed = true;
+    questionRevision += 1;
+    questionLaunch.removeEventListener("click", onQuestionLaunch);
+    unmountQuestion();
+    packChangeDisposed = true;
+    packChangeRevision += 1;
+    packChangeLaunch.removeEventListener("click", onPackChangeLaunch);
+    unmountPackChange();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);

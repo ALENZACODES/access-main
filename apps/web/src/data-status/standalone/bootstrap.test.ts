@@ -3,6 +3,7 @@ import { applyChrome, bootstrap, pickLocale, type BootDeps, type DocLike } from 
 import { createSnapshot, createSnapshotStore, lintFrench, scanHtml, visibleText } from '../index';
 import { FakeHost, NOW, RECORDS, memoryStorage } from '../testkit';
 import { SAVED_VIEWS_KEY, VIEW_SAVE_ACTION } from '../savedViews';
+import { parseFilters } from '../filters';
 
 const REGISTRY = JSON.stringify([
   {
@@ -228,6 +229,34 @@ describe('bootstrap: order of the list', () => {
   it('ignores an order it cannot read', async () => {
     const out = await bootstrap(deps({ search: '?sort=bogus' }));
     expect(out.panel.getSort()).toBeNull();
+  });
+});
+
+describe('bootstrap: grouping of the list', () => {
+  it('starts grouped as the address says, and writes a new grouping back next to the filters and the order', async () => {
+    const searches: string[] = [];
+    const d = deps({ search: '?state=stale&sort=source&group=licence', onSearchChange: (s) => searches.push(s) });
+    const out = await bootstrap(d);
+    expect(out.panel.getGroup()).toBe('licence');
+    expect(d.host.innerHTML).toContain('<option value="licence" selected>');
+    expect(d.host.innerHTML).toContain('data-group="open"');
+    d.host.filter('change', 'group', 'status');
+    expect(searches.at(-1)).toBe('?state=stale&sort=source&group=status');
+    d.host.filter('change', 'group', 'none');
+    expect(searches.at(-1)).toBe('?state=stale&sort=source');
+  });
+  it('ignores a grouping it cannot read', async () => {
+    const out = await bootstrap(deps({ search: '?group=colour' }));
+    expect(out.panel.getGroup()).toBe('none');
+    expect(out.panel.getFilters()).toEqual(parseFilters(''));
+  });
+  it('offers the details toggle and the checklist downloads on the standalone page', async () => {
+    const d = deps();
+    await bootstrap(d);
+    expect(d.host.innerHTML).toContain('id="ds-f-details"');
+    expect(d.host.innerHTML).toContain('data-action="export-checklist-md"');
+    d.host.filter('change', 'details', '', true);
+    expect(d.host.region.innerHTML).toContain('data-row-detail');
   });
 });
 

@@ -219,7 +219,7 @@ export const ATTEMPT_COPY: Record<RecoveryLocale, {
   heading: string; introduction: string; pack: string; kind: string; outcome: string;
   note: string; source: string; licence: string; date: string; tier: string;
   add: string; importFile: string; exportFile: string; apply: string;
-  empty: string; error: string; saved: string; staged: string; conflict: string;
+  empty: string; error: string; saved: string; staged: string; conflict: string; unknownLabel: string;
 }> = {
   en: {
     heading: "Manual repair attempts", introduction: "Add local notes about an attempt. Notes cannot change pack status.",
@@ -228,6 +228,7 @@ export const ATTEMPT_COPY: Record<RecoveryLocale, {
     importFile: "Choose a local attempts file", exportFile: "Save attempts file", apply: "Add non-conflicting attempts",
     empty: "No attempt notes yet", error: "The attempt could not be saved.", saved: "Attempts saved locally.",
     staged: "Selected file is ready for review.", conflict: "An attempt ID has conflicting history. Nothing was imported.",
+    unknownLabel: "UNKNOWN",
   },
   fr: {
     heading: "Tentatives de récupération", introduction: "Ajoutez une note locale. Les notes ne changent pas l’état de l’ensemble.",
@@ -237,5 +238,6 @@ export const ATTEMPT_COPY: Record<RecoveryLocale, {
     empty: "Aucune tentative consignée", error: "La tentative n’a pas pu être enregistrée.",
     saved: "Tentatives enregistrées localement.", staged: "Le fichier sélectionné peut être examiné.",
     conflict: "Un identifiant présente un historique contradictoire. Aucun ajout n’a été effectué.",
+    unknownLabel: "UNKNOWN",
   },
 };

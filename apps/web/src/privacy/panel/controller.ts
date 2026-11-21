@@ -10,6 +10,19 @@ import { inventoryAsCsv, inventoryAsText } from "./inventoryExport";
 import { ownEntries } from "./ownEntries";
 import { reconcile } from "./reconcile";
 import { describeDevice, type DeviceRow } from "./deviceRegister";
+import type { AddressRegisterView } from "./addressView";
+import type { FeatureRow } from "./featureRegister";
+import { featuresAsCsv, featuresAsText } from "./featureExport";
+import { addressesAsCsv, addressesAsText } from "./addressExport";
+import { glanceAsCsv, glanceAsText } from "./glanceSection";
+import { receiptRows, type ReceiptRow } from "./receipt";
+import { checkStatements, type StatementResult, type StatementRow } from "./statementRegister";
+import { statementsAsCsv, statementsAsText } from "./statementSection";
+import { receiptAsCsv, receiptAsText } from "./receiptSection";
+import type { HandoffRow } from "./handoffRegister";
+import { handoffAsCsv, handoffAsText } from "./handoffSection";
+import { glanceFigures, type GlanceSources } from "./glance";
+import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
 import { clearDevice, removable, scanDevice, type ClearOptions, type DeviceHost, type DeviceScan } from "./deviceStorage";
 import { protect, unprotect, passphraseProblem, type CryptoLike } from "./protectedBackup";
@@ -51,6 +64,18 @@ export interface ControllerDeps {
   outside?: readonly OutsideItem[];
   /** The App's own list of caches and databases. With `device`, the panel says what each name found on the device is. */
   deviceRegister?: readonly DeviceRow[];
+  /** The App's list of browser features and the browser to ask. With it, the panel shows what the App asks of the browser. */
+  features?: { register: readonly FeatureRow[]; host: FeatureHost };
+  /** The web addresses and network requests in the App. With it, the panel shows them and offers a download. */
+  addresses?: AddressRegisterView;
+  /** Show a short count of each list above. Needs at least one of the lists above to have something to count. */
+  glance?: boolean;
+  /** Where the App says data stays on the device or is not sent. Checked against `addresses`; without it, every row is shown as not checked. */
+  statements?: readonly StatementRow[];
+  /** Show the record of the person's choices, with a download. Needs `purposes`. Pass `register` through `kept` to list what each choice lets the App save. */
+  receipt?: boolean;
+  /** The links in the App that open another app. With it, the panel lists them and offers a download. */
+  handoffs?: readonly HandoffRow[];
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -92,6 +117,8 @@ export interface PrivacyState {
   /** null until read, or when the section is off */
   signals: Signals | null;
   scan: DeviceScan | null;
+  /** The browser's answers about features, or null before the check */
+  featureStates: FeatureStates | null;
   confirmingClearDevice: boolean;
 }
 
@@ -106,6 +133,18 @@ export type PrivacyAction =
   | { type: "export-list-text" }
   | { type: "export-kept-csv" }
   | { type: "export-kept-text" }
+  | { type: "export-features-csv" }
+  | { type: "export-features-text" }
+  | { type: "export-addresses-csv" }
+  | { type: "export-addresses-text" }
+  | { type: "export-glance-csv" }
+  | { type: "export-glance-text" }
+  | { type: "export-receipt-csv" }
+  | { type: "export-receipt-text" }
+  | { type: "export-handoff-csv" }
+  | { type: "export-handoff-text" }
+  | { type: "export-statements-csv" }
+  | { type: "export-statements-text" }
   | { type: "mark-seen" }
   | { type: "import-load"; text: string }
   | { type: "import-confirm" }
@@ -118,12 +157,14 @@ export type PrivacyAction =
   | { type: "report"; status: Status }
   | { type: "publish"; file: ExportFile; status: Status }
   | { type: "signals-read"; signals: Signals }
-  | { type: "device-scanned"; scan: DeviceScan };
+  | { type: "device-scanned"; scan: DeviceScan }
+  | { type: "features-read"; states: FeatureStates };
 
 /** Actions that wait for the browser. Passphrases are used once and never kept. */
 export type PrivacyAsyncAction =
   | { type: "read-signals" }
   | { type: "scan-device" }
+  | { type: "check-features" }
   | { type: "clear-device-confirm" }
   | { type: "protected-export"; passphrase: string; confirm: string }
   | { type: "protected-import"; text: string; passphrase: string };
@@ -141,6 +182,49 @@ export interface PrivacyController {
  * Throws at start-up if the inventory or the purposes break the wording or data
  * rules. On start it also removes expired local items (see expiry.ts).
  */
+/** The statement rows set beside the places that make requests, or null when none were given. */
+function statementsFor(deps: ControllerDeps): StatementResult[] | null {
+  if (deps.statements === undefined || deps.statements.length === 0) return null;
+  return checkStatements(deps.statements, deps.addresses === undefined ? null : deps.addresses.calls);
+}
+
+/** What the counts are made from: only the lists the controller was given. Null when there is nothing to count. */
+function glanceSources(deps: ControllerDeps): GlanceSources | null {
+  if (deps.glance !== true) return null;
+  const src: GlanceSources = {
+    ...(deps.kept !== undefined ? { kept: deps.kept } : {}),
+    ...(deps.deviceRegister !== undefined ? { device: deps.deviceRegister } : {}),
+    ...(deps.features !== undefined ? { features: deps.features.register } : {}),
+    ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
+    ...(statementsFor(deps) !== null ? { statements: statementsFor(deps) as StatementResult[] } : {}),
+  };
+  return glanceFigures(src).length === 0 ? null : src;
+}
+
+/** The names stored on this device now. Empty when the browser blocks storage. */
+function storedKeys(storage: StorageLike | null): string[] {
+  const keys: string[] = [];
+  if (storage === null) return keys;
+  for (let i = 0; i < storage.length; i += 1) {
+    const k = storage.key(i);
+    if (k !== null) keys.push(k);
+  }
+  return keys;
+}
+
+/** The rows of the record of choices, or null when it is off or there are no purposes. */
+function receiptFor(deps: ControllerDeps, consent: ConsentState): ReceiptRow[] | null {
+  if (deps.receipt !== true || (deps.purposes ?? []).length === 0) return null;
+  return receiptRows({
+    purposes: deps.purposes ?? [],
+    rules: deps.withdrawRules ?? [],
+    consent,
+    ...(deps.kept !== undefined ? { register: deps.kept.register } : {}),
+    keys: storedKeys(deps.storage),
+    removesOnNo: deps.withdrawRules !== undefined,
+  });
+}
+
 export function createPrivacyController(deps: ControllerDeps): PrivacyController {
   assertValidInventory(deps.inventory);
   const purposes = deps.purposes ?? [];
@@ -179,6 +263,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     importPending: false,
     signals: null,
     scan: null,
+    featureStates: null,
     confirmingClearDevice: false,
   };
   let plan: ImportPlan | null = null;
@@ -214,6 +299,9 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       case "consent": {
         const purpose = purposes.find((p) => p.id === action.purposeId);
         if (purpose === undefined) break;
+        // A file waiting to be restored was checked before this choice. Restoring it afterwards could put back
+        // what a "do not allow" has just removed, so the person is asked to load the file again.
+        plan = null;
         const consent = setConsent(state.consent, purpose, action.value, deps.now());
         const saved = saveConsent(storage, deps.prefix, consent);
         log({ kind: action.value === "granted" ? "consent-granted" : "consent-declined", purposeId: purpose.id });
@@ -225,6 +313,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           ...state,
           consent,
           confirmingErase: false,
+          importPending: false,
           lastExport: null,
           status: removed > 0
             ? { kind: "consent-withdrawn", label: purpose.label[state.prefs.locale], removed }
@@ -273,6 +362,71 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const file = csv ? keptAsCsv(loc, src, deps.now(), loc === "fr" ? ";" : ",") : keptAsText(loc, src, deps.now());
         log({ kind: "kept-export", format: csv ? "csv" : "text" });
         state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "kept-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-features-csv":
+      case "export-features-text": {
+        if (deps.features === undefined) break;
+        const csv = action.type === "export-features-csv";
+        const loc = state.prefs.locale;
+        const file = csv
+          ? featuresAsCsv(loc, deps.features.register, state.featureStates, deps.now(), loc === "fr" ? ";" : ",")
+          : featuresAsText(loc, deps.features.register, state.featureStates, deps.now());
+        log({ kind: "features-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "features-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-addresses-csv":
+      case "export-addresses-text": {
+        if (deps.addresses === undefined) break;
+        const csv = action.type === "export-addresses-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? addressesAsCsv(loc, deps.addresses, deps.now(), loc === "fr" ? ";" : ",") : addressesAsText(loc, deps.addresses, deps.now());
+        log({ kind: "addresses-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "addresses-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-glance-csv":
+      case "export-glance-text": {
+        const src = glanceSources(deps);
+        if (src === null) break;
+        const csv = action.type === "export-glance-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? glanceAsCsv(loc, src, deps.now(), loc === "fr" ? ";" : ",") : glanceAsText(loc, src, deps.now());
+        log({ kind: "glance-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "glance-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-handoff-csv":
+      case "export-handoff-text": {
+        if (deps.handoffs === undefined || deps.handoffs.length === 0) break;
+        const csv = action.type === "export-handoff-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? handoffAsCsv(loc, deps.handoffs, deps.now(), loc === "fr" ? ";" : ",") : handoffAsText(loc, deps.handoffs, deps.now());
+        log({ kind: "handoff-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "handoff-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-receipt-csv":
+      case "export-receipt-text": {
+        const rows = receiptFor(deps, state.consent);
+        if (rows === null) break;
+        const csv = action.type === "export-receipt-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? receiptAsCsv(loc, rows, deps.now(), loc === "fr" ? ";" : ",") : receiptAsText(loc, rows, deps.now());
+        log({ kind: "receipt-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "receipt-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-statements-csv":
+      case "export-statements-text": {
+        const results = statementsFor(deps);
+        if (results === null) break;
+        const csv = action.type === "export-statements-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? statementsAsCsv(loc, results, deps.now(), loc === "fr" ? ";" : ",") : statementsAsText(loc, results, deps.now());
+        log({ kind: "statements-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "statements-exported", format: csv ? "csv" : "text" } };
         break;
       }
       case "mark-seen": {
@@ -399,6 +553,10 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         if (deps.device === undefined) break;
         state = { ...state, scan: action.scan, confirmingClearDevice: false, lastExport: null, status: { kind: "scan-done" } };
         break;
+      case "features-read":
+        if (deps.features === undefined) break;
+        state = { ...state, featureStates: action.states, confirmingErase: false, lastExport: null, status: { kind: "features-checked" } };
+        break;
       case "clear-device-ask": {
         const r = deps.device === undefined || state.scan === null ? null : removable(state.scan, deps.device);
         if (r === null || r.caches.length + r.databases.length === 0) {
@@ -459,6 +617,10 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       case "read-signals": {
         if (deps.signals === undefined) return state;
         return dispatch({ type: "signals-read", signals: await readSignals(deps.signals) });
+      }
+      case "check-features": {
+        if (deps.features === undefined) return state;
+        return dispatch({ type: "features-read", states: await readFeatureStates(deps.features.host, deps.features.register, deps.now()) });
       }
       case "scan-device": {
         if (deps.device === undefined) return state;
@@ -538,6 +700,12 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         ...(deps.device !== undefined && deps.deviceRegister !== undefined
           ? { deviceNames: state.scan === null ? null : describeDevice(state.scan, deps.deviceRegister, deps.device) }
           : {}),
+        ...(deps.features !== undefined ? { features: { register: deps.features.register, states: state.featureStates } } : {}),
+        ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
+        ...(statementsFor(deps) !== null ? { statements: statementsFor(deps) as StatementResult[] } : {}),
+        ...(deps.handoffs !== undefined && deps.handoffs.length > 0 ? { handoffs: deps.handoffs } : {}),
+        ...(receiptFor(deps, state.consent) !== null ? { receipt: receiptFor(deps, state.consent) as ReceiptRow[] } : {}),
+        ...(glanceSources(deps) !== null ? { glance: glanceSources(deps) as GlanceSources } : {}),
         ...(deps.kept !== undefined ? { keptList: true } : {}),
         ...(deps.crypto !== undefined ? { protectedCopy: true } : {}),
         ...(deps.logActivity === true ? { activity: loadActivity(deps.storage, deps.prefix, deps.now()) } : {}),
