@@ -38,7 +38,7 @@ const inventory: RegionInventory = {
 };
 
 function model(initial: RegionInventory | null = inventory): DashboardModel {
-  let state: DashboardState = {
+  const state: DashboardState = {
     phase: "ready",
     inventory: initial,
     plan: null,
@@ -193,11 +193,11 @@ describe("offline pack receipt panel", () => {
     vi.stubGlobal("crypto", webcrypto);
     const first = await createPackReceipt(manifest, inventory, "2026-11-21T10:00:00.000Z", cryptoProvider);
     const book = appendPackReceipt(emptyReceiptBook("north"), first);
-    const raw = JSON.parse(encodeReceiptBook(book)) as ReceiptBook;
-    raw.receipts[0]!.digest = "0".repeat(64);
+    const raw = JSON.parse(encodeReceiptBook(book)) as { receipts: Array<Record<string, unknown>> };
+    const changed = { ...raw, receipts: raw.receipts.map((item) => ({ ...item, digest: "0".repeat(64) })) };
     const view = mount();
     const textarea = view.root.querySelector("textarea")!;
-    textarea.value = JSON.stringify(raw);
+    textarea.value = JSON.stringify(changed);
     button(view.root, view.copy.importJson).click();
     await flush();
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.invalid);
