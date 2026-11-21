@@ -4,6 +4,9 @@ import type { ReceiptChange, ReceiptFilter, ReceiptOrder } from "./packReceipt";
 export const PACK_RECEIPT_COPY = {
   en: {
     title: "Offline pack receipts",
+    open: "Open offline pack receipts",
+    close: "Close offline pack receipts",
+    compared: "Latest readings compared.",
     intro: "Record a portable summary of the listed offline cells and compare two readings. Receipt files contain metadata, not downloaded content.",
     caution: "A receipt is a historical record. An imported receipt does not describe what is currently saved on this device or establish physical access.",
     digest: "SHA-256 digest",
@@ -59,6 +62,9 @@ export const PACK_RECEIPT_COPY = {
   },
   fr: {
     title: "Reçus des packs hors ligne",
+    open: "Ouvrir les reçus des packs hors ligne",
+    close: "Fermer les reçus des packs hors ligne",
+    compared: "Les dernières lectures ont été comparées.",
     intro: "Enregistrez un résumé transférable des cellules répertoriées et comparez deux lectures. Les reçus contiennent des métadonnées, pas le contenu téléchargé.",
     caution: "Un reçu est un document historique. Un reçu importé ne décrit pas ce qui est actuellement enregistré sur cet appareil et n’établit pas l’accès physique.",
     digest: "Empreinte SHA-256",
