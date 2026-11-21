@@ -11,7 +11,7 @@ const WORDS = Object.freeze({
     title: 'Offline release acceptance review',
     caution: 'Recorded test outcomes are not an accessibility certification.',
     unknown: 'UNKNOWN', source: 'Source', licence: 'Licence', retrieved: 'Retrieved',
-    tier: 'Verification tier', route: 'Route', check: 'Check', kind: 'Category',
+    tier: 'Source review tier', route: 'Route', check: 'Check', kind: 'Category',
     state: 'Recorded result', run: 'Test run', digest: 'Artifact SHA-256',
     missing: 'Missing test', fail: 'Recorded failure', pass: 'Recorded pass',
     history: 'Release changes', noChanges: 'No recorded changes',
