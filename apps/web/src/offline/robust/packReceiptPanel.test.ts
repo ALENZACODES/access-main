@@ -76,10 +76,10 @@ function button(root: HTMLElement, label: string): HTMLButtonElement {
   return result;
 }
 
-async function flush(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
+async function waitForStatus(root: HTMLElement, expected: string): Promise<void> {
+  await vi.waitFor(() => {
+    expect(root.querySelector('[role="status"]')?.textContent).toBe(expected);
+  });
 }
 
 afterEach(() => {
@@ -127,7 +127,7 @@ describe("offline pack receipt panel", () => {
     vi.stubGlobal("crypto", webcrypto);
     const view = mount();
     button(view.root, view.copy.capture).click();
-    await flush();
+    await waitForStatus(view.root, view.copy.captured);
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.captured);
     expect(view.root.textContent).toContain(view.copy.saved);
     expect(view.root.textContent).toContain(view.copy.unknown);
@@ -142,7 +142,7 @@ describe("offline pack receipt panel", () => {
     vi.stubGlobal("crypto", webcrypto);
     const view = mount("en", null);
     button(view.root, view.copy.capture).click();
-    await flush();
+    await waitForStatus(view.root, view.copy.captured);
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.captured);
     expect(view.root.textContent).toContain("UNKNOWN");
     expect(view.root.textContent).not.toContain("Saved copies1");
@@ -154,7 +154,7 @@ describe("offline pack receipt panel", () => {
     const view = mount();
     expect(button(view.root, view.copy.compare).disabled).toBe(true);
     button(view.root, view.copy.capture).click();
-    await flush();
+    await waitForStatus(view.root, view.copy.captured);
     expect(button(view.root, view.copy.compare).disabled).toBe(true);
     view.unmount();
   });
@@ -179,8 +179,7 @@ describe("offline pack receipt panel", () => {
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
     expect(view.root.textContent).toContain(view.copy.empty);
     button(view.root, view.copy.importJson).click();
-    await flush();
-    expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.imported);
+    await waitForStatus(view.root, view.copy.imported);
     expect(view.root.textContent).toContain(view.copy.captures);
     expect(view.root.textContent).toContain("2");
     expect(view.root.textContent).toContain(view.copy.saved);
@@ -202,8 +201,7 @@ describe("offline pack receipt panel", () => {
     textarea.value = JSON.stringify(changed);
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
     button(view.root, view.copy.importJson).click();
-    await flush();
-    expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.invalid);
+    await waitForStatus(view.root, view.copy.invalid);
     expect(view.root.textContent).toContain(view.copy.empty);
     view.unmount();
   });
@@ -223,7 +221,7 @@ describe("offline pack receipt panel", () => {
     vi.stubGlobal("crypto", webcrypto);
     const view = mount();
     button(view.root, view.copy.capture).click();
-    await flush();
+    await waitForStatus(view.root, view.copy.captured);
     button(view.root, view.copy.clear).click();
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.cleared);
     expect(view.root.textContent).toContain(view.copy.empty);
@@ -237,7 +235,7 @@ describe("offline pack receipt panel", () => {
     document.body.append(root);
     const unmount = mountOfflinePackReceipts(root, manifest, sourceModel, "en");
     button(root, PACK_RECEIPT_COPY.en.capture).click();
-    await flush();
+    await waitForStatus(view.root, view.copy.captured);
     expect(root.textContent).toContain(PACK_RECEIPT_COPY.en.captured);
     unmount();
     expect(root.querySelector("section")).toBeNull();
