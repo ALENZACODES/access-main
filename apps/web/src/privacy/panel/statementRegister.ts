@@ -42,6 +42,8 @@ export const STATEMENT_REGISTER: readonly StatementRow[] = [
   row("apps/web/src/pages/AboutPage.tsx", 1, 0, "The About page", "La page À propos"),
   row("apps/web/src/recovery/recoveryLedger.ts", 1, 0, "The recovery ledger", "Le registre de reprise"),
   row("apps/web/src/states/PackCompare.tsx", 1, 1, "Comparing a places file", "La comparaison d’un fichier de lieux"),
+  row("apps/web/src/states/spotResultsCopy.ts", 1, 1, "Reading a filled-in spot-check sheet", "La lecture d’une feuille d’observation remplie"),
+  row("apps/web/src/states/spotSheetCopy.ts", 0, 1, "The spot-check sheet", "La feuille d’observation sur place"),
 ];
 
 export type StatementCheck = "no-requests-in-file" | "requests-in-file" | "not-checked";
