@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { mountSharedDeviceHandback } from "./sharedDeviceHandbackPanel";
 import { createSharedDeviceHandback } from "./sharedDeviceHandback";
 import { HANDBACK_COPY } from "./sharedDeviceHandbackCopy";
@@ -67,7 +67,7 @@ describe("shared-device handback panel", () => {
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe(view.copy.started);
     expect(view.root.textContent).toContain(view.copy.total);
     expect(view.root.textContent).toContain("15");
-    expect(view.root.textContent).toContain("account-signout");
+    expect(view.root.textContent).toContain(view.copy.itemAccountSignout);
     expect(button(view.root, view.copy.exportJson).disabled).toBe(false);
     view.unmount();
   });
@@ -204,15 +204,23 @@ describe("shared-device handback panel", () => {
   it("does not start a review or perform actions on mount", () => {
     const view = mount();
     expect(view.root.querySelector('[role="status"]')?.textContent).toBe("");
-    expect(view.root.textContent).toContain(view.copy.noActions);
+    expect(view.root.querySelector("ol > li")?.textContent).toBe(view.copy.empty);
+    expect(view.root.textContent).toContain(view.copy.boundary);
     view.unmount();
   });
 
   it("does not schedule timers or polling", () => {
-    const view = mount();
-    const text = view.root.querySelector("section")?.textContent ?? "";
-    expect(text).not.toMatch(/periodically|automatically|background task/i);
-    view.unmount();
+    vi.useFakeTimers();
+    try {
+      const view = mount();
+      expect(vi.getTimerCount()).toBe(0);
+      button(view.root, view.copy.capture).click();
+      expect(vi.getTimerCount()).toBe(0);
+      view.unmount();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("removes the panel on unmount", () => {

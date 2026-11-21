@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { describe, expect, it, vi } from "vitest";
 import {
   createSharedDeviceHandback,
@@ -71,7 +72,7 @@ describe("shared-device handback JSON and filenames", () => {
 
   it("sanitizes filenames and preserves the requested extension", () => {
     expect(sharedDeviceHandbackFilename("handback-1", "json")).toBe("shared-device-handback-handback-1.json");
-    expect(sharedDeviceHandbackFilename("../private id", "txt")).toBe("shared-device-handback---private-id.txt");
+    expect(sharedDeviceHandbackFilename("../private id", "txt")).toBe("shared-device-handback-private-id.txt");
     expect(sharedDeviceHandbackFilename(" ", "json")).toBe("shared-device-handback-review.json");
   });
 });
@@ -79,9 +80,9 @@ describe("shared-device handback JSON and filenames", () => {
 describe("saveSharedDeviceHandback", () => {
   it("creates a JSON blob and revokes its object URL after the explicit export", async () => {
     const review = sample();
-    let captured: Promise<string> | null = null;
+    const captured: Blob[] = [];
     const createUrl = vi.fn((blob: Blob) => {
-      captured = blob.text();
+      captured.push(blob);
       return "blob:handback";
     });
     const revokeUrl = vi.fn();
@@ -92,7 +93,15 @@ describe("saveSharedDeviceHandback", () => {
     expect(click).toHaveBeenCalledOnce();
     expect(document.querySelector("a[download]")).toBeNull();
     click.mockRestore();
-    expect(await captured).toContain('"schema":"shared-device-handback-v1"');
+    const blob = captured[0]!;
+    expect(blob.type).toBe("application/json;charset=utf-8");
+    const reader = new FileReader();
+    const content = new Promise<string>((resolve, reject) => {
+      reader.addEventListener("load", () => resolve(String(reader.result)));
+      reader.addEventListener("error", () => reject(reader.error));
+    });
+    reader.readAsText(blob);
+    expect(JSON.parse(await content)).toEqual(review);
   });
 
   it("creates a text blob with the selected language", () => {

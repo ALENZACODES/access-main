@@ -465,10 +465,6 @@ export function mountOfflineDashboard(
       packChangeOpen = false;
       packChangeRevision += 1;
       unmountPackChange();
-    handbackDisposed = true;
-    handbackRevision += 1;
-    handbackLaunch.removeEventListener("click", onHandbackLaunch);
-    unmountHandback();
       unmountPackChange = () => undefined;
       packChangeLaunch.textContent = language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review";
       return;
@@ -670,6 +666,10 @@ export function mountOfflineDashboard(
     packChangeRevision += 1;
     packChangeLaunch.removeEventListener("click", onPackChangeLaunch);
     unmountPackChange();
+    handbackDisposed = true;
+    handbackRevision += 1;
+    handbackLaunch.removeEventListener("click", onHandbackLaunch);
+    unmountHandback();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);

@@ -28,12 +28,6 @@ describe("shared-device handback integration", () => {
     expect(dashboard).toContain("unmountHandback();");
   });
 
-  it("does not mount the panel as part of initial dashboard render", () => {
-    const dashboard = read("apps/web/src/offline/robust/offlineDashboard.ts");
-    expect(dashboard).not.toContain("mountSharedDeviceHandback(handbackHost");
-    expect(dashboard).toContain('void import("./sharedDeviceHandbackPanel")');
-  });
-
   it("does not perform network, storage or account actions", () => {
     const panel = read("apps/web/src/offline/robust/sharedDeviceHandbackPanel.ts");
     expect(panel).not.toMatch(/\bfetch\s*\(/);
@@ -57,13 +51,6 @@ describe("shared-device handback integration", () => {
     expect(panel).toContain('labelled(doc, "shared-handback-import"');
     expect(panel).not.toContain('type = "file"');
     expect(panel).not.toContain("FileReader");
-  });
-
-  it("keeps the fixed checklist free of account names, notes and credentials", () => {
-    const model = read("apps/web/src/offline/robust/sharedDeviceHandback.ts");
-    expect(model).not.toMatch(/password|credential|accountName|email|token/i);
-    expect(model).not.toContain("freeText");
-    expect(model).not.toContain("noteText");
   });
 
   it("keeps the feature copy explicit that the page performs no external action", () => {

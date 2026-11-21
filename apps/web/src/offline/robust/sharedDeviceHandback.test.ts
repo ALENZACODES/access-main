@@ -80,9 +80,9 @@ describe("shared-device handback checklist catalogue", () => {
   });
 
   it("does not store free-form notes or account identifiers in the catalogue", () => {
-    const serialized = JSON.stringify(HANDBACK_ITEMS);
-    expect(serialized).not.toMatch(/password|username|email|accountName|credential|token/i);
-    expect(serialized).not.toContain("notes");
+    for (const item of HANDBACK_ITEMS) {
+      expect(Object.keys(item).sort()).toEqual(["category", "id", "order", "required"]);
+    }
   });
 
   it("maps every item to one review area and a required flag", () => {
@@ -429,13 +429,13 @@ describe("pageHandback search, filtering and ordering", () => {
 
   it("searches fixed item IDs and category names", () => {
     expect(page(fresh(), { search: "download" }).entries.map((entry) => entry.itemId))
-      .toEqual(["download-folder"]);
+      .toEqual(["download-folder", "temporary-files"]);
     expect(page(fresh(), { search: "paper" }).entries.map((entry) => entry.itemId))
       .toEqual(["printed-pages", "written-notes", "external-storage"]);
   });
 
   it("search is case-insensitive and normalized", () => {
-    expect(page(fresh(), { search: "DOWNLOAD" }).total).toBe(1);
+    expect(page(fresh(), { search: "ＤＯＷＮＬＯＡＤ" }).total).toBe(2);
     expect(page(fresh(), { search: "  ACCOUNTS  " }).total).toBe(3);
   });
 
@@ -523,15 +523,27 @@ describe("handback JSON import and export", () => {
     expect(() => parseSharedDeviceHandback("x".repeat(HANDBACK_MAX_BYTES + 1), "north")).toThrow();
   });
 
-  it("rejects an oversized export", () => {
-    const review = fresh();
-    expect(() => encodeSharedDeviceHandback(review)).not.toThrow();
+  it("keeps the fullest valid export inside the portable byte limit", () => {
+    let review = fresh("r".repeat(120), "s".repeat(120));
+    for (const item of HANDBACK_ITEMS) {
+      review = setState(review, item.id, "not-applicable", changed);
+    }
+    const encoded = encodeSharedDeviceHandback(review);
+    expect(new TextEncoder().encode(encoded).byteLength).toBeLessThanOrEqual(HANDBACK_MAX_BYTES);
+    expect(parseSharedDeviceHandback(encoded, review.regionId)).toEqual(review);
   });
 
   it("does not include free-form notes or secret-like fields", () => {
-    const text = encodeSharedDeviceHandback(fresh());
-    expect(text).not.toMatch(/password|secret|credential|accountName|email|token/i);
-    expect(text).not.toContain("notes");
+    const review = fresh();
+    const extra = {
+      ...review,
+      accountName: "private-name",
+      notes: "private-note",
+      entries: review.entries.map((entry) => ({ ...entry, token: "private-token" })),
+    };
+    const exported = encodeSharedDeviceHandback(extra);
+    expect(JSON.parse(exported)).toEqual(review);
+    expect(exported).not.toContain("private-");
   });
 
   it("rejects a tampered unknown item rather than silently dropping it", () => {

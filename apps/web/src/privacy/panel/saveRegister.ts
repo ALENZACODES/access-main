@@ -48,6 +48,7 @@ export const SAVE_REGISTER: readonly SaveRow[] = [
   row("text", "apps/web/src/states/downloadFile.ts", 1, ["Any file handed to the shared download helper", "Tout fichier confié à l’outil de téléchargement commun"]),
   row("none", "apps/web/src/privacy/panel/mount.ts", 1, ["The lists and files this panel prepares", "Les listes et fichiers que ce panneau prépare"]),
   row("json", "apps/web/src/offline/robust/sourceLedgerPanel.ts", 1, ["A source ledger", "Un registre des sources"]),
+  row("json-and-text", "apps/web/src/offline/robust/sharedDeviceHandbackExport.ts", 1, ["A shared-device handback review", "Un examen de restitution d’un appareil partagé"]),
   row("json-and-text", "apps/web/src/offline/robust/contingencyExport.ts", 1, ["A contingency plan for a region", "Un plan de contingence pour une région"]),
   row("json-and-text", "apps/web/src/offline/robust/packChangeImpactPanel.ts", 1, ["A comparison of the effect of a pack change", "Une comparaison de l’effet d’un changement de paquet"]),
   row("json-and-text", "apps/web/src/offline/robust/continuityDrillExport.ts", 1, ["An offline continuity report", "Un rapport de continuité hors ligne"]),

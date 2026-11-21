@@ -55,7 +55,7 @@ export function sharedDeviceHandbackFilename(
   reviewId: string,
   format: "json" | "txt",
 ): string {
-  const safe = reviewId.replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 64) || "review";
+  const safe = reviewId.replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 64).replace(/^-+|-+$/g, "") || "review";
   return "shared-device-handback-" + safe + "." + format;
 }
 

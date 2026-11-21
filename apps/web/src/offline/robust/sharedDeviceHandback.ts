@@ -299,7 +299,7 @@ export function pageHandback(
     !HANDBACK_ORDERS.includes(query.order)) {
     throw new TypeError("Invalid handback page query");
   }
-  const term = query.search.slice(0, 120).normalize("NFKC").toLocaleLowerCase();
+  const term = query.search.slice(0, 120).normalize("NFKC").trim().toLowerCase();
   const entries = review.entries.filter((entry) => {
     const definition = ITEM_BY_ID.get(entry.itemId)!;
     if (query.category !== "all" && definition.category !== query.category) return false;

@@ -98,6 +98,7 @@ export function mountSharedDeviceHandback(
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
   status.setAttribute("aria-atomic", "true");
+  const exportHint = element(doc, "p", c.filePrivate);
   const controls = element(doc, "div");
   const start = action(doc, c.capture);
   const reset = action(doc, c.reset);
@@ -150,7 +151,7 @@ export function mountSharedDeviceHandback(
 
   section.append(
     heading, intro, boundary, privacy, history, resetBoundary, status, controls,
-    importLabel, importHint, importButton, summaryHeading, summary,
+    exportHint, importLabel, importHint, importButton, summaryHeading, summary,
     filterControls, pageHost,
   );
   root.append(section);
