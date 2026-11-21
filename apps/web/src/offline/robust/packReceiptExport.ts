@@ -52,7 +52,7 @@ export function receiptComparisonText(diff: ReceiptDiff | null, language: Langua
 export function receiptSingleText(receipt: PackReceipt, language: Language): string {
   const fr = language === "fr";
   const label = (en: string, french: string): string => fr ? french : en;
-  const colon = fr ? "\\u00a0:" : ":";
+  const colon = fr ? "\u00a0:" : ":";
   const out = [
     label("Offline pack receipt", "Reçu de pack hors ligne"),
     label("Region", "Région") + colon + " " + receipt.regionId,
@@ -78,7 +78,7 @@ export function receiptSingleText(receipt: PackReceipt, language: Language): str
     "This is a historical device reading. It does not establish current storage or physical access.",
     "Cette lecture est historique. Elle n’établit ni le stockage actuel ni l’accès physique.",
   ));
-  return out.join("\\n") + "\\n";
+  return out.join("\n") + "\n";
 }
 
 export function receiptBookText(book: ReceiptBook, language: Language): string {
