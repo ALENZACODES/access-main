@@ -336,7 +336,76 @@ export function mountOfflineDashboard(
     // The original offline controls remain available when this optional view fails.
   });
 
-  // Optional private handout editor: load only on a deliberate user action.
+  const coordinationHost = element("div");
+  const openCoordinationLabel = language === "fr" ? "Ouvrir la fiche de coordination" : "Open coordination brief";
+  const closeCoordinationLabel = language === "fr" ? "Fermer la fiche de coordination" : "Close coordination brief";
+  const coordinationLaunch = action(openCoordinationLabel);
+  coordinationLaunch.style.minHeight = "44px";
+  coordinationLaunch.style.minWidth = "44px";
+  section.append(coordinationLaunch, coordinationHost);
+  let coordinationDisposed = false;
+  let coordinationOpen = false;
+  let coordinationRevision = 0;
+  let unmountCoordination: () => void = () => undefined;
+  // Explicit user action: no additional visual panel is loaded during pack-page mount.
+  const onCoordinationLaunch = (): void => {
+    if (coordinationDisposed) return;
+    if (coordinationOpen) {
+      coordinationOpen = false;
+      coordinationRevision += 1;
+      unmountCoordination();
+      unmountCoordination = () => undefined;
+      coordinationLaunch.textContent = openCoordinationLabel;
+      return;
+    }
+    coordinationOpen = true;
+    const token = ++coordinationRevision;
+    coordinationLaunch.textContent = closeCoordinationLabel;
+    coordinationHost.replaceChildren();
+    void import("./coordinationBriefPanel").then(({ mountOfflineCoordinationBrief }) => {
+      if (coordinationDisposed || !coordinationOpen || token !== coordinationRevision) return;
+      unmountCoordination = mountOfflineCoordinationBrief(coordinationHost, manifest, language);
+    }).catch(() => {
+      if (coordinationDisposed || !coordinationOpen || token !== coordinationRevision) return;
+      coordinationOpen = false;
+      coordinationLaunch.textContent = openCoordinationLabel;
+      coordinationHost.textContent = "UNKNOWN";
+    });
+  };
+  coordinationLaunch.addEventListener("click", onCoordinationLaunch);
+
+  const snapshotHost = element("div");
+  const snapshotLaunch = action(language === "fr" ? "Ouvrir la comparaison des instantanés" : "Open snapshot comparison");
+  snapshotHost.append(snapshotLaunch);
+  section.append(snapshotHost);
+  let snapshotDisposed = false;
+  let snapshotOpen = false;
+  let snapshotRevision = 0;
+  let unmountSnapshot: () => void = () => undefined;
+  const onSnapshotLaunch = (): void => {
+    if (snapshotDisposed) return;
+    if (snapshotOpen) {
+      snapshotOpen = false;
+      snapshotRevision += 1;
+      unmountSnapshot();
+      unmountSnapshot = () => undefined;
+      snapshotLaunch.textContent = language === "fr" ? "Ouvrir la comparaison des instantanés" : "Open snapshot comparison";
+      return;
+    }
+    snapshotOpen = true;
+    const revision = ++snapshotRevision;
+    snapshotLaunch.textContent = language === "fr" ? "Fermer la comparaison des instantanés" : "Close snapshot comparison";
+    void import("./snapshotComparisonPanel").then(({ mountSnapshotComparison }) => {
+      if (snapshotDisposed || !snapshotOpen || revision !== snapshotRevision) return;
+      unmountSnapshot = mountSnapshotComparison(snapshotHost, manifest, model, language);
+    }).catch(() => {
+      if (snapshotDisposed || revision !== snapshotRevision) return;
+      snapshotOpen = false;
+      snapshotLaunch.textContent = language === "fr" ? "Ouvrir la comparaison des instantanés" : "Open snapshot comparison";
+    });
+  };
+  snapshotLaunch.addEventListener("click", onSnapshotLaunch);
+
   const questionHost = element("div");
   const questionLaunch = action(language === "fr" ? "Ouvrir la fiche de questions" : "Open question sheet");
   questionHost.append(questionLaunch);
@@ -501,6 +570,14 @@ export function mountOfflineDashboard(
     unmountInquiry();
     contingencyDisposed = true;
     unmountContingency();
+    coordinationDisposed = true;
+    coordinationRevision += 1;
+    coordinationLaunch.removeEventListener("click", onCoordinationLaunch);
+    unmountCoordination();
+    snapshotDisposed = true;
+    snapshotRevision += 1;
+    snapshotLaunch.removeEventListener("click", onSnapshotLaunch);
+    unmountSnapshot();
     questionDisposed = true;
     questionRevision += 1;
     questionLaunch.removeEventListener("click", onQuestionLaunch);
