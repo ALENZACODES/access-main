@@ -14,7 +14,7 @@ function allStrings(l: "en" | "fr"): string[] {
     copy.helpHeading(l), copy.helpLead(l), copy.helpDropped(1, l), copy.helpDropped(4, l), copy.noNumberNote(l), copy.noHowNote(l),
     copy.otherLanguageNote(other, l), copy.saidLine(row, l), copy.kindLine(row, l), copy.helpToolsLabel(true, l), copy.helpToolsLabel(false, l),
     copy.helpSearchLabel(l), copy.helpSearchHelp(l), copy.helpSortLabel(l), copy.helpSortName("pack", l), copy.helpSortName("name", l),
-    copy.helpSaveText(l), copy.helpSaveCsv(l), copy.helpSaved("a.csv", l), copy.helpSaveFailed(l), copy.nameOrId(rowFor(help({ name: { en: null, fr: null } }), l), l),
+    copy.helpSaveText(l), copy.helpSaveCsv(l), copy.helpSaveAudit(l), copy.helpSaveAuditCsv(l), copy.helpSaved("a.csv", l), copy.helpSaveFailed(l), copy.nameOrId(rowFor(help({ name: { en: null, fr: null } }), l), l),
   ];
 }
 

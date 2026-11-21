@@ -3,6 +3,7 @@
  * parts that are missing, a copy that is old, or one number saved under two entries. It reads only
  * what the pack holds; it cannot say whether a number still works, and it never says it does.
  */
+import { csvCell } from "./exportData";
 import { readContact } from "./helpContact";
 import type { HelpNumber } from "./packHelp";
 import type { Locale } from "./stateCopy";
@@ -119,4 +120,15 @@ export function auditToText(items: readonly HelpNumber[], today: string, locale:
     for (const f of mine) lines.push(`- ${findingText(f, locale)}`);
   }
   return `${lines.join("\n")}\n`;
+}
+
+export const AUDIT_CSV_COLUMNS = ["id", "code", "detail", "finding"] as const;
+
+/** The findings as CSV, one row each, with the sentence in the given language. Header only when there are none. */
+export function auditToCsv(items: readonly HelpNumber[], today: string, locale: Locale, opts: { bom?: boolean } = {}): string {
+  const lines = [AUDIT_CSV_COLUMNS.join(",")];
+  for (const f of auditHelp(items, today)) {
+    lines.push([f.id, f.code, f.detail ?? "UNKNOWN", findingText(f, locale)].map(csvCell).join(","));
+  }
+  return `${opts.bom ? "\uFEFF" : ""}${lines.join("\r\n")}\r\n`;
 }

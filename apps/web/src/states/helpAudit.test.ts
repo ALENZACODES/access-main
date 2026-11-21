@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import contentText from "../../public/packs/toronto/content.json?raw";
-import { HELP_FINDING_CODES, HELP_STALE_DAYS, auditHelp, auditToText, daysBetween, findingText, summariseAudit, type HelpFindingCode } from "./helpAudit";
+import { AUDIT_CSV_COLUMNS, HELP_FINDING_CODES, HELP_STALE_DAYS, auditHelp, auditToCsv, auditToText, daysBetween, findingText, summariseAudit, type HelpFindingCode } from "./helpAudit";
+import { parseCsv } from "./csvParse";
 import { lintCopy } from "./copyLint";
 import { help } from "./helpFixtures";
 import { parseHelpNumbers } from "./packHelp";
@@ -152,5 +153,39 @@ describe("auditToText", () => {
   it("has a title underline as long as the title", () => {
     const [title, rule] = auditToText([], TODAY, "en").split("\n");
     expect(rule).toBe("=".repeat(title!.length));
+  });
+});
+
+describe("auditToCsv", () => {
+  const read = (csv: string) => {
+    const r = parseCsv(csv.replace(/^\ufeff/, ""));
+    if (!r.ok) throw new Error("csv did not parse");
+    return r.rows as string[][];
+  };
+  it("has the header only when there are no findings", () => {
+    expect(auditToCsv([help()], TODAY, "en")).toBe(`${AUDIT_CSV_COLUMNS.join(",")}\r\n`);
+    expect(auditToCsv([], TODAY, "en")).toBe(`${AUDIT_CSV_COLUMNS.join(",")}\r\n`);
+  });
+  it("has one row for each finding with its sentence", () => {
+    const rows = read(auditToCsv([bare], TODAY, "en"));
+    expect(rows).toHaveLength(auditHelp([bare], TODAY).length + 1);
+    expect(rows[1]).toEqual(["b", "no-number", "UNKNOWN", "No number is saved."]);
+  });
+  it("gives the detail of an old copy and of a repeated number", () => {
+    const rows = read(auditToCsv([help({ id: "a", retrievedOn: "2026-01-01" }), help({ id: "b" })], TODAY, "en"));
+    expect(rows.find((r) => r[1] === "old-copy")?.[2]).toBe("324");
+    expect(rows.find((r) => r[1] === "same-number")?.slice(0, 3)).toEqual(["b", "same-number", "a"]);
+  });
+  it("is in French with a byte order mark when asked", () => {
+    const csv = auditToCsv([bare], TODAY, "fr", { bom: true });
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    expect(read(csv)[1]?.[3]).toBe("Aucun num\u00e9ro n\u2019est enregistr\u00e9.");
+  });
+  it("has the same number of cells in every row", () => {
+    for (const r of read(auditToCsv([bare, help({ id: "q", retrievedOn: "2020-01-01" })], TODAY, "en"))) expect(r).toHaveLength(AUDIT_CSV_COLUMNS.length);
+  });
+  it("neutralises a finding that would run as a formula", () => {
+    const rows = read(auditToCsv([help({ id: "=SUM(A1)", tier: null })], TODAY, "en"));
+    expect(rows[1]?.[0]?.startsWith("'")).toBe(true);
   });
 });

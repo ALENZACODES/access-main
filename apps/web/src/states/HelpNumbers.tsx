@@ -3,10 +3,10 @@ import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { saveTextFile } from "./downloadFile.ts";
 import {
-  helpDropped, helpHeading, helpLead, helpSaveAudit, helpSaveCsv, helpSaveFailed, helpSaveText, helpSaved, helpSearchHelp, helpSearchLabel, helpSortLabel, helpSortName,
+  helpDropped, helpHeading, helpLead, helpSaveAudit, helpSaveAuditCsv, helpSaveCsv, helpSaveFailed, helpSaveText, helpSaved, helpSearchHelp, helpSearchLabel, helpSortLabel, helpSortName,
   helpSourceLine, helpToolsLabel, kindLine, nameOrId, noHowNote, noNumberNote, otherLanguageNote, pageLine, saidLine,
 } from "./helpCopy.ts";
-import { auditToText } from "./helpAudit.ts";
+import { auditToCsv, auditToText } from "./helpAudit.ts";
 import { helpFileName, helpToCsv, helpToText } from "./helpExport.ts";
 import { EMPTY_HELP_QUERY, HELP_SORTS, isHelpSort, viewHelp, type HelpQuery } from "./helpView.ts";
 import { parseHelpNumbers } from "./packHelp.ts";
@@ -41,10 +41,10 @@ export function HelpNumbers({ numbers, locale, today }: Props) {
   const view = useMemo(() => viewHelp(parsed.items, query, locale), [parsed.items, query, locale]);
   if (parsed.items.length === 0 && parsed.dropped === 0) return null;
 
-  const save = (kind: "csv" | "txt" | "audit") => {
-    const name = kind === "audit" ? `help-numbers-check-${day}.txt` : helpFileName(kind, day);
-    const content = kind === "csv" ? helpToCsv(view.rows.map((r) => r.item), { bom: true }) : kind === "audit" ? auditToText(parsed.items, day, locale) : helpToText(view.rows, day, locale, query);
-    const done = saveTextFile({ name, mime: kind === "csv" ? "text/csv;charset=utf-8" : "text/plain;charset=utf-8", content });
+  const save = (kind: "csv" | "txt" | "audit" | "auditcsv") => {
+    const name = kind === "audit" ? `help-numbers-check-${day}.txt` : kind === "auditcsv" ? `help-numbers-check-${day}.csv` : helpFileName(kind, day);
+    const content = kind === "auditcsv" ? auditToCsv(parsed.items, day, locale, { bom: true }) : kind === "csv" ? helpToCsv(view.rows.map((r) => r.item), { bom: true }) : kind === "audit" ? auditToText(parsed.items, day, locale) : helpToText(view.rows, day, locale, query);
+    const done = saveTextFile({ name, mime: kind === "csv" || kind === "auditcsv" ? "text/csv;charset=utf-8" : "text/plain;charset=utf-8", content });
     setSaved(done ? helpSaved(name, locale) : helpSaveFailed(locale));
   };
   const dropped = helpDropped(parsed.dropped, locale);
@@ -72,6 +72,7 @@ export function HelpNumbers({ numbers, locale, today }: Props) {
               <Button variant="secondary" onPress={() => save("txt")}>{helpSaveText(locale)}</Button>
               <Button variant="secondary" onPress={() => save("csv")}>{helpSaveCsv(locale)}</Button>
               <Button variant="secondary" onPress={() => save("audit")}>{helpSaveAudit(locale)}</Button>
+              <Button variant="secondary" onPress={() => save("auditcsv")}>{helpSaveAuditCsv(locale)}</Button>
             </div>
             <p aria-live="polite" data-help-saved>{saved}</p>
           </>

@@ -100,6 +100,10 @@ export function helpSaveAudit(locale: Locale): string {
   return t(locale, "Save a check for gaps", "Enregistrer un contrôle des lacunes");
 }
 
+export function helpSaveAuditCsv(locale: Locale): string {
+  return t(locale, "Save the gap check as a CSV file", "Enregistrer le contrôle des lacunes en fichier CSV");
+}
+
 export function helpSaved(file: string, locale: Locale): string {
   return t(locale, `Saved ${file}.`, `${file} enregistré.`);
 }

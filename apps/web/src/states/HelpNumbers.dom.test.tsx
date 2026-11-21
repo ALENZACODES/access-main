@@ -110,6 +110,23 @@ describe("HelpNumbers, English", () => {
     expect(saved.calls[0]!.content).toContain("6 entries, 1 with findings.");
     expect(saved.calls[0]!.content).toContain("emergency-911");
   });
+  it("saves the gap check as CSV with a byte order mark and its own file name", () => {
+    render(<HelpNumbers numbers={pack} locale="en" today={TODAY} />);
+    fireEvent.click(screen.getByRole("button", { name: /Search and save the numbers/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Save the gap check as a CSV file" }));
+    const f = saved.calls[0]!;
+    expect(f.name).toBe("help-numbers-check-2026-11-21.csv");
+    expect(f.mime).toBe("text/csv;charset=utf-8");
+    expect(f.content.charCodeAt(0)).toBe(0xfeff);
+    expect(f.content).toContain("emergency-911,no-page");
+  });
+  it("saves the gap check in French on the French page", () => {
+    render(<HelpNumbers numbers={pack} locale="fr" today={TODAY} />);
+    fireEvent.click(screen.getByRole("button", { name: /Chercher et enregistrer/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Enregistrer un contr\u00f4le des lacunes" }));
+    expect(saved.calls[0]!.content).toContain("Contr\u00f4le des num\u00e9ros d\u2019aide enregistr\u00e9s");
+    expect(saved.calls[0]!.content).toContain("Aucune adresse de page n\u2019est enregistr\u00e9e.");
+  });
   it("says when saving failed", () => {
     saved.ok = false;
     render(<HelpNumbers numbers={pack} locale="en" today={TODAY} />);
