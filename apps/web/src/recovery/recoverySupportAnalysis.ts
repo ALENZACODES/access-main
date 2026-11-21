@@ -1,3 +1,4 @@
+import { recoverySupportCopy } from "./recoverySupportCopy";
 import {
   briefSummary, type BriefCondition, type BriefDocument,
   type BriefObservation, type BriefQuestion, type BriefQuestionTopic, type BriefSource,
@@ -149,16 +150,18 @@ export function briefReport(document: BriefDocument, asOf: string): BriefReport 
 }
 export function briefNarrative(document: BriefDocument, asOf: string, locale: "en" | "fr"): string {
   const report = briefReport(document, asOf);
+  const copy = recoverySupportCopy(locale);
+  const separator = locale === "fr" ? "\u00a0: " : ": ";
   const lines = locale === "fr"
     ? [`Résumé de récupération — ${asOf}`, `Dossiers\u00a0: ${report.briefs}`, `Questions\u00a0: ${report.questions}`, `Valeurs UNKNOWN\u00a0: ${report.unknown}`, `Points à examiner\u00a0: ${report.findings.length}`,
       "Ces notes ne confirment pas que les ensembles sont utilisables."]
     : [`Recovery support brief — ${asOf}`, `Cases: ${report.briefs}`, `Questions: ${report.questions}`, `UNKNOWN values: ${report.unknown}`, `Review findings: ${report.findings.length}`,
       "These notes do not establish that any pack is usable."];
   for (const entry of document.briefs) {
-    const item = `${entry.packId} — ${entry.title} (${entry.condition}, ${entry.state})`;
+    const item = `${entry.packId} — ${entry.title} (${copy.conditions[entry.condition]}, ${copy.states[entry.state]})`;
     lines.push(item);
     for (const question of briefQuestionsFor(document, entry.id)) {
-      lines.push(`- ${question.topic}: ${question.question} [${question.state}]`);
+      lines.push(`- ${copy.topics[question.topic]}${separator}${question.question} [${copy.questionStates[question.state]}]`);
     }
   }
   return lines.join("\n");

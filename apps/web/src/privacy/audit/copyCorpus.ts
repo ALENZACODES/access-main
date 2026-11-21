@@ -39,6 +39,8 @@ const STATUSES: readonly Status[] = [
   { kind: "kept-exported", format: "text" },
   { kind: "features-exported", format: "csv" },
   { kind: "features-exported", format: "text" },
+  { kind: "handoff-exported", format: "csv" },
+  { kind: "handoff-exported", format: "text" },
   { kind: "seen-saved" },
   { kind: "import-ready", additions: 2, overwrites: 1, unchanged: 3 },
   { kind: "import-done", count: 4 },

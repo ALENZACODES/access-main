@@ -80,7 +80,8 @@ export function briefReviewText(plan: BriefReviewPlan, locale: "en" | "fr"): str
   const lines = locale === "fr"
     ? [`Dossier ${plan.briefId}`, `Ensemble\u00a0: ${plan.packId}`]
     : [`Brief ${plan.briefId}`, `Pack: ${plan.packId}`];
-  for (const topic of plan.topics) lines.push(`${labels[topic.topic]}: ${topic.status === "UNKNOWN" ? "UNKNOWN" : `${topic.answered}/${topic.recorded}`}`);
+  const separator = locale === "fr" ? "\u00a0: " : ": ";
+  for (const topic of plan.topics) lines.push(`${labels[topic.topic]}${separator}${topic.status === "UNKNOWN" ? "UNKNOWN" : `${topic.answered}/${topic.recorded}`}`);
   lines.push(locale === "fr" ? "Ce bilan ne confirme jamais qu’un ensemble est utilisable." : "This summary never confirms a pack is usable.");
   return lines.join("\n");
 }

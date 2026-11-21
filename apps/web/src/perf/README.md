@@ -18,6 +18,14 @@ that only `/map` requests. The guard fails if any of them is ever precached,
 and prints their size separately. `@access-main/budgets`
 (`check:web-precache`) still checks the per-file and precache limits.
 
+The `/dev/narrow` audit page is a developer tool. Its chunk
+(`NarrowAuditPage-*.js`, loaded lazily by the router) is built and fetched
+when the page is opened, but `vite.config.ts` keeps it out of the precache
+(`globIgnores`), so it is not part of the first install and the page does not
+work offline. The install guard is unchanged: it measures every precached
+file. `src/perf/narrow-precache.test.ts` fails if the page stops being lazy or
+the ignore goes away.
+
 ## Measured on this branch
 
 Start-up JS (modulepreload set on `/`): about 827,000 B before the split,

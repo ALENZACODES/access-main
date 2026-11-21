@@ -1,6 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, ReactElement } from "react";
 import type { LocalPackRecord } from "./packInventory";
+import { saveTextFile } from "../states/downloadFile";
 import type { SaveTextFile } from "./recoveryExport";
 import {
   BRIEF_CONDITIONS, BRIEF_LIMITS, BRIEF_OPERATIONS, BRIEF_QUESTION_STATES,
@@ -29,11 +30,16 @@ const frame: CSSProperties = {
 const touch: CSSProperties = { minHeight: 44, minWidth: 44, maxWidth: "100%", boxSizing: "border-box", font: "inherit", padding: "10px 12px" };
 const row: CSSProperties = { display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-start", minWidth: 0 };
 const field: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 4, flex: "1 1 160px", minWidth: 0, maxWidth: "100%" };
-const card: CSSProperties = { ...frame, padding: 12, marginBlock: 6 };
 const MAX_VISIBLE = 70;
 
+const saveLocalBrief: SaveTextFile = async (name, content) => {
+  const mime = name.endsWith(".json") ? "application/json" : "text/plain;charset=utf-8";
+  if (!saveTextFile({ name, content, mime })) throw new Error("Download unavailable");
+};
+
 /** All actions are manual. No network, background work, browser storage or installed-pack changes. */
-export function RecoverySupportBriefPanel({ locale, records, inspected, saveFile, onInspect }: RecoverySupportBriefPanelProps): ReactElement {
+export function RecoverySupportBriefPanel({ locale, records, inspected, saveFile = saveLocalBrief, onInspect }: RecoverySupportBriefPanelProps): ReactElement {
+  const card: CSSProperties = { ...frame, padding: 12, marginBlock: 6 };
   const copy = recoverySupportCopy(locale);
   const heading = useId();
   const listHeading = useId();
@@ -139,7 +145,7 @@ export function RecoverySupportBriefPanel({ locale, records, inspected, saveFile
     fileInput.current?.focus();
   }
   async function saveText(asNarrative: boolean): Promise<void> {
-    if (!saveFile || saving) return;
+    if (saving) return;
     if (!auditBriefPrivacy(document).safeToShare) { setMessage(copy.issues.privacy); return; }
     const result = exportBriefs(document);
     if (!result.ok) { setMessage(copy.issues[result.issue]); return; }
@@ -216,7 +222,7 @@ export function RecoverySupportBriefPanel({ locale, records, inspected, saveFile
       <h3 id={reviewHeading}>{copy.review}</h3>
       <p>{copy.cases}{sep}{overview.briefs}</p><p>{copy.unresolved}{sep}{overview.unanswered}</p>
       <p>{copy.findings}{sep}{coverage.withConflicts + coverage.withUnansweredQuestions}</p>
-      <ul>{queue.map((item) => <li key={item.briefId}>{item.packId} — {item.title} — {item.reasons.join(", ")}</li>)}</ul>
+      <ul>{queue.map((item) => <li key={item.briefId}>{item.packId} — {item.title} — {item.reasons.map((reason) => copy.findingLabels[reason]).join(", ")}</li>)}</ul>
     </section>
     <section aria-labelledby={`${heading} ${listHeading}`}>
       <h3 id={listHeading}>{copy.list}</h3>
@@ -237,10 +243,10 @@ export function RecoverySupportBriefPanel({ locale, records, inspected, saveFile
         aria-label={copy.open} onChange={(event: ChangeEvent<HTMLInputElement>) => { void chooseFile(event); }} />
       {preview && <div><p>{copy.staged}</p><p>{preview.incoming} / {preview.conflicts.length}</p>
         <button type="button" style={touch} disabled={!preview.canMerge} onClick={acceptFile}>{copy.merge}</button></div>}
-      {saveFile && <div style={row}>
+      <div style={row}>
         <button type="button" style={touch} disabled={saving} onClick={() => { void saveText(false); }}>{copy.save}</button>
         <button type="button" style={touch} disabled={saving} onClick={() => { void saveText(true); }}>{copy.saveNarrative}</button>
-      </div>}
+      </div>
     </section>
   </section>;
 }

@@ -25,7 +25,7 @@ The panel uses native labels and buttons, minimum 44 CSS-pixel targets for contr
 
 ## Integration and budget
 
-The existing dashboard calls `import("./accessInquiryPanel")`, keeping this panel outside the initial offline entry chunk. A disposal guard prevents asynchronous mounting after unmount; the returned cleanup removes event listeners and its model subscription. The public barrel exports the model, copy and report API, but not the panel module itself. Existing offline mounts and their teardown remain unchanged.
+The existing dashboard calls `import("./accessInquiryPanel")`, keeping this panel outside the initial offline entry chunk. A disposal guard prevents asynchronous mounting after unmount; the returned cleanup removes event listeners and its model subscription. The public barrel exports the model, copy, report API, and `accessInquiryPanel` mount. The dashboard mounts the panel through a deferred import to keep it outside the initial offline entry chunk. Existing offline mounts and their teardown remain unchanged.
 
 Neither per-file nor total precache limits should be adjusted. Actual budget compliance must be measured with the repository's production build and precache checker, including the 524,288-byte per-entry limit.
 

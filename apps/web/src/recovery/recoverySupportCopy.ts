@@ -1,3 +1,4 @@
+import type { BriefFindingCode } from "./recoverySupportAnalysis";
 import type { BriefCondition, BriefEventAction, BriefIssue, BriefOperation, BriefQuestionState, BriefQuestionTopic, BriefState, BriefTier } from "./recoverySupportBrief";
 export interface SupportCopy {
   readonly title: string;
@@ -46,6 +47,7 @@ export interface SupportCopy {
   readonly reopen: string;
   readonly cases: string;
   readonly findings: string;
+  readonly findingLabels: Readonly<Record<BriefFindingCode, string>>;
   readonly actions: Readonly<Record<BriefEventAction, string>>;
   readonly conditions: Readonly<Record<BriefCondition, string>>;
   readonly operations: Readonly<Record<BriefOperation, string>>;
@@ -80,6 +82,15 @@ const en: SupportCopy = {
   empty: "No briefs recorded locally.", list: "Recorded briefs", review: "Items for manual review", count: "Records", unresolved: "Open questions", search: "Search briefs", clear: "Clear search",
   file: "Local JSON file", open: "Choose local file", merge: "Add compatible records", save: "Save JSON", saveNarrative: "Save text summary", saved: "File saved.", failed: "The file could not be saved or opened.", pending: "Reading local file…", staged: "A local file is ready for review.", noFile: "No file selected.",
   requestReview: "Request review", archive: "Archive documentation", reopen: "Reopen review", cases: "Briefs", findings: "Review findings",
+  findingLabels: {
+    "unknown-condition": "Condition is UNKNOWN",
+    "missing-observation": "No observation recorded",
+    "unanswered-question": "Unanswered question",
+    "disputed-answer": "Deferred question",
+    "conflicting-observation": "Conflicting observations",
+    "stale-source": "Source retrieved over 90 days ago",
+    "unfinished-review": "Review is open",
+  },
   actions: { created: "Created", "question-added": "Question added", "observation-added": "Observation added", "review-requested": "Review requested", reopened: "Reopened", archived: "Archived" },
   conditions: { UNKNOWN: "UNKNOWN", interrupted: "Interrupted", missing: "Missing", conflicting: "Conflicting", unavailable: "Unavailable" },
   operations: { pack: "Pack inspection", download: "Download", storage: "Storage", transfer: "Transfer", other: "Other" },
@@ -99,6 +110,15 @@ const fr: SupportCopy = {
   empty: "Aucun résumé consigné localement.", list: "Résumés consignés", review: "Éléments à examiner manuellement", count: "Dossiers", unresolved: "Questions en attente", search: "Rechercher les résumés", clear: "Effacer la recherche",
   file: "Fichier JSON local", open: "Choisir un fichier local", merge: "Ajouter les dossiers compatibles", save: "Enregistrer JSON", saveNarrative: "Enregistrer le résumé texte", saved: "Fichier enregistré.", failed: "Le fichier n’a pas pu être ouvert ou enregistré.", pending: "Lecture du fichier local…", staged: "Un fichier local est prêt à examiner.", noFile: "Aucun fichier sélectionné.",
   requestReview: "Demander une révision", archive: "Archiver les notes", reopen: "Rouvrir la révision", cases: "Résumés", findings: "Points à examiner",
+  findingLabels: {
+    "unknown-condition": "État UNKNOWN",
+    "missing-observation": "Aucune observation consignée",
+    "unanswered-question": "Question sans réponse",
+    "disputed-answer": "Question reportée",
+    "conflicting-observation": "Observations contradictoires",
+    "stale-source": "Source consultée il y a plus de 90 jours",
+    "unfinished-review": "Révision en cours",
+  },
   actions: { created: "Créé", "question-added": "Question ajoutée", "observation-added": "Observation ajoutée", "review-requested": "Révision demandée", reopened: "Rouvert", archived: "Archivé" },
   conditions: { UNKNOWN: "UNKNOWN", interrupted: "Interrompu", missing: "Manquant", conflicting: "Contradictoire", unavailable: "Indisponible" },
   operations: { pack: "Examen de l’ensemble", download: "Téléchargement", storage: "Stockage", transfer: "Transfert", other: "Autre" },

@@ -105,6 +105,11 @@ describe("English and French text handoff", () => {
   it("includes a plain disclaimer in English", () => { expect(briefNarrative(base(), "2026-11-19", "en")).toContain("do not establish"); });
   it("includes a plain disclaimer in French", () => { expect(briefNarrative(base(), "2026-11-19", "fr")).toContain("ne confirment pas"); });
   it("uses a nonbreaking space before French colon labels", () => { expect(briefNarrative(base(), "2026-11-19", "fr")).toContain("\u00a0:"); });
+  it("localises the topic and the case state while preserving the question as entered", () => {
+    const narrative = briefNarrative(sample(), "2026-11-19", "fr");
+    expect(narrative).toContain("Transfert\u00a0: Which source is missing? [UNKNOWN]");
+    expect(narrative).toContain("(UNKNOWN, Brouillon)");
+  });
   it("does not insert contact details", () => { expect(briefNarrative(base(), "2026-11-19", "en")).not.toMatch(/@example|\+1-\d{3}/u); });
   it("does not export private access tokens", () => { expect(briefNarrative(base(), "2026-11-19", "en")).not.toContain("apiKey"); });
 });
