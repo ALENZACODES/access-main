@@ -178,7 +178,7 @@ function receiptCell(cell: RegionManifest["cells"][number], observed: RegionInve
 }
 
 function orderedCells(cells: readonly PackReceiptCell[]): PackReceiptCell[] {
-  return [...cells].sort((a, b) => a.id.localeCompare(b.id));
+  return [...cells].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
 /** Canonical payload: fixed key order and cell order make the digest reproducible. */
