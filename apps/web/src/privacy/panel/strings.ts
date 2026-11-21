@@ -2,6 +2,7 @@
 // stores: that comes from the inventory the caller passes in.
 // FR typography: ’ apostrophe, U+00A0 before ":", U+202F before ; ! ? and inside « ».
 
+import { workerSummary } from "./autoLive";
 import { browserSummary } from "./browserLive";
 import { liveSummary } from "./retentionLive";
 import { addressSummary } from "./queryLive";
@@ -37,6 +38,9 @@ export type Status =
   | { kind: "query-exported"; format: "csv" | "text" }
   | { kind: "query-checked"; params: number; findings: number }
   | { kind: "query-unreadable" }
+  | { kind: "auto-exported"; format: "csv" | "text" }
+  | { kind: "workers-checked"; registered: number | null; differences: number }
+  | { kind: "picks-exported"; format: "csv" | "text" }
   | { kind: "statements-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
@@ -152,6 +156,12 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `List of what a web address can carry prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "retention-checked":
           return liveSummary("en", s.compared, s.differences);
+        case "workers-checked":
+          return workerSummary("en", s.registered, s.differences);
+        case "auto-exported":
+          return `List of what the App does on its own prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "picks-exported":
+          return `List of files the App reads when you choose them prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "browser-checked":
           return browserSummary("en", s.answered, s.asked);
         case "browser-exported":
@@ -244,6 +254,12 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Liste de ce qu’une adresse web peut contenir préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "retention-checked":
           return liveSummary("fr", s.compared, s.differences);
+        case "workers-checked":
+          return workerSummary("fr", s.registered, s.differences);
+        case "auto-exported":
+          return `Liste de ce que l’App fait d’elle-même préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "picks-exported":
+          return `Liste des fichiers que l’App lit quand vous les choisissez préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "browser-checked":
           return browserSummary("fr", s.answered, s.asked);
         case "browser-exported":
