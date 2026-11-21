@@ -25,8 +25,9 @@ import { renderHandoffHtml } from "./handoffSection";
 import type { QueryRow } from "./queryRegister";
 import type { AddressCheck } from "./queryLive";
 import { renderQueryHtml } from "./querySection";
-import type { PickRow } from "./pickRegister";
-import { renderPickHtml } from "./pickSection";
+import type { BrowserRow } from "./browserRegister";
+import type { BrowserCheckView } from "./browserLive";
+import { renderBrowserHtml } from "./browserSection";
 import type { RetentionRow } from "./retentionRegister";
 import { renderRetentionHtml, type RetentionCheckView } from "./retentionSection";
 import type { StatementResult } from "./statementRegister";
@@ -82,8 +83,10 @@ export interface PanelView {
   queryCheck?: AddressCheck;
   /** Whether the check button is shown. Off when the page cannot read its own address. */
   queryCanCheck?: boolean;
-  /** The places that read a file you choose. Leave undefined to hide the section. */
-  picks?: readonly PickRow[];
+  /** The places that ask the browser about the device or settings. Leave undefined to hide the section. */
+  browser?: readonly BrowserRow[];
+  /** What the browser said when asked now. Leave undefined before the person asks. */
+  browserCheck?: BrowserCheckView;
   /** Where the App says data stays on the device or is not sent. Leave undefined to hide the section. */
   statements?: readonly StatementResult[];
   /** Show the buttons that download everything the App keeps on this device. */
@@ -170,7 +173,7 @@ export function renderPrivacyPanelHtml(view: PanelView): string {
     `${view.receipt === undefined ? "" : renderReceiptHtml(view.locale, view.receipt)}` +
     `${view.handoffs === undefined ? "" : renderHandoffHtml(view.locale, view.handoffs)}` +
     `${view.queries === undefined ? "" : renderQueryHtml(view.locale, view.queries, view.queryCheck ?? null, view.queryCanCheck !== false)}` +
-    `${view.picks === undefined ? "" : renderPickHtml(view.locale, view.picks)}` +
+    `${view.browser === undefined ? "" : renderBrowserHtml(view.locale, view.browser, view.browserCheck ?? null)}` +
     `${view.retention === undefined ? "" : renderRetentionHtml(view.locale, view.retention, view.retentionCheck ?? null)}` +
     `${view.statements === undefined ? "" : renderStatementsHtml(view.locale, view.statements)}` +
     `${view.glance === undefined ? "" : renderGlanceHtml(view.locale, view.glance)}` +

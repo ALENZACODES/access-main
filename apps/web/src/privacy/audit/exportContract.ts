@@ -110,12 +110,12 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
     },
   },
   {
-    id: "picks",
+    id: "browser",
     kind: "csv",
-    stem: { en: "the-app-files-you-choose", fr: "l-app-fichiers-que-vous-choisissez" },
+    stem: { en: "the-app-browser-questions", fr: "l-app-questions-au-navigateur" },
     header: {
-      en: ["What you give", "How", "Kinds offered", "Size limit", "Checked in", "In the code", "Places", "Recorded on"],
-      fr: ["Ce que vous donnez", "Comment", "Types proposés", "Limite de taille", "Contrôlée dans", "Dans le code", "Endroits", "Date d’inscription"],
+      en: ["About", "What it asks", "What it is used for", "In the code", "Places", "Recorded on"],
+      fr: ["Sujet", "Ce qu’elle demande", "À quoi cela sert", "Dans le code", "Endroits", "Date d’inscription"],
     },
   },
   {
@@ -179,10 +179,10 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     title: { en: "What a web address can carry", fr: "Ce qu’une adresse web peut contenir" },
   },
   {
-    id: "picks",
+    id: "browser",
     kind: "text",
-    stem: { en: "the-app-files-you-choose", fr: "l-app-fichiers-que-vous-choisissez" },
-    title: { en: "Where the App reads a file you choose", fr: "Où l’App lit un fichier que vous choisissez" },
+    stem: { en: "the-app-browser-questions", fr: "l-app-questions-au-navigateur" },
+    title: { en: "What the App asks your browser", fr: "Ce que l’App demande à votre navigateur" },
   },
   {
     id: "retention",

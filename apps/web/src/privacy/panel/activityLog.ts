@@ -17,7 +17,7 @@ export type ActivityKind =
   | "handoff-export"
   | "retention-export"
   | "query-export"
-  | "picks-export"
+  | "browser-export"
   | "statements-export"
   | "consent-granted"
   | "consent-declined"
@@ -55,7 +55,7 @@ const KINDS: readonly ActivityKind[] = [
   "handoff-export",
   "retention-export",
   "query-export",
-  "picks-export",
+  "browser-export",
   "statements-export",
   "consent-granted",
   "consent-declined",
