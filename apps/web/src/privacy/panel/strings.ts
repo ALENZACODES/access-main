@@ -25,6 +25,8 @@ export type Status =
   | { kind: "features-exported"; format: "csv" | "text" }
   | { kind: "addresses-exported"; format: "csv" | "text" }
   | { kind: "glance-exported"; format: "csv" | "text" }
+  | { kind: "receipt-exported"; format: "csv" | "text" }
+  | { kind: "statements-exported"; format: "csv" | "text" }
   | { kind: "seen-saved" }
   | MoreStatus
   | DeviceStatus;
@@ -127,6 +129,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `List of web addresses and network requests prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "glance-exported":
           return `Privacy counts prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "receipt-exported":
+          return `Record of your choices prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
+        case "statements-exported":
+          return `List of what the App says about your data prepared as ${s.format === "csv" ? "CSV" : "text"}.`;
         case "seen-saved":
           return "The list is marked as seen.";
         default:
@@ -199,6 +205,10 @@ export const PANEL_STRINGS: Record<Locale, PanelStrings> = {
           return `Liste des adresses web et des requêtes réseau préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "glance-exported":
           return `Chiffres sur la vie privée préparés ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "receipt-exported":
+          return `Registre de vos choix préparé ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
+        case "statements-exported":
+          return `Liste de ce que l’App dit de vos données préparée ${s.format === "csv" ? "au format CSV" : "en texte"}.`;
         case "seen-saved":
           return "La liste est marquée comme vue.";
         default:
