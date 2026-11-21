@@ -29,7 +29,7 @@ function examplePack(): PackManifest {
 }
 
 function definition(container: Locator, label: string) {
-  return container.locator("dt").filter({ hasText: new RegExp("^" + label + "$") }).locator("+ dd");
+  return container.getByText(label, { exact: true }).locator("xpath=following-sibling::dd[1]");
 }
 
 for (const language of ["en", "fr"] as const) {
@@ -38,12 +38,16 @@ for (const language of ["en", "fr"] as const) {
 
     test("compares an IndexedDB manifest after a cold offline reopen", async ({ context, page }) => {
       const pack = examplePack();
-      let partRequests = 0;
+      const paths = new Set(Object.values(pack.search).map(part => "/data/" + part.path));
+      const partRequests: string[] = [];
+      context.on("request", request => {
+        const path = new URL(request.url()).pathname;
+        if (paths.has(path)) partRequests.push(path);
+      });
       await context.route("**/data/**", async (route) => {
         if (new URL(route.request().url()).pathname.endsWith("/pack/v1/manifest.json")) {
           await route.fulfill({ json: pack });
         } else {
-          partRequests++;
           await route.fulfill({ status: 404 });
         }
       });
@@ -114,7 +118,7 @@ for (const language of ["en", "fr"] as const) {
         .include('[aria-labelledby="' + id + '"]')
         .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
       expect(audit.violations).toEqual([]);
-      expect(partRequests).toBe(0);
+      expect(partRequests).toEqual([]);
       expect(await offline.evaluate(() => navigator.onLine)).toBe(false);
     });
   });
