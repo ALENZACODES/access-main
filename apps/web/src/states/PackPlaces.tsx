@@ -17,6 +17,7 @@ import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, pack
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
 import { MeetUp } from "./MeetUp.tsx";
+import { PossibleRepeats } from "./PossibleRepeats.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
@@ -211,6 +212,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
+      <PossibleRepeats places={parsed.places} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
