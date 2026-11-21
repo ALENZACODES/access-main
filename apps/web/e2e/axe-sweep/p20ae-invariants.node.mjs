@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { evaluate, WIDTH_MATRIX, HEIGHT_MATRIX } from "./p20ae-reflow-contracts.ts";
-import { buildMatrix, reconcileMatrix } from "./p20ae-reflow-matrix.ts";
+import { buildMatrix } from "./p20ae-reflow-matrix.ts";
 
 test("P20AE invariant: viewport matrix has nine widths", () => assert.equal(WIDTH_MATRIX.length, 9));
 test("P20AE invariant: viewport matrix has five heights", () => assert.equal(HEIGHT_MATRIX.length, 5));
