@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { CommunicationCardsLauncher } from "./communicationCards/CommunicationCardsLauncher";
 import { PersonalOfflineTools } from "./PersonalOfflineTools";
 import { offlineCatalog } from "./catalog.ts";
 import {
@@ -321,6 +322,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     <p>{c.intro}</p>
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {listFailed ? <StateNotice lang={language} view={getRouteError("offline", "region-list-unavailable", language)} onAction={{ retry: () => { setListFailed(false); setListAttempt((n) => n + 1); } }} /> : null}
+    <CommunicationCardsLauncher language={language} />
     {startedWithoutRegions && <PersonalOfflineTools language={language} />}
     {error && <p role="alert">{error}</p>}
     {packStatus ? (
