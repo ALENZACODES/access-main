@@ -290,6 +290,50 @@ export * from "./recoveryReceiptAnalysis";
 export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
 export type { ReceiptCopy } from "./recoveryReceiptCopy";
 
+// Manual local guided review; notes cannot change installed pack readiness.
+export { RecoveryGuidedReviewPanel } from "./RecoveryGuidedReviewPanel";
+export type { RecoveryGuidedReviewPanelProps } from "./RecoveryGuidedReviewPanel";
+export {
+  GUIDED_ACTIONS, GUIDED_CONDITIONS, GUIDED_EVIDENCE, GUIDED_LIMITS,
+  GUIDED_OUTCOMES, GUIDED_PHASES, GUIDED_TIERS, GUIDED_TOPICS,
+  appendGuidedEvent, beginGuidedCase, checkGuidedCase, checkGuidedDocument,
+  checkGuidedEvent, checkGuidedSource, checkGuidedStep, emptyGuidedDocument,
+  filterGuidedCases, guidedContentReady, guidedEventsFor, guidedPhaseFromEvents,
+  guidedStepsFor, guidedSummary, mergeGuidedDocuments, nextGuidedId,
+  parseGuidedDocument, previewGuidedMerge, recordGuidedStep,
+  serializeGuidedDocument,
+} from "./recoveryGuidedReview";
+export type {
+  GuidedAction, GuidedCase, GuidedCondition, GuidedCounts, GuidedDocument,
+  GuidedEvent, GuidedEvidence, GuidedFilter, GuidedIssue, GuidedLocale,
+  GuidedMergePreview, GuidedOutcome, GuidedPhase, GuidedResult,
+  GuidedSource, GuidedStep, GuidedTier, GuidedTopic,
+} from "./recoveryGuidedReview";
+export {
+  compareGuidedPacks, createGuidedReport, guidedDailyGroups, guidedFindings,
+  guidedNarrative, guidedPackReviews, guidedReviewPlan, guidedSourceGroups,
+  guidedTimeline, guidedTopicStatus,
+} from "./recoveryGuidedAnalysis";
+export type {
+  GuidedComparison, GuidedDailyGroup, GuidedFinding, GuidedFindingCode,
+  GuidedPackReview, GuidedReport, GuidedReviewPlan, GuidedSourceGroup,
+  GuidedTopicStatus,
+} from "./recoveryGuidedAnalysis";
+export { recoveryGuidedCopy } from "./recoveryGuidedCopy";
+export type { GuidedCopy } from "./recoveryGuidedCopy";
+
+// User-directed offline support briefs; no automated handoffs or pack readiness claims.
+export { RecoverySupportBriefPanel } from "./RecoverySupportBriefPanel";
+export type { RecoverySupportBriefPanelProps } from "./RecoverySupportBriefPanel";
+export * from "./recoverySupportBrief";
+export * from "./recoverySupportAnalysis";
+export { recoverySupportCopy } from "./recoverySupportCopy";
+export type { SupportCopy } from "./recoverySupportCopy";
+export { auditBriefPrivacy, briefExportAllowed, briefPrivacyCodes } from "./recoverySupportPrivacy";
+export type { BriefPrivacyCode, BriefPrivacyFinding, BriefPrivacyReport } from "./recoverySupportPrivacy";
+export { buildBriefReviewPlan, buildBriefPortfolio, briefTopicLabels, briefReviewText } from "./recoverySupportReview";
+export type { BriefTopicReview, BriefReviewPlan, BriefPortfolio } from "./recoverySupportReview";
+
 // User-initiated offline source-date review; never infers pack readiness.
 export { RecoverySourceRefreshPanel } from "./RecoverySourceRefreshPanel";
 export type { RecoverySourceRefreshPanelProps } from "./RecoverySourceRefreshPanel";
@@ -322,3 +366,5 @@ export type {
 } from "./recoverySourceRefreshAnalysis";
 export { recoverySourceRefreshCopy } from "./recoverySourceRefreshCopy";
 export type { RefreshCopy } from "./recoverySourceRefreshCopy";
+
+export { RecoveryTransferBundleDisclosure } from "./transferBundle/Disclosure";

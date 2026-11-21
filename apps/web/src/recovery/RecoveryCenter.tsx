@@ -5,6 +5,7 @@ import { inspectInstalledPacks, inventoryCopy, type LocalPackRecord, type LocalP
 import { exportCopy, saveRecoveryExport, type RecoveryExportRecord, type SaveTextFile } from "./recoveryExport";
 import type { RecoveryLocale } from "./index";
 import { RecoveryNotice } from "./RecoveryNotice";
+import { RecoveryTransferBundleDisclosure } from "./transferBundle/Disclosure";
 import { RecoveryWorkbench } from "./RecoveryWorkbench";
 import { RecoveryQueuePanel } from "./RecoveryQueuePanel";
 import { RecoveryPlanReview } from "./RecoveryPlanReview";
@@ -48,6 +49,14 @@ const RecoveryReceiptLedgerPanel = lazy(async () => ({
   default: (await import("./RecoveryReceiptLedgerPanel")).RecoveryReceiptLedgerPanel,
 }));
 
+const RecoveryGuidedReviewPanel = lazy(async () => ({
+  default: (await import("./RecoveryGuidedReviewPanel")).RecoveryGuidedReviewPanel,
+}));
+
+const RecoverySupportBriefPanel = lazy(async () => ({
+  default: (await import("./RecoverySupportBriefPanel")).RecoverySupportBriefPanel,
+}));
+
 const RecoverySourceRefreshPanel = lazy(async () => ({
   default: (await import("./RecoverySourceRefreshPanel")).RecoverySourceRefreshPanel,
 }));
@@ -70,6 +79,7 @@ function initialDownload(): DownloadSnapshot {
   return { phase: "idle", received: 0, expected: null, percent: null };
 }
 export function RecoveryCenter({ locale, store, download, saveFile, onPackReady }: RecoveryCenterProps): ReactElement {
+  const [briefOpened, setBriefOpened] = useState(false);
   const inventoryHeading = useId();
   const transferHeading = useId();
   const exportHeading = useId();
@@ -77,6 +87,7 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
   const [previousInventory, setPreviousInventory] = useState<LocalPackRecord[] | null>(null);
   const [inspectionDate, setInspectionDate] = useState("");
   const [checking, setChecking] = useState(false);
+  const [guidedReviewOpened, setGuidedReviewOpened] = useState(false);
   const [sourceReviewOpened, setSourceReviewOpened] = useState(false);
   const [inventoryFailure, setInventoryFailure] = useState(false);
   const [hasInspected, setHasInspected] = useState(false);
@@ -161,6 +172,7 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
           ))}
         </ul>
       </section>
+      <RecoveryTransferBundleDisclosure locale={locale} />
       <RecoveryWorkbench locale={locale} records={inventory} previous={previousInventory}
         inspected={hasInspected && !checking && !inventoryFailure} inspectionDate={inspectionDate}
         onInspect={() => { void refresh(); }} />
@@ -219,6 +231,34 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         <RecoveryReceiptLedgerPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
+      <details style={section} onToggle={(event) => {
+        if (event.currentTarget.open) setGuidedReviewOpened(true);
+      }}>
+        <summary style={button}>
+          {locale === "fr" ? "Examen guidé de récupération hors ligne" : "Guided offline recovery review"}
+        </summary>
+        {guidedReviewOpened && (
+          <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen guidé…" : "Loading guided review…"}</p>}>
+            <RecoveryGuidedReviewPanel locale={locale} records={inventory}
+              inspected={hasInspected && !checking && !inventoryFailure}
+              onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          </Suspense>
+        )}
+      </details>
+      <details style={section} onToggle={(event) => {
+        if (event.currentTarget.open) setBriefOpened(true);
+      }}>
+        <summary style={button}>
+          {locale === "fr" ? "Résumé de soutien à la récupération" : "Recovery support brief"}
+        </summary>
+        {briefOpened && (
+          <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du résumé local…" : "Loading local support brief…"}</p>}>
+            <RecoverySupportBriefPanel locale={locale} records={inventory}
+              inspected={hasInspected && !checking && !inventoryFailure}
+              onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          </Suspense>
+        )}
+      </details>
       <details style={section} onToggle={(event) => {
         if (event.currentTarget.open) setSourceReviewOpened(true);
       }}>

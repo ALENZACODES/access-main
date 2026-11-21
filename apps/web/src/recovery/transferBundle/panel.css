@@ -1,0 +1,74 @@
+.recovery-transfer-bundle {
+  max-inline-size: 58rem;
+  overflow-wrap: anywhere;
+}
+
+.recovery-transfer-bundle section {
+  margin-block: 1.5rem;
+  border-block-start: 1px solid currentColor;
+  padding-block-start: 0.5rem;
+}
+
+.recovery-transfer-bundle label {
+  display: block;
+  margin-block: 0.75rem 0.25rem;
+  font-weight: 650;
+}
+
+.recovery-transfer-bundle :is(button, input, summary),
+.recovery-transfer-bundle input::file-selector-button {
+  box-sizing: border-box;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  max-inline-size: 100%;
+  font: inherit;
+}
+
+.recovery-transfer-bundle input[type="file"] {
+  display: block;
+  inline-size: 100%;
+}
+
+.recovery-transfer-bundle ::file-selector-button {
+  cursor: pointer;
+}
+
+.recovery-transfer-bundle :is(button, summary) {
+  padding: 0.65rem;
+  white-space: normal;
+}
+
+.recovery-transfer-bundle summary {
+  cursor: pointer;
+  width: fit-content;
+}
+
+.recovery-transfer-bundle :is(input, button, summary):focus-visible {
+  outline: 3px solid var(--focus, currentColor);
+  outline-offset: 2px;
+}
+
+.recovery-transfer-bundle .transfer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+
+.recovery-transfer-bundle .transfer-file-list {
+  padding-inline-start: 1.75rem;
+}
+
+.recovery-transfer-bundle .transfer-file-list > li {
+  padding-block: 0.5rem;
+}
+
+.recovery-transfer-bundle .transfer-file-list p {
+  margin-block: 0.25rem;
+}
+
+.recovery-transfer-bundle code {
+  display: block;
+  padding-block: 0.25rem;
+  overflow-wrap: anywhere;
+}

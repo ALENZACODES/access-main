@@ -163,40 +163,33 @@ export async function assertSemantics(page: Page): Promise<void> {
   expect(await auditSemantics(page), "Interactive semantics and references").toEqual([]);
 }
 
-/** Assert accessibility tree names using Playwright's accessible-name engine. */
+/** Check the name sources of controls found by Playwright's accessible role selector. */
 export async function auditRoleNames(page: Page): Promise<AuditFinding[]> {
   const roles = ["button", "link", "checkbox", "switch", "radio", "tab"] as const;
   const findings: AuditFinding[] = [];
   for (const role of roles) {
-    const locator = page.getByRole(role);
-    const count = await locator.count();
-    for (let index = 0; index < count; index += 1) {
-      const item = locator.nth(index);
-      if (!(await item.isVisible())) continue;
-      // A named counterpart must match the accessible-name text produced by
-      // Playwright's semantic engine, not just textContent or a CSS selector.
-      const accessibleName = await item.getAttribute("aria-label");
-      const title = await item.getAttribute("title");
-      const content = await item.innerText().catch(() => "");
-      const labelledBy = await item.getAttribute("aria-labelledby");
-      const labelText = await item.evaluate((node) => {
-        if (!(node instanceof HTMLElement)) return "";
-        if (node instanceof HTMLInputElement || node instanceof HTMLSelectElement ||
-            node instanceof HTMLTextAreaElement || node instanceof HTMLButtonElement) {
-          const fromLabels = Array.from(node.labels ?? [])
-            .map((label) => label.textContent?.trim() ?? "")
-            .find((text) => text.length > 0);
-          if (fromLabels) return fromLabels;
+    // Read every name source from the same DOM element. A newly displayed
+    // prompt can shift all later button positions while protocol calls await.
+    const unnamed = await page.getByRole(role).filter({ visible: true }).evaluateAll(elements => {
+      const missing: number[] = [];
+      for (const [index, node] of elements.entries()) {
+        const label = node.getAttribute("aria-label")?.trim();
+        const title = node.getAttribute("title")?.trim();
+        const content = node instanceof HTMLElement ? node.innerText.trim() : "";
+        const labelledBy = node.getAttribute("aria-labelledby");
+        const fromLabels = (node instanceof HTMLInputElement || node instanceof HTMLSelectElement ||
+          node instanceof HTMLTextAreaElement || node instanceof HTMLButtonElement) &&
+          Array.from(node.labels ?? []).some(item => item.textContent?.trim());
+        const wrapper = node instanceof HTMLElement && node.closest("label")?.textContent?.trim();
+        if (!label && !title && !content && !labelledBy && !fromLabels && !wrapper &&
+            !node.querySelector("img[alt]:not([alt=''])")) {
+          missing.push(index);
         }
-        const wrapper = node.closest("label");
-        return wrapper?.textContent?.trim() ?? "";
-      });
-      if (!accessibleName?.trim() && !title?.trim() && !content.trim() && !labelledBy && !labelText) {
-        const imageName = await item.locator("img[alt]:not([alt=''])").count();
-        if (imageName === 0) findings.push({
-          code: "unlabelled-role", element: `${role}[${index}]`, detail: "No name source",
-        });
       }
+      return missing;
+    });
+    for (const index of unnamed) {
+      findings.push({ code: "unlabelled-role", element: `${role}[${index}]`, detail: "No name source" });
     }
   }
   return findings;
