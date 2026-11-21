@@ -155,14 +155,10 @@ export function activityText(
         return `Liste de ce que l’App dit des données téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "handoff-export":
         return `Liste des liens vers d’autres applications téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
-      case "picks-export":
-        return `Liste des fichiers que l’App lit quand vous les choisissez téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
-      case "browser-export":
-        return `Liste de ce que l’App demande au navigateur téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
+      case "save-export":
+        return `Liste des endroits où l’App fabrique des fichiers à enregistrer téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "query-export":
         return `Liste de ce qu’une adresse web peut contenir téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
-      case "auto-export":
-        return `Liste de ce que l’App fait d’elle-même téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "retention-export":
         return `Liste de la durée de conservation téléchargée (${e.format === "csv" ? "CSV" : "texte"})`;
       case "receipt-export":
@@ -206,14 +202,10 @@ export function activityText(
       return `Downloaded the list of what the App says about data (${e.format === "csv" ? "CSV" : "text"})`;
     case "handoff-export":
       return `Downloaded the list of links to other apps (${e.format === "csv" ? "CSV" : "text"})`;
-    case "picks-export":
-      return `Downloaded the list of files the App reads when you choose them (${e.format === "csv" ? "CSV" : "text"})`;
-    case "browser-export":
-      return `Downloaded the list of what the App asks your browser (${e.format === "csv" ? "CSV" : "text"})`;
+    case "save-export":
+      return `Downloaded the list of where the App makes files for you to save (${e.format === "csv" ? "CSV" : "text"})`;
     case "query-export":
       return `Downloaded the list of what a web address can carry (${e.format === "csv" ? "CSV" : "text"})`;
-    case "auto-export":
-      return `Downloaded the list of what the App does on its own (${e.format === "csv" ? "CSV" : "text"})`;
     case "retention-export":
       return `Downloaded the list of how long the App keeps things (${e.format === "csv" ? "CSV" : "text"})`;
     case "receipt-export":
