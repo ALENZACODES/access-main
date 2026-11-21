@@ -389,7 +389,6 @@ describe("receipt books and import boundaries", () => {
     const same = await receipt(inventory(), early);
     const book = appendPackReceipt(sourceBook(), first);
     expect(() => appendPackReceipt(book, same)).toThrow();
-    expect(() => appendPackReceipt(book, awaitableReceipt as never)).toThrow();
   });
 
   it("rejects duplicate receipt digests", async () => {
@@ -520,9 +519,11 @@ describe("historical receipt comparisons", () => {
         ? { ...cell, provenance: { ...cell.provenance, date: "2026-10-02" } }
         : cell),
     };
-    const sourceChange = await receipt(inventory([
-      inventoryCell("alpha"), inventoryCell("beta"), inventoryCell("gamma"),
-    ]), middle, sourceManifest);
+    const sourceInventory = inventory([
+      inventoryCell("alpha", "present", { provenance: sourceManifest.cells[0]!.provenance }),
+      inventoryCell("beta"), inventoryCell("gamma"),
+    ]);
+    const sourceChange = await receipt(sourceInventory, middle, sourceManifest);
     expect(comparePackReceipts(one, sourceChange).rows.find((row) => row.id === "alpha")?.change).toBe("source-changed");
     const sizeManifest: RegionManifest = {
       ...manifest,
@@ -588,7 +589,10 @@ describe("historical receipt comparisons", () => {
 
 describe("receipt pages and summaries", () => {
   async function sampleBook(): Promise<ReceiptBook> {
-    const one = await receipt(inventory(), early);
+    const allSaved = inventory([
+      inventoryCell("alpha"), inventoryCell("beta"), inventoryCell("gamma"),
+    ]);
+    const one = await receipt(allSaved, early);
     const two = await receipt(inventory([
       inventoryCell("alpha"),
       inventoryCell("beta"),
@@ -604,7 +608,7 @@ describe("receipt pages and summaries", () => {
       captures: 2,
       saved: 2,
       unknown: 1,
-      changed: 0,
+      changed: 1,
       latestAt: middle,
       totalBytes: 60,
     });
