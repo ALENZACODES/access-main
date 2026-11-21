@@ -92,10 +92,6 @@ async function receipt(
   return createPackReceipt(sourceManifest, cells, at, cryptoProvider);
 }
 
-function mutateReceipt(value: PackReceipt, patch: Partial<PackReceipt>): PackReceipt {
-  return { ...value, ...patch };
-}
-
 function sourceBook(): ReceiptBook {
   return emptyReceiptBook("north");
 }
