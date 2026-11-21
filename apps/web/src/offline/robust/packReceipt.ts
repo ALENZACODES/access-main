@@ -120,6 +120,11 @@ function validTime(value: unknown): value is string {
   return Number.isFinite(parsed.valueOf()) && parsed.toISOString() === value;
 }
 
+function safeId(value: unknown): value is string {
+  return safeText(value, RECEIPT_MAX_ID) &&
+    /^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$/u.test(value) && !value.includes("..");
+}
+
 function safeBytes(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
@@ -130,11 +135,11 @@ function validProvenance(value: unknown): value is Provenance {
 }
 
 function validateManifest(manifest: RegionManifest): void {
-  if (!safeText(manifest.regionId, RECEIPT_MAX_ID) || !Array.isArray(manifest.cells) ||
+  if (!safeId(manifest.regionId) || !Array.isArray(manifest.cells) ||
     manifest.cells.length > RECEIPT_MAX_CELLS) throw new TypeError("Invalid receipt manifest");
   const seen = new Set<string>();
   for (const cell of manifest.cells) {
-    if (!safeText(cell.id, RECEIPT_MAX_ID) || seen.has(cell.id) ||
+    if (!safeId(cell.id) || seen.has(cell.id) ||
       !safeBytes(cell.bytes) || !validProvenance(cell.provenance)) {
       throw new TypeError("Invalid receipt manifest cell");
     }
@@ -247,7 +252,7 @@ export async function createPackReceipt(
 
 export function validatePackReceipt(input: unknown): PackReceipt {
   if (!isObject(input) || input.schema !== "offline-pack-receipt-v1" ||
-    !safeText(input.regionId, RECEIPT_MAX_ID) || !validTime(input.capturedAt) ||
+    !safeId(input.regionId) || !validTime(input.capturedAt) ||
     !STATUSES.includes(input.status as ReceiptStatus) || !Array.isArray(input.cells) ||
     input.cells.length > RECEIPT_MAX_CELLS || !safeBytes(input.savedCount) ||
     !safeBytes(input.unknownCount) || !safeBytes(input.totalBytes) ||
@@ -258,7 +263,7 @@ export function validatePackReceipt(input: unknown): PackReceipt {
   let saved = 0;
   let totalBytes = 0;
   const cells: PackReceiptCell[] = input.cells.map((raw: unknown): PackReceiptCell => {
-    if (!isObject(raw) || !safeText(raw.id, RECEIPT_MAX_ID) || seen.has(raw.id) ||
+    if (!isObject(raw) || !safeId(raw.id) || seen.has(raw.id) ||
       !safeBytes(raw.bytes) || !validProvenance(raw.source) ||
       !STATES.includes(raw.state as ReceiptCellState) || !CAUSES.includes(raw.cause as ReceiptCellCause)) {
       throw new TypeError("Invalid receipt cell");
@@ -303,7 +308,7 @@ export async function checkPackReceiptDigest(receipt: PackReceipt, cryptoValue?:
 }
 
 export function emptyReceiptBook(regionId: string): ReceiptBook {
-  if (!safeText(regionId, RECEIPT_MAX_ID)) throw new TypeError("Invalid receipt region");
+  if (!safeId(regionId)) throw new TypeError("Invalid receipt region");
   return { schema: "offline-pack-receipt-book-v1", regionId, receipts: [] };
 }
 
