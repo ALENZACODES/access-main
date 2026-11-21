@@ -74,7 +74,7 @@ describe("source review lives in the recovery shell without clobbering other fea
   it("announces user actions politely", () => { expect(panel).toContain('role="status" aria-live="polite"'); });
   it("retains user-initiated file selection", () => { expect(panel).toContain('type="file"'); expect(panel).toContain("onChange="); });
   it("blocks conflicting imports from automatic merge", () => { expect(panel).toContain('disabled={!preview.canMerge}'); });
-  it("requires a caller-provided save function", () => { expect(panel).toContain("await saveFile("); });
+  it("uses the configured save function for local exports", () => { expect(panel).toContain("await saveFile("); });
   it("does not perform remote fetches", () => { for (const item of feature) expect(item).not.toContain("fetch("); });
   it("does not modify browser storage", () => { for (const item of feature) expect(item).not.toContain("localStorage.setItem("); });
   it("does not use scheduled background work", () => {

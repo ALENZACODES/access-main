@@ -77,6 +77,7 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
   const [previousInventory, setPreviousInventory] = useState<LocalPackRecord[] | null>(null);
   const [inspectionDate, setInspectionDate] = useState("");
   const [checking, setChecking] = useState(false);
+  const [sourceReviewOpened, setSourceReviewOpened] = useState(false);
   const [inventoryFailure, setInventoryFailure] = useState(false);
   const [hasInspected, setHasInspected] = useState(false);
   const [transfer, setTransfer] = useState<DownloadSnapshot>(initialDownload);
@@ -218,11 +219,20 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         <RecoveryReceiptLedgerPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
-      <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen des sources…" : "Loading source review…"}</p>}>
-        <RecoverySourceRefreshPanel locale={locale} records={inventory}
-          inspected={hasInspected && !checking && !inventoryFailure}
-          onInspect={() => { void refresh(); }} saveFile={saveFile} />
-      </Suspense>
+      <details style={section} onToggle={(event) => {
+        if (event.currentTarget.open) setSourceReviewOpened(true);
+      }}>
+        <summary style={button}>
+          {locale === "fr" ? "Examen de l’actualité des sources" : "Source refresh review"}
+        </summary>
+        {sourceReviewOpened && (
+          <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen des sources…" : "Loading source review…"}</p>}>
+            <RecoverySourceRefreshPanel locale={locale} records={inventory}
+              inspected={hasInspected && !checking && !inventoryFailure}
+              onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          </Suspense>
+        )}
+      </details>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>

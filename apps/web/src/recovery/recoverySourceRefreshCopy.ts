@@ -35,6 +35,7 @@ export interface RefreshCopy {
   readonly days: string;
   readonly window: string;
   readonly asOf: string;
+  readonly withinWindow: string;
   readonly queue: string;
   readonly manual: string;
   readonly state: string;
@@ -70,6 +71,7 @@ const en: RefreshCopy = {
   source: "Source name", licence: "Licence", retrievedOn: "Retrieved on", tier: "Evidence tier", reference: "Source reference",
   choose: "Choose an item", record: "Save observation", review: "Record manual review", decision: "Review decision",
   search: "Search local entries", clear: "Clear search", items: "Source items", findings: "Review findings",
+  withinWindow: "Within the selected review window",
   age: "Age of source", days: "days", window: "Manual review window", asOf: "Review reference day",
   queue: "Manual review queue", manual: "Manual review", state: "Status", reviewed: "Reviewed record", notReviewed: "Needs manual review",
   empty: "No local source items match this filter.", status: "Review message", open: "Choose local JSON file",
@@ -105,6 +107,7 @@ const fr: RefreshCopy = {
   source: "Nom de la source", licence: "Licence", retrievedOn: "Date de récupération", tier: "Niveau de preuve", reference: "Référence de la source",
   choose: "Choisir un dossier", record: "Enregistrer l’observation", review: "Consigner l’examen manuel", decision: "Décision d’examen",
   search: "Rechercher des dossiers locaux", clear: "Effacer la recherche", items: "Dossiers de source", findings: "Points à examiner",
+  withinWindow: "Dans la fenêtre d’examen choisie",
   age: "Âge de la source", days: "jours", window: "Fenêtre d’examen manuel", asOf: "Date de référence de l’examen",
   queue: "Liste d’examen manuel", manual: "Examen manuel", state: "État", reviewed: "Dossier examiné", notReviewed: "Examen manuel requis",
   empty: "Aucun dossier local ne correspond à ce filtre.", status: "Message d’examen", open: "Choisir un fichier JSON local",

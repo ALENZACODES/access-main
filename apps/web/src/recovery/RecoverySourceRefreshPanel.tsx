@@ -1,5 +1,6 @@
 import { useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, ReactElement } from "react";
+import { saveTextFile } from "../states/downloadFile";
 import type { LocalPackRecord } from "./packInventory";
 import type { SaveTextFile } from "./recoveryExport";
 import {
@@ -40,8 +41,13 @@ const cell: CSSProperties = { border: "1px solid currentColor", borderRadius: 6,
 const MAX_RENDER = 80;
 const asDay = (): string => new Date().toISOString().slice(0, 10);
 
+const saveLocalFile: SaveTextFile = async (name, content) => {
+  const mime = name.endsWith(".json") ? "application/json" : "text/plain;charset=utf-8";
+  if (!saveTextFile({ name, mime, content })) throw new Error("Local file download unavailable");
+};
+
 export function RecoverySourceRefreshPanel({
-  locale, records, inspected, saveFile, onInspect,
+  locale, records, inspected, saveFile = saveLocalFile, onInspect,
 }: RecoverySourceRefreshPanelProps): ReactElement {
   const copy = recoverySourceRefreshCopy(locale);
   const heading = useId();
@@ -78,6 +84,11 @@ export function RecoverySourceRefreshPanel({
   const packOverview = useMemo(() => refreshPackOverviews(document, options), [document, options]);
   const ageBuckets = useMemo(() => refreshAgeBuckets(document, options), [document, options]);
   const summary = useMemo(() => summarizeRefresh(document), [document]);
+  const ageLabels = {
+    UNKNOWN: copy.unknown,
+    "current-window": copy.withinWindow,
+    "older-than-window": copy.findingsCopy["older-than-window"],
+  };
   const referenceDayValid = refreshCalendarDay(asOf);
   const preview = useMemo(() => staged ? previewRefreshMerge(document, staged) : null, [document, staged]);
   const selected = document.subjects.find((subject) => subject.id === subjectId);
@@ -146,7 +157,7 @@ export function RecoverySourceRefreshPanel({
     fileRef.current?.focus();
   }
   async function saveJson(): Promise<void> {
-    if (!saveFile || saving) return;
+    if (saving) return;
     const serialized = exportRefreshDocument(document);
     if (!serialized.ok) { setMessage(copy.issues[serialized.issue]); return; }
     setSaving(true);
@@ -157,7 +168,7 @@ export function RecoverySourceRefreshPanel({
     finally { setSaving(false); }
   }
   async function saveSummary(): Promise<void> {
-    if (!saveFile || saving) return;
+    if (saving) return;
     if (!refreshCalendarDay(asOf)) { setMessage(copy.issues.date); return; }
     setSaving(true);
     try {
@@ -233,7 +244,7 @@ export function RecoverySourceRefreshPanel({
         {!referenceDayValid && <p role="status">{copy.issues.date}</p>}
         <p>{copy.items}{colon}{summary.subjects}; {copy.unknown}{colon}{summary.unknown}</p>
         <p>{copy.manual}{colon}{summary.unresolved}</p>
-        <ul>{ageBuckets.map((b) => <li key={b.key}>{b.key}{colon}{b.count}</li>)}</ul>
+        <ul>{ageBuckets.map((b) => <li key={b.key}>{ageLabels[b.key]}{colon}{b.count}</li>)}</ul>
         <ul>{packOverview.map((p) => <li key={p.packId}>{p.packId}{colon}{p.total} / {p.outstanding} {copy.notReviewed}</li>)}</ul>
         <ul>{queue.slice(0, MAX_RENDER).map((q) => (
           <li key={q.subjectId} style={cell}>
@@ -262,10 +273,10 @@ export function RecoverySourceRefreshPanel({
           <p>{copy.conflict}{colon}{preview.conflicts}</p>
           <button type="button" style={control} disabled={!preview.canMerge} onClick={applyImport}>{copy.merge}</button>
         </div>}
-        {saveFile && <div style={row}>
+        <div style={row}>
           <button type="button" style={control} disabled={saving} onClick={() => { void saveJson(); }}>{copy.export}</button>
           <button type="button" style={control} disabled={saving} onClick={() => { void saveSummary(); }}>{copy.exportText}</button>
-        </div>}
+        </div>
       </section>
     </section>
   );
