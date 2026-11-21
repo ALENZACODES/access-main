@@ -57,6 +57,19 @@ describe("offline packs page: the list cannot be read", () => {
     await waitFor(() => expect(source.manifest).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(screen.queryByRole("heading", { name: "The offline packs could not be listed" })).toBeNull());
   });
+  it("keeps a personal draft open while the catalogue is retried", async () => {
+    source.manifest.mockRejectedValueOnce(new Error("unavailable"));
+    await page();
+    fireEvent.click(await screen.findByRole("button", { name: "Open question sheet" }));
+    const panel = await screen.findByRole("region", { name: "Personal offline question sheet" });
+    const question = panel.querySelector("textarea")!;
+    fireEvent.change(question, { target: { value: "Is there a side entrance?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await screen.findByRole("heading", { name: "No offline packs are listed" });
+    expect(question.value).toBe("Is there a side entrance?");
+    expect(panel.contains(question)).toBe(true);
+    expect(document.contains(panel)).toBe(true);
+  });
   it("is in French", async () => {
     source.manifest.mockRejectedValueOnce(new Error("x"));
     await page("fr");
