@@ -25,13 +25,15 @@ const LABELS: Record<GlanceId, { en: string; fr: string }> = {
   names: { en: "Names inside data formats, which are never contacted", fr: "Noms dans des formats de données, jamais contactés" },
   "request-places": { en: "Places in the code that make network requests", fr: "Endroits du code qui font des requêtes réseau" },
   "request-unknown": { en: "of which the destination is unknown", fr: "dont la destination est inconnue" },
+  "statement-parts": { en: "Parts of the App that say data stays here or is not sent", fr: "Parties de l’App qui disent que les données restent ici ou ne sont pas envoyées" },
+  "statement-unconfirmed": { en: "of which the check cannot confirm the statement (unknown)", fr: "dont le contrôle ne peut pas confirmer l’affirmation (inconnu)" },
 };
 
 export const GLANCE_STRINGS = {
   en: {
     heading: "Privacy at a glance",
     note: "These counts come from the App’s own lists on this page, not from your device. A count marked unknown covers things the App has not confirmed. It is never counted as a yes or a no.",
-    groups: { kept: "Saved in this browser", device: "Offline storage", features: "Browser features", addresses: "Web addresses and requests" } as Record<GlanceGroup, string>,
+    groups: { kept: "Saved in this browser", device: "Offline storage", features: "Browser features", addresses: "Web addresses and requests", statements: "What the App says about data" } as Record<GlanceGroup, string>,
     columns: { what: "What", count: "How many" },
     unconfirmed: (things: number): string => (things === 0 ? "Nothing in these lists is unconfirmed." : `${things} ${things === 1 ? "thing" : "things"} the App has not confirmed. They are shown as unknown.`),
     csvButton: "Download these counts (CSV)",
@@ -45,7 +47,7 @@ export const GLANCE_STRINGS = {
   fr: {
     heading: "La vie privée en un coup d’œil",
     note: "Ces chiffres viennent des listes de l’App sur cette page, pas de votre appareil. Un chiffre marqué inconnu couvre des éléments que l’App n’a pas confirmés. Il n’est jamais compté comme un oui ou un non.",
-    groups: { kept: "Enregistré dans ce navigateur", device: "Stockage hors ligne", features: "Fonctions du navigateur", addresses: "Adresses web et requêtes" } as Record<GlanceGroup, string>,
+    groups: { kept: "Enregistré dans ce navigateur", device: "Stockage hors ligne", features: "Fonctions du navigateur", addresses: "Adresses web et requêtes", statements: "Ce que l’App dit des données" } as Record<GlanceGroup, string>,
     columns: { what: "Quoi", count: "Combien" },
     unconfirmed: (things: number): string => (things === 0 ? "Rien n’est à confirmer dans ces listes." : `${things} ${things > 1 ? "éléments que l’App n’a pas confirmés" : "élément que l’App n’a pas confirmé"}. ${things > 1 ? "Ils sont indiqués" : "Il est indiqué"} comme inconnu${things > 1 ? "s" : ""}.`),
     csvButton: "Télécharger ces chiffres (CSV)",
@@ -58,7 +60,7 @@ export const GLANCE_STRINGS = {
   },
 } as const;
 
-const GROUPS: readonly GlanceGroup[] = ["kept", "device", "features", "addresses"];
+const GROUPS: readonly GlanceGroup[] = ["kept", "device", "features", "addresses", "statements"];
 
 /** Empty when no list was given, so the section only appears when it has something to count. */
 export function renderGlanceHtml(locale: Locale, src: GlanceSources): string {

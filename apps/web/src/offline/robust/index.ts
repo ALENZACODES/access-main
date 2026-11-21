@@ -96,3 +96,20 @@ export * from "./accessPreparation";
 export * from "./accessPreparationCopy";
 export * from "./accessPreparationExport";
 export * from "./accessPreparationPanel";
+
+// Inquiry and contingency capabilities; each panel is mounted on explicit page load.
+export * from "./accessInquiry";
+export * from "./accessInquiryCopy";
+export * from "./accessInquiryExport";
+export * from "./accessInquiryPanel";
+export * from "./contingencyPlan";
+export * from "./contingencyCopy";
+export * from "./contingencyExport";
+
+export * from "./dependencyPlanner";
+export * from "./dependencyPlannerCopy";
+export * from "./dependencyPlannerExport";
+// Type-only coordination API keeps the initial offline bundle unchanged.
+export type { CoordinationBrief, BriefStep, BriefProvenance, BriefStatus, BriefPriority,
+  BriefTopic, BriefEvent, BriefSummary, StepDraft, BriefPageOptions } from "./coordinationBrief";
+export type { BriefChange, BriefDiff, BriefChangeKind } from "./coordinationBriefDiff";
