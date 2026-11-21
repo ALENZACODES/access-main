@@ -21,6 +21,7 @@ describe("the states barrel exposes the pack tools", () => {
     "TextMap", "DistanceMatrix", "buildDistanceMatrix", "cellText", "matrixSummary", "matrixCaveat", "matrixToText", "matrixToCsv", "MAX_MATRIX_PLACES", "buildTextMap", "buildAround", "bearingDegrees", "compassOf", "compassName", "locate", "partOf", "tagMix", "cellSentence", "gridSummary", "directionLine", "textMapToText", "aroundToText", "textMapToCsv", "aroundToCsv", "GRID_SIZES", "COMPASS",
     "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
+    "ViewCode", "viewToCode", "parseViewCode", "viewIsEmpty", "viewKeys", "VIEW_CODE_HEADER", "EMPTY_VIEW_PARTS", "VIEW_KEYS", "viewIgnoredText", "viewAppliedText",
     "MeetUp", "buildMeetUp", "halfway", "meetUpPage", "MEET_UP_ORDERS", "MEET_UP_LIMITS", "isMeetUpOrder", "isMeetUpLimit", "meetUpToText", "meetUpToCsv", "meetUpRowText", "meetUpOrderLabel", "meetUpCaveat", "MEET_UP_FILENAMES", "MEET_UP_CSV_FILENAMES", "meetUpMinutes", "readPaces", "hasPace", "NO_PACES", "meetUpTimeText", "meetUpPaceNote", "meetUpMinutesCell", "meetUpToGeoJson", "MEET_UP_GEOJSON_FILENAMES",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
   ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
