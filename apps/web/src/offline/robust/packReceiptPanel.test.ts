@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { webcrypto } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { DashboardModel, DashboardState } from "./offlineDashboard";
+import { mountOfflineDashboard, type DashboardModel, type DashboardState } from "./offlineDashboard";
 import type { RegionInventory } from "./regionInventory";
 import type { RegionManifest } from "./regionDownload";
 import { mountOfflinePackReceipts } from "./packReceiptPanel";
@@ -292,6 +292,33 @@ describe("offline pack receipt panel", () => {
     expect(section).toBeTruthy();
     view.unmount();
     expect(view.root.querySelector("section")).toBeNull();
+  });
+
+  it("keeps receipts independent of pack-change review and releases them on dashboard unmount", async () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const unmount = mountOfflineDashboard(root, manifest, {
+      store: { get: async () => undefined, put: async () => undefined },
+      fetchCell: async () => 0,
+      estimateStorage: async () => ({}),
+    }, "en");
+    const launch = button(root, PACK_RECEIPT_COPY.en.open);
+    const change = button(root, "Open pack change review");
+    launch.click();
+    await vi.waitFor(() => expect(root.querySelector('[aria-label="Offline pack receipts"]')).toBeTruthy());
+    change.click();
+    change.click();
+    expect(root.querySelector('[aria-label="Offline pack receipts"]')).toBeTruthy();
+    launch.click();
+    expect(root.querySelector('[aria-label="Offline pack receipts"]')).toBeNull();
+    launch.click();
+    await vi.waitFor(() => expect(root.querySelector('[aria-label="Offline pack receipts"]')).toBeTruthy());
+    const receiptParent = launch.parentElement!;
+    unmount();
+    expect(receiptParent.querySelector('[aria-label="Offline pack receipts"]')).toBeNull();
+    launch.click();
+    await Promise.resolve();
+    expect(receiptParent.querySelector('[aria-label="Offline pack receipts"]')).toBeNull();
   });
 
   it("does not schedule polling or background work", async () => {

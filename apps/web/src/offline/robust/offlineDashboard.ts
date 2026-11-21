@@ -465,10 +465,6 @@ export function mountOfflineDashboard(
       packChangeOpen = false;
       packChangeRevision += 1;
       unmountPackChange();
-    receiptDisposed = true;
-    receiptRevision += 1;
-    receiptLaunch.removeEventListener("click", onReceiptLaunch);
-    unmountReceipts();
       unmountPackChange = () => undefined;
       packChangeLaunch.textContent = language === "fr" ? "Ouvrir l’examen des changements du pack" : "Open pack change review";
       return;
@@ -670,6 +666,10 @@ export function mountOfflineDashboard(
     packChangeRevision += 1;
     packChangeLaunch.removeEventListener("click", onPackChangeLaunch);
     unmountPackChange();
+    receiptDisposed = true;
+    receiptRevision += 1;
+    receiptLaunch.removeEventListener("click", onReceiptLaunch);
+    unmountReceipts();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
