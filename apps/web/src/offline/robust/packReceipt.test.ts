@@ -556,7 +556,13 @@ describe("historical receipt comparisons", () => {
       inventoryCell("alpha"), inventoryCell("beta"), inventoryCell("gamma"),
     ]), middle, afterManifest);
     expect(comparePackReceipts(before, after).rows.find((row) => row.id === "gamma")?.change).toBe("added");
-    expect(comparePackReceipts(after, before).rows.find((row) => row.id === "gamma")?.change).toBe("removed");
+    const withGamma = await receipt(inventory([
+      inventoryCell("alpha"), inventoryCell("beta"), inventoryCell("gamma"),
+    ]), late, afterManifest);
+    const withoutGamma = await receipt(inventory([
+      inventoryCell("alpha"), inventoryCell("beta"),
+    ]), new Date(Date.parse(late) + 60_000).toISOString(), beforeManifest);
+    expect(comparePackReceipts(withGamma, withoutGamma).rows.find((row) => row.id === "gamma")?.change).toBe("removed");
   });
 
   it("rejects different regions and reversed capture times", async () => {
