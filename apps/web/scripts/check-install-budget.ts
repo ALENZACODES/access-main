@@ -8,19 +8,15 @@
  *
  * On-demand downloads are not part of the first install and are kept out of
  * the cap: offline region packs (packs/), data files (data/), PMTiles, and
- * the MapLibre chunk and the optional narrow-screen audit chunk. Both optional
- * screens cache their chunks after an intentional online visit. The guard fails if any
+ * the MapLibre chunk that only the map page requests. The guard fails if any
  * of them ever lands in the precache, and reports their sizes separately.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertInstallBudget, INSTALL_BUDGET_BYTES, type InstallAsset } from "../src/perf/install-budget.ts";
-import { isOnDemandAuditAsset } from "../src/perf/optional-audit-assets.ts";
 
 const ON_DEMAND = [/^packs\//, /^data\//, /\.pmtiles$/, /(^|\/)maplibre-[^/]*\.js$/];
-const isOnDemand = (assetPath: string): boolean =>
-  ON_DEMAND.some((pattern) => pattern.test(assetPath)) || isOnDemandAuditAsset(assetPath);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dist = path.resolve(here, "../dist");
@@ -46,7 +42,7 @@ if (!list) fail("no precacheAndRoute([...]) in dist/sw.js.");
 const urls = [...list.matchAll(/url\s*:\s*"([^"]+)"/g)].map((match) => (match[1] ?? "").replace(/^\//, ""));
 if (urls.length === 0) fail("the precache list is empty; refusing to pass an empty install.");
 
-const misplaced = urls.filter((url) => isOnDemand(url));
+const misplaced = urls.filter((url) => ON_DEMAND.some((pattern) => pattern.test(url)));
 if (misplaced.length > 0) fail(`on-demand files are in the precache and would count toward first install: ${misplaced.join(", ")}`);
 
 const runtime = ["sw.js", ...[...sw.matchAll(/["']\.\/(workbox-[\w-]+)["']/g)].map((match) => `${match[1]}.js`)];
@@ -65,8 +61,8 @@ try {
   fail(`${error instanceof Error ? error.message : String(error)}\nLargest files:\n${largest}`);
 }
 
-const onDemand = walk(dist).filter((file) => isOnDemand(file));
+const onDemand = walk(dist).filter((file) => ON_DEMAND.some((pattern) => pattern.test(file)));
 const onDemandBytes = onDemand.reduce((sum, file) => sum + statSync(path.join(dist, file)).size, 0);
 
 console.log(`First install: ${report.totalBytes} B in ${report.assets} files (cap ${INSTALL_BUDGET_BYTES} B, ${report.remainingBytes} B left).`);
-console.log(`On demand, outside the cap: ${onDemandBytes} B in ${onDemand.length} files (packs, data, tiles, MapLibre, optional narrow-screen audit).`);
+console.log(`On demand, outside the cap: ${onDemandBytes} B in ${onDemand.length} files (packs, data, tiles, MapLibre).`);

@@ -1,0 +1,48 @@
+import { describe, expect, it } from "vitest";
+import { addBriefStep, createCoordinationBrief, setBriefStatus, type StepDraft } from "./coordinationBrief";
+import { coordinationBriefFilename, coordinationBriefJson, coordinationBriefText } from "./coordinationBriefExport";
+const stamp = "2026-11-20T12:00:00.000Z";
+const plan = createCoordinationBrief("central", "Public service visit", "2026-11-20", "Ask in advance");
+const draft: StepDraft = { label: "Arrival", topic: "arrival", priority: "essential",
+  question: "Which entrance should I ask about?", fallbackQuestion: "Who can describe an alternative?",
+  contactMethod: "Phone", note: "Ask a person", provenance: { source: "Example response", licence: "User note", date: "2026-11-19" } };
+const book = addBriefStep(plan, "arrival", "event1", stamp, draft);
+const noSource = addBriefStep(plan, "arrival", "event1", stamp, { ...draft, provenance: null });
+describe("offline coordination JSON and text exports", () => {
+  it("serializes schema", () => { expect(coordinationBriefJson(book)).toContain("offline-coordination-brief-v1"); });
+  it("appends newline", () => { expect(coordinationBriefJson(book).endsWith("\n")).toBe(true); });
+  it("preserves source name in JSON", () => { expect(coordinationBriefJson(book)).toContain("Example response"); });
+  it("preserves licence in JSON", () => { expect(coordinationBriefJson(book)).toContain("User note"); });
+  it("preserves source date in JSON", () => { expect(coordinationBriefJson(book)).toContain("2026-11-19"); });
+  it("preserves question verbatim in JSON", () => { expect(coordinationBriefJson(book)).toContain("Which entrance should I ask about?"); });
+  it("retains literal physical UNKNOWN in JSON", () => { expect(coordinationBriefJson(book)).toContain('"physicalCondition": "UNKNOWN"'); });
+  it("never serializes device fingerprints", () => { expect(coordinationBriefJson(book)).not.toContain("userAgent"); });
+  it("never serializes precise location", () => { expect(coordinationBriefJson(book)).not.toContain("longitude"); });
+  it("text includes English title", () => { expect(coordinationBriefText(book, "en")).toContain("Offline coordination brief"); });
+  it("text includes French title", () => { expect(coordinationBriefText(book, "fr")).toContain("Fiche de coordination hors ligne"); });
+  it("English text identifies region", () => { expect(coordinationBriefText(book, "en")).toContain("Local region: central"); });
+  it("French text uses a nonbreaking colon separator", () => { expect(coordinationBriefText(book, "fr")).toContain("Région locale\u00A0: central"); });
+  it("text includes the actual question", () => { expect(coordinationBriefText(book, "en")).toContain(draft.question); });
+  it("text includes the fallback question", () => { expect(coordinationBriefText(book, "en")).toContain(draft.fallbackQuestion); });
+  it("text includes the user-supplied licence", () => { expect(coordinationBriefText(book, "en")).toContain("User note"); });
+  it("text reports UNKNOWN physical conditions", () => { expect(coordinationBriefText(book, "en")).toContain("Physical conditions: UNKNOWN"); });
+  it("French text reports UNKNOWN physical conditions", () => { expect(coordinationBriefText(book, "fr")).toContain("Conditions physiques\u00A0: UNKNOWN"); });
+  it("missing sources are never manufactured", () => { expect(coordinationBriefText(noSource, "en")).toContain("Source: UNKNOWN"); });
+  it("missing context says UNKNOWN", () => { expect(coordinationBriefText(addBriefStep(createCoordinationBrief("central", "Visit", "2026-11-20"), "arrival", "ev", stamp, draft), "en")).toContain("Outing or service context: UNKNOWN"); });
+  it("status still says UNKNOWN after recording a reply", () => { const after = setBriefStatus(book, "arrival", "event2", "2026-11-20T13:00:00.000Z", "reply-recorded"); expect(coordinationBriefText(after, "en")).toContain("Reply recorded, conditions UNKNOWN"); });
+  it("text includes explicit privacy warning", () => { expect(coordinationBriefText(book, "en")).toContain("personal contact notes"); });
+  it("text has a final newline", () => { expect(coordinationBriefText(book, "en").endsWith("\n")).toBe(true); });
+  it("text is stable between calls", () => { expect(coordinationBriefText(book, "en")).toBe(coordinationBriefText(book, "en")); });
+  it("does not mutate original data", () => { const before = coordinationBriefJson(book); coordinationBriefText(book, "fr"); expect(coordinationBriefJson(book)).toBe(before); });
+  it("English text does not print raw JSON braces", () => { expect(coordinationBriefText(book, "en")).not.toContain('"schema":'); });
+  it("filename uses region and date", () => { expect(coordinationBriefFilename("central", "2026-11-20", "json")).toBe("offline-coordination-central-2026-11-20.json"); });
+  it("filename retains text extension", () => { expect(coordinationBriefFilename("central", "2026-11-20", "txt")).toMatch(/\.txt$/u); });
+  it("filename removes path separators", () => { expect(coordinationBriefFilename("../North/West", "2026-11-20", "txt")).toBe("offline-coordination-north-west-2026-11-20.txt"); });
+  it("filename limits region length", () => { expect(coordinationBriefFilename("A".repeat(500), "2026-11-20", "txt").length).toBeLessThan(110); });
+  it("filename uses fallback for blank region", () => { expect(coordinationBriefFilename("", "2026-11-20", "json")).toContain("region"); });
+  it("filename uses fallback for unsafe date", () => { expect(coordinationBriefFilename("central", "../../", "json")).toContain("unknown-date"); });
+  it("filename keeps accents from being path escapes", () => { expect(coordinationBriefFilename("Québec", "2026-11-20", "txt")).toContain("quebec"); });
+  it("text removes directional override controls", () => { const altered = addBriefStep(plan, "arrival", "event1", stamp, { ...draft, label: "Safe\u202eaway" }); expect(coordinationBriefText(altered, "en")).not.toContain("\u202e"); });
+  it("text converts line breaks in notes to spaces", () => { const altered = addBriefStep(plan, "arrival", "event1", stamp, { ...draft, note: "line1\nline2" }); expect(coordinationBriefText(altered, "en")).toContain("line1 line2"); });
+  it("zero-step briefing is explicitly counted", () => { expect(coordinationBriefText(plan, "en")).toContain("Checkpoints: 0"); });
+});

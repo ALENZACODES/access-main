@@ -3,6 +3,7 @@ import { ADDRESS_REGISTER, CALL_REGISTER, type CallRow } from "./addressRegister
 import { DEVICE_REGISTER, type DeviceRow } from "./deviceRegister";
 import { FEATURE_REGISTER, type FeatureRow } from "./featureRegister";
 import { glanceFigures, glanceUnknowns, type GlanceFigure } from "./glance";
+import { STATEMENT_REGISTER, checkStatements, type StatementResult } from "./statementRegister";
 import { STORAGE_REGISTER, UNSCANNED, type RegisterRow } from "./storageRegister";
 
 const b = { en: "x", fr: "y" };
@@ -54,6 +55,27 @@ describe("glanceFigures", () => {
     expect(f.caches! + f.databases!).toBe(DEVICE_REGISTER.length);
     expect(f["features-used"]! + f["features-unused"]!).toBe(FEATURE_REGISTER.length);
     expect(f.pages! + f.names!).toBe(ADDRESS_REGISTER.length);
+  });
+});
+
+describe("glanceFigures: statements", () => {
+  const result = (check: StatementResult["check"]): StatementResult => ({ row: STATEMENT_REGISTER[0]!, check });
+  it("counts the parts and the parts that are not a pass", () => {
+    const f = glanceFigures({ statements: [result("no-requests-in-file"), result("requests-in-file"), result("not-checked")] });
+    expect(byId(f)).toEqual({ "statement-parts": 3, "statement-unconfirmed": 2 });
+  });
+  it("marks only the unconfirmed figure as unknown", () => {
+    expect(glanceFigures({ statements: [result("not-checked")] }).filter((x) => x.unknown).map((x) => x.id)).toEqual(["statement-unconfirmed"]);
+  });
+  it("counts nothing as unconfirmed when every part was found clear", () => {
+    expect(byId(glanceFigures({ statements: [result("no-requests-in-file")] }))["statement-unconfirmed"]).toBe(0);
+  });
+  it("counts every part as unconfirmed when the list of requests was not given", () => {
+    const f = glanceFigures({ statements: checkStatements(STATEMENT_REGISTER, null) });
+    expect(byId(f)).toEqual({ "statement-parts": STATEMENT_REGISTER.length, "statement-unconfirmed": STATEMENT_REGISTER.length });
+  });
+  it("adds no figure when no statements were given", () => {
+    expect(glanceFigures({ device: [] }).some((x) => x.group === "statements")).toBe(false);
   });
 });
 

@@ -31,6 +31,15 @@ describe("guided recovery bilingual interface", () => {
     expect(en.tiers.UNKNOWN).toBe("UNKNOWN");
     expect(fr.tiers.UNKNOWN).toBe("UNKNOWN");
   });
+  it("labels every review finding and its priority in the selected language", () => {
+    expect(fr.priorityNames).toEqual({ low: "Faible", medium: "Moyenne", high: "Élevée" });
+    for (const [key, label] of Object.entries(en.findingNames)) {
+      expect(fr.findingNames).toHaveProperty(key);
+      const french = fr.findingNames[key as keyof typeof fr.findingNames];
+      expect(french).not.toBe(label);
+      expect(french).not.toBe(key);
+    }
+  });
   it("provides each topic in English", () => {
     expect(GUIDED_TOPICS.every((topic) => en.topics[topic].length > 0)).toBe(true);
   });

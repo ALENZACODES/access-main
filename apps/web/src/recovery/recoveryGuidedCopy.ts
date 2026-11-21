@@ -1,3 +1,4 @@
+import type { GuidedFindingCode, GuidedReviewPlan } from "./recoveryGuidedAnalysis";
 import type {
   GuidedAction, GuidedCondition, GuidedEvidence, GuidedIssue, GuidedLocale,
   GuidedOutcome, GuidedPhase, GuidedTier, GuidedTopic,
@@ -48,6 +49,8 @@ export interface GuidedCopy {
   readonly number: string;
   readonly unresolved: string;
   readonly priority: string;
+  readonly priorityNames: Readonly<Record<GuidedReviewPlan["priority"], string>>;
+  readonly findingNames: Readonly<Record<GuidedFindingCode, string>>;
   readonly operations: Readonly<Record<GuidedCondition, string>>;
   readonly topics: Readonly<Record<GuidedTopic, string>>;
   readonly evidenceNames: Readonly<Record<GuidedEvidence, string>>;
@@ -72,6 +75,14 @@ const en: GuidedCopy = {
   staged: "Import preview available. No records have changed.", saved: "Saved using the selected file action.",
   failed: "The file could not be read or saved.", pending: "Reading the selected file.", noFile: "Choose a file first.",
   search: "Find a recorded review", clear: "Clear search", empty: "No matching reviews.", number: "Count", unresolved: "Open", priority: "Priority",
+  priorityNames: { high: "High", medium: "Medium", low: "Low" },
+  findingNames: {
+    "unknown-condition": "Condition recorded as UNKNOWN", "unknown-source": "Source tier recorded as UNKNOWN",
+    "unknown-evidence": "Evidence recorded as UNKNOWN", disputed: "Observation disputed",
+    "missing-topic": "Topic still to review", "needs-action": "Manual action requested",
+    "stale-source": "Source retrieved over 180 days ago", "no-steps": "No observations recorded",
+    "open-review": "Review still open",
+  },
   operations: { UNKNOWN: "UNKNOWN", interrupted: "Interrupted", "missing-data": "Missing data", permission: "Permission", storage: "Storage", integrity: "Integrity", handoff: "Handoff" },
   topics: { identify: "Identify the pack", connection: "Connection", storage: "Storage space", permissions: "Permissions", integrity: "File integrity", transfer: "Handoff details", "follow-up": "Manual follow-up" },
   evidenceNames: { UNKNOWN: "UNKNOWN", observed: "Observed locally", reported: "Reported by user", documented: "Documented", disputed: "Disputed" },
@@ -103,6 +114,14 @@ const fr: GuidedCopy = {
   staged: "Aperçu disponible. Aucun dossier n’a été modifié.", saved: "Enregistré avec l’action de fichier choisie.",
   failed: "Impossible de lire ou d’enregistrer le fichier.", pending: "Lecture du fichier choisi.", noFile: "Choisissez d’abord un fichier.",
   search: "Rechercher un examen consigné", clear: "Effacer la recherche", empty: "Aucun examen correspondant.", number: "Nombre", unresolved: "Ouverts", priority: "Priorité",
+  priorityNames: { high: "Élevée", medium: "Moyenne", low: "Faible" },
+  findingNames: {
+    "unknown-condition": "État consigné comme UNKNOWN", "unknown-source": "Niveau de preuve consigné comme UNKNOWN",
+    "unknown-evidence": "Preuve consignée comme UNKNOWN", disputed: "Observation contestée",
+    "missing-topic": "Sujet restant à examiner", "needs-action": "Intervention manuelle demandée",
+    "stale-source": "Source récupérée il y a plus de 180 jours", "no-steps": "Aucune observation consignée",
+    "open-review": "Examen toujours ouvert",
+  },
   operations: { UNKNOWN: "UNKNOWN", interrupted: "Interrompu", "missing-data": "Données manquantes", permission: "Autorisation", storage: "Stockage", integrity: "Intégrité", handoff: "Transfert" },
   topics: { identify: "Identifier l’ensemble", connection: "Connexion", storage: "Espace de stockage", permissions: "Autorisations", integrity: "Intégrité des fichiers", transfer: "Détails du transfert", "follow-up": "Suivi manuel" },
   evidenceNames: { UNKNOWN: "UNKNOWN", observed: "Observé localement", reported: "Déclaré par l’utilisateur", documented: "Documenté", disputed: "Contesté" },

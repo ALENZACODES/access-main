@@ -1,5 +1,6 @@
 import { useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, ReactElement } from "react";
+import { saveTextFile } from "../states/downloadFile";
 import type { LocalPackRecord } from "./packInventory";
 import type { SaveTextFile } from "./recoveryExport";
 import {
@@ -32,10 +33,15 @@ const controls: CSSProperties = {
 };
 const row: CSSProperties = { display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-start", minWidth: 0 };
 const field: CSSProperties = { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 4, flex: "1 1 160px", minWidth: 0, maxWidth: "100%" };
-const item: CSSProperties = { ...frame, padding: 12, marginBlock: 8 };
+
+const saveInBrowser: SaveTextFile = async (filename, content) => {
+  const mime = filename.endsWith(".json") ? "application/json;charset=utf-8" : "text/plain;charset=utf-8";
+  if (!saveTextFile({ name: filename, content, mime })) throw new Error("Local download unavailable");
+};
 
 /** Manual-only panel: no storage writes, network calls, background timers or pack mutation. */
-export function RecoveryGuidedReviewPanel({ locale, records, inspected, saveFile, onInspect }: RecoveryGuidedReviewPanelProps): ReactElement {
+export function RecoveryGuidedReviewPanel({ locale, records, inspected, saveFile = saveInBrowser, onInspect }: RecoveryGuidedReviewPanelProps): ReactElement {
+  const item: CSSProperties = { ...frame, padding: 12, marginBlock: 8 };
   const copy = recoveryGuidedCopy(locale);
   const heading = useId();
   const listHeading = useId();
@@ -131,7 +137,7 @@ export function RecoveryGuidedReviewPanel({ locale, records, inspected, saveFile
     inputRef.current?.focus();
   }
   async function exportFile(summaryOnly: boolean): Promise<void> {
-    if (!saveFile || saving) return;
+    if (saving) return;
     const data = summaryOnly ? { ok: true as const, value: guidedNarrative(document, today, locale) } : serializeGuidedDocument(document);
     if (!data.ok) { setMessage(copy.issues[data.issue]); return; }
     setSaving(true);
@@ -204,7 +210,7 @@ export function RecoveryGuidedReviewPanel({ locale, records, inspected, saveFile
         <h3 id={queueHeading}>{copy.reviewQueue}</h3>
         <p>{copy.cases}{sep}{summary.cases}. {copy.observations}{sep}{summary.steps}. {copy.unresolved}{sep}{summary.open}.</p>
         <ul>{report.reviews.slice(0, 70).map((entry) =>
-          <li key={entry.caseId}>{entry.packId} — {entry.caseId} — {copy.priority}{sep}{entry.priority} — {entry.codes.join(", ")}</li>
+          <li key={entry.caseId}>{entry.packId} — {entry.caseId} — {copy.priority}{sep}{copy.priorityNames[entry.priority]} — {entry.codes.map((code) => copy.findingNames[code]).join(", ")}</li>
         )}</ul>
       </section>
       <section aria-labelledby={listHeading}>
@@ -232,10 +238,10 @@ export function RecoveryGuidedReviewPanel({ locale, records, inspected, saveFile
           {preview.conflicts.length > 0 && <ul>{preview.conflicts.map((conflict) => <li key={conflict}>{conflict}</li>)}</ul>}
           <button type="button" style={controls} disabled={!preview.canMerge} onClick={applyFile}>{copy.merge}</button>
         </div>}
-        {saveFile && <div style={row}>
+        <div style={row}>
           <button type="button" style={controls} disabled={saving} onClick={() => { void exportFile(false); }}>{copy.save}</button>
           <button type="button" style={controls} disabled={saving} onClick={() => { void exportFile(true); }}>{copy.saveSummary}</button>
-        </div>}
+        </div>
       </section>
     </section>
   );
