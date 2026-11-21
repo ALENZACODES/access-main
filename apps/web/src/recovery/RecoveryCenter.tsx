@@ -48,6 +48,10 @@ const RecoveryReceiptLedgerPanel = lazy(async () => ({
   default: (await import("./RecoveryReceiptLedgerPanel")).RecoveryReceiptLedgerPanel,
 }));
 
+const RecoveryGuidedReviewPanel = lazy(async () => ({
+  default: (await import("./RecoveryGuidedReviewPanel")).RecoveryGuidedReviewPanel,
+}));
+
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
 export interface RecoveryCenterProps {
   readonly locale: RecoveryLocale;
@@ -73,6 +77,7 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
   const [previousInventory, setPreviousInventory] = useState<LocalPackRecord[] | null>(null);
   const [inspectionDate, setInspectionDate] = useState("");
   const [checking, setChecking] = useState(false);
+  const [guidedReviewOpened, setGuidedReviewOpened] = useState(false);
   const [inventoryFailure, setInventoryFailure] = useState(false);
   const [hasInspected, setHasInspected] = useState(false);
   const [transfer, setTransfer] = useState<DownloadSnapshot>(initialDownload);
@@ -214,6 +219,20 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         <RecoveryReceiptLedgerPanel locale={locale} records={inventory}
           inspected={hasInspected && !checking && !inventoryFailure} saveFile={saveFile} />
       </Suspense>
+      <details style={section} onToggle={(event) => {
+        if (event.currentTarget.open) setGuidedReviewOpened(true);
+      }}>
+        <summary style={button}>
+          {locale === "fr" ? "Examen guidé de récupération hors ligne" : "Guided offline recovery review"}
+        </summary>
+        {guidedReviewOpened && (
+          <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen guidé…" : "Loading guided review…"}</p>}>
+            <RecoveryGuidedReviewPanel locale={locale} records={inventory}
+              inspected={hasInspected && !checking && !inventoryFailure}
+              onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          </Suspense>
+        )}
+      </details>
       {download !== undefined && (
         <section aria-labelledby={transferHeading} style={section} aria-busy={isActive}>
           <h2 id={transferHeading}>{transferCopy.heading}</h2>

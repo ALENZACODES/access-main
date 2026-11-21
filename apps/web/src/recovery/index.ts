@@ -289,3 +289,35 @@ export * from "./recoveryReceiptLedger";
 export * from "./recoveryReceiptAnalysis";
 export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
 export type { ReceiptCopy } from "./recoveryReceiptCopy";
+
+// Manual local guided review; notes cannot change installed pack readiness.
+export { RecoveryGuidedReviewPanel } from "./RecoveryGuidedReviewPanel";
+export type { RecoveryGuidedReviewPanelProps } from "./RecoveryGuidedReviewPanel";
+export {
+  GUIDED_ACTIONS, GUIDED_CONDITIONS, GUIDED_EVIDENCE, GUIDED_LIMITS,
+  GUIDED_OUTCOMES, GUIDED_PHASES, GUIDED_TIERS, GUIDED_TOPICS,
+  appendGuidedEvent, beginGuidedCase, checkGuidedCase, checkGuidedDocument,
+  checkGuidedEvent, checkGuidedSource, checkGuidedStep, emptyGuidedDocument,
+  filterGuidedCases, guidedContentReady, guidedEventsFor, guidedPhaseFromEvents,
+  guidedStepsFor, guidedSummary, mergeGuidedDocuments, nextGuidedId,
+  parseGuidedDocument, previewGuidedMerge, recordGuidedStep,
+  serializeGuidedDocument,
+} from "./recoveryGuidedReview";
+export type {
+  GuidedAction, GuidedCase, GuidedCondition, GuidedCounts, GuidedDocument,
+  GuidedEvent, GuidedEvidence, GuidedFilter, GuidedIssue, GuidedLocale,
+  GuidedMergePreview, GuidedOutcome, GuidedPhase, GuidedResult,
+  GuidedSource, GuidedStep, GuidedTier, GuidedTopic,
+} from "./recoveryGuidedReview";
+export {
+  compareGuidedPacks, createGuidedReport, guidedDailyGroups, guidedFindings,
+  guidedNarrative, guidedPackReviews, guidedReviewPlan, guidedSourceGroups,
+  guidedTimeline, guidedTopicStatus,
+} from "./recoveryGuidedAnalysis";
+export type {
+  GuidedComparison, GuidedDailyGroup, GuidedFinding, GuidedFindingCode,
+  GuidedPackReview, GuidedReport, GuidedReviewPlan, GuidedSourceGroup,
+  GuidedTopicStatus,
+} from "./recoveryGuidedAnalysis";
+export { recoveryGuidedCopy } from "./recoveryGuidedCopy";
+export type { GuidedCopy } from "./recoveryGuidedCopy";
