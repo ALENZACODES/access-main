@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-const source = readFileSync(new URL("./p20ae-browser-reflow.ts", import.meta.url), "utf8");
+const source = readFileSync(new globalThis.URL("./p20ae-browser-reflow.ts", import.meta.url), "utf8");
 test("P20AE observer exports observation reader", () => assert.match(source, /export async function readObservation/));
 test("P20AE observer exports full page audit", () => assert.match(source, /export async function auditPageReflow/));
 test("P20AE observer exports opt-in text spacing stress", () => assert.match(source, /export async function applySpacingStress/));
