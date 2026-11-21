@@ -1,7 +1,7 @@
 import { expect, test as base, type Page } from "@playwright/test";
 
 export const test = base.extend<{ firstOfflinePage: Page }>({
-  firstOfflinePage: async ({ page, context }, use) => {
+  firstOfflinePage: async ({ page, context }, runTest) => {
     // Only the home page is visited online. The new tab starts with no evaluated modules.
     await page.goto("/");
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
@@ -25,7 +25,7 @@ export const test = base.extend<{ firstOfflinePage: Page }>({
     const response = await offline.goto("/offline");
     expect(response?.fromServiceWorker()).toBe(true);
     expect(await offline.evaluate(() => navigator.onLine)).toBe(false);
-    await use(offline);
+    await runTest(offline);
 
     // A runtime cache hit cannot substitute for a first-install entry.
     expect(requestedAssets.size).toBeGreaterThan(0);
