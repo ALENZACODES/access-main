@@ -166,6 +166,44 @@ test.describe("P16 round eight route continuity", () => {
       .toContain("language-selection-mismatch");
   });
 
+  test("shell and embedded language groups can each select one option", async ({ page }) => {
+    await fixture(page, `<header class="site-header"><div role="group" aria-label="Language">
+      <button lang="en" aria-pressed="true">English</button>
+      <button lang="fr" aria-pressed="false">Français</button>
+    </div></header><main><h1>Home</h1></main>
+    <div role="group" aria-label="Tool language">
+      <button lang="en" aria-pressed="true">English</button>
+      <button lang="fr" aria-pressed="false">Français</button>
+    </div>`);
+    expect(await inspectLanguageButtons(page)).toEqual([]);
+  });
+
+  test("two active choices in an embedded switch still fail", async ({ page }) => {
+    await fixture(page, `<header class="site-header"><div role="group" aria-label="Language">
+      <button lang="en" aria-pressed="true">English</button>
+      <button lang="fr" aria-pressed="false">Français</button>
+    </div></header><main><h1>Home</h1></main>
+    <div role="group" aria-label="Tool language">
+      <button lang="en" aria-pressed="true">English</button>
+      <button lang="fr" aria-pressed="true">Français</button>
+    </div>`);
+    expect((await inspectLanguageButtons(page)).map((item) => item.code))
+      .toContain("language-selection-count");
+  });
+
+  test("invalid embedded language selection still fails", async ({ page }) => {
+    await fixture(page, `<header class="site-header"><div role="group">
+      <button lang="en" aria-pressed="true">English</button>
+      <button lang="fr" aria-pressed="false">Français</button>
+    </div></header><main><h1>Home</h1></main>
+    <div role="group" aria-label="Tool language">
+      <button lang="en" aria-pressed="true">English</button>
+      <button lang="fr" aria-pressed="true">Français</button>
+    </div>`);
+    expect((await inspectLanguageButtons(page)).map((item) => item.code))
+      .toContain("language-selection-count");
+  });
+
   test("an invalid language button state fails", async ({ page }) => {
     await fixture(page, `<main><h1>Home</h1></main>
       <button lang="fr" aria-pressed="maybe">Français</button>`);

@@ -132,7 +132,7 @@ test.describe("P16 round eight provenance and offline contracts", () => {
   });
 
   test("correctly spaced French copy passes", async ({ page }) => {
-    await fixture(page, `<p data-a11y-localized-copy>l’App : « Inconnu » !</p>`, "fr");
+    await fixture(page, `<p data-a11y-localized-copy>l’App\u00A0: «\u202FInconnu\u202F»\u202F!</p>`, "fr");
     expect(await inspectLocalizedCopy(page)).toEqual([]);
   });
 

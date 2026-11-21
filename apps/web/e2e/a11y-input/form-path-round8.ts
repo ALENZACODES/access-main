@@ -116,16 +116,27 @@ export async function inspectFormGroups(page: Page): Promise<FormFinding[]> {
       if (!name && group.getAttribute("role") !== "group") {
         findings.push({ code: "form-group-name", target, detail: "Group lacks an accessible label" });
       }
+      // Native radio inputs have the implicit radio role. Omitting them would
+      // report an empty group even when it contains labelled radio controls.
       const items = Array.from(group.querySelectorAll<HTMLElement>(
-        "[role='radio'],[role='option']",
-      ));
+        group.getAttribute("role") === "radiogroup"
+          ? "[role='radio'],input[type='radio']"
+          : "[role='option']",
+      )).filter((item) => !(item instanceof HTMLInputElement &&
+        item.closest("[role='radio']")));
+      // A synthetic radio can wrap a native input. Count that widget once,
+      // while retaining the native input's implicit role when it stands alone.
       if (group.getAttribute("role") === "radiogroup") {
         if (!items.length) findings.push({ code: "radiogroup-empty", target,
           detail: "Radio group has no radio options" });
-        const selected = items.filter((item) => item.getAttribute("aria-checked") === "true");
+        const selected = items.filter((item) => item instanceof HTMLInputElement
+          ? item.checked : item.getAttribute("aria-checked") === "true");
         if (selected.length > 1) findings.push({ code: "radiogroup-multi-selected", target,
           detail: "More than one radio is checked" });
-        const reachable = items.filter((item) => item.getAttribute("tabindex") === "0");
+        // Native radio groups follow the browser's checked-radio focus rule.
+        // An explicit roving tabindex contract applies to synthetic ARIA radios.
+        const reachable = items.filter((item) =>
+          !(item instanceof HTMLInputElement) && item.getAttribute("tabindex") === "0");
         if (reachable.length > 1) findings.push({ code: "radiogroup-multi-tabstop", target,
           detail: "More than one radio participates in sequential focus" });
       }

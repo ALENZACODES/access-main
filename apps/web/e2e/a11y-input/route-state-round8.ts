@@ -180,15 +180,31 @@ export async function inspectLanguageButtons(page: Page): Promise<RouteFinding[]
           detail: `${Math.round(rect.width)} x ${Math.round(rect.height)} CSS px` });
       }
     }
-    const selected = switches.filter((button) => button.getAttribute("aria-pressed") === "true");
-    if (switches.length >= 2 && selected.length !== 1) {
-      findings.push({ code: "language-selection-count", target: "language-switch",
-        detail: `Exactly one language choice must be pressed; found ${selected.length}` });
+    // Embedded tools can host their own language switch. Count selected
+    // options per group, not across unrelated shell and embedded controls.
+    const groups = new Map<Element, HTMLButtonElement[]>();
+    for (const button of switches) {
+      const group = button.closest("[role='group'],.language-switch") ??
+        button.parentElement ?? button;
+      groups.set(group, [...(groups.get(group) ?? []), button]);
     }
-    const current = document.documentElement.lang.toLowerCase().slice(0, 2);
-    if (selected.length === 1 && selected[0]?.lang !== current) {
-      findings.push({ code: "language-selection-mismatch", target: "language-switch",
-        detail: "Selected language does not match document language" });
+    for (const [group, choices] of groups) {
+      const selected = choices.filter((button) => button.getAttribute("aria-pressed") === "true");
+      const target = group.id ? `#${group.id}` :
+        group.closest(".site-header") ? "language-switch" : "embedded-language-switch";
+      if (choices.length >= 2 && selected.length !== 1) {
+        findings.push({ code: "language-selection-count", target,
+          detail: `Exactly one language choice must be pressed; found ${selected.length}` });
+      }
+      // Only the shell switch controls html[lang]. An embedded control may
+      // select its own localized view without changing the page language.
+      if ((group.closest(".site-header") || groups.size === 1) && selected.length === 1) {
+        const current = document.documentElement.lang.toLowerCase().slice(0, 2);
+        if (selected[0]?.lang !== current) {
+          findings.push({ code: "language-selection-mismatch", target,
+            detail: "Selected language does not match document language" });
+        }
+      }
     }
     return findings;
   });

@@ -153,7 +153,7 @@ test.describe("P16 round 10: reflow and interaction alternatives", () => {
 
   test("semantic link can provide a keyboard alternative", async ({ page }) => {
     await fixture(page, `<div data-a11y-drag-operation data-a11y-drag-alternative="edit">Drag</div>
-      <a id="edit" href="/edit">Edit order</a>`);
+      <a id="edit" href="/edit" style="display:inline-flex;min-height:44px;min-width:44px;align-items:center">Edit order</a>`);
     expect((await auditReflowInteractions(page)).issues).toEqual([]);
   });
 

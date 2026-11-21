@@ -32,6 +32,38 @@ test.describe("P16 round eight form semantics", () => {
     expect(await auditFormRoute(page)).toEqual([]);
   });
 
+  test("native radio inputs count as options inside an ARIA radiogroup", async ({ page }) => {
+    await fixture(page, `<fieldset role="radiogroup" aria-label="Choices"><legend>Choices</legend>
+      <label><input type="radio" name="choice" checked>First</label>
+      <label><input type="radio" name="choice">Second</label>
+    </fieldset>`);
+    expect(await inspectFormGroups(page)).toEqual([]);
+  });
+
+  test("a synthetic radio wrapping a native input counts as one option", async ({ page }) => {
+    await fixture(page, `<div role="radiogroup" aria-label="Choices">
+      <label role="radio" aria-checked="true" tabindex="0">
+        <input type="radio" name="choice" checked>First
+      </label>
+    </div>`);
+    expect(await inspectFormGroups(page)).toEqual([]);
+  });
+
+  test("native checked radio count remains exclusive", async ({ page }) => {
+    await fixture(page, `<div role="radiogroup" aria-label="Choices">
+      <label><input id="one" type="radio" name="one" checked>First</label>
+      <label><input id="two" type="radio" name="two" checked>Second</label>
+    </div>`);
+    expect((await inspectFormGroups(page)).map((item) => item.code))
+      .toContain("radiogroup-multi-selected");
+  });
+
+  test("truly empty radiogroups remain a blocking finding", async ({ page }) => {
+    await fixture(page, `<div role="radiogroup" aria-label="Choices"></div>`);
+    expect((await inspectFormGroups(page)).map((item) => item.code))
+      .toContain("radiogroup-empty");
+  });
+
   test("an unlabelled text input is reported", async ({ page }) => {
     await fixture(page, `<input id="unnamed">`);
     expect((await inspectFormNames(page)).map((item) => item.code)).toContain("field-name");
