@@ -147,6 +147,14 @@ describe("offline pack receipt capture", () => {
     expect(result.cells.every((cell) => cell.state === "UNKNOWN")).toBe(true);
   });
 
+  it("records all cells as UNKNOWN when the inventory summary disagrees with its rows", async () => {
+    const inconsistent = { ...inventory(), savedCount: 3, savedBytes: 60, complete: true };
+    const result = await receipt(inconsistent);
+    expect(result.savedCount).toBe(0);
+    expect(result.unknownCount).toBe(3);
+    expect(result.cells.every((cell) => cell.cause === "UNKNOWN")).toBe(true);
+  });
+
   it("keeps an individual cell UNKNOWN when its byte count differs", async () => {
     const rows = [
       inventoryCell("alpha", "present", { expectedBytes: 11 }),
