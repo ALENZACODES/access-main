@@ -3,7 +3,6 @@ import { evaluate, type ControlKind, type Observation, type Report } from "./p20
 
 export interface ReadOptions { route?: string; limit?: number; includeHidden?: boolean; }
 const CONTROL_SELECTOR = "a[href],button,input:not([type=hidden]),select,textarea,summary,[role=button],[role=link],[role=checkbox],[role=radio],[role=switch],[tabindex]:not([tabindex='-1'])";
-const TEXT_SELECTOR = "main h1,main h2,main h3,main p,main li,main label,main legend,main table,main pre,main blockquote";
 
 export async function readObservation(page: Page, options: ReadOptions = {}): Promise<Observation> {
   return page.evaluate(({ route, limit, includeHidden }) => {
