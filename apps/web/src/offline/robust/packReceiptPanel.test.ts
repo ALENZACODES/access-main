@@ -11,7 +11,6 @@ import {
   createPackReceipt,
   emptyReceiptBook,
   encodeReceiptBook,
-  type ReceiptBook,
   type ReceiptCrypto,
 } from "./packReceipt";
 
