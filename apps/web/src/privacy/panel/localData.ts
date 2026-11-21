@@ -43,7 +43,12 @@ export function exportLocalData(
   const prefix = scope.prefix;
   const items: Record<string, string> = {};
   for (const k of scopeKeysPresent(storage, scope)) {
-    const v = storage.getItem(k);
+    let v: string | null = null;
+    try {
+      v = storage.getItem(k);
+    } catch {
+      // The browser would not let this value be read, so it cannot be in the file.
+    }
     if (v !== null) items[k] = v;
   }
   const body = {
@@ -71,7 +76,14 @@ export function eraseLocalData(storage: StorageLike, prefixOrScope: string | Dat
       failed.push(k);
       continue;
     }
-    if (storage.getItem(k) !== null) failed.push(k);
+    // A name counts as removed only when it can be seen to be gone.
+    let still = true;
+    try {
+      still = storage.getItem(k) !== null;
+    } catch {
+      still = true;
+    }
+    if (still) failed.push(k);
   }
   return { removed: keys.length - failed.length, failed };
 }
