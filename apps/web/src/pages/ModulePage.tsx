@@ -12,7 +12,7 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
 import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm.tsx";
-import { DataCredits, PackCompare, PackFreshness, PackPlaces, PackReport, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { DataCredits, ElevatorNotices, PackCompare, PackFreshness, PackPlaces, PackReport, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -64,12 +64,21 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   }, [online]);
   // Places in the pack stored on this device. A missing, unreadable or unsupported pack shows nothing here.
   const [packPlaces, setPackPlaces] = useState<unknown>(null);
+  const [packElevators, setPackElevators] = useState<unknown>(null);
   useEffect(() => {
     if (id !== "places") return;
     let active = true;
     getPack(OFFLINE_PACK_ID).then(
-      (pack) => { if (active) setPackPlaces(pack?.content?.places ?? null); },
-      () => { if (active) setPackPlaces(null); },
+      (pack) => {
+        if (!active) return;
+        setPackPlaces(pack?.content?.places ?? null);
+        setPackElevators(pack?.content?.elevator_status ?? null);
+      },
+      () => {
+        if (!active) return;
+        setPackPlaces(null);
+        setPackElevators(null);
+      },
     );
     return () => { active = false; };
   }, [id]);
@@ -218,6 +227,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
       {id === "places" && packPlaces !== null ? <PackFreshness places={packPlaces} locale={locale} /> : null}
       {id === "places" && packPlaces !== null ? <PackReport places={packPlaces} locale={locale} /> : null}
       {id === "places" && packPlaces !== null ? <PackCompare places={packPlaces} locale={locale} today={new Date().toISOString().slice(0, 10)} /> : null}
+      {id === "places" && packElevators !== null ? <ElevatorNotices notices={packElevators} locale={locale} /> : null}
       {id === "places" && packCredits.length > 0 ? <DataCredits records={packCredits} locale={locale} showOsmCredit={false} /> : null}
       <p>{t("data.liveBody")}</p>
     </div>
