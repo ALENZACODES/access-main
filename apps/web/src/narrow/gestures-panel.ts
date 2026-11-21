@@ -250,6 +250,11 @@ export function gesturesNoteOf(s: GesturesPanelState, lang: Lang): string {
   return s.testing ? '' : dragNote(dragResult(s.trial), lang);
 }
 
+/** Whether dragging asks the site for something: unless every try of a finished test made it. */
+export function dragNeedsSite(s: GesturesPanelState): boolean {
+  return dragIsHard(dragResult(s.trial)) !== false;
+}
+
 /** The panel itself, so its own handle is not counted with the page. */
 export const GESTURES_EXCLUDE = '.gest';
 
