@@ -4,11 +4,13 @@
 
 import type { ExportFile } from "./localData";
 import type { PrivacyController } from "./controller";
+import { MAX_IMPORT_BYTES } from "./importData";
+import { MAX_PROTECTED_BYTES } from "./protectedBackup";
 
 export interface ActionTarget {
   getAttribute(name: string): string | null;
   /** Set on a file input */
-  files?: ArrayLike<{ text(): Promise<string> }> | null;
+  files?: ArrayLike<{ size?: number; text(): Promise<string> }> | null;
 }
 export interface PanelEvent {
   target: { closest(selector: string): ActionTarget | null } | null;
@@ -51,12 +53,12 @@ export function mountPrivacyPanel(
       case "export-glance-text":
       case "export-handoff-csv":
       case "export-handoff-text":
+      case "export-picks-csv":
+      case "export-picks-text":
       case "export-retention-csv":
       case "export-retention-text":
       case "export-query-csv":
       case "export-query-text":
-      case "export-auto-csv":
-      case "export-auto-text":
       case "export-receipt-csv":
       case "export-receipt-text":
       case "export-statements-csv":
@@ -66,7 +68,7 @@ export function mountPrivacyPanel(
         const action = t.getAttribute("data-action");
         const before = controller.getState().lastExport;
         const type =
-          action === "export-list-csv" || action === "export-list-text" || action === "export-kept-csv" || action === "export-kept-text" || action === "export-features-csv" || action === "export-features-text" || action === "export-addresses-csv" || action === "export-addresses-text" || action === "export-glance-csv" || action === "export-glance-text" || action === "export-handoff-csv" || action === "export-auto-csv" || action === "export-auto-text" || action === "export-retention-csv" || action === "export-retention-text" || action === "export-query-csv" || action === "export-query-text" || action === "export-handoff-text" || action === "export-receipt-csv" || action === "export-receipt-text" || action === "export-statements-csv" || action === "export-statements-text" || action === "export-support" || action === "export-printable"
+          action === "export-list-csv" || action === "export-list-text" || action === "export-kept-csv" || action === "export-kept-text" || action === "export-features-csv" || action === "export-features-text" || action === "export-addresses-csv" || action === "export-addresses-text" || action === "export-glance-csv" || action === "export-glance-text" || action === "export-handoff-csv" || action === "export-picks-csv" || action === "export-picks-text" || action === "export-retention-csv" || action === "export-retention-text" || action === "export-query-csv" || action === "export-query-text" || action === "export-handoff-text" || action === "export-receipt-csv" || action === "export-receipt-text" || action === "export-statements-csv" || action === "export-statements-text" || action === "export-support" || action === "export-printable"
             ? action
             : "export";
         const after = controller.dispatch({ type }).lastExport;
@@ -81,9 +83,6 @@ export function mountPrivacyPanel(
       case "check-retention":
         controller.dispatch({ type: "check-retention" });
         render("[data-privacy-status]");
-        break;
-      case "check-workers":
-        void controller.dispatchAsync({ type: "check-workers" }).then(() => render("[data-privacy-status]"));
         break;
       case "check-features":
         void controller.dispatchAsync({ type: "check-features" }).then(() => render("[data-privacy-status]"));
@@ -160,6 +159,10 @@ export function mountPrivacyPanel(
       const f = sealed.files?.[0];
       if (f === undefined) return;
       const passphrase = root.querySelector("[data-protected-pass]")?.value ?? "";
+      if (f.size !== undefined && f.size > MAX_PROTECTED_BYTES) {
+        void controller.dispatchAsync({ type: "protected-import", text: "", passphrase, size: f.size }).then(() => render("[data-privacy-status]"));
+        return;
+      }
       void f.text().then(
         (text) => controller.dispatchAsync({ type: "protected-import", text, passphrase }),
         () => controller.dispatchAsync({ type: "protected-import", text: "", passphrase }),
@@ -170,6 +173,11 @@ export function mountPrivacyPanel(
     if (file !== null) {
       const f = file.files?.[0];
       if (f === undefined) return;
+      if (f.size !== undefined && f.size > MAX_IMPORT_BYTES) {
+        controller.dispatch({ type: "import-load", text: "", size: f.size });
+        render("[data-privacy-status]");
+        return;
+      }
       void f.text().then(
         (text) => {
           controller.dispatch({ type: "import-load", text });

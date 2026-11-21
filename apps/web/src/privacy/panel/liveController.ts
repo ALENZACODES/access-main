@@ -8,9 +8,8 @@ import { LIVE_PURPOSES, LIVE_RULES, PRIVACY_STORAGE_PREFIX, liveRefused } from "
 import { DEVICE_REGISTER } from "./deviceRegister";
 import { ADDRESS_REGISTER, CALL_REGISTER } from "./addressRegister";
 import { FEATURE_REGISTER } from "./featureRegister";
-import { AUTO_REGISTER } from "./autoRegister";
-import { browserWorkerHost } from "./autoLive";
 import { HANDOFF_REGISTER } from "./handoffRegister";
+import { PICK_REGISTER } from "./pickRegister";
 import { RETENTION_REGISTER } from "./retentionRegister";
 import { QUERY_REGISTER } from "./queryRegister";
 import { STATEMENT_REGISTER } from "./statementRegister";
@@ -18,7 +17,7 @@ import { browserFeatureHost } from "./permissions";
 import { outsideItemsForScope } from "./outsideSection";
 import { STORAGE_REGISTER, UNSCANNED, panelExtraKeys, type RegisterRow, type UnscannedRow } from "./storageRegister";
 
-export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside" | "deviceRegister" | "kept" | "features" | "addresses" | "glance" | "receipt" | "handoffs" | "retention" | "queries" | "address" | "auto" | "statements">;
+export type LiveControllerDeps = Pick<ControllerDeps, "prefix" | "purposes" | "withdrawRules" | "extraKeys" | "refused" | "outside" | "deviceRegister" | "kept" | "features" | "addresses" | "glance" | "receipt" | "handoffs" | "retention" | "queries" | "picks" | "address" | "statements">;
 
 export interface LiveControllerOptions {
   /** For tests: other registers. Defaults to the App's own. */
@@ -58,8 +57,8 @@ export function liveControllerDeps(options: LiveControllerOptions = {}): LiveCon
     handoffs: HANDOFF_REGISTER,
     retention: RETENTION_REGISTER,
     queries: QUERY_REGISTER,
+    picks: PICK_REGISTER,
     ...(address === undefined ? {} : { address }),
-    auto: { register: AUTO_REGISTER, host: browserWorkerHost() },
     statements: STATEMENT_REGISTER,
     outside: outsideItemsForScope(register, unscanned, { prefix: PRIVACY_STORAGE_PREFIX, keys: extraKeys }),
   };
