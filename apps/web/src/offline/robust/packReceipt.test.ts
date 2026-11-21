@@ -273,6 +273,19 @@ describe("offline pack receipt capture", () => {
     expect(canonical).not.toContain(result.digest);
     expect(canonical.indexOf('"alpha"')).toBeLessThan(canonical.indexOf('"beta"'));
   });
+
+  it("uses code-point ordering rather than the browser's locale for digest input", async () => {
+    const mixed: RegionManifest = {
+      regionId: "north",
+      cells: [
+        { id: "a", bytes: 1, provenance: firstSource },
+        { id: "A", bytes: 2, provenance: firstSource },
+      ],
+    };
+    const result = await createPackReceipt(mixed, null, early, cryptoProvider);
+    const canonical = receiptCanonicalPayload(result);
+    expect(canonical.indexOf('"A"')).toBeLessThan(canonical.indexOf('"a"'));
+  });
 });
 
 describe("receipt validation and digest checking", () => {
