@@ -161,7 +161,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
-        globIgnores: ["data/**", "**/*.pmtiles", "**/maplibre-*.js"],
+        // The /dev/narrow audit page is a developer tool: its chunk is built, and fetched when the page is opened,
+        // but it is not precached, so it is not part of the first install. It does not work offline.
+        globIgnores: ["data/**", "**/*.pmtiles", "**/maplibre-*.js", "**/NarrowAuditPage-*.js"],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/packs\//, dataPath],
         cleanupOutdatedCaches: true,
