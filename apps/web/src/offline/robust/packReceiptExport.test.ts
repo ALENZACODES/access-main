@@ -101,12 +101,24 @@ describe("offline receipt export text", () => {
     });
   });
 
-  it("exports a one-reading text summary without inventing a comparison", async () => {
+  it("exports a one-reading text summary with its cell metadata", async () => {
     const captured = await createPackReceipt(manifest, local, firstTime, cryptoProvider);
     const book = appendPackReceipt(emptyReceiptBook("central"), captured);
     const text = receiptBookText(book, "en");
     expect(text).toContain("UNKNOWN");
-    expect(text).toContain("No pair of readings");
+    expect(text).toContain("Offline pack receipt");
+    expect(text).toContain("one");
+    expect(text).toContain("Municipal open data");
+  });
+
+  it("uses French typography in a one-reading export", async () => {
+    const captured = await createPackReceipt(manifest, local, firstTime, cryptoProvider);
+    const book = appendPackReceipt(emptyReceiptBook("central"), captured);
+    const text = receiptBookText(book, "fr");
+    expect(text).toContain("Région\\u00a0: central");
+    expect(text).toContain("Heure de lecture\\u00a0:");
+    expect(text).toContain("Source\\u00a0:");
+    expect(text).not.toMatch(/ [;:!?]/u);
   });
 
   it("keeps payload bytes and device identity out of text output", async () => {
