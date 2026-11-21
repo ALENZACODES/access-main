@@ -3,7 +3,7 @@ import type { DashboardModel } from "./offlineDashboard";
 import type { Language, RegionManifest } from "./regionDownload";
 import {
   appendPackReceipt, createPackReceipt,
-  emptyReceiptBook, encodeReceiptBook, latestReceiptDiff, pageReceiptDiff,
+  emptyReceiptBook, latestReceiptDiff, pageReceiptDiff,
   parseReceiptBook, summarizeReceiptBook, RECEIPT_MAX_BYTES, RECEIPT_MAX_CAPTURES,
   RECEIPT_PAGE_SIZE, type ReceiptBook, type ReceiptDiffRow,
   type ReceiptFilter, type ReceiptOrder,
