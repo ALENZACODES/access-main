@@ -51,8 +51,9 @@ describe("a controller built from the live settings", () => {
     const html = make().c.html();
     expect(html).toContain("Keep my route reports");
     expect(html).toContain("data-privacy-outside");
-    expect(html).toContain("The list of map tiles kept for offline use");
-    expect(html).not.toContain("Your display preferences");
+    const o = html.slice(html.indexOf("data-privacy-outside"), html.indexOf("</div>", html.indexOf("data-privacy-outside")));
+    expect(o).toContain("The list of map tiles kept for offline use");
+    expect(o).not.toContain("Your display preferences");
   });
   it("removes saved route reports when the person declines, and says how many", () => {
     const { storage, c } = make();

@@ -97,7 +97,8 @@ export function loadSeen(storage: StorageLike | null, prefix: string, now: Date)
       if (s === null || typeof s !== "object") return null;
       const e = s as { h?: unknown; label?: unknown };
       if (typeof e.h !== "string" || !isBilingual(e.label)) return null;
-      entries[id] = { h: e.h, label: e.label };
+      // defineProperty, so an entry named __proto__ is stored as a name and cannot become what every entry inherits
+      Object.defineProperty(entries, id, { value: { h: e.h, label: e.label }, enumerable: true, writable: true, configurable: true });
     }
     return { seenOn: o.seenOn, entries };
   } catch {
