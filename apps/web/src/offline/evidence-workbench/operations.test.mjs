@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyDocument, makeDraft, UNKNOWN, FEATURES } from './model.ts';
+import { emptyDocument, makeDraft, UNKNOWN } from './model.ts';
 import {
  createWorkspace, updateWorkspace, filterItems, countSummary, compareDocuments,
  groupByPlace, overdueItems, needsReview, reviewQueue, safeSelect, draftId,

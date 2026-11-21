@@ -1,13 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-const router=readFileSync(new URL('../../router.tsx',import.meta.url),'utf8');
-const page=readFileSync(new URL('./EvidenceWorkbench.tsx',import.meta.url),'utf8');
-const model=readFileSync(new URL('./model.ts',import.meta.url),'utf8');
-const analysis=readFileSync(new URL('./analysis.ts',import.meta.url),'utf8');
-const ops=readFileSync(new URL('./operations.ts',import.meta.url),'utf8');
-const report=readFileSync(new URL('./export.ts',import.meta.url),'utf8');
-const source=[router,page,model,analysis,ops,report].join('\n');
+const router=readFileSync(new globalThis.URL('../../router.tsx',import.meta.url),'utf8');
+const page=readFileSync(new globalThis.URL('./EvidenceWorkbench.tsx',import.meta.url),'utf8');
+const model=readFileSync(new globalThis.URL('./model.ts',import.meta.url),'utf8');
+const analysis=readFileSync(new globalThis.URL('./analysis.ts',import.meta.url),'utf8');
+const ops=readFileSync(new globalThis.URL('./operations.ts',import.meta.url),'utf8');
+const report=readFileSync(new globalThis.URL('./export.ts',import.meta.url),'utf8');
 
 test('offline route retains the original pack route contract',()=>{
  assert.match(router,/path: "offline"/u);
