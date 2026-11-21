@@ -8,6 +8,7 @@ import { FIXTURE } from "../panel/fixtures.test-util";
 import { glanceFigures } from "../panel/glance";
 import { clearLiveRefused } from "../panel/live";
 import { liveControllerDeps } from "../panel/liveController";
+import { checkStatements } from "../panel/statementRegister";
 import { createMemoryStorage } from "../panel/storage";
 import { auditHtml, formatViolations } from "./htmlAudit";
 import { rawTexts } from "./rawTexts";
@@ -34,19 +35,19 @@ describe("live panel privacy counts", () => {
     });
   }
 
-  it("shows four tables, one for each of the App's lists", () => {
+  it("shows five tables, one for each of the App's lists", () => {
     const html = render("en");
     const start = html.indexOf("data-privacy-glance");
     const end = html.indexOf("data-privacy-addresses");
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    expect(html.slice(start, end).match(/<table>/g)).toHaveLength(4);
+    expect(html.slice(start, end).match(/<table>/g)).toHaveLength(5);
   });
 
   it("matches the live controller's own lists, figure by figure", () => {
     const live = liveControllerDeps();
-    const figures = glanceFigures({ ...(live.kept ? { kept: live.kept } : {}), ...(live.deviceRegister ? { device: live.deviceRegister } : {}), ...(live.features ? { features: live.features.register } : {}), ...(live.addresses ? { addresses: live.addresses } : {}) });
-    expect(figures.length).toBe(14);
+    const figures = glanceFigures({ ...(live.kept ? { kept: live.kept } : {}), ...(live.deviceRegister ? { device: live.deviceRegister } : {}), ...(live.features ? { features: live.features.register } : {}), ...(live.addresses ? { addresses: live.addresses } : {}), ...(live.statements ? { statements: checkStatements(live.statements, live.addresses?.calls ?? null) } : {}) });
+    expect(figures.length).toBe(16);
     expect(figures.every((f) => Number.isInteger(f.count) && f.count >= 0)).toBe(true);
   });
 

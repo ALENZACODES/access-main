@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
+import { PersonalOfflineTools } from "./PersonalOfflineTools";
 import { offlineCatalog } from "./catalog.ts";
 import {
   cellStatusText,
@@ -146,6 +147,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   const [regions, setRegions] = useState<RegionStatus[]>([]);
   const [error, setError] = useState("");
   const [listFailed, setListFailed] = useState(false);
+  const [startedWithoutRegions, setStartedWithoutRegions] = useState(false);
   const [listAttempt, setListAttempt] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -171,8 +173,16 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     source.manifest().then(async (value) => {
       const statuses = await source.regions();
       const reports = await cellReports(value, statuses);
-      if (active) { setListFailed(false); setManifest(value); setRegions(statuses); setCells(reports); }
-    }).catch(() => { if (active) setListFailed(true); });
+      if (active) {
+        if (statuses.length === 0) setStartedWithoutRegions(true);
+        setListFailed(false); setManifest(value); setRegions(statuses); setCells(reports);
+      }
+    }).catch(() => {
+      if (active) {
+        setStartedWithoutRegions(true);
+        setListFailed(true);
+      }
+    });
     return () => { active = false; };
   }, [source, listAttempt]);
   async function refresh() {
@@ -311,6 +321,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     <p>{c.intro}</p>
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {listFailed ? <StateNotice lang={language} view={getRouteError("offline", "region-list-unavailable", language)} onAction={{ retry: () => { setListFailed(false); setListAttempt((n) => n + 1); } }} /> : null}
+    {startedWithoutRegions && <PersonalOfflineTools language={language} />}
     {error && <p role="alert">{error}</p>}
     {packStatus ? (
       <CorruptPackNotice

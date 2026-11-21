@@ -17,6 +17,7 @@ import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
+import { MeetUp } from "./MeetUp.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
@@ -220,6 +221,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         }}
       />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
+      <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
