@@ -45,7 +45,9 @@ describe("offline receipt export text", () => {
     const text = receiptComparisonText(null, "en");
     expect(text).toContain("Offline pack receipt comparison");
     expect(text).toContain("Status: UNKNOWN");
-    expect(text).toContain("No pair of readings");
+    expect(text).toContain("Offline pack receipt");
+    expect(text).toContain("one");
+    expect(text).toContain("Municipal open data");
   });
 
   it("includes region, timestamps, status and cell provenance in English", async () => {
