@@ -62,7 +62,7 @@ export interface GuidedCopy {
 }
 const en: GuidedCopy = {
   heading: "Guided offline recovery review",
-  description: "Record one observation at a time and identify what still needs manual review. Nothing is sent automatically.",
+  description: "Record one observation at a time and identify what still needs manual review. Export the JSON file to keep your review after leaving this page.",
   caution: "UNKNOWN means there is not enough information to describe the condition. These notes do not establish that a pack is usable.",
   unknown: "UNKNOWN", pack: "Installed pack", title: "What happened", condition: "Observed problem", source: "Source name",
   licence: "Source licence", retrieved: "Source retrieval date", reference: "Source reference", tier: "Evidence tier",
@@ -101,7 +101,7 @@ const en: GuidedCopy = {
 };
 const fr: GuidedCopy = {
   heading: "Examen guidé de récupération hors ligne",
-  description: "Consignez une observation à la fois et repérez les points qui nécessitent une révision manuelle. Aucune donnée n’est transmise automatiquement.",
+  description: "Consignez une observation à la fois et repérez les points qui nécessitent une révision manuelle. Avant de quitter cette page, exportez l’examen au format JSON pour en conserver une copie.",
   caution: "UNKNOWN indique que l’information ne suffit pas pour décrire l’état. Ces notes ne confirment pas qu’un ensemble est utilisable.",
   unknown: "UNKNOWN", pack: "Ensemble installé", title: "Ce qui s’est passé", condition: "Problème constaté", source: "Nom de la source",
   licence: "Licence de la source", retrieved: "Date de récupération de la source", reference: "Référence de la source", tier: "Niveau de preuve",
