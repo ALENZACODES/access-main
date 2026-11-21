@@ -24,6 +24,9 @@ import { handoffAsCsv, handoffAsText } from "./handoffSection";
 import type { RetentionRow } from "./retentionRegister";
 import { comparedCount, checkStored } from "./retentionLive";
 import { retentionAsCsv, retentionAsText, type RetentionCheckView } from "./retentionSection";
+import type { QueryRow } from "./queryRegister";
+import { checkAddress, type AddressCheck } from "./queryLive";
+import { queryAsCsv, queryAsText } from "./querySection";
 import { glanceFigures, type GlanceSources } from "./glance";
 import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
@@ -81,6 +84,10 @@ export interface ControllerDeps {
   handoffs?: readonly HandoffRow[];
   /** What the App keeps, for how long and how much, as read from its code. With it, the panel shows the list and offers a download. */
   retention?: readonly RetentionRow[];
+  /** The names the App reads from and builds into a web address. With it, the panel lists them and offers a download. */
+  queries?: readonly QueryRow[];
+  /** Reads the part of this page's address after the question mark, for example `() => window.location.search`. With it and `queries`, the panel can examine the address. Nothing is stored or changed. */
+  address?: () => string;
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -126,6 +133,8 @@ export interface PrivacyState {
   featureStates: FeatureStates | null;
   /** What comparing the retention list with the stored values found, or null before the person asks */
   retentionCheck: RetentionCheckView | null;
+  /** What reading the address of this page found, or null before the person asks */
+  queryCheck: AddressCheck | null;
   confirmingClearDevice: boolean;
 }
 
@@ -151,6 +160,9 @@ export type PrivacyAction =
   | { type: "export-handoff-csv" }
   | { type: "export-handoff-text" }
   | { type: "check-retention" }
+  | { type: "check-query" }
+  | { type: "export-query-csv" }
+  | { type: "export-query-text" }
   | { type: "export-retention-csv" }
   | { type: "export-retention-text" }
   | { type: "export-statements-csv" }
@@ -275,6 +287,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     scan: null,
     featureStates: null,
     retentionCheck: null,
+    queryCheck: null,
     confirmingClearDevice: false,
   };
   let plan: ImportPlan | null = null;
@@ -427,6 +440,29 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const findings = checkStored(storage, deps.retention, deps.now());
         const compared = comparedCount(storage, deps.retention);
         state = { ...state, confirmingErase: false, lastExport: null, retentionCheck: { compared, findings }, status: { kind: "retention-checked", compared, differences: findings.length } };
+        break;
+      }
+      case "check-query": {
+        if (deps.queries === undefined || deps.queries.length === 0 || deps.address === undefined) break;
+        let search: string;
+        try {
+          search = deps.address();
+        } catch {
+          state = { ...state, confirmingErase: false, lastExport: null, queryCheck: null, status: { kind: "query-unreadable" } };
+          break;
+        }
+        const check = checkAddress(deps.queries, search);
+        state = { ...state, confirmingErase: false, lastExport: null, queryCheck: check, status: { kind: "query-checked", params: check.params, findings: check.findings.length } };
+        break;
+      }
+      case "export-query-csv":
+      case "export-query-text": {
+        if (deps.queries === undefined || deps.queries.length === 0) break;
+        const csv = action.type === "export-query-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? queryAsCsv(loc, deps.queries, deps.now(), loc === "fr" ? ";" : ",") : queryAsText(loc, deps.queries, deps.now());
+        log({ kind: "query-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "query-exported", format: csv ? "csv" : "text" } };
         break;
       }
       case "export-retention-csv":
@@ -736,6 +772,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
         ...(statementsFor(deps) !== null ? { statements: statementsFor(deps) as StatementResult[] } : {}),
         ...(deps.handoffs !== undefined && deps.handoffs.length > 0 ? { handoffs: deps.handoffs } : {}),
+        ...(deps.queries !== undefined && deps.queries.length > 0 ? { queries: deps.queries, queryCanCheck: deps.address !== undefined, ...(state.queryCheck !== null ? { queryCheck: state.queryCheck } : {}) } : {}),
         ...(deps.retention !== undefined && deps.retention.length > 0 ? { retention: deps.retention, ...(state.retentionCheck !== null ? { retentionCheck: state.retentionCheck } : {}) } : {}),
         ...(receiptFor(deps, state.consent) !== null ? { receipt: receiptFor(deps, state.consent) as ReceiptRow[] } : {}),
         ...(glanceSources(deps) !== null ? { glance: glanceSources(deps) as GlanceSources } : {}),
