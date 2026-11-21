@@ -91,6 +91,15 @@ export const CSV_CONTRACTS: readonly CsvContract[] = [
       fr: ["Groupe", "Quoi", "Combien", "Non confirmé par l’App"],
     },
   },
+  {
+    id: "retention",
+    kind: "csv",
+    stem: { en: "the-app-how-long-kept", fr: "l-app-duree-de-conservation" },
+    header: {
+      en: ["Stored under", "What is kept", "How long", "How much", "Files read", "Recorded on"],
+      fr: ["Enregistré sous", "Ce qui est gardé", "Combien de temps", "Quelle quantité", "Fichiers lus", "Date d’inscription"],
+    },
+  },
 ];
 
 export const TEXT_CONTRACTS: readonly TextContract[] = [
@@ -129,6 +138,12 @@ export const TEXT_CONTRACTS: readonly TextContract[] = [
     kind: "text",
     stem: { en: "the-app-privacy-at-a-glance", fr: "l-app-vie-privee-en-un-coup-d-oeil" },
     title: { en: "Privacy at a glance", fr: "La vie privée en un coup d’œil" },
+  },
+  {
+    id: "retention",
+    kind: "text",
+    stem: { en: "the-app-how-long-kept", fr: "l-app-duree-de-conservation" },
+    title: { en: "How long the App keeps things", fr: "Combien de temps l’App garde les choses" },
   },
 ];
 

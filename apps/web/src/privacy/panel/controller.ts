@@ -15,6 +15,13 @@ import type { FeatureRow } from "./featureRegister";
 import { featuresAsCsv, featuresAsText } from "./featureExport";
 import { addressesAsCsv, addressesAsText } from "./addressExport";
 import { glanceAsCsv, glanceAsText } from "./glanceSection";
+import { receiptRows, type ReceiptRow } from "./receipt";
+import { checkStatements, type StatementResult, type StatementRow } from "./statementRegister";
+import { statementsAsCsv, statementsAsText } from "./statementSection";
+import { receiptAsCsv, receiptAsText } from "./receiptSection";
+import type { RetentionRow } from "./retentionRegister";
+import { comparedCount, checkStored } from "./retentionLive";
+import { retentionAsCsv, retentionAsText, type RetentionCheckView } from "./retentionSection";
 import { glanceFigures, type GlanceSources } from "./glance";
 import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
@@ -64,6 +71,12 @@ export interface ControllerDeps {
   addresses?: AddressRegisterView;
   /** Show a short count of each list above. Needs at least one of the lists above to have something to count. */
   glance?: boolean;
+  /** Where the App says data stays on the device or is not sent. Checked against `addresses`; without it, every row is shown as not checked. */
+  statements?: readonly StatementRow[];
+  /** Show the record of the person's choices, with a download. Needs `purposes`. Pass `register` through `kept` to list what each choice lets the App save. */
+  receipt?: boolean;
+  /** What the App keeps, for how long and how much, as read from its code. With it, the panel shows the list and offers a download. */
+  retention?: readonly RetentionRow[];
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -107,6 +120,8 @@ export interface PrivacyState {
   scan: DeviceScan | null;
   /** The browser's answers about features, or null before the check */
   featureStates: FeatureStates | null;
+  /** What comparing the retention list with the stored values found, or null before the person asks */
+  retentionCheck: RetentionCheckView | null;
   confirmingClearDevice: boolean;
 }
 
@@ -127,6 +142,13 @@ export type PrivacyAction =
   | { type: "export-addresses-text" }
   | { type: "export-glance-csv" }
   | { type: "export-glance-text" }
+  | { type: "export-receipt-csv" }
+  | { type: "export-receipt-text" }
+  | { type: "check-retention" }
+  | { type: "export-retention-csv" }
+  | { type: "export-retention-text" }
+  | { type: "export-statements-csv" }
+  | { type: "export-statements-text" }
   | { type: "mark-seen" }
   | { type: "import-load"; text: string }
   | { type: "import-confirm" }
@@ -164,6 +186,12 @@ export interface PrivacyController {
  * Throws at start-up if the inventory or the purposes break the wording or data
  * rules. On start it also removes expired local items (see expiry.ts).
  */
+/** The statement rows set beside the places that make requests, or null when none were given. */
+function statementsFor(deps: ControllerDeps): StatementResult[] | null {
+  if (deps.statements === undefined || deps.statements.length === 0) return null;
+  return checkStatements(deps.statements, deps.addresses === undefined ? null : deps.addresses.calls);
+}
+
 /** What the counts are made from: only the lists the controller was given. Null when there is nothing to count. */
 function glanceSources(deps: ControllerDeps): GlanceSources | null {
   if (deps.glance !== true) return null;
@@ -172,8 +200,33 @@ function glanceSources(deps: ControllerDeps): GlanceSources | null {
     ...(deps.deviceRegister !== undefined ? { device: deps.deviceRegister } : {}),
     ...(deps.features !== undefined ? { features: deps.features.register } : {}),
     ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
+    ...(statementsFor(deps) !== null ? { statements: statementsFor(deps) as StatementResult[] } : {}),
   };
   return glanceFigures(src).length === 0 ? null : src;
+}
+
+/** The names stored on this device now. Empty when the browser blocks storage. */
+function storedKeys(storage: StorageLike | null): string[] {
+  const keys: string[] = [];
+  if (storage === null) return keys;
+  for (let i = 0; i < storage.length; i += 1) {
+    const k = storage.key(i);
+    if (k !== null) keys.push(k);
+  }
+  return keys;
+}
+
+/** The rows of the record of choices, or null when it is off or there are no purposes. */
+function receiptFor(deps: ControllerDeps, consent: ConsentState): ReceiptRow[] | null {
+  if (deps.receipt !== true || (deps.purposes ?? []).length === 0) return null;
+  return receiptRows({
+    purposes: deps.purposes ?? [],
+    rules: deps.withdrawRules ?? [],
+    consent,
+    ...(deps.kept !== undefined ? { register: deps.kept.register } : {}),
+    keys: storedKeys(deps.storage),
+    removesOnNo: deps.withdrawRules !== undefined,
+  });
 }
 
 export function createPrivacyController(deps: ControllerDeps): PrivacyController {
@@ -215,6 +268,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     signals: null,
     scan: null,
     featureStates: null,
+    retentionCheck: null,
     confirmingClearDevice: false,
   };
   let plan: ImportPlan | null = null;
@@ -250,9 +304,6 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       case "consent": {
         const purpose = purposes.find((p) => p.id === action.purposeId);
         if (purpose === undefined) break;
-        // A file waiting to be restored was checked before this choice. Restoring it afterwards could put back
-        // what a "do not allow" has just removed, so the person is asked to load the file again.
-        plan = null;
         const consent = setConsent(state.consent, purpose, action.value, deps.now());
         const saved = saveConsent(storage, deps.prefix, consent);
         log({ kind: action.value === "granted" ? "consent-granted" : "consent-declined", purposeId: purpose.id });
@@ -264,7 +315,6 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           ...state,
           consent,
           confirmingErase: false,
-          importPending: false,
           lastExport: null,
           status: removed > 0
             ? { kind: "consent-withdrawn", label: purpose.label[state.prefs.locale], removed }
@@ -346,6 +396,49 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         const file = csv ? glanceAsCsv(loc, src, deps.now(), loc === "fr" ? ";" : ",") : glanceAsText(loc, src, deps.now());
         log({ kind: "glance-export", format: csv ? "csv" : "text" });
         state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "glance-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "check-retention": {
+        if (deps.retention === undefined || deps.retention.length === 0) break;
+        if (storage === null) {
+          state = unavailable();
+          break;
+        }
+        const findings = checkStored(storage, deps.retention, deps.now());
+        const compared = comparedCount(storage, deps.retention);
+        state = { ...state, confirmingErase: false, lastExport: null, retentionCheck: { compared, findings }, status: { kind: "retention-checked", compared, differences: findings.length } };
+        break;
+      }
+      case "export-retention-csv":
+      case "export-retention-text": {
+        if (deps.retention === undefined || deps.retention.length === 0) break;
+        const csv = action.type === "export-retention-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? retentionAsCsv(loc, deps.retention, deps.now(), loc === "fr" ? ";" : ",") : retentionAsText(loc, deps.retention, deps.now());
+        log({ kind: "retention-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "retention-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-receipt-csv":
+      case "export-receipt-text": {
+        const rows = receiptFor(deps, state.consent);
+        if (rows === null) break;
+        const csv = action.type === "export-receipt-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? receiptAsCsv(loc, rows, deps.now(), loc === "fr" ? ";" : ",") : receiptAsText(loc, rows, deps.now());
+        log({ kind: "receipt-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "receipt-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-statements-csv":
+      case "export-statements-text": {
+        const results = statementsFor(deps);
+        if (results === null) break;
+        const csv = action.type === "export-statements-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? statementsAsCsv(loc, results, deps.now(), loc === "fr" ? ";" : ",") : statementsAsText(loc, results, deps.now());
+        log({ kind: "statements-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "statements-exported", format: csv ? "csv" : "text" } };
         break;
       }
       case "mark-seen": {
@@ -621,6 +714,9 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           : {}),
         ...(deps.features !== undefined ? { features: { register: deps.features.register, states: state.featureStates } } : {}),
         ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
+        ...(statementsFor(deps) !== null ? { statements: statementsFor(deps) as StatementResult[] } : {}),
+        ...(deps.retention !== undefined && deps.retention.length > 0 ? { retention: deps.retention, ...(state.retentionCheck !== null ? { retentionCheck: state.retentionCheck } : {}) } : {}),
+        ...(receiptFor(deps, state.consent) !== null ? { receipt: receiptFor(deps, state.consent) as ReceiptRow[] } : {}),
         ...(glanceSources(deps) !== null ? { glance: glanceSources(deps) as GlanceSources } : {}),
         ...(deps.kept !== undefined ? { keptList: true } : {}),
         ...(deps.crypto !== undefined ? { protectedCopy: true } : {}),
