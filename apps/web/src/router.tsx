@@ -6,9 +6,12 @@ import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OnboardingPage } from "./pages/OnboardingPage.tsx";
 import { routePage } from "./perf/routeChunks.ts";
 import { AppShell } from "./shell/AppShell.tsx";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
+import { useTranslation } from "react-i18next";
 const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
 const AccessRehearsalPage = lazy(() => import("./input/rehearsal/AccessRehearsalPage.tsx").then((module) => ({ default: module.AccessRehearsalPage })));
+// The local evidence workbench is not requested until the user opens it.
+const EvidenceWorkbench = lazy(() => import("./offline/evidence-workbench/EvidenceWorkbench.tsx").then((module) => ({ default: module.EvidenceWorkbench })));
 
 // Every route in the integration contract is lazy, so none is on the first-install path.
 // Home and onboarding stay in the entry chunk: they are the first screens. The rest
@@ -21,6 +24,25 @@ const HelpPage = routePage("/help", (module) => module.HelpPage);
 const DataStatusPage = routePage("/data-status", (module) => module.DataStatusPage);
 const BuildCardPage = routePage("/build-card", (module) => module.BuildCardPage);
 const OfflinePackPage = routePage("/offline", (module) => module.OfflinePackPage);
+
+function OfflineWithEvidenceWorkbench() {
+  const { i18n } = useTranslation();
+  const fr = i18n.language.startsWith("fr");
+  const [open, setOpen] = useState(false);
+  return <>
+    <OfflinePackPage />
+    <section className="panel stack" aria-labelledby="offline-workbench-entry">
+      <h2 id="offline-workbench-entry">{fr ? "Mes notes de preuves hors ligne" : "My offline evidence notes"}</h2>
+      <p>{fr ? "Examinez vos propres notes locales. Les observations manquantes restent UNKNOWN. Aucun renseignement n’est envoyé." : "Review your own local notes. Missing observations stay UNKNOWN. Nothing is uploaded."}</p>
+      <button type="button" style={{ minWidth: 44, minHeight: 44 }} aria-expanded={open} aria-controls="offline-evidence-workbench-host" onClick={() => setOpen(value => !value)}>
+        {open ? (fr ? "Fermer l’atelier" : "Close workbench") : (fr ? "Ouvrir l’atelier" : "Open workbench")}
+      </button>
+      <div id="offline-evidence-workbench-host">
+        {open ? <Suspense fallback={<p role="status">{fr ? "Chargement…" : "Loading…"}</p>}><EvidenceWorkbench /></Suspense> : null}
+      </div>
+    </section>
+  </>;
+}
 
 // Entry files owned by other lanes. A missing file renders a "being connected" page, not a build error.
 const MapPage = optionalPage("map");
@@ -39,7 +61,7 @@ export const routes: RouteObject[] = [
       { path: "profile", element: <Section><ProfilePage /></Section> },
       { path: "data-status", element: <Section><DataStatusPage /></Section> },
       { path: "build-card", element: <Section><BuildCardPage /></Section> },
-      { path: "offline", element: <Section><OfflinePackPage /></Section> },
+      { path: "offline", element: <Section><OfflineWithEvidenceWorkbench /></Section> },
       { path: "access-rehearsal", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><AccessRehearsalPage /></Suspense></Section> },
       { path: "places", element: <Section><ModulePage id="places" /></Section> },
       { path: "places/:id", element: <Section><PlaceDetailPage /></Section> },
