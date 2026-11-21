@@ -2,7 +2,7 @@ import type { Language, RegionManifest } from "./regionDownload";
 import {
   addBriefNote, addBriefStep, createCoordinationBrief, editBriefStep, moveBriefStep,
   pageBriefSteps, parseCoordinationBrief, removeBriefStep, setBriefStatus, summarizeBrief,
-  type BriefPriority, type BriefStatus, type BriefTopic, type CoordinationBrief, type StepDraft,
+  type BriefPriority, type BriefStatus, type BriefStep, type BriefTopic, type CoordinationBrief, type StepDraft,
 } from "./coordinationBrief";
 import {
   COORDINATION_COPY, COORDINATION_FILTERS, COORDINATION_PRIORITIES,
@@ -196,6 +196,13 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
     statusChoice.control.value = "UNKNOWN";
     save.textContent = c.addStep;
   };
+  function updateSelectionActions(chosen: BriefStep | undefined): void {
+    remove.disabled = chosen === undefined;
+    moveUp.disabled = chosen === undefined || chosen.order === 0;
+    moveDown.disabled = chosen === undefined || chosen.order >= brief.steps.length - 1;
+    setStatus.disabled = chosen === undefined;
+    appendButton.disabled = chosen === undefined;
+  }
   const showSelected = (id: string): void => {
     const item = brief.steps.find((step) => step.id === id);
     if (!item) return;
@@ -212,6 +219,7 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
     sourceDate.control.value = item.provenance?.date ?? "";
     statusChoice.control.value = item.status;
     save.textContent = c.editStep;
+    updateSelectionActions(item);
     announcement.textContent = `${c.opened}${colon}${item.label}`;
   };
   const update = (): void => {
@@ -243,12 +251,7 @@ export function mountOfflineCoordinationBrief(root: HTMLElement, manifest: Regio
     for (const event of brief.events.slice(-12)) {
       historyList.append(node(doc, "li", `${event.at}${colon}${event.stepId} — ${event.kind}`));
     }
-    const chosen = brief.steps.find((step) => step.id === selected);
-    remove.disabled = chosen === undefined;
-    moveUp.disabled = chosen === undefined || chosen.order === 0;
-    moveDown.disabled = chosen === undefined || chosen.order >= brief.steps.length - 1;
-    setStatus.disabled = chosen === undefined;
-    appendButton.disabled = chosen === undefined;
+    updateSelectionActions(brief.steps.find((step) => step.id === selected));
   };
   const apply = (operation: () => CoordinationBrief): void => {
     try { brief = operation(); announcement.textContent = c.saved; update(); }
