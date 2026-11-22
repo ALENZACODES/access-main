@@ -1,0 +1,46 @@
+.communication-cards .field {
+  display: grid;
+  gap: .4rem;
+  min-width: 0;
+}
+.communication-cards input,
+.communication-cards textarea,
+.communication-cards select {
+  max-width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+}
+.communication-cards textarea { width: 100%; }
+.communication-cards button {
+  min-width: 44px;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.communication-cards button[aria-pressed="true"] {
+  font-weight: bold;
+  border: .2rem solid currentColor;
+}
+.communication-list { padding-inline-start: 1.5rem; }
+.communication-list > li + li {
+  border-block-start: 1px solid var(--line);
+  padding-block-start: 1rem;
+  margin-block-start: 1rem;
+}
+.communication-wording div + div { margin-block-start: .5rem; }
+.communication-wording dt, .communication-counts dt { font-weight: bold; }
+.communication-wording dd, .communication-counts dd { margin-inline-start: 0; }
+.communication-wording dd,
+.communication-reading {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.communication-reading {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  line-height: 1.3;
+}
+.communication-reading.extra-large { font-size: clamp(3rem, 9vw, 5rem); }
+.communication-display-message {
+  padding: clamp(.65rem, 3vw, 2rem);
+  border: 2px solid currentColor;
+}
