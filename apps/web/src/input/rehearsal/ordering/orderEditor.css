@@ -1,0 +1,80 @@
+.order-editor-trigger,
+.order-editor button,
+.order-editor select {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}
+
+.order-editor {
+  box-sizing: border-box;
+  inline-size: min(40rem, calc(100% - 1rem));
+  max-inline-size: calc(100% - 1rem);
+  max-block-size: calc(100dvh - 1rem);
+  padding: clamp(.75rem, 3vw, 1.5rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+  color: var(--ink, CanvasText);
+  background: var(--bg, Canvas);
+  border: 2px solid currentColor;
+}
+
+.order-editor::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+
+.order-editor h2 {
+  margin-block-start: 0;
+}
+
+.order-editor label,
+.order-editor select {
+  display: block;
+}
+
+.order-editor select {
+  inline-size: 100%;
+  min-inline-size: min(44px, 100%);
+  max-inline-size: 100%;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.order-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-block: .6rem 1rem;
+}
+
+.order-editor button,
+.order-editor-trigger {
+  padding: .45rem .75rem;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
+.order-editor button[aria-pressed="true"] {
+  font-weight: bold;
+  border: 3px double currentColor;
+}
+
+.order-editor ol {
+  padding-inline-start: 2.25rem;
+}
+
+.order-editor li {
+  margin-block: .75rem;
+}
+
+.order-editor li::marker {
+  font-weight: bold;
+}
+
+.order-editor :focus-visible,
+.order-editor-trigger:focus-visible {
+  outline: 3px solid var(--focus, Highlight);
+  outline-offset: 2px;
+}
