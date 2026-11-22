@@ -1,6 +1,6 @@
 /** Stable before/after release comparisons. Missing or changed evidence stays review-only. */
 import { checkManifest, UNKNOWN } from './release-impact-contract.mjs';
-import { dependants, entryPoints, graphReview, impactFor, indexAssets } from './release-impact-graph.mjs';
+import { entryPoints, graphReview, impactFor, indexAssets } from './release-impact-graph.mjs';
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const sorted = items => items.sort((a, b) => compare(a.id, b.id));
 export function assetChanges(before, after) {
