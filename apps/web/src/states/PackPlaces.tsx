@@ -19,6 +19,7 @@ import { OutingPlanner } from "./OutingPlanner.tsx";
 import { MeetUp } from "./MeetUp.tsx";
 import { NoteReading } from "./NoteReading.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
+import { WritingCheck } from "./WritingCheck.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PackSearchWords, PackWordList } from "./PackWords.tsx";
@@ -208,6 +209,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onRemove={shortlist.remove}
         onClear={shortlist.clear}
       />
+      <WritingCheck places={view.shownPlaces} locale={locale} />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <NoteReading places={view.shownPlaces} locale={locale} />
