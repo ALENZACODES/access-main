@@ -114,6 +114,12 @@ export type { CoordinationBrief, BriefStep, BriefProvenance, BriefStatus, BriefP
   BriefTopic, BriefEvent, BriefSummary, StepDraft, BriefPageOptions } from "./coordinationBrief";
 export type { BriefChange, BriefDiff, BriefChangeKind } from "./coordinationBriefDiff";
 
+// Portable metadata-only receipts are loaded on demand by the offline dashboard.
+export * from "./packReceipt";
+export * from "./packReceiptCopy";
+export * from "./packReceiptExport";
+export * from "./packReceiptPanel";
+
 // Shared-device handback is loaded on demand from the offline dashboard.
 export * from "./sharedDeviceHandback";
 export * from "./sharedDeviceHandbackCopy";
