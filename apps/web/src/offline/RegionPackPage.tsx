@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
 import { ShellCheckLauncher } from "./shell-check/ShellCheckLauncher";
 import { PackingListLauncher } from "./packing/PackingListLauncher";
+import { CommunicationCardsLauncher } from "./communicationCards/CommunicationCardsLauncher";
 import { PersonalOfflineTools } from "./PersonalOfflineTools";
 import { offlineCatalog } from "./catalog.ts";
 import {
@@ -322,6 +323,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   return <div className="stack">
     <h1>{c.title}</h1>
     <p>{c.intro}</p>
+    <CommunicationCardsLauncher language={language} />
     <PackingListLauncher language={language} />
     <ShellCheckLauncher language={language} />
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
