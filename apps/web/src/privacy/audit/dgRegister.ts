@@ -17,6 +17,7 @@ const R_CAUGHT_TEXT = "The catch puts the message of the caught error into a not
 const R_CAUGHT_STRING = "The same catch turns an error that is not an Error into text with String(), for the same notice or line.";
 const R_TOOL_TEXT = "Test tooling inside src: describes a caught error for a failure message in a test log. It is not part of a screen.";
 const R_CANARY_TEXT = "Test tooling inside src: reads the message of a caught error to look for the canary in it. The text is not shown or kept.";
+const R_JSONC_TEXT = "Test tooling inside src: parseJsonc keeps the message of a JSON parse error as the problem it reports for a configuration file. The text read is a file of the repository; it is not shown on a screen. Not checked: every caller of parseJsonc.";
 const R_TOOL_NAME = "The thrown text writes spec.name, the name a test gives its own property. It is not a value a person typed.";
 const R_FIELD_NAME = "The thrown text writes a parameter that holds the name of a field. The calls in this folder that were found by search pass quoted names, not values.";
 const R_QUERY_NAME = "The thrown text lists the problems of the web address register, where name is the name of a query parameter, not a value.";
@@ -73,6 +74,8 @@ export const DG_ACCEPTED: readonly DgAcceptRow[] = [
   { path: "apps/web/src/privacy/audit/fuzz/property.ts", code: "dg-error-string", count: 1, reason: R_TOOL_TEXT },
   { path: "apps/web/src/privacy/audit/fuzz/property.ts", code: "dg-error-text", count: 1, reason: R_TOOL_TEXT },
   { path: "apps/web/src/privacy/audit/fuzz/property.ts", code: "dg-throw-user-name", count: 1, reason: R_TOOL_NAME },
+  { path: "apps/web/src/privacy/audit/jsonc.ts", code: "dg-error-string", count: 1, reason: R_JSONC_TEXT },
+  { path: "apps/web/src/privacy/audit/jsonc.ts", code: "dg-error-text", count: 1, reason: R_JSONC_TEXT },
   { path: "apps/web/src/privacy/audit/parity.ts", code: "dg-error-string", count: 1, reason: R_TOOL_TEXT },
   { path: "apps/web/src/privacy/panel/queryRegister.ts", code: "dg-throw-user-name", count: 1, reason: R_QUERY_NAME },
   { path: "apps/web/src/shell/AppShell.tsx", code: "dg-boundary", count: 1, reason: R_BOUNDARY },
