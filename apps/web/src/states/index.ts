@@ -217,3 +217,15 @@ export { WalkGroups, WALK_GROUPS_SHOWN, WALK_MEMBERS_SHOWN } from "./WalkGroups.
 export * from "./walkGroupLinks.ts";
 export * from "./walkGroupSweep.ts";
 export * from "./walkGroupSketch.ts";
+export * from "./tagNoteSignals.ts";
+export * from "./tagNoteMarks.ts";
+export * from "./tagNoteCheck.ts";
+export * from "./tagNoteCopy.ts";
+export * from "./tagNoteExport.ts";
+export { TagNoteCheck, TAG_NOTE_SHOWN } from "./TagNoteCheck.tsx";
+export { TagNoteSpread } from "./TagNoteSpread.tsx";
+export { TagNoteEarlier } from "./TagNoteEarlier.tsx";
+export * from "./tagNoteSpread.ts";
+export * from "./tagNoteEarlier.ts";
+export * from "./tagNoteMoreCopy.ts";
+export * from "./tagNoteSpreadExport.ts";
