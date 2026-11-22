@@ -4,7 +4,7 @@ import {
   indexAssets, reverseEdges, dependencies, dependants, entryPoints, reachable,
   orphanAssets, cycles, rootCoverage, impactFor, graphReview, criticalPath,
 } from './release-impact-graph.mjs';
-import { asset, manifest, bilingual, chain, DAY, mutate } from './release-impact-fixtures.mjs';
+import { asset, manifest, bilingual, DAY, mutate } from './release-impact-fixtures.mjs';
 import { UNKNOWN } from './release-impact-contract.mjs';
 const simple = manifest(asset('a', { entry: true, dependsOn: ['b'] }), asset('b'));
 const fork = manifest(asset('a', { entry: true, dependsOn: ['b', 'c'] }), asset('b', { dependsOn: ['d'] }),
