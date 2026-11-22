@@ -56,6 +56,12 @@ export function HomePage() {
             </li>
           ))}
           <li>
+            <Link className="card" to="/input-workbench" style={{ minHeight: 44 }}>
+              <span className="card-title">{french ? "Atelier clavier et contacteur" : "Keyboard and switch workbench"}</span>
+              <span>{french ? "Examiner les commandes et les annonces dans une séance locale." : "Review controls and announcements in a local session."}</span>
+            </Link>
+          </li>
+          <li>
             <Link className="card" to="/question-packet" style={{ minHeight: 44 }}>
               <span className="card-title">{french ? "Fiche de questions sur l’accessibilité" : "Accessibility questions packet"}</span>
               <span>{french ? "Préparez des questions et suivez les réponses consignées, sans envoi automatique." : "Prepare accessibility questions and record reported answers without automatic uploads."}</span>

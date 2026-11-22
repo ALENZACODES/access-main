@@ -10,6 +10,7 @@ import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
 const AccessRehearsalPage = lazy(() => import("./input/rehearsal/AccessRehearsalPage.tsx").then((module) => ({ default: module.AccessRehearsalPage })));
+const InputWorkbenchPage = lazy(() => import("./input/switch-workbench/WorkbenchPage.tsx").then((module) => ({ default: module.WorkbenchPage })));
 const QuestionPacketPage = lazy(() => import("./question-packet/QuestionPacketPage.tsx").then((module) => ({ default: module.QuestionPacketPage })));
 // The local evidence workbench is not requested until the user opens it.
 const EvidenceWorkbench = lazy(() => import("./offline/evidence-workbench/EvidenceWorkbench.tsx").then((module) => ({ default: module.EvidenceWorkbench })));
@@ -70,6 +71,7 @@ export const routes: RouteObject[] = [
       { path: "data-status", element: <Section><DataStatusPage /></Section> },
       { path: "build-card", element: <Section><BuildCardPage /></Section> },
       { path: "offline", element: <Section><OfflineWithEvidenceWorkbench /></Section> },
+      { path: "input-workbench", element: <Section><InputWorkbenchPage /></Section> },
       { path: "access-rehearsal", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><AccessRehearsalPage /></Suspense></Section> },
       { path: "question-packet", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><QuestionPacketPage /></Suspense></Section> },
       { path: "places", element: <Section><ModulePage id="places" /></Section> },
