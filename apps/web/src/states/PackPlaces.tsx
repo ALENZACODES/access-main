@@ -17,6 +17,7 @@ import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, pack
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
 import { MeetUp } from "./MeetUp.tsx";
+import { lazy, Suspense } from "react";
 import { NoteReading } from "./NoteReading.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
@@ -29,6 +30,9 @@ import { SuggestionList } from "./SuggestionList.tsx";
 import { useShortlist } from "./useShortlist.ts";
 import type { Locale } from "./stateCopy.ts";
 import { t } from "./typography.ts";
+
+// In its own file, loaded after the page. It is still in the offline precache, so it works offline.
+const WayPlaces = lazy(() => import("./WayPlaces.tsx").then((m) => ({ default: m.WayPlaces })));
 
 interface Props {
   /** The `places` array of the pack stored on this device, as read. It is parsed here, not trusted. */
@@ -212,6 +216,9 @@ export function PackPlaces({ places, locale, today }: Props) {
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <NoteReading places={view.shownPlaces} locale={locale} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
+      <Suspense fallback={null}>
+        <WayPlaces places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
+      </Suspense>
       <NoteTopics places={view.shownPlaces} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
