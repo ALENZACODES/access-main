@@ -188,6 +188,14 @@ describe("offline dependency planner: conservative device evidence", () => {
     const book = addDependency(base(), { ...rawItem, cellIds: [] }, "2026-02-03");
     expect(assessDependency(book, manifest, inventory)[0]?.availability).toBe("UNKNOWN");
   });
+  it("keeps a checkpoint unresolved when a region listing is unavailable, even with inventory", () => {
+    const row = assessDependency(one(), null, inventory)[0];
+    expect(row?.cells).toEqual([{
+      cellId: "entrance", availability: "UNKNOWN", expectedBytes: null, source: null, reason: "listing-unavailable",
+    }]);
+    expect(row?.availability).toBe("UNKNOWN");
+    expect(row?.physicalAccess).toBe("UNKNOWN");
+  });
   it("does not treat missing inventory as saved", () => {
     expect(assessDependency(one(), manifest, null)[0]?.availability).toBe("UNKNOWN");
   });
