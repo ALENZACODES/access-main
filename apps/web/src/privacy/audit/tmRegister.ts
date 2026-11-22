@@ -27,6 +27,7 @@ export const TM_ACCEPTED: readonly TmAcceptRow[] = [
   { path: "apps/web/src/hub/EventOrganiserPage.tsx", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/hub/RouteReportsPage.tsx", code: "tm-clock-in-text", count: 1, reason: R_ID_TIME },
   { path: "apps/web/src/input/rehearsal/AccessRehearsalPage.tsx", code: "tm-local-getter", count: 3, reason: R_DATE_NAME_3 },
+  { path: "apps/web/src/input/switch-workbench/WorkbenchPage.tsx", code: "tm-local-getter", count: 3, reason: R_DATE_NAME_3 },
   { path: "apps/web/src/narrow/access-summary.ts", code: "tm-local-getter", count: 3, reason: R_MONTH_NAME },
   { path: "apps/web/src/narrow/gestures-panel.ts", code: "tm-hires-timer", count: 1, reason: R_TIMER },
   { path: "apps/web/src/narrow/press-panel.ts", code: "tm-hires-timer", count: 1, reason: R_TIMER },
