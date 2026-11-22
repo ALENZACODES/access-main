@@ -56,6 +56,12 @@ export function HomePage() {
             </li>
           ))}
           <li>
+            <Link className="card" to="/input-workbench" style={{ minHeight: 44 }}>
+              <span className="card-title">{french ? "Atelier clavier et contacteur" : "Keyboard and switch workbench"}</span>
+              <span>{french ? "Examiner les commandes et les annonces dans une séance locale." : "Review controls and announcements in a local session."}</span>
+            </Link>
+          </li>
+          <li>
             <Link className="card" to="/access-rehearsal" style={{ minHeight: 44 }}>
               <span className="card-title">{french ? "Répétition d’accessibilité" : "Access rehearsal"}</span>
               <span>{french ? "Parcours au clavier et par balayage, sans transmission de données." : "Practice keyboard and switch journeys without sending data."}</span>
