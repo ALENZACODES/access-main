@@ -41,7 +41,6 @@ export const ROUTE_COVERAGE: Readonly<Record<string, RouteCoverage>> = {
   "build-card": { file: "pages/BuildCardPage.tsx", mechanism: "static", why: "Reads build information compiled into the app." },
   offline: { file: "offline/RegionPackPage.tsx", mechanism: "states", stateRoute: "offline", why: "Pack list failure and an empty list." },
   "access-rehearsal": { file: "input/rehearsal/AccessRehearsalPage.tsx", mechanism: "form", why: "Device-local step editor reports missing bilingual fields next to the editable inputs and provides retry by editing and saving." },
-  "input-workbench": { file: "input/switch-workbench/WorkbenchPage.tsx", mechanism: "form", why: "Bilingual control form shows local field validation and allows correction before saving." },
   places: { file: "pages/ModulePage.tsx", mechanism: "states", stateRoute: "search", why: "Search, offline and load failures." },
   "places/:id": { file: "pages/PlaceDetailPage.tsx", mechanism: "states", stateRoute: "place", why: "Not found and load failures." },
   map: { file: "map/MapPage.tsx", mechanism: "states", stateRoute: "map", why: "Empty view and load failures." },
