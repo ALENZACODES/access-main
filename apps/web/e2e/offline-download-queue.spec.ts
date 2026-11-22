@@ -15,6 +15,32 @@ test.describe("checksummed region downloads in browser storage", () => {
   // The fixture supplies the pack endpoint; Chromium still verifies and stores the real bytes.
   test.use({ serviceWorkers: "block" });
 
+  test("the region row downloads with the keyboard while the queue stays closed", async ({ page }) => {
+    const fixture = regionDownloadQueueFixture();
+    const received: string[] = [];
+    await page.route("**/data/pack/v1/manifest.json", (route) => route.fulfill({ json: fixture.manifest }));
+    await page.route("**/data/venues/queue-test/*", async (route) => {
+      const path = new URL(route.request().url()).pathname.slice("/data/".length);
+      received.push(path);
+      const part = fixture.parts.get(path);
+      if (!part) throw new Error(`Unexpected region part ${path}`);
+      await route.fulfill({ body: part, contentType: "application/octet-stream" });
+    });
+
+    await page.goto("/offline");
+    const queue = button(page, "Open region download queue");
+    const row = page.getByRole("listitem").filter({
+      has: page.getByRole("heading", { name: fixture.southLabel.en, exact: true }),
+    });
+    await expect(queue).toHaveAttribute("aria-expanded", "false");
+    await button(row, "Download").press("Enter");
+    await expect(page.getByText("Download integrity checked", { exact: true })).toBeVisible();
+    await expect(regionState(page, fixture.southLabel.en)).toHaveText("Downloaded, integrity checked");
+    await expect(regionState(page, fixture.northLabel.en)).toHaveText("Not downloaded");
+    await expect(queue).toHaveAttribute("aria-expanded", "false");
+    expect(received).toEqual(fixture.south);
+  });
+
   test("reorders two regions, recovers a partial region, and reads both back after a reload", async ({ page }) => {
     const fixture = regionDownloadQueueFixture();
     const requests: string[] = [];

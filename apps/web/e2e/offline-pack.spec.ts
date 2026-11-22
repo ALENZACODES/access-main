@@ -112,7 +112,8 @@ for (const language of ["en", "fr"] as const) {
       return accessibility.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"] } });
     });
     expect(audit.violations).toEqual([]);
-    const download = page.getByRole("button", { name: language === "en" ? "Download" : "Télécharger" }).first();
+    const download = page.getByRole("listitem")
+      .getByRole("button", { name: language === "en" ? "Download" : "Télécharger", exact: true }).first();
     if (await download.isVisible()) {
       await download.click();
       await expect(page.getByText(language === "en" ? "Download integrity checked" : "Intégrité du téléchargement contrôlée")).toBeVisible();
