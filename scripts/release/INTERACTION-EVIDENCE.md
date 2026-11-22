@@ -14,7 +14,7 @@ Root: `schemaVersion: 1`, `capturedOn` (YYYY-MM-DD), and `routes` (bounded array
 - Screen reader and status message use `announced` as a recorded boolean.
 - Accessible-name uses `accessibleName`; an explicit empty name can record `FAIL`, but never `PASS`.
 
-Missing observations stay `UNKNOWN`; the validator never creates a positive result. A record contains provenance regardless of outcome. The optional digest is *metadata provided by the source*, not a signature or an authenticity guarantee. Its format is checked but its origin is not independently verified.
+Missing observations stay `UNKNOWN`; the validator never creates a positive result. A record contains provenance regardless of outcome. The optional digest is *metadata provided by the source*, not a signature or an authenticity guarantee. Its format is checked but its origin is not independently checked.
 
 The analysis produces source-age flags, unknown-result flags, missing-language and missing-kind flags, and a human-review queue. The comparison detects additions, removals, source changes and recorded PASS-to-FAIL transitions while keeping transitions involving `UNKNOWN` indeterminate. HTML exports include a main landmark, skip link, language tag and visible focus; CSV protects leading formula characters.
 
