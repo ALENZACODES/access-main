@@ -42,6 +42,7 @@ test("focused control in inert subtree is rejected", async ({ page }) => {
   await mount(page, `<div><button id="action">Action</button></div>`);
   await page.locator("#action").focus();
   await page.locator("#action").evaluate((node) => node.parentElement?.setAttribute("inert", ""));
+  await expect(page.locator("#action")).not.toBeFocused();
   const state = await observeHandoffFocusRound11(page);
   // Chromium moves focus to the document when an ancestor becomes inert;
   // the observable failure is therefore focus-disappeared, while the DOM
