@@ -22,7 +22,7 @@ export interface StatementRow {
   recordedOn: string;
 }
 
-const REVIEWED = "2026-11-20";
+const REVIEWED = "2026-11-21";
 const SOURCE = "Read from the source file named in the row";
 
 const row = (path: string, en: number, fr: number, whereEn: string, whereFr: string): StatementRow => ({ path, where: { en: whereEn, fr: whereFr }, en, fr, source: SOURCE, recordedOn: REVIEWED });
@@ -34,13 +34,16 @@ export const STATEMENT_REGISTER: readonly StatementRow[] = [
   row("apps/web/src/i18n/en.ts", 13, 0, "The main text of the App in English", "Le texte principal de l’App en anglais"),
   row("apps/web/src/i18n/fr.ts", 0, 10, "The main text of the App in French", "Le texte principal de l’App en français"),
   row("apps/web/src/input/rehearsal/copy.ts", 1, 1, "Journey rehearsal", "La répétition de parcours"),
+  row("apps/web/src/offline/evidence-workbench/EvidenceWorkbench.tsx", 1, 1, "Offline evidence workbench privacy note", "Note de confidentialité de l’atelier de preuves hors ligne"),
   row("apps/web/src/offline/robust/cleanupCopy.ts", 1, 0, "Offline storage cleanup", "Le nettoyage du stockage hors ligne"),
   row("apps/web/src/offline/robust/offlineCasebookCopy.ts", 0, 1, "Notes on offline copies", "Les notes sur les copies hors ligne"),
   row("apps/web/src/offline/robust/offlineCopy.ts", 0, 1, "Offline downloads", "Les téléchargements hors ligne"),
   row("apps/web/src/offline/robust/recoveryBatchesCopy.ts", 1, 1, "The recovery batches plan", "Le plan des lots de reprise"),
   row("apps/web/src/offline/robust/updateCopy.ts", 1, 1, "The offline update review", "L’examen de la mise à jour hors ligne"),
   row("apps/web/src/pages/AboutPage.tsx", 1, 0, "The About page", "La page À propos"),
+  row("apps/web/src/recovery/RecoveryPlanReview.tsx", 1, 1, "Recovery plan file review", "Examen d’un fichier de plan de récupération"),
   row("apps/web/src/recovery/recoveryLedger.ts", 1, 0, "The recovery ledger", "Le registre de reprise"),
+  row("apps/web/src/recovery/recoveryReconciliationCopy.ts", 1, 1, "Recovery reconciliation register", "Registre de rapprochement des récupérations"),
   row("apps/web/src/states/PackCompare.tsx", 1, 1, "Comparing a places file", "La comparaison d’un fichier de lieux"),
 ];
 
