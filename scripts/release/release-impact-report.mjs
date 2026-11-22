@@ -33,7 +33,7 @@ export function escapeHtml(value) {
 }
 export function csvCell(value) {
   const text = String(value ?? UNKNOWN);
-  const guarded = /^[\s]*[=+@\-]/u.test(text) ? `'${text}` : text;
+  const guarded = /^[\s]*[=+@-]/u.test(text) ? `'${text}` : text;
   return `"${guarded.replaceAll('"', '""')}"`;
 }
 export function localPunctuation(text, language) {
