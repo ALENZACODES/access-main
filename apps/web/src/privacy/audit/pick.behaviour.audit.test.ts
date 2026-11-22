@@ -23,7 +23,7 @@ const NEAR = 12;
 const NETWORK = /\bfetch\s*\(|XMLHttpRequest|sendBeacon|navigator\.sendBeacon|new\s+WebSocket|new\s+EventSource/;
 
 /** Files where the pick passes the file to a function defined above it, and the size comparison is in that function. */
-const CHECK_IN_CALLED_FUNCTION = new Set(["apps/web/src/recovery/RecoveryCaseJournal.tsx"]);
+const CHECK_IN_CALLED_FUNCTION = new Set(["apps/web/src/recovery/RecoveryCaseJournal.tsx", "apps/web/src/offline/communicationCards/CardBackup.tsx"]);
 
 describe("a row limited before reading compares the size before any read", () => {
   const rows = picksOfKind(PICK_REGISTER, "pick").filter((r) => r.limit === "before-read");
