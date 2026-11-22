@@ -70,21 +70,50 @@ function zipEntry(name: string, data: Uint8Array, offset: number): { local: Uint
   u16(c, 28, filename.length); u32(c, 42, offset); central.set(filename, 46);
   return { local, central };
 }
+/** Allocate archive member names independently of arbitrary IDs in version-one imports. */
+function archiveSegments(ids: Iterable<string>): Map<string, string> {
+  const names = new Map<string, string>();
+  const used = new Set<string>();
+  for (const id of ids) {
+    if (names.has(id)) continue;
+    // Tilde is reserved for generated aliases. ASCII avoids normalization differences on extraction.
+    const portable = /^[a-z0-9_-][a-z0-9_.-]*$/i.test(id) && !id.endsWith(".")
+      && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])([.]|$)/i.test(id);
+    const collision = used.has(id.toLowerCase());
+    const segment = portable && !collision ? id : `~${names.size + 1}`;
+    names.set(id, segment);
+    used.add(segment.toLowerCase());
+  }
+  return names;
+}
+
 /** Offline ZIP, stored entries; no third-party service or upload path. */
-export async function exportZip(drafts: Draft[], readPhoto: (id: string) => Promise<Blob | undefined>): Promise<Blob> {
+export async function exportZip(drafts: Draft[], readPhoto: (id: string, draftId: string) => Promise<Blob | undefined>): Promise<Blob> {
   const files: Array<[string, Uint8Array]> = [
     ["contributions.json", encoder.encode(JSON.stringify(drafts, null, 2))],
     ["contributions.geojson", encoder.encode(JSON.stringify(toGeoJSON(drafts), null, 2))],
   ];
-  const used = new Set<string>();
-  for (const draft of drafts) for (const photo of draft.photos) {
-    const name = `photos/${draft.id}/${photo.id}.jpg`;
-    if (used.has(name)) continue;
-    used.add(name);
-    const blob = await readPhoto(photo.id);
-    if (!blob) throw new Error(`Missing photo: ${photo.id}`);
-    files.push([name, new Uint8Array(await blob.arrayBuffer())]);
+  const photoIds = new Map<string, Set<string>>();
+  for (const draft of drafts) {
+    if (!draft.photos.length) continue;
+    const ids = photoIds.get(draft.id) ?? new Set<string>();
+    for (const photo of draft.photos) ids.add(photo.id);
+    photoIds.set(draft.id, ids);
   }
+  const index: Array<{ draftId: string; photoId: string; path: string }> = [];
+  let needsIndex = false;
+  for (const [draftId, directory] of archiveSegments(photoIds.keys())) {
+    const ids = photoIds.get(draftId) ?? [];
+    for (const [photoId, segment] of archiveSegments(ids)) {
+      const path = `photos/${directory}/${segment}.jpg`;
+      const blob = await readPhoto(photoId, draftId);
+      if (!blob) throw new Error(`Missing photo: ${photoId}`);
+      files.push([path, new Uint8Array(await blob.arrayBuffer())]);
+      index.push({ draftId, photoId, path });
+      if (directory !== draftId || segment !== photoId) needsIndex = true;
+    }
+  }
+  if (needsIndex) files.push(["photo-paths.json", encoder.encode(JSON.stringify(index, null, 2))]);
   let offset = 0;
   const locals: Uint8Array[] = [], centrals: Uint8Array[] = [];
   for (const [name, bytes] of files) {
