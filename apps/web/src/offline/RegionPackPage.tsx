@@ -340,7 +340,9 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
       <p>{c.built}{colon} <time dateTime={manifest.builtAt}>{manifest.builtAt.slice(0, 10)}</time>. {c.counts}{colon} {manifest.counts.records.toLocaleString(language)}.</p>
       <section className="panel stack" aria-labelledby="offline-sources"><h2 id="offline-sources">{c.sources}</h2>
         <ul>{manifest.sources.filter((entry) => entry.inWebPack).map((entry) => <li key={entry.sourceId}>{entry.name} — {entry.licence} — {c.retrieved}{colon} {entry.retrieved}</li>)}</ul>
-        {manifest.sources.some((entry) => entry.sourceId.includes("osm") && entry.inWebPack) && <p>{c.credit}</p>}
+        {manifest.sources.some((entry) => entry.sourceId.includes("osm") && entry.inWebPack) && (
+          <p><span>{c.credit}</span> — <span>{c.licence}</span></p>
+        )}
       </section>
       {regions.length === 0 ? <StateNotice lang={language} view={getRouteEmpty("offline", language)!} /> : null}
       <ul className="record-list">{regions.map((region) => {
