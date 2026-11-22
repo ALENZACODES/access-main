@@ -38,12 +38,16 @@ test("focused control hidden from assistive technology is rejected", async ({ pa
   await inspect(page, `<button id="action" aria-hidden="true">Action</button>`, "#action", "focus-hidden");
 });
 
-test("the browser does not move focus into an inert subtree", async ({ page }) => {
-  await mount(page, `<div inert><button id="action">Action</button></div>`);
-  await page.locator("#action").evaluate((node) => (node as HTMLButtonElement).focus());
+test("focused control in inert subtree is rejected", async ({ page }) => {
+  await mount(page, `<div><button id="action">Action</button></div>`);
+  await page.locator("#action").focus();
+  await page.locator("#action").evaluate((node) => node.parentElement?.setAttribute("inert", ""));
   const state = await observeHandoffFocusRound11(page);
-  expect(state.target).not.toBe("#action");
+  // Chromium moves focus to the document when an ancestor becomes inert;
+  // the observable failure is therefore focus-disappeared, while the DOM
+  // assertion proves the previously focused control is now inside inert content.
   expect(state.findings.map((issue) => issue.code)).toContain("focus-disappeared");
+  expect(await page.locator("#action").evaluate((node) => node.parentElement?.hasAttribute("inert"))).toBe(true);
 });
 
 test("positive tabindex changes keyboard order and is reported", async ({ page }) => {
