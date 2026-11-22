@@ -142,3 +142,6 @@ export * from './twice.ts';
 export * from './twice-panel.ts';
 export * from './start.ts';
 export * from './start-panel.ts';
+export * from './hit-inpage.ts';
+export * from './hit.ts';
+export * from './hit-panel.ts';

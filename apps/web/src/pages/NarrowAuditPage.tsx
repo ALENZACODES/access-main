@@ -18,6 +18,7 @@ import { mountMovingPanel, movingAimNoteOf, movingNoteOf, type MovingPanelState 
 import { hoverAbilityNoteOf, hoverNeedsSite, hoverNoteOf, mountHoverPanel, type HoverPanelState } from "../narrow/hover-panel.ts";
 import { mountTwicePanel, twiceNoteOf, type TwicePanelState } from "../narrow/twice-panel.ts";
 import { mountStartPanel, startNoteOf, type StartPanelState } from "../narrow/start-panel.ts";
+import { hitNoteOf, mountHitPanel, type HitPanelState } from "../narrow/hit-panel.ts";
 import { START_INFO, type StartPanelKey } from "../narrow/start.ts";
 import { PART_HEADINGS, mountSummaryPanel, type SummaryPanelState } from "../narrow/summary-panel.ts";
 import { tapNote, tapResult } from "../narrow/tap-trial.ts";
@@ -91,6 +92,9 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
  *
  * Then "Asked twice" reads the forms of this page for things asked for twice.
  *
+ * Then "Covered controls" asks the browser what a press would land on at five
+ * points of each control on the screen, and lists those something covers.
+ *
  * "Where to start", right after the audit tool, asks what the person uses to
  * point and type and puts the tests that matter most for it first.
  *
@@ -143,6 +147,9 @@ export function NarrowAuditPage() {
   const twiceRef = useRef<HTMLDivElement>(null);
   const twiceStateRef = useRef<TwicePanelState | undefined>(undefined);
   const twiceMountedRef = useRef<{ getState(): TwicePanelState } | null>(null);
+  const hitRef = useRef<HTMLDivElement>(null);
+  const hitStateRef = useRef<HitPanelState | undefined>(undefined);
+  const hitMountedRef = useRef<{ getState(): HitPanelState } | null>(null);
   const startRef = useRef<HTMLDivElement>(null);
   const startStateRef = useRef<StartPanelState | undefined>(undefined);
   const startMountedRef = useRef<{ getState(): StartPanelState } | null>(null);
@@ -183,6 +190,7 @@ export function NarrowAuditPage() {
       const moving = movingMountedRef.current?.getState() ?? movingStateRef.current;
       const hover = hoverMountedRef.current?.getState() ?? hoverStateRef.current;
       const twice = twiceMountedRef.current?.getState() ?? twiceStateRef.current;
+      const hit = hitMountedRef.current?.getState() ?? hitStateRef.current;
       return [
         tap ? tapNote(tap.trial, panelLang) : "",
         zones ? zoneNote(zones.cells, panelLang) : "",
@@ -193,6 +201,7 @@ export function NarrowAuditPage() {
         moving ? movingNoteOf(moving, panelLang) : "",
         hover ? hoverNoteOf(hover, panelLang) : "",
         twice ? twiceNoteOf(twice, panelLang) : "",
+        hit ? hitNoteOf(hit, panelLang) : "",
       ].filter((line) => line !== "");
     };
     const mounted = mountFitPanel({ root, lang: panelLang, extraFacts, ...(draftRef.current ? { draft: draftRef.current } : {}) });
@@ -384,6 +393,20 @@ export function NarrowAuditPage() {
   }, [panelLang]);
 
   useEffect(() => {
+    const host = hitRef.current;
+    if (!host) return;
+    const root = document.createElement("div");
+    host.appendChild(root);
+    const mounted = mountHitPanel({ root, lang: panelLang, ...(hitStateRef.current ? { state: hitStateRef.current } : {}) });
+    hitMountedRef.current = mounted;
+    return () => {
+      hitStateRef.current = mounted.getState();
+      hitMountedRef.current = null;
+      root.remove();
+    };
+  }, [panelLang]);
+
+  useEffect(() => {
     const host = startRef.current;
     if (!host) return;
     const root = document.createElement("div");
@@ -495,6 +518,7 @@ export function NarrowAuditPage() {
       <div ref={movingRef} />
       <div ref={hoverRef} />
       <div ref={twiceRef} />
+      <div ref={hitRef} />
       <div ref={summaryRef} />
       <div ref={handRef} />
       <div ref={reachRef} />

@@ -39,7 +39,7 @@ const TOOL_WORDS: Readonly<Record<ToolId, { readonly en: string; readonly fr: st
 };
 
 /** The tests of the page this panel can point to, in the order of the page. */
-export const START_PANELS = ['fit', 'tap', 'zones', 'press', 'voice', 'slip', 'travel', 'typing', 'gestures', 'scan', 'moving', 'hover', 'twice', 'hand', 'reach', 'scroll'] as const;
+export const START_PANELS = ['fit', 'tap', 'zones', 'press', 'voice', 'slip', 'travel', 'typing', 'gestures', 'scan', 'moving', 'hover', 'twice', 'hit', 'hand', 'reach', 'scroll'] as const;
 export type StartPanelKey = (typeof START_PANELS)[number];
 
 export interface StartPanelInfo {
@@ -131,6 +131,12 @@ export const START_INFO: Readonly<Record<StartPanelKey, StartPanelInfo>> = {
     go: { en: 'asked twice', fr: 'demandé deux fois' },
     why: { en: 'Answers a form makes you type twice.', fr: 'Les réponses qu’un formulaire fait taper deux fois.' },
   },
+  hit: {
+    heading: '#hit-h',
+    title: { en: 'Covered controls', fr: 'Commandes couvertes' },
+    go: { en: 'covered controls', fr: 'les commandes couvertes' },
+    why: { en: 'Controls something else sits on top of, so a press misses them.', fr: 'Les commandes sous un autre élément, qu’un appui manque.' },
+  },
   hand: {
     heading: '#hand-h',
     title: { en: 'Look by hand', fr: 'Regarder à la main' },
@@ -153,15 +159,15 @@ export const START_INFO: Readonly<Record<StartPanelKey, StartPanelInfo>> = {
 
 /** For each tool, the tests that matter, most first. */
 export const TOOL_TESTS: Readonly<Record<ToolId, readonly StartPanelKey[]>> = {
-  finger: ['tap', 'zones', 'slip', 'press', 'gestures', 'hover', 'fit'],
-  stylus: ['tap', 'slip', 'press', 'gestures', 'hover', 'moving'],
-  'mouth-stick': ['typing', 'tap', 'slip', 'twice', 'press', 'gestures', 'hover'],
-  'head-pointer': ['moving', 'tap', 'travel', 'press', 'gestures', 'hover', 'slip'],
-  'eye-gaze': ['moving', 'tap', 'slip', 'hover', 'travel', 'gestures', 'twice'],
+  finger: ['tap', 'zones', 'slip', 'hit', 'press', 'gestures', 'hover', 'fit'],
+  stylus: ['tap', 'slip', 'hit', 'press', 'gestures', 'hover', 'moving'],
+  'mouth-stick': ['typing', 'tap', 'slip', 'twice', 'hit', 'press', 'gestures', 'hover'],
+  'head-pointer': ['moving', 'tap', 'hit', 'travel', 'press', 'gestures', 'hover', 'slip'],
+  'eye-gaze': ['moving', 'tap', 'hit', 'slip', 'hover', 'travel', 'gestures', 'twice'],
   switch: ['scan', 'reach', 'typing', 'twice', 'moving', 'hover', 'scroll'],
   voice: ['voice', 'typing', 'twice', 'hover', 'gestures'],
   keyboard: ['reach', 'scan', 'hover', 'gestures', 'scroll', 'twice'],
-  mouse: ['travel', 'tap', 'gestures', 'moving', 'press', 'slip'],
+  mouse: ['travel', 'tap', 'gestures', 'moving', 'hit', 'press', 'slip'],
 };
 
 /** How many tests are put first. */

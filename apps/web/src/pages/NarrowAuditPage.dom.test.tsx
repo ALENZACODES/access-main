@@ -1993,3 +1993,82 @@ describe("NarrowAuditPage: where to start", () => {
     expect(document.activeElement).toBe(container.querySelector("#start-h"));
   });
 });
+
+/** "Covered controls" sits after "Asked twice". jsdom lays nothing out and has no elementFromPoint, so the tests give both. */
+describe("NarrowAuditPage: covered controls", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete (document as unknown as { elementFromPoint?: unknown }).elementFromPoint;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "A banner covers the Send button.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+  /** Every element sits in one small box on the screen; the element with id zz-cover, when there is one, is on top of everything. */
+  const layout = () => {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ x: 10, y: 10, top: 10, left: 10, right: 90, bottom: 54, width: 80, height: 44, toJSON: () => ({}) } as DOMRect);
+    (document as unknown as { elementFromPoint: () => Element | null }).elementFromPoint = () => document.getElementById("zz-cover");
+  };
+
+  it("is on the page once, under an h2, between asked twice and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".hittest")).toHaveLength(1);
+    const h2 = container.querySelector("#hit-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Covered controls");
+    expect((container.querySelector("#twice-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("finds the controls something covers, leaves its own out, and puts it in the barrier text", async () => {
+    layout();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(
+      <>
+        {page()}
+        <div id="zz-cover">We use cookies</div>
+      </>,
+    );
+    expect(await barrierText(container)).not.toContain("Covered controls:");
+    await press(container, '.hittest [data-action="hit-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#hit-result-h"));
+    const text = container.querySelector(".hittest")?.textContent ?? "";
+    expect(text).toMatch(/\d+ controls tested\. Fully covered: \d+\./);
+    expect(text).toContain("is fully covered by another element “We use cookies” (div#zz-cover).");
+    expect(text).not.toContain("“Find covered controls” is fully covered");
+    expect(await barrierText(container)).toMatch(/Covered controls: \d+ controls are covered by something else/);
+  });
+
+  it("keeps the result in French after a switch", async () => {
+    layout();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.hittest [data-action="hit-read"]');
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".hittest")).toHaveLength(1);
+    expect(container.querySelector("#hit-h")?.textContent).toBe("Commandes couvertes");
+    expect(container.querySelector(".hittest")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#hit-result-h")?.textContent).toBe("Ce qui couvre des commandes");
+  });
+
+  it("is in where to start for a pointer, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    await press(container, '.start [data-action="start-tool"][data-value="head-pointer"]');
+    await press(container, '.start [data-action="start-go"][data-value="hit"]');
+    expect(document.activeElement).toBe(container.querySelector("#hit-h"));
+    unmount();
+    expect(document.querySelector(".hittest")).toBeNull();
+  });
+});

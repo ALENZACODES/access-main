@@ -52,9 +52,10 @@ describe('startOrder', () => {
 
   it('adds the weights over several tools, and says which tools each test is for', () => {
     const order = startOrder(['finger', 'head-pointer']);
-    expect(order[0]).toEqual({ key: 'tap', score: 7 + 6, forTools: ['finger', 'head-pointer'] });
-    const moving = order.find((t) => t.key === 'moving');
-    expect(moving).toEqual({ key: 'moving', score: 7, forTools: ['head-pointer'] });
+    // Both lists have eight tests: tap is first for a finger (8) and second for a head pointer (7).
+    expect(order[0]).toEqual({ key: 'tap', score: 8 + 7, forTools: ['finger', 'head-pointer'] });
+    expect(order.find((t) => t.key === 'moving')).toEqual({ key: 'moving', score: 8, forTools: ['head-pointer'] });
+    expect(order.find((t) => t.key === 'hit')).toEqual({ key: 'hit', score: 5 + 6, forTools: ['finger', 'head-pointer'] });
   });
 
   it('keeps the order of the page on a tie, and gives every test once', () => {
