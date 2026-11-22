@@ -113,3 +113,20 @@ export * from "./dependencyPlannerExport";
 export type { CoordinationBrief, BriefStep, BriefProvenance, BriefStatus, BriefPriority,
   BriefTopic, BriefEvent, BriefSummary, StepDraft, BriefPageOptions } from "./coordinationBrief";
 export type { BriefChange, BriefDiff, BriefChangeKind } from "./coordinationBriefDiff";
+
+export * from "./storageScenario";
+export * from "./storageScenarioCopy";
+export * from "./storageScenarioExport";
+export * from "./storageScenarioPanel";
+
+export * from "./recoveryJournal";
+export * from "./recoveryJournalCopy";
+export * from "./recoveryJournalExport";
+export * from "./recoveryJournalPanel";
+
+export * from "./recoveryGuide";
+export * from "./recoveryGuideCopy";
+export type { RecoveryCopyKey } from "./recoveryBatchesCopy";
+export type { RecoveryCopyKey as RecoveryGuideCopyKey } from "./recoveryGuideCopy";
+export * from "./recoveryGuideExport";
+export * from "./recoveryGuidePanel";

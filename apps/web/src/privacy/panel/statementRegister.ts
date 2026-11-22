@@ -38,6 +38,10 @@ export const STATEMENT_REGISTER: readonly StatementRow[] = [
   row("apps/web/src/offline/robust/offlineCasebookCopy.ts", 0, 1, "Notes on offline copies", "Les notes sur les copies hors ligne"),
   row("apps/web/src/offline/robust/offlineCopy.ts", 0, 1, "Offline downloads", "Les téléchargements hors ligne"),
   row("apps/web/src/offline/robust/recoveryBatchesCopy.ts", 1, 1, "The recovery batches plan", "Le plan des lots de reprise"),
+  {
+    ...row("apps/web/src/offline/robust/storageScenarioCopy.ts", 1, 1, "Offline storage planning", "La planification du stockage hors ligne"),
+    recordedOn: "2026-11-21",
+  },
   row("apps/web/src/offline/robust/updateCopy.ts", 1, 1, "The offline update review", "L’examen de la mise à jour hors ligne"),
   row("apps/web/src/pages/AboutPage.tsx", 1, 0, "The About page", "La page À propos"),
   row("apps/web/src/recovery/recoveryLedger.ts", 1, 0, "The recovery ledger", "Le registre de reprise"),
