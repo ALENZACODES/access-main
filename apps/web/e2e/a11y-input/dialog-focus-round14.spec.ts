@@ -10,8 +10,7 @@ test.describe("P16 round 14 dialog focus", () => {
     expect((await inspectDialogFocus(page)).issues).toEqual([]);
   });
   test("open named native dialog is accepted when focused inside", async ({ page }) => {
-    await fixture(page, `<dialog id="dialog" open aria-label="Settings"><button id="inside">Close</button></dialog>`);
-    await page.locator("#dialog").evaluate(node => (node as HTMLDialogElement).showModal());
+    await fixture(page, `<dialog id="dialog" aria-label="Settings"><button id="inside">Close</button></dialog>`);
     await page.locator("#dialog").evaluate(node => (node as HTMLDialogElement).showModal());
     await page.locator("#inside").focus();
     expect((await inspectDialogFocus(page)).issues).toEqual([]);

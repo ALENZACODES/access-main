@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { inspectDialogFocus } from "./dialog-focus-round14";
+import { inspectDialogFocus, tabAroundModal } from "./dialog-focus-round14";
 import { inspectSemanticSurface } from "./semantic-surface-round14";
 
 async function dialogFixture(page: import("@playwright/test").Page, content: string): Promise<void> {
@@ -24,20 +24,19 @@ test.describe("P16 round 14 modal focus containment", () => {
     await dialogFixture(page, `<button id="open">Open</button><button id="background">Background</button><dialog id="dialog" aria-label="Preferences"><button id="first">First</button><button id="last">Last</button></dialog><script>document.querySelector('#open').onclick=()=>document.querySelector('#dialog').showModal()</script>`);
     await page.locator("#open").click();
     await page.locator("#last").focus();
-    await page.keyboard.press("Tab");
-    await expect(page.locator("#first")).toBeFocused();
+    await tabAroundModal(page, "Tab", page.locator("#first"));
     expect(await page.locator("#dialog").evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
   test("Shift Tab from first dialog control remains within modal", async ({ page }) => {
     await dialogFixture(page, `<button id="open">Open</button><dialog id="dialog" aria-label="Preferences"><button id="first">First</button><button id="last">Last</button></dialog><script>document.querySelector('#open').onclick=()=>document.querySelector('#dialog').showModal()</script>`);
     await page.locator("#open").click();
     await page.locator("#first").focus();
-    await page.keyboard.press("Shift+Tab");
-    await expect(page.locator("#last")).toBeFocused();
+    await tabAroundModal(page, "Shift+Tab", page.locator("#last"));
     expect(await page.locator("#dialog").evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
   test("dialog heading can name dialog through aria-labelledby", async ({ page }) => {
-    await dialogFixture(page, `<dialog id="dialog" open aria-labelledby="title"><h2 id="title">Preferences</h2><button>Close</button></dialog>`);
+    await dialogFixture(page, `<dialog id="dialog" aria-labelledby="title"><h2 id="title">Preferences</h2><button>Close</button></dialog>`);
+    await page.locator("dialog").evaluate(node => (node as HTMLDialogElement).showModal());
     await page.locator("dialog button").focus();
     expect((await inspectDialogFocus(page)).issues).toEqual([]);
   });

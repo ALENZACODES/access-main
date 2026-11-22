@@ -18,16 +18,16 @@ test.describe("P16 round 14 locale contract", () => {
     await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><p>Attention: texte.</p></main></body></html>`);
     expect((await inspectLocaleContract(page)).map(x => x.code)).toContain("french-colon-spacing");
   });
-  test("French narrow space before question mark is accepted", async ({ page }) => {
-    await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><p>Comment faire\u202f?</p></main></body></html>`);
+  test("French nonbreaking space before question mark is accepted", async ({ page }) => {
+    await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><p>Comment faire\u00a0?</p></main></body></html>`);
     expect(await inspectLocaleContract(page)).toEqual([]);
   });
   test("French ordinary space before exclamation is rejected", async ({ page }) => {
     await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><p>Attention !</p></main></body></html>`);
-    expect((await inspectLocaleContract(page)).map(x => x.code)).toContain("french-narrow-spacing");
+    expect((await inspectLocaleContract(page)).map(x => x.code)).toContain("french-punctuation-spacing");
   });
-  test("French guillemets use narrow no-break spaces", async ({ page }) => {
-    await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><p>Lire «\u202fce texte\u202f».</p></main></body></html>`);
+  test("French guillemets use no-break spaces", async ({ page }) => {
+    await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><p>Lire «\u00a0ce texte\u00a0».</p></main></body></html>`);
     expect(await inspectLocaleContract(page)).toEqual([]);
   });
   test("French guillemets without inner spacing are rejected", async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe("P16 round 14 locale contract", () => {
     expect((await inspectLocaleContract(page)).map(x => x.code)).toContain("french-guillemet-spacing");
   });
   test("script and code contents are excluded from typography audit", async ({ page }) => {
-    await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><code>don't alter code: ;</code><p>l’élément\u00a0: «\u202ftexte\u202f».</p></main></body></html>`);
+    await page.setContent(`<html lang="fr"><head><title>Page</title></head><body><main><h1>Page</h1><code>don't alter code: ;</code><p>l’élément\u00a0: «\u00a0texte\u00a0».</p></main></body></html>`);
     expect(await inspectLocaleContract(page)).toEqual([]);
   });
   test("unsupported document language is rejected", async ({ page }) => {

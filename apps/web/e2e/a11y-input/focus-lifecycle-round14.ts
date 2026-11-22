@@ -31,7 +31,7 @@ export async function currentFocus(page: Page): Promise<FocusItem | null> {
     const selector = node.id ? `#${CSS.escape(node.id)}` : `${node.localName}[tabindex="${node.tabIndex}"]`;
     return {
       selector,
-      role: node.getAttribute("role") ?? node.localName,
+      role: node.getAttribute("role") ?? (node instanceof HTMLInputElement && ["checkbox", "radio"].includes(node.type) ? node.type : node.localName),
       name,
       tabIndex: node.tabIndex,
       disabled: node.matches(":disabled,[aria-disabled='true']"),
@@ -69,7 +69,7 @@ export async function traceTabOrder(page: Page, max = 100): Promise<FocusTrace> 
           node.getAttribute("title")?.trim() || nativeLabels || node.textContent?.trim() || "";
         return {
           selector: node.id ? `#${CSS.escape(node.id)}` : `[${key}="${node.getAttribute(key)}"]`,
-          role: node.getAttribute("role") ?? node.localName,
+          role: node.getAttribute("role") ?? (node instanceof HTMLInputElement && ["checkbox", "radio"].includes(node.type) ? node.type : node.localName),
           name,
           tabIndex: node.tabIndex,
           disabled: node.matches(":disabled,[aria-disabled='true']"),
@@ -85,7 +85,7 @@ export async function traceTabOrder(page: Page, max = 100): Promise<FocusTrace> 
       if (item.hidden) issues.push({ code: "focus-hidden", selector: item.selector, detail: "Tab reached a hidden element" });
       if (item.disabled) issues.push({ code: "focus-disabled", selector: item.selector, detail: "Tab reached a disabled element" });
       if (item.tabIndex > 0) issues.push({ code: "focus-positive-tabindex", selector: item.selector, detail: "Positive tabindex changes order" });
-      if (!item.name && ["button", "a", "input", "select", "textarea"].includes(item.role)) {
+      if (!item.name && ["button", "a", "input", "checkbox", "radio", "select", "textarea"].includes(item.role)) {
         issues.push({ code: "focus-unnamed", selector: item.selector, detail: "Native control has no accessible text name" });
       }
       if (item.rect.width < 44 || item.rect.height < 44) {

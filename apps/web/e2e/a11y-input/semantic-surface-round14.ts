@@ -83,14 +83,6 @@ export async function inspectSemanticSurface(page: Page): Promise<SemanticSnapsh
       if (node.hasAttribute("aria-labelledby") && !referencedText(node, "aria-labelledby")) {
         issues.push({ code: "labelledby-empty", selector, detail: "aria-labelledby has no resolvable text" });
       }
-      for (const attribute of ["aria-labelledby", "aria-describedby", "aria-controls", "aria-owns"]) {
-        const ids = (node.getAttribute(attribute) ?? "").split(/\s+/).filter(Boolean);
-        for (const id of ids) {
-          if (!document.getElementById(id)) {
-            issues.push({ code: "id-reference-missing", selector, detail: `${attribute} references missing id ${id}` });
-          }
-        }
-      }
       const role = node.getAttribute("role") ?? node.localName;
       if (!isHidden && node.getAttribute("aria-disabled") === "true" && node.tabIndex >= 0) {
         issues.push({ code: "aria-disabled-tabbable", selector, detail: "aria-disabled control remains in sequential focus" });
@@ -115,6 +107,19 @@ export async function inspectSemanticSurface(page: Page): Promise<SemanticSnapsh
       }
       return { selector, role, name, description, hidden: isHidden, tag: node.localName };
     });
+    const references = ["aria-labelledby", "aria-describedby", "aria-controls", "aria-owns"];
+    const owners = document.querySelectorAll(references.map(attribute => `[${attribute}]`).join(","));
+    for (const owner of owners) {
+      for (const attribute of references) {
+        const ids = (owner.getAttribute(attribute) ?? "").trim().split(/\s+/).filter(Boolean);
+        for (const id of ids) {
+          if (!document.getElementById(id)) {
+            const selector = owner.id ? `#${CSS.escape(owner.id)}` : owner.localName;
+            issues.push({ code: "id-reference-missing", selector, detail: `${attribute} references missing id ${id}` });
+          }
+        }
+      }
+    }
     const headingNodes = Array.from(document.querySelectorAll<HTMLElement>("h1,h2,h3,h4,h5,h6"));
     const headings = headingNodes.map((node) => ({
       level: Number(node.localName.slice(1)),

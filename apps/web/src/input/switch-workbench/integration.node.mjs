@@ -19,14 +19,26 @@ const browser=(changes={})=>({lang:'en',title:'Practice',nodes:[node('main',{tag
 const codes=list=>list.map(x=>x.code);
 const has=(issues,code)=>assert.ok(codes(issues).includes(code),`${code} missing`);
 
-test('route contains lazy workbench import',()=>assert.ok(content('router.tsx').includes('switch-workbench/WorkbenchPage.tsx')));
-test('route contains input-workbench path',()=>assert.ok(content('router.tsx').includes('path: "input-workbench"')));
-test('route wraps workbench with Section',()=>assert.ok(content('router.tsx').includes('<Section><Suspense')));
-test('route includes loading fallback',()=>assert.ok(content('router.tsx').includes('fallback={<p role="status">Loading…</p>}')));
-test('Home includes workbench route',()=>assert.ok(content('pages/HomePage.tsx').includes('to="/input-workbench"')));
-test('Home includes English workbench label',()=>assert.ok(content('pages/HomePage.tsx').includes('Keyboard and switch workbench')));
-test('Home includes French workbench label',()=>assert.ok(content('pages/HomePage.tsx').includes('Atelier clavier et contacteur')));
-test('Home link has 44 px target',()=>assert.ok(content('pages/HomePage.tsx').includes('to="/input-workbench" style={{ minHeight: 44 }}')));
+test('the switch workbench is loaded only when its route renders', () => {
+  const router = content('router.tsx');
+  assert.match(router, /const\s+InputWorkbenchPage\s*=\s*lazy\(\s*\(\)\s*=>\s*import\(["']\.\/input\/switch-workbench\/WorkbenchPage\.tsx["']\)/);
+  assert.match(router, /path:\s*["']input-workbench["'],\s*element:\s*<Section>\s*<InputWorkbenchPage\s*\/>\s*<\/Section>/);
+});
+
+test('the shared route fallback announces the localized loading message', () => {
+  const section = content('modules/Section.tsx');
+  assert.match(section, /<Suspense\s+fallback=\{<SectionLoading\s*\/>\}>\{children\}<\/Suspense>/);
+  assert.match(section, /<p\s+role=["']status["']>\{t\(["']lanes\.loading["']\)\}<\/p>/);
+});
+
+test('the Home workbench link has a bilingual label and a 44 px target', () => {
+  const link = content('pages/HomePage.tsx').match(/<Link\b[^>]*\bto=["']\/input-workbench["'][^>]*>[\s\S]*?<\/Link>/);
+  assert.ok(link, 'Home must link to the switch workbench');
+  assert.match(link[0], /\bminHeight:\s*44\b/);
+  assert.match(link[0], /Keyboard and switch workbench/);
+  assert.match(link[0], /Atelier clavier et contacteur/);
+});
+
 test('route coverage includes workbench',()=>assert.ok(content('states/routeCoverage.ts').includes('"input-workbench": {')));
 test('route coverage uses form mechanism',()=>assert.ok(content('states/routeCoverage.ts').includes('"input-workbench": { file: "input/switch-workbench/WorkbenchPage.tsx", mechanism: "form"')));
 test('route coverage provides explanation',()=>assert.ok(content('states/routeCoverage.ts').includes('Bilingual control form shows local field validation')));
@@ -34,7 +46,6 @@ test('public input barrel exports workbench model',()=>assert.ok(content('input/
 test('public input barrel exports workbench scanner',()=>assert.ok(content('input/index.ts').includes('initialWorkbenchMachine')));
 test('public input barrel exports workbench reports',()=>assert.ok(content('input/index.ts').includes('buildWorkbenchReport')));
 test('public input barrel exports bilingual copy',()=>assert.ok(content('input/index.ts').includes('workbenchCopy')));
-test('workbench page is lazy-loaded by the route',()=>assert.ok(content('router.tsx').includes('WorkbenchPage')));
 test('screen exposes local privacy statement',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('{copy.local}')));
 test('screen has two separate language fields',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('name-en')&&content('input/switch-workbench/WorkbenchPage.tsx').includes('name-fr')));
 test('screen has distinct descriptions',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('description-en')&&content('input/switch-workbench/WorkbenchPage.tsx').includes('description-fr')));
@@ -43,9 +54,15 @@ test('screen uses minWidth 44',()=>assert.ok(content('input/switch-workbench/Wor
 test('screen has keyboard group',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('role="group"')));
 test('screen has polite live status',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('aria-live="polite"')));
 test('screen has assertive form status',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('aria-live="assertive"')));
-test('screen supports CSV export',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes("saveReport('csv')")));
-test('screen supports JSON export',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes("saveReport('json')")));
-test('screen supports local handoff',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes("saveReport('handoff')")));
+for (const [format, label] of [['csv', 'exportCsv'], ['json', 'exportJson'], ['handoff', 'report']]) {
+  test(`the ${format} export is wired to its labelled button`, () => {
+    const page = content('input/switch-workbench/WorkbenchPage.tsx');
+    const buttons = page.match(/<button\b[\s\S]*?<\/button>/g) ?? [];
+    const button = buttons.find((source) => source.includes(`{copy.${label}}`));
+    assert.ok(button, `missing ${label} button`);
+    assert.match(button, new RegExp(`onClick=\\{\\(\\)\\s*=>\\s*saveReport\\(["']${format}["']\\)\\}`));
+  });
+}
 test('screen has a clear-session action',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('onClick={reset}')));
 test('screen has a return-home link',()=>assert.ok(content('input/switch-workbench/WorkbenchPage.tsx').includes('to="/"')));
 test('screen does not persist to localStorage',()=>assert.ok(!content('input/switch-workbench/WorkbenchPage.tsx').includes('localStorage')));

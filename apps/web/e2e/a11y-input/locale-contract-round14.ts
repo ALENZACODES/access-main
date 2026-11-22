@@ -5,10 +5,8 @@ export interface LocaleIssue {
   readonly selector: string;
   readonly detail: string;
 }
-const FRENCH_NARROW = "\u202f";
-const FRENCH_NBSP = "\u00a0";
 export async function inspectLocaleContract(page: Page): Promise<LocaleIssue[]> {
-  return page.evaluate(({ narrow, nbsp }) => {
+  return page.evaluate(() => {
     const issues: LocaleIssue[] = [];
     const language = document.documentElement.lang.toLowerCase();
     if (!/^(en|fr)(-|$)/.test(language)) issues.push({ code: "document-language-invalid", selector: "html", detail: `Unsupported document language ${language || "empty"}` });
@@ -32,22 +30,17 @@ export async function inspectLocaleContract(page: Page): Promise<LocaleIssue[]> 
         if (/[^\u00a0]:/u.test(value) && /[a-zA-Z]\s*:/u.test(value)) {
           issues.push({ code: "french-colon-spacing", selector: `text[${index}]`, detail: "Use a non-breaking space before a colon" });
         }
-        if (/[^\u202f][;!?]/u.test(value)) {
-          issues.push({ code: "french-narrow-spacing", selector: `text[${index}]`, detail: "Use a narrow no-break space before ; ! ?" });
+        if (/[^\u00a0][!?]|[^\u202f];/u.test(value)) {
+          issues.push({ code: "french-punctuation-spacing", selector: `text[${index}]`, detail: "Use a no-break space before ! or ? and a narrow no-break space before ;" });
         }
-        if (/«[^\u202f]/u.test(value) || /[^\u202f]»/u.test(value)) {
-          issues.push({ code: "french-guillemet-spacing", selector: `text[${index}]`, detail: "Use narrow no-break spaces inside French guillemets" });
+        if (/«[^\u00a0]/u.test(value) || /[^\u00a0]»/u.test(value)) {
+          issues.push({ code: "french-guillemet-spacing", selector: `text[${index}]`, detail: "Use no-break spaces inside French guillemets" });
         }
         if (value.includes("  ")) issues.push({ code: "french-double-space", selector: `text[${index}]`, detail: "Avoid repeated ordinary spaces" });
       });
     }
-    // Keep the constants in the evaluated payload so source tests can assert
-    // the exact Unicode code points without inserting invisible characters.
-    if (narrow.codePointAt(0) !== 0x202f || nbsp.codePointAt(0) !== 0x00a0) {
-      issues.push({ code: "locale-spacing-constants", selector: "audit", detail: "Locale spacing constants are malformed" });
-    }
     return issues;
-  }, { narrow: FRENCH_NARROW, nbsp: FRENCH_NBSP });
+  });
 }
 export async function assertLocaleContract(page: Page, language: "en" | "fr"): Promise<void> {
   await expect(page.locator("html")).toHaveAttribute("lang", language);

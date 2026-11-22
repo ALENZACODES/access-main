@@ -71,14 +71,12 @@ export function isSafeFile(input: unknown): input is string {
 }
 export function frenchIssues(input: string): string[] {
   const errors: string[] = [];
-  if (/(^|[^\u00a0]):(?=\s|\S)/u.test(input) && /\S\s*:\s*/u.test(input)) {
-    const left = [...input.matchAll(/[^\s\u00a0]:/gu)];
-    if (left.length > 0) errors.push('fr.colon');
-  }
-  if (/[^\u202f][;!?]/u.test(input)) errors.push('fr.narrow');
-  if (/«[^\u202f]/u.test(input)) errors.push('fr.open');
-  if (/[^\u202f]»/u.test(input)) errors.push('fr.close');
-  if (/[a-zA-Z]'[a-zA-Z]/u.test(input)) errors.push('fr.apostrophe');
+  if (/(?<!\u00a0):/u.test(input)) errors.push('fr.colon');
+  if (/(?<!\u00a0)[!?]/u.test(input)) errors.push('fr.punctuation');
+  if (/(?<!\u202f);/u.test(input)) errors.push('fr.narrow');
+  if (/«(?!\u00a0)/u.test(input)) errors.push('fr.open');
+  if (/(?<!\u00a0)»/u.test(input)) errors.push('fr.close');
+  if (/\p{L}'\p{L}/u.test(input)) errors.push('fr.apostrophe');
   return errors;
 }
 export function safeCsvCell(input: unknown): string {

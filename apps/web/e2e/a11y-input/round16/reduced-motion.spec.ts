@@ -20,7 +20,8 @@ test.describe("P16 round 16 reduced-motion preference",()=>{
   });
   test("animation duration is minimized",async({page})=>{
     const duration=await page.locator("#animated").evaluate(node=>getComputedStyle(node).animationDuration);
-    expect(duration).toMatch(/0\.01ms|0s/);
+    const milliseconds = parseFloat(duration) * (duration.endsWith("ms") ? 1 : 1000);
+    expect(milliseconds).toBeLessThanOrEqual(0.01);
   });
   test("animation iteration is limited",async({page})=>{
     const count=await page.locator("#animated").evaluate(node=>getComputedStyle(node).animationIterationCount);

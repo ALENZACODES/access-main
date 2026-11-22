@@ -53,11 +53,11 @@ export async function fixture(page: Page, body: string, style = ""): Promise<voi
 <style>
   :root { color-scheme: light; font-family: Arial,sans-serif; font-size:16px; }
   * { box-sizing:border-box; }
-  body { margin:0; padding:16px; color:#18232d; background:#fff; line-height:1.5; }
+  body { margin:0; padding:16px; color:#18232d; background:#fff; line-height:1.5; overflow-wrap:anywhere; }
   main { max-width:72rem; margin-inline:auto; }
   button,a,input,select,textarea,summary { min-width:44px; min-height:44px; }
   button,a { padding:8px 12px; }
-  a { color:#064b83; }
+  a { color:#064b83; display:inline-block; }
   :focus-visible { outline:3px solid #064b83; outline-offset:3px; }
   .row { display:flex; flex-wrap:wrap; gap:12px; }
   .card { min-width:0; padding:12px; border:1px solid #687783; }
@@ -126,7 +126,7 @@ function channel(value: number): number {
   return normalized<=0.04045?normalized/12.92:((normalized+0.055)/1.055)**2.4;
 }
 function luminance(color: string): number {
-  const values=color.match(/[\\d.]+/g)?.map(Number)??[];
+  const values=color.match(/[\d.]+/g)?.map(Number)??[];
   if(values.length<3)return 0;
   return 0.2126*channel(values[0]??0)+0.7152*channel(values[1]??0)+0.0722*channel(values[2]??0);
 }
@@ -136,18 +136,17 @@ export function contrastRatio(foreground: string, background: string): number {
   return (light+0.05)/(dark+0.05);
 }
 export async function contrast(page: Page, selector: string): Promise<ContrastResult> {
-  return page.locator(selector).evaluate(node=>{
-    const style=getComputedStyle(node);
-    const fg=style.color,bg=style.backgroundColor;
-    const parse=(value:string):number=>{
-      const values=value.match(/[\\d.]+/g)?.map(Number)??[];
-      if(values.length<3)return 0;
-      const convert=(n:number)=>{const v=n/255;return v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;};
-      return 0.2126*convert(values[0]??0)+0.7152*convert(values[1]??0)+0.0722*convert(values[2]??0);
-    };
-    const l1=parse(fg),l2=parse(bg),hi=Math.max(l1,l2),lo=Math.min(l1,l2);
-    return {foreground:fg,background:bg,ratio:(hi+0.05)/(lo+0.05)};
+  const colors = await page.locator(selector).evaluate(node => {
+    const style = getComputedStyle(node);
+    let background = style.backgroundColor;
+    let parent = node.parentElement;
+    while (background === "rgba(0, 0, 0, 0)" && parent) {
+      background = getComputedStyle(parent).backgroundColor;
+      parent = parent.parentElement;
+    }
+    return { foreground: style.color, background };
   });
+  return { ...colors, ratio: contrastRatio(colors.foreground, colors.background) };
 }
 export async function focusAndInspect(page: Page, selector: string): Promise<{focused:boolean;outline:string;outlineWidth:number;shadow:string}> {
   const locator=page.locator(selector);

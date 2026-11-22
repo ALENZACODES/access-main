@@ -61,7 +61,7 @@ test.describe("P16 round 15 multi-step focus recovery",()=>{
     await expect(page.locator("#step-one")).toBeHidden();
     await page.locator("#second").focus();
     await page.keyboard.press("Shift+Tab");
-    await expect(page.locator("#step-one")).not.toContainText("Step one");
+    await expectFocus(page,"start");
   });
   test("second step validation focuses second field",async({page})=>{
     await page.locator("#first").fill("Value");

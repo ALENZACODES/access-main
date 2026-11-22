@@ -1,5 +1,5 @@
-import { type Decision, type Language, type ControlKind, type Evidence } from './model.ts';
-import { type Command, type Mode } from './engine.ts';
+import { type Activation, type Decision, type Language, type ControlKind, type Evidence } from './model.ts';
+import { type Command, type Mode, type Phase } from './engine.ts';
 export interface WorkbenchCopy{title:string;intro:string;caveat:string;local:string;project:string;control:string;nameEn:string;nameFr:string;descriptionEn:string;descriptionFr:string;kind:string;evidence:string;source:string;sourceUrl:string;licence:string;date:string;reviewed:string;save:string;delete:string;reset:string;empty:string;keyboard:string;switchInput:string;mode:string;wrap:string;group:string;selected:string;focus:string;findings:string;exportJson:string;exportCsv:string;report:string;status:string;count:string;unknown:string;noSource:string;validation:string;edit:string;add:string;home:string;back:string;current:string;cancel:string;prior:string;next:string;choose:string;restart:string;error:string;warning:string;scope:string;finish:string}
 const EN:WorkbenchCopy={title:'Keyboard and switch workbench',intro:'Design a small sequence of controls and rehearse how keyboard and switch access behave.',caveat:'This is a structural rehearsal, not a test with a screen reader or a finding about a real location.',local:'This session stays in this browser page. Nothing is stored or sent.',project:'Control set',control:'Control',nameEn:'English control name',nameFr:'French control name',descriptionEn:'English description',descriptionFr:'French description',kind:'Control type',evidence:'Evidence level',source:'Source title',sourceUrl:'Source HTTPS address',licence:'Source licence',date:'Access date',reviewed:'I have reviewed the description',save:'Save control',delete:'Remove control',reset:'Clear session',empty:'No controls have been added.',keyboard:'Keyboard order',switchInput:'Switch controls',mode:'Scan mode',wrap:'Wrap around at the end',group:'Group',selected:'Selected control',focus:'Current focus',findings:'Structural findings',exportJson:'Export JSON',exportCsv:'Export CSV',report:'Local report',status:'Review status',count:'Controls',unknown:'UNKNOWN',noSource:'Source not supplied',validation:'Enter valid English and French names before saving.',edit:'Edit control',add:'Add control',home:'First control',back:'Back',current:'Current control',cancel:'Cancel',prior:'Previous',next:'Next',choose:'Select',restart:'Restart',error:'Error',warning:'Review',scope:'Page-local rehearsal only',finish:'Close workbench'};
 const FR:WorkbenchCopy={title:'Atelier de commande au clavier et par contacteur',intro:'Créez une courte suite de commandes et examinez la navigation au clavier ou par contacteur.',caveat:'Cet exercice examine la structure. Il ne remplace pas un essai avec un lecteur d’écran et ne décrit aucun lieu réel.',local:'Cette séance reste dans la page. Aucune donnée n’est conservée ni envoyée.',project:'Ensemble de commandes',control:'Commande',nameEn:'Nom de la commande en anglais',nameFr:'Nom de la commande en français',descriptionEn:'Description en anglais',descriptionFr:'Description en français',kind:'Type de commande',evidence:'Niveau de preuve',source:'Titre de la source',sourceUrl:'Adresse HTTPS de la source',licence:'Licence de la source',date:'Date de consultation',reviewed:'J’ai examiné la description',save:'Enregistrer la commande',delete:'Supprimer la commande',reset:'Effacer la séance',empty:'Aucune commande n’a été ajoutée.',keyboard:'Ordre du clavier',switchInput:'Commandes du contacteur',mode:'Mode de balayage',wrap:'Revenir au début après la fin',group:'Groupe',selected:'Commande sélectionnée',focus:'Élément actif',findings:'Constats structurels',exportJson:'Exporter en JSON',exportCsv:'Exporter en CSV',report:'Rapport local',status:'État de la révision',count:'Commandes',unknown:'UNKNOWN',noSource:'Source non fournie',validation:'Saisissez des noms valides en français et en anglais avant d’enregistrer.',edit:'Modifier la commande',add:'Ajouter une commande',home:'Première commande',back:'Retour',current:'Commande active',cancel:'Annuler',prior:'Précédent',next:'Suivant',choose:'Sélectionner',restart:'Recommencer',error:'Erreur',warning:'À examiner',scope:'Exercice local à cette page uniquement',finish:'Fermer l’atelier'};
@@ -10,3 +10,27 @@ export function evidenceLabel(value:Evidence,locale:Language):string{const en:Re
 export function decisionLabel(value:Decision,locale:Language):string{const en:Record<Decision,string>={READY:'Ready for manual review',REVIEW:'Structural issues found',UNKNOWN:'UNKNOWN'};const fr:Record<Decision,string>={READY:'Prêt pour un examen manuel',REVIEW:'Problèmes de structure détectés',UNKNOWN:'UNKNOWN'};return locale==='fr'?fr[value]:en[value];}
 export function modeLabel(mode:Mode,locale:Language):string{const en:Record<Mode,string>={LINEAR:'Linear',GROUPED:'Grouped',DIRECT:'Direct'};const fr:Record<Mode,string>={LINEAR:'Linéaire',GROUPED:'Par groupes',DIRECT:'Direct'};return locale==='fr'?fr[mode]:en[mode];}
 export function issueLabel(code:string,locale:Language):string{if(locale==='en')return code.replaceAll('.',' — ').replaceAll('-',' ');const keys:Record<string,string>={'control.name':'Nom de commande manquant','control.description':'Description manquante','control.target-size':'Zone tactile trop petite','control.missing-source':'Source non fournie','project.duplicate-id':'Identifiant répété','project.dangling-reference':'Référence absente','project.unreachable-control':'Commande non atteignable au clavier','scan.no-controls':'Aucune commande disponible','node.unnamed':'Nom accessible manquant','node.small-target':'Cible trop petite','focus.unvisited':'Élément non atteint'};return keys[code]??code.replaceAll('.',' — ').replaceAll('-',' ');}
+
+const activationLabels: Record<Activation, Record<Language, string>> = {
+  ENTER: { en: "Enter", fr: "Entrée" },
+  SPACE: { en: "Space", fr: "Espace" },
+  BOTH: { en: "Enter or Space", fr: "Entrée ou Espace" },
+  ARROWS: { en: "Arrow keys", fr: "Touches fléchées" },
+  NONE: { en: "None", fr: "Aucune" },
+};
+
+const phaseLabels: Record<Phase, Record<Language, string>> = {
+  IDLE: { en: "Ready to start", fr: "Prêt à commencer" },
+  FOCUSED: { en: "Control focused", fr: "Commande active" },
+  SELECTED: { en: "Control selected", fr: "Commande sélectionnée" },
+  CANCELLED: { en: "Cancelled", fr: "Annulé" },
+  UNKNOWN: { en: "UNKNOWN", fr: "UNKNOWN" },
+};
+
+export function activationLabel(activation: Activation, locale: Language): string {
+  return activationLabels[activation][locale];
+}
+
+export function phaseLabel(phase: Phase, locale: Language): string {
+  return phaseLabels[phase][locale];
+}

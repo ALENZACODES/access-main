@@ -31,10 +31,11 @@ test.describe("P16 round 15 keyboard navigation shortcuts",()=>{
     await expect(page.locator("#text")).toHaveValue("abcdefX");
   });
   test("Control Home in document moves to first page content",async({page})=>{
+    await page.addStyleTag({content: "#alpha-panel{min-height:180vh}"});
     await page.locator("#gamma-action").focus();
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
     await page.keyboard.press("Control+Home");
-    const active=await page.evaluate(()=>document.activeElement?.tagName.toLowerCase()??"");
-    expect(active).toBe("body");
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   });
   test("Control End in document does not activate a control",async({page})=>{
     await page.locator("#alpha").focus();

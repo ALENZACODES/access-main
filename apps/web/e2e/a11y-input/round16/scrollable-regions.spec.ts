@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { fixture, overflow, expectNoHorizontalOverflow } from "./visual-harness";
 
 async function scrollPage(page: import("@playwright/test").Page): Promise<void> {
-  await fixture(page,`<section id="horizontal" role="region" aria-label="Timeline" tabindex="0" style="max-width:100%;overflow:auto">
+  await fixture(page,`<section id="horizontal" role="region" aria-label="Timeline" tabindex="0" style="max-width:min(100%,36rem);overflow:auto">
     <div style="width:900px;display:flex;gap:12px"><article>January</article><article>February</article><article>March</article></div>
   </section>
   <section id="vertical" role="region" aria-label="Long notes" tabindex="0" style="height:180px;overflow:auto">
@@ -35,11 +35,11 @@ test.describe("P16 round 16 scrollable content regions",()=>{
   });
   test("horizontal region scrolls with keyboard",async({page})=>{
     await page.locator("#horizontal").focus();await page.keyboard.press("ArrowRight");
-    expect(await page.locator("#horizontal").evaluate(node=>node.scrollLeft)).toBeGreaterThan(0);
+    await expect.poll(() => page.locator("#horizontal").evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
   });
   test("vertical region scrolls with keyboard",async({page})=>{
     await page.locator("#vertical").focus();await page.keyboard.press("End");
-    expect(await page.locator("#vertical").evaluate(node=>node.scrollTop)).toBeGreaterThan(0);
+    await expect.poll(() => page.locator("#vertical").evaluate(node => node.scrollTop)).toBeGreaterThan(0);
   });
   test("vertical region can reach final note",async({page})=>{
     await page.locator("#last").scrollIntoViewIfNeeded();await expect(page.locator("#last")).toBeInViewport();

@@ -101,8 +101,8 @@ test.describe("P16 round 15 sequential focus order",()=>{
   });
   test("focus is not moved by live status changes",async({page})=>{
     await page.locator("#second").focus();
-    await page.locator("#one").setAttribute("role","status");
-    await page.locator("#one").setAttribute("aria-live","polite");
+    await page.locator("#one").evaluate(node => node.setAttribute("role","status"));
+    await page.locator("#one").evaluate(node => node.setAttribute("aria-live","polite"));
     await expectFocus(page,"second");
   });
   test("removing focused element does not leave a detached active node",async({page})=>{

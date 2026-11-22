@@ -37,6 +37,7 @@ test.describe("P16 round 15 tabs: keyboard contract", () => {
   test.beforeEach(async ({ page }) => mountTabs(page));
   test("has a named tablist, selected tab and roving stop", async ({ page }) => {
     await assertWidgetSemantics(page);
+    await page.keyboard.press("Tab");
     await expectRoving(page, "#tabset [role=tab]", "tab-home");
   });
   test("right arrow moves to next tab and panel", async ({ page }) => {
@@ -111,8 +112,8 @@ test.describe("P16 round 15 tabs: keyboard contract", () => {
     await pressKeys(page, ["ArrowRight","ArrowRight","ArrowRight","ArrowLeft","ArrowRight","ArrowRight"]);
     await expect(page.locator("#tabset [aria-selected=true]")).toHaveCount(1);
     const selected = await page.locator("#tabset [aria-selected=true]").getAttribute("id");
-    expect(selected).toBe("tab-home");
-    await expectRoving(page, "#tabset [role=tab]", "tab-home");
+    expect(selected).toBe("tab-details");
+    await expectRoving(page, "#tabset [role=tab]", "tab-details");
   });
   test("clicking a tab selects it and reveals its panel", async ({ page }) => {
     await page.locator("#tab-history").click();
@@ -126,12 +127,12 @@ test.describe("P16 round 15 tabs: keyboard contract", () => {
     await expect(page.locator("#panel-history")).toBeVisible();
   });
   test("missing panel reference is reported", async ({ page }) => {
-    await page.locator("#tab-details").removeAttribute("aria-controls");
+    await page.locator("#tab-details").evaluate(node => node.removeAttribute("aria-controls"));
     const result = await inspectWidgets(page);
     expect(result.issues.map(issue=>issue.code)).toContain("tab-panel-reference");
   });
   test("two selected tabs are reported", async ({ page }) => {
-    await page.locator("#tab-details").setAttribute("aria-selected","true");
+    await page.locator("#tab-details").evaluate(node => node.setAttribute("aria-selected","true"));
     const result = await inspectWidgets(page);
     expect(result.issues.map(issue=>issue.code)).toContain("tab-selection-count");
   });
@@ -141,7 +142,7 @@ test.describe("P16 round 15 tabs: keyboard contract", () => {
     expect(result.issues.map(issue=>issue.code)).toContain("tab-roving-focus");
   });
   test("unnamed tablist is reported", async ({ page }) => {
-    await page.locator("#tabset").removeAttribute("aria-label");
+    await page.locator("#tabset").evaluate(node => node.removeAttribute("aria-label"));
     const result = await inspectWidgets(page);
     expect(result.issues.map(issue=>issue.code)).toContain("tablist-name");
   });
@@ -162,7 +163,7 @@ test.describe("P16 round 15 tabs: keyboard contract", () => {
     await expect(page.locator("#panel-history")).toHaveAttribute("aria-labelledby","tab-history");
   });
   test("disabled state is exposed without silently removing tab", async ({ page }) => {
-    await page.locator("#tab-details").setAttribute("aria-disabled","true");
+    await page.locator("#tab-details").evaluate(node => node.setAttribute("aria-disabled","true"));
     await page.locator("#tab-home").focus();
     await page.keyboard.press("ArrowRight");
     await expect(page.locator("#tab-details")).toBeFocused();

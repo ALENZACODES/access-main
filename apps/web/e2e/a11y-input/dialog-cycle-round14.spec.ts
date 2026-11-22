@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { exerciseEscapeAndRestore, inspectDialogFocus } from "./dialog-focus-round14";
+import { exerciseEscapeAndRestore, inspectDialogFocus, tabAroundModal } from "./dialog-focus-round14";
 
 async function dialogPage(page: import("@playwright/test").Page, html: string): Promise<void> {
   await page.setContent(`<!doctype html><html lang="en"><head><title>Dialog cycle</title></head><body><main><h1>Dialog cycle</h1>${html}</main></body></html>`);
@@ -15,8 +15,7 @@ test.describe("P16 round 14 dialog focus cycles", () => {
     await dialogPage(page, `<button id="open">Open</button><button id="background">Background</button><dialog id="dialog" aria-label="Preferences"><button id="inside">Inside</button><button id="last">Last</button></dialog><script>document.querySelector('#open').onclick=()=>document.querySelector('#dialog').showModal()</script>`);
     await page.locator("#open").click();
     await page.locator("#last").focus();
-    await page.keyboard.press("Tab");
-    await expect(page.locator("#inside")).toBeFocused();
+    await tabAroundModal(page, "Tab", page.locator("#inside"));
     expect(await page.locator("#dialog").evaluate(node => node.contains(document.activeElement))).toBe(true);
   });
   test("Escape restores focus to the invoking button", async ({ page }) => {

@@ -31,11 +31,11 @@ test.describe("P16 round 15 accessible-name and description contracts",()=>{
   });
   test("aria-describedby supplies description separately from name",async({page})=>{
     await nameFixture(page,`<label for="email">Email</label><input id="email" aria-describedby="hint"><p id="hint">We use this to send updates.</p>`);
-    await expect(page.getByRole("textbox",{name:"Email",description:"We use this to send updates."})).toHaveCount(1);
+    await expect(page.getByRole("textbox", { name: "Email" })).toHaveAccessibleDescription("We use this to send updates.");
   });
   test("multiple described-by nodes are combined",async({page})=>{
     await nameFixture(page,`<label for="email">Email</label><input id="email" aria-describedby="hint format"><p id="hint">Required</p><p id="format">Use an email address</p>`);
-    await expect(page.getByRole("textbox",{name:"Email",description:"Required Use an email address"})).toHaveCount(1);
+    await expect(page.getByRole("textbox", { name: "Email" })).toHaveAccessibleDescription("Required Use an email address");
   });
   test("missing aria-labelledby target does not create an accessible name",async({page})=>{
     await nameFixture(page,`<button aria-labelledby="missing"></button>`);
@@ -91,7 +91,7 @@ test.describe("P16 round 15 accessible-name and description contracts",()=>{
   });
   test("meter exposes a value and accessible name",async({page})=>{
     await nameFixture(page,`<label for="meter">Completion</label><meter id="meter" min="0" max="100" value="50"></meter>`);
-    await expect(page.getByLabel("Completion")).toHaveValue("50");
+    await expect(page.getByRole("meter", { name: "Completion" })).toHaveJSProperty("value", 50);
   });
   test("output can be associated with its source input",async({page})=>{
     await nameFixture(page,`<label for="amount">Amount</label><input id="amount" type="number" value="3"><output id="result" for="amount">3</output>`);

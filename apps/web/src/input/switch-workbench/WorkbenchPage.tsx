@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ChangeEvent } from "react";
+import { useId, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,7 +12,7 @@ import {
 } from "./engine.ts";
 import { buildHandoff, buildReport, exportCsv, exportHandoff, exportJson, safeFilename } from "./report.ts";
 import {
-  commandLabel, decisionLabel, evidenceLabel, issueLabel, kindLabel, modeLabel, workbenchCopy,
+  activationLabel, commandLabel, decisionLabel, evidenceLabel, issueLabel, kindLabel, modeLabel, phaseLabel, workbenchCopy,
 } from "./copy.ts";
 
 const targetStyle = { minHeight: 44, minWidth: 44, padding: "9px 12px" } as const;
@@ -44,6 +44,7 @@ export function WorkbenchPage() {
   const locale: Language = i18n.language.startsWith("fr") ? "fr" : "en";
   const copy = workbenchCopy(locale);
   const formId = useId();
+  const nextControlId = useRef(1);
 
   const [project, setProject] = useState<Project>(defaultProject);
   const [machine, setMachine] = useState<Machine>(initialMachine);
@@ -92,7 +93,7 @@ export function WorkbenchPage() {
       setShowError(true);
       return;
     }
-    const id = editing ?? `control-${project.controls.length + 1}`;
+    const id = editing ?? `control-${nextControlId.current++}`;
     const previous = project.controls.find((control) => control.id === id);
     const source = sourceName.trim() && sourceUrl.trim() && licence.trim()
       ? { title: sourceName.trim(), url: sourceUrl.trim(), licence: licence.trim(), accessed: date }
@@ -216,7 +217,7 @@ export function WorkbenchPage() {
           value={activation}
           onChange={(event: ChangeEvent<HTMLSelectElement>) => setActivation(event.target.value as Activation)}
         >
-          {ACTIVATIONS.map((value) => <option key={value} value={value}>{value}</option>)}
+          {ACTIVATIONS.map((value) => <option key={value} value={value}>{activationLabel(value, locale)}</option>)}
         </select>
 
         <label htmlFor={`${formId}-evidence`}>{copy.evidence}</label>
@@ -340,7 +341,7 @@ export function WorkbenchPage() {
           ))}
         </div>
         {active ? <p>{active.description[locale]}</p> : null}
-        <p>{copy.status} — {machine.phase} · {scanSummary.accepted}/{scanSummary.total}</p>
+        <p>{copy.status} — {phaseLabel(machine.phase, locale)} · {scanSummary.accepted}/{scanSummary.total}</p>
       </section>
 
       <section className="panel" aria-labelledby={`${formId}-report-title`}>

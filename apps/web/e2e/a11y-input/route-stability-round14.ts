@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export interface RouteStabilityIssue {
   readonly code: string;
@@ -28,12 +28,11 @@ export async function captureRouteState(page: Page): Promise<RouteState> {
     };
   });
 }
-export async function assertFocusDoesNotNavigate(page: Page, selector: string): Promise<void> {
+export async function assertFocusDoesNotNavigate(page: Page, target: Locator): Promise<void> {
   const before = await captureRouteState(page);
-  const target = page.locator(selector);
   await expect(target).toBeVisible();
   await target.focus();
-  await page.waitForTimeout(50);
+  await expect(target).toBeFocused();
   const after = await captureRouteState(page);
   expect(after.path).toBe(before.path);
   expect(after.heading).toBe(before.heading);

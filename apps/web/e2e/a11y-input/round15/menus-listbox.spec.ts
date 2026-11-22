@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { assertTarget, assertWidgetSemantics, expectFocus, fixture, inspectWidgets } from "./harness";
-import { expectOneTabStop } from "./patterns";
+import { assertTarget, assertWidgetSemantics, expectFocus, expectOneTabStop, fixture, inspectWidgets } from "./harness";
 
 async function menuFixture(page: import("@playwright/test").Page): Promise<void> {
   await fixture(page, `<button id="menu-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="actions">Actions</button>
@@ -43,6 +42,10 @@ async function listboxFixture(page: import("@playwright/test").Page, multi = fal
     let current=0;
     const focus=(index)=>{current=index;items.forEach((item,i)=>item.tabIndex=i===index?0:-1);items[index].focus();};
     const select=(index,add=false)=>{if(!multi)items.forEach((item,i)=>item.setAttribute('aria-selected',String(i===index)));else if(!add)items[index].setAttribute('aria-selected',String(items[index].getAttribute('aria-selected')!=='true'));document.querySelector('#selection').textContent=items.filter(item=>item.getAttribute('aria-selected')==='true').map(item=>item.textContent).join(', ');};
+    box.addEventListener('focusin',event=>{
+      const index=items.indexOf(event.target);
+      if(index>=0)current=index;
+    });
     box.addEventListener('keydown',event=>{
       if(event.key==='ArrowDown'||event.key==='ArrowRight'){event.preventDefault();focus((current+1)%items.length);}
       else if(event.key==='ArrowUp'||event.key==='ArrowLeft'){event.preventDefault();focus((current+items.length-1)%items.length);}
@@ -129,7 +132,7 @@ test.describe("P16 round 15 menu keyboard contract",()=>{
     }
   });
   test("unnamed menu is rejected",async({page})=>{
-    await page.locator("#actions").removeAttribute("aria-label");
+    await page.locator("#actions").evaluate(node => node.removeAttribute("aria-label"));
     const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("menu-name");
   });
   test("menu with no menu items is rejected",async({page})=>{
@@ -137,7 +140,8 @@ test.describe("P16 round 15 menu keyboard contract",()=>{
     const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("menu-children");
   });
   test("menu with two tab stops is rejected",async({page})=>{
-    await page.locator("#open").evaluate(node=>(node as HTMLElement).tabIndex=0);
+    await page.locator("#menu-trigger").click();
+    await page.locator("#rename").evaluate(node => (node as HTMLElement).tabIndex = 0);
     const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("menu-roving-focus");
   });
   test("unnamed menu item is rejected",async({page})=>{
@@ -162,10 +166,10 @@ test.describe("P16 round 15 listbox keyboard contract",()=>{
   test("typeahead selects matching initial",async({page})=>{await page.locator("#choices").focus();await page.keyboard.press("m");await expectFocus(page,"mail");});
   test("listbox has a single tab stop",async({page})=>{await expectOneTabStop(page,"#choices [role=option]");});
   test("listbox options have 44px targets",async({page})=>{for(const id of ["email","phone","mail"])await assertTarget(page,`#${id}`);});
-  test("unnamed listbox is rejected",async({page})=>{await page.locator("#choices").removeAttribute("aria-label");const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("listbox-name");});
+  test("unnamed listbox is rejected",async({page})=>{await page.locator("#choices").evaluate(node => node.removeAttribute("aria-label"));const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("listbox-name");});
   test("listbox with no options is rejected",async({page})=>{await page.locator("#choices [role=option]").evaluateAll(nodes=>nodes.forEach(node=>node.remove()));const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("listbox-children");});
   test("option without accessible name is rejected",async({page})=>{await page.locator("#phone").textContent().then(async()=>page.locator("#phone").evaluate(node=>node.textContent=""));const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("option-name");});
-  test("option without selected state is rejected",async({page})=>{await page.locator("#phone").removeAttribute("aria-selected");const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("option-selected-state");});
-  test("multiple selected options are rejected in single-select listbox",async({page})=>{await page.locator("#phone").setAttribute("aria-selected","true");const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("listbox-selection-count");});
-  test("multiselect listbox permits several selected options",async({page})=>{await listboxFixture(page,true);await page.locator("#phone").setAttribute("aria-selected","true");expect((await inspectWidgets(page)).issues).toEqual([]);});
+  test("option without selected state is rejected",async({page})=>{await page.locator("#phone").evaluate(node => node.removeAttribute("aria-selected"));const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("option-selected-state");});
+  test("multiple selected options are rejected in single-select listbox",async({page})=>{await page.locator("#phone").evaluate(node => node.setAttribute("aria-selected","true"));const result=await inspectWidgets(page);expect(result.issues.map(x=>x.code)).toContain("listbox-selection-count");});
+  test("multiselect listbox permits several selected options",async({page})=>{await listboxFixture(page,true);await page.locator("#phone").evaluate(node => node.setAttribute("aria-selected","true"));expect((await inspectWidgets(page)).issues).toEqual([]);});
 });

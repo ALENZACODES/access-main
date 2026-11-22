@@ -3,10 +3,10 @@ import { fixture, scrollTo, visibleState, focusAndInspect } from "./visual-harne
 
 async function stickyPage(page: import("@playwright/test").Page): Promise<void> {
   await fixture(page,`<header id="header" style="position:sticky;top:0;z-index:10;background:white;padding:8px;border-bottom:2px solid #333"><a href="#start">Top</a></header>
-  <div style="height:900px"></div><main id="content"><h2>Actions</h2>
+  <div style="height:900px"></div><section id="content"><h2>Actions</h2>
   <button id="start">Start</button><button id="first">First action</button><button id="second">Second action</button>
-  <a id="link" href="#end">End link</a><div style="height:900px"></div><button id="end">End action</button></main>
-  <footer id="footer" style="position:sticky;bottom:0;background:white;padding:8px;border-top:2px solid #333">Footer</footer>`);
+  <a id="link" href="#end">End link</a><div style="height:900px"></div><button id="end">End action</button></section>
+  <footer id="footer" style="position:sticky;bottom:0;background:white;padding:8px;border-top:2px solid #333">Footer</footer>`, "html{scroll-padding-block:5rem}");
 }
 test.describe("P16 round 16 focus visibility around sticky content",()=>{
   test.beforeEach(async({page})=>stickyPage(page));

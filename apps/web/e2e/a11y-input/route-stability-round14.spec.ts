@@ -13,9 +13,7 @@ for (const route of routes()) {
     });
     test("focus does not navigate away from the current route", async ({ page }) => {
       const candidate = page.locator("nav a[href]").first();
-      if (await candidate.count() === 0) test.skip(true, "This shell route has no navigation link");
-      const selector = await candidate.evaluate((node) => node.id ? `#${CSS.escape(node.id)}` : `a[href="${node.getAttribute("href")}"]`);
-      await assertFocusDoesNotNavigate(page, selector);
+      await assertFocusDoesNotNavigate(page, candidate);
     });
     test("skip-link references resolve", async ({ page }) => {
       expect(await inspectSkipLinks(page)).toEqual([]);

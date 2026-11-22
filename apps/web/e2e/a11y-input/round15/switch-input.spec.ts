@@ -28,12 +28,12 @@ test.describe("P16 round 15 switch and toggle keyboard contract",()=>{
   test("switch exposes a Boolean checked state",async({page})=>{await expect(page.locator("#switch")).toHaveAttribute("aria-checked","false");});
   test("Space toggles switch on",async({page})=>{await page.locator("#switch").focus();await page.keyboard.press("Space");await expect(page.locator("#switch")).toHaveAttribute("aria-checked","true");});
   test("Space toggles switch off",async({page})=>{await page.locator("#switch").focus();await page.keyboard.press("Space");await page.keyboard.press("Space");await expect(page.locator("#switch")).toHaveAttribute("aria-checked","false");});
-  test("Enter does not toggle switch when Space is the declared key",async({page})=>{await page.locator("#switch").focus();await page.keyboard.press("Enter");await expect(page.locator("#switch")).toHaveAttribute("aria-checked","false");});
+  test("Enter activates a switch backed by a native button",async({page})=>{await page.locator("#switch").focus();await page.keyboard.press("Enter");await expect(page.locator("#switch")).toHaveAttribute("aria-checked","true");});
   test("switch retains focus after toggling",async({page})=>{await page.locator("#switch").focus();await page.keyboard.press("Space");await expectFocus(page,"switch");});
   test("checkbox Space toggles checked state",async({page})=>{await page.locator("#check").focus();await page.keyboard.press("Space");await expect(page.locator("#check")).toHaveAttribute("aria-checked","true");});
   test("checkbox can be toggled back with Space",async({page})=>{await page.locator("#check").focus();await page.keyboard.press("Space");await page.keyboard.press("Space");await expect(page.locator("#check")).toHaveAttribute("aria-checked","false");});
   test("radio group has one checked radio",async({page})=>{await expect(page.locator("#radio-group [aria-checked=true]")).toHaveCount(1);});
-  test("radio group has one sequential stop",async({page})=>{await expect(page.locator("#radio-group [tabindex=0]")).toHaveCount(1);});
+  test("radio group has one sequential stop",async({page})=>{await expect(page.locator("#radio-group [tabindex='0']")).toHaveCount(1);});
   test("ArrowRight selects next radio",async({page})=>{await page.locator("#compact").focus();await page.keyboard.press("ArrowRight");await expect(page.locator("#comfortable")).toHaveAttribute("aria-checked","true");});
   test("ArrowDown selects next radio",async({page})=>{await page.locator("#compact").focus();await page.keyboard.press("ArrowDown");await expect(page.locator("#comfortable")).toHaveAttribute("aria-checked","true");});
   test("ArrowLeft selects previous radio",async({page})=>{await page.locator("#comfortable").focus();await page.keyboard.press("ArrowLeft");await expect(page.locator("#compact")).toHaveAttribute("aria-checked","true");});

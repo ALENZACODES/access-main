@@ -3,11 +3,11 @@ import { fixture, expectNoHorizontalOverflow, box } from "./visual-harness";
 
 test.describe("P16 round 16 responsive media and data",()=>{
   test("responsive image remains within 320 pixel viewport",async({page})=>{
-    await fixture(page,`<img id="photo" alt="Map preview" width="1600" height="900" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='1600' height='900' fill='gray'/%3E%3C/svg%3E`);
+    await fixture(page,`<img id="photo" alt="Map preview" width="1600" height="900" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='1600' height='900' fill='gray'/%3E%3C/svg%3E">`);
     await page.setViewportSize({width:320,height:720});await expectNoHorizontalOverflow(page);expect((await box(page,"#photo")).width).toBeLessThanOrEqual(288);
   });
   test("responsive image retains its aspect ratio",async({page})=>{
-    await fixture(page,`<img id="photo" alt="Map preview" width="1600" height="900" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='1600' height='900' fill='gray'/%3E%3C/svg%3E`);
+    await fixture(page,`<img id="photo" alt="Map preview" width="1600" height="900" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='1600' height='900' fill='gray'/%3E%3C/svg%3E">`);
     const b=await box(page,"#photo");expect(b.width/b.height).toBeCloseTo(16/9,1);
   });
   test("video placeholder scales to the viewport",async({page})=>{
@@ -39,15 +39,15 @@ test.describe("P16 round 16 responsive media and data",()=>{
     await page.setViewportSize({width:1280,height:900});const a=await box(page,".card:nth-child(1)"),b=await box(page,".card:nth-child(2)");expect(b.x).toBeGreaterThan(a.x);
   });
   test("media alt text remains available after resizing",async({page})=>{
-    await fixture(page,`<img alt="Route diagram" width="1200" height="600" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600'%3E%3Crect width='1200' height='600'/%3E%3C/svg%3E`);
+    await fixture(page,`<img alt="Route diagram" width="1200" height="600" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600'%3E%3Crect width='1200' height='600'/%3E%3C/svg%3E">`);
     await page.setViewportSize({width:320,height:720});await expect(page.getByRole("img",{name:"Route diagram"})).toHaveCount(1);
   });
   test("media does not change the document heading",async({page})=>{
-    await fixture(page,`<img alt="Route diagram" width="1200" height="600" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600'%3E%3Crect width='1200' height='600'/%3E%3C/svg%3E`);
+    await fixture(page,`<img alt="Route diagram" width="1200" height="600" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600'%3E%3Crect width='1200' height='600'/%3E%3C/svg%3E">`);
     await page.setViewportSize({width:320,height:720});await expect(page.getByRole("heading",{level:1})).toHaveCount(1);
   });
   test("media reflow preserves page language",async({page})=>{
-    await fixture(page,`<img alt="Preview" width="1200" height="600" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600'%3E%3Crect width='1200' height='600'/%3E%3C/svg%3E`);
+    await fixture(page,`<img alt="Preview" width="1200" height="600" style="max-width:100%;height:auto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600'%3E%3Crect width='1200' height='600'/%3E%3C/svg%3E">`);
     await page.setViewportSize({width:320,height:720});await expect(page.locator("html")).toHaveAttribute("lang","en");
   });
   test("media container can be scrolled without moving keyboard focus",async({page})=>{

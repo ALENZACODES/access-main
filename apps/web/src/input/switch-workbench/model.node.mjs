@@ -101,8 +101,13 @@ for(const [label,value,expected] of [
 for(const [label,value,expected] of [
   ['valid bilingual',copy(),true],
   ['valid French punctuation',copy('Info','Note\u00A0: suite'),true],
-  ['valid exclamation',copy('Open','Bonjour\u202f!'),true],
-  ['valid guillemets',copy('Welcome','«\u202fBienvenue\u202f»'),true],
+  ['valid exclamation',copy('Open','Bonjour\u00a0!'),true],
+  ['valid guillemets',copy('Welcome','«\u00a0Bienvenue\u00a0»'),true],
+  ['valid question', copy('Ready?', 'Prêt\u00a0?'), true],
+  ['ordinary space before colon', copy('Note', 'Note : texte'), false],
+  ['narrow space before question', copy('Ready?', 'Prêt\u202f?'), false],
+  ['ordinary spaces inside guillemets', copy('Text', '« extrait »'), false],
+  ['narrow space before semicolon', copy('Notes', 'Un\u202f; deux'), true],
   ['missing French',{en:'Hello'},false],
   ['missing English',{fr:'Bonjour'},false],
   ['empty English',{en:'',fr:'Bonjour'},false],
@@ -221,7 +226,7 @@ test('CSV newline neutralized',()=>assert.equal(safeCsvCell('a\nb'),'"a b"'));
 test('filename contract accepts slug',()=>assert.equal(isSafeFile('report.json'),true));
 test('filename contract rejects traversal',()=>assert.equal(isSafeFile('../file.json'),false));
 test('French colon needs no-break space',()=>assert.ok(frenchIssues('Note: texte').includes('fr.colon')));
-test('French narrow space accepted',()=>assert.deepEqual(frenchIssues('Bonjour\u202f!'),[]));
-test('French opening guillemet needs narrow space',()=>assert.ok(frenchIssues('«Bonjour').includes('fr.open')));
-test('French closing guillemet needs narrow space',()=>assert.ok(frenchIssues('Bonjour»').includes('fr.close')));
+test('French non-breaking space accepted before exclamation',()=>assert.deepEqual(frenchIssues('Bonjour\u00a0!'),[]));
+test('French opening guillemet needs a non-breaking space',()=>assert.ok(frenchIssues('«Bonjour').includes('fr.open')));
+test('French closing guillemet needs a non-breaking space',()=>assert.ok(frenchIssues('Bonjour»').includes('fr.close')));
 test('French apostrophe must be typographic',()=>assert.ok(frenchIssues("Aujourd'hui").includes('fr.apostrophe')));

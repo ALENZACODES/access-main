@@ -9,7 +9,7 @@ test.describe("P16 round 16 responsive layout state",()=>{
     await fixture(page,`<div id="layout" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px"><div id="a">A</div><div id="b">B</div></div>`);await page.setViewportSize({width:1280,height:900});const a=await box(page,"#a"),b=await box(page,"#b");expect(b.x).toBeGreaterThan(a.x);
   });
   test("layout adapts after repeated orientation changes",async({page})=>{
-    await fixture(page,`<div class="row"><button>A</button><button>B</button></div>`);for(const [width,height] of [[320,720],[720,320],[320,720]]){await page.setViewportSize({width,height});await expectNoHorizontalOverflow(page);}
+    await fixture(page,`<div class="row"><button>A</button><button>B</button></div>`);for(const [width,height] of [[320,720],[720,320],[320,720]] as const){await page.setViewportSize({width,height});await expectNoHorizontalOverflow(page);}
   });
   test("layout remains usable with 200 percent text",async({page})=>{
     await fixture(page,`<div class="row"><button>Previous</button><button>Continue</button></div>`);await setFontScale(page,200);await page.setViewportSize({width:320,height:720});await expectNoHorizontalOverflow(page);

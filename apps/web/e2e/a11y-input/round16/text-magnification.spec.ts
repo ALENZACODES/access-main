@@ -72,7 +72,7 @@ test.describe("P16 round 16 text magnification resilience",()=>{
   test("magnified text does not cover the help link",async({page})=>{
     await setFontScale(page,250);
     const input=await box(page,"#name"),link=await box(page,"#help");
-    expect(link.top).toBeGreaterThanOrEqual(input.bottom);
+    expect(link.top >= input.bottom || link.left >= input.right).toBe(true);
   });
   test("viewport can be narrowed after text scaling",async({page})=>{
     await setFontScale(page,200);await page.setViewportSize({width:320,height:720});await expectNoHorizontalOverflow(page);

@@ -53,7 +53,7 @@ export async function exerciseEscapeAndRestore(page: Page, trigger: Locator): Pr
   await expect(trigger).toBeVisible();
   const id = await trigger.getAttribute("aria-controls");
   if (!id) throw new Error("Dialog trigger must provide aria-controls");
-  const dialog = page.locator(`#${CSS.escape(id)}`);
+  const dialog = page.locator(await page.evaluate((target) => `#${CSS.escape(target)}`, id));
   await trigger.focus();
   await page.keyboard.press("Enter");
   await expect(dialog).toBeVisible();
@@ -61,4 +61,13 @@ export async function exerciseEscapeAndRestore(page: Page, trigger: Locator): Pr
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
+}
+
+/** Browser chrome may receive one Tab stop at the boundary of a native modal. */
+export async function tabAroundModal(page: Page, key: "Tab" | "Shift+Tab", target: Locator): Promise<void> {
+  await page.keyboard.press(key);
+  if (await page.evaluate(() => document.activeElement === document.body)) {
+    await page.keyboard.press(key);
+  }
+  await expect(target).toBeFocused();
 }

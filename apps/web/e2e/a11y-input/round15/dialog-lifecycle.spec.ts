@@ -13,6 +13,13 @@ async function modal(page: import("@playwright/test").Page): Promise<void> {
   <script>
     const opener=document.querySelector('#open'),dialog=document.querySelector('#settings');
     opener.addEventListener('click',()=>dialog.showModal());
+    dialog.addEventListener('keydown',event=>{
+      if(event.key!=='Tab')return;
+      const fields=[...dialog.querySelectorAll('input,button')];
+      const first=fields[0],last=fields[fields.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    });
     document.querySelector('#close').addEventListener('click',()=>dialog.close());
     document.querySelector('#save').addEventListener('click',()=>{document.querySelector('#result').textContent='Saved';dialog.close();});
   </script>`);

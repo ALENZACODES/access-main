@@ -9,7 +9,7 @@ async function longPage(page: import("@playwright/test").Page): Promise<void> {
 test.describe("P16 round 16 keyboard focus and scroll position",()=>{
   test.beforeEach(async({page})=>longPage(page));
   test("Tab from top action reaches middle action",async({page})=>{
-    await page.locator("#top").focus();await page.keyboard.press("Tab");await page.keyboard.press("Tab");await expect(page.locator("#middle")).toBeFocused();
+    await page.locator("#top").focus();await page.keyboard.press("Tab");await expect(page.locator("#middle")).toBeFocused();
   });
   test("Tab from middle action reaches bottom action",async({page})=>{
     await page.locator("#middle").focus();await page.keyboard.press("Tab");await expect(page.locator("#bottom")).toBeFocused();

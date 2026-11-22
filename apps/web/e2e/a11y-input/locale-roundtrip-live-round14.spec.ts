@@ -11,7 +11,7 @@ test.describe("P16 round 14 live language round-trip", () => {
     test(`French document language can be selected on ${route}`, async ({ page }) => {
       await visit(page, route, "en");
       const toggle = page.getByRole("button", { name: "Français" }).first();
-      if (await toggle.count() === 0) test.skip(true, "No language toggle on this route");
+      await expect(toggle).toBeVisible();
       await toggle.focus();
       await page.keyboard.press("Enter");
       await expect(page.locator("html")).toHaveAttribute("lang", "fr");

@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 /** Exercises the mounted page, not a simulated speech synthesizer. */
@@ -12,6 +13,21 @@ test.describe("P16 input workbench: keyboard and switch controls", () => {
   test("page describes its local-only scope", async ({ page }) => {
     await expect(page.getByText("Nothing is stored or sent.", { exact: false })).toBeVisible();
   });
+  for (const language of ["en", "fr"] as const) {
+    test(`workbench is accessible in ${language}`, async ({ page }) => {
+      if (language === "fr") {
+        await page.getByRole("button", { name: "Français" }).click();
+        await expect(page.getByRole("heading", { name: "Atelier de commande au clavier et par contacteur" })).toBeVisible();
+        await expect(page.getByLabel("Ordre du clavier").locator("option:checked")).toHaveText("Entrée ou Espace");
+        await expect(page.getByText(/Prêt à commencer/)).toBeVisible();
+      }
+      await expect(page.locator("html")).toHaveAttribute("lang", language);
+      const scan = await new AxeBuilder({ page }).withTags([
+        "wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa",
+      ]).analyze();
+      expect(scan.violations).toEqual([]);
+    });
+  }
   test("no controls initially exist", async ({ page }) => {
     await expect(page.getByText("No controls have been added.")).toBeVisible();
   });
@@ -29,6 +45,23 @@ test.describe("P16 input workbench: keyboard and switch controls", () => {
     await page.getByLabel("French description").fill("Ouvrir la première porte");
     await page.getByRole("button", { name: "Add control" }).click();
     await expect(page.getByText("First door", { exact: true })).toBeVisible();
+  });
+  test("adding after removal preserves the surviving control", async ({ page }) => {
+    async function add(en: string, fr: string) {
+      await page.getByLabel("English control name").fill(en);
+      await page.getByLabel("French control name").fill(fr);
+      await page.getByLabel("English description").fill(en);
+      await page.getByLabel("French description").fill(fr);
+      await page.getByRole("button", { name: "Add control" }).click();
+    }
+    await add("First", "Première");
+    await add("Second", "Deuxième");
+    await page.getByRole("button", { name: "Remove control" }).first().click();
+    await add("Third", "Troisième");
+    const controls = page.getByRole("region", { name: "Control (2)", exact: true });
+    await expect(controls.getByRole("listitem")).toHaveCount(2);
+    await expect(controls.getByRole("listitem").nth(0)).toContainText("Second");
+    await expect(controls.getByRole("listitem").nth(1)).toContainText("Third");
   });
   test("Next command moves focus in the abstract scan model", async ({ page }) => {
     await page.getByLabel("English control name").fill("Entrance");
@@ -65,22 +98,30 @@ test.describe("P16 input workbench: keyboard and switch controls", () => {
   });
   test("keyboard Tab reaches the scan controls", async ({ page }) => {
     const next = page.getByRole("group", { name: "Switch controls" }).getByRole("button", { name: "Next", exact: true });
-    await next.focus();
+    await page.getByLabel("Wrap around at the end").focus();
+    await page.keyboard.press("Tab");
     await expect(next).toBeFocused();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("status").filter({ hasText: "Current control" })).toBeVisible();
+    await expect(page.getByText("Review status — UNKNOWN · 0/1")).toBeVisible();
   });
   test("form labels are real label associations", async ({ page }) => {
     const english = page.getByLabel("English control name");
     const french = page.getByLabel("French control name");
     await expect(english).toBeVisible();
     await expect(french).toBeVisible();
-    await expect(english).not.toHaveAttribute("id", await french.getAttribute("id"));
+    const frenchId = await french.getAttribute("id");
+    expect(frenchId).toBeTruthy();
+    const englishId = await english.getAttribute("id");
+    expect(englishId).toBeTruthy();
+    expect(englishId).not.toBe(frenchId);
   });
-  test("touch controls expose focus-visible style", async ({ page }) => {
+  test("keyboard focus on Add control has a visible outline", async ({ page }) => {
     const button = page.getByRole("button", { name: "Add control" });
-    await button.focus();
+    await page.getByLabel("I have reviewed the description").focus();
+    await page.keyboard.press("Tab");
     await expect(button).toBeFocused();
+    await expect(button).toHaveCSS("outline-style", "solid");
+    expect(await button.evaluate(node => Number.parseFloat(getComputedStyle(node).outlineWidth))).toBeGreaterThanOrEqual(2);
   });
   test("the workbench has a return-home link", async ({ page }) => {
     const link = page.getByRole("link", { name: "Close workbench" });

@@ -25,14 +25,17 @@ export interface WidgetAudit {
 export type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
 
 export async function fixture(page: Page, content: string, extraStyle = ""): Promise<void> {
-  await page.setContent(`<!doctype html><html lang="en"><head><meta charset="utf-8">
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   <title>Keyboard pattern fixture</title><style>
   *{box-sizing:border-box}body{margin:0;padding:16px;font:16px/1.5 sans-serif}
   button,[role=tab],[role=menuitem],[role=option],[role=treeitem],[role=gridcell],input,select,textarea
   {min-width:44px;min-height:44px}
   :focus-visible{outline:3px solid #164d75;outline-offset:2px}
   [hidden]{display:none!important}${extraStyle}
-  </style></head><body><main><h1>Keyboard pattern fixture</h1>${content}</main></body></html>`);
+  </style></head><body><main><h1>Keyboard pattern fixture</h1>${content}</main></body></html>`;
+  const url = "http://fixture.invalid/keyboard";
+  await page.route(url, route => route.fulfill({ contentType: "text/html", body: html }), { times: 1 });
+  await page.goto(url);
 }
 export async function focused(page: Page): Promise<FocusState | null> {
   return page.evaluate(() => {
@@ -42,10 +45,10 @@ export async function focused(page: Page): Promise<FocusState | null> {
       (node instanceof HTMLButtonElement ? "button" :
       node instanceof HTMLAnchorElement ? "link" :
       node instanceof HTMLInputElement ? node.type : node.localName);
-    const label = node.getAttribute("aria-label") ??
-      (node.getAttribute("aria-labelledby") ?? "").split(/\\s+/)
-        .map(id => document.getElementById(id)?.textContent?.trim() ?? "").filter(Boolean).join(" ") ??
-      node.textContent?.trim() ?? "";
+    const label = node.getAttribute("aria-label")?.trim() ||
+      (node.getAttribute("aria-labelledby") ?? "").split(/\s+/)
+        .map(id => document.getElementById(id)?.textContent?.trim() ?? "").filter(Boolean).join(" ") ||
+      node.textContent?.trim() || "";
     const selected = node.getAttribute("aria-selected");
     const expanded = node.getAttribute("aria-expanded");
     const checked = node.getAttribute("aria-checked");
@@ -69,16 +72,16 @@ export async function inspectWidgets(page: Page): Promise<WidgetAudit> {
   return page.evaluate(() => {
     const issues: Issue[] = [];
     const counts = { tablists: 0, menus: 0, listboxes: 0, trees: 0, grids: 0 };
-    const nameOf = (node: HTMLElement) => node.getAttribute("aria-label")?.trim() ||
-      (node.getAttribute("aria-labelledby") ?? "").split(/\\s+/)
-        .map(id => document.getElementById(id)?.textContent?.trim() ?? "").filter(Boolean).join(" ").trim() ||
-      node.textContent?.trim() || "";
+    const authorName = (node: HTMLElement) => node.getAttribute("aria-label")?.trim() ||
+      (node.getAttribute("aria-labelledby") ?? "").split(/\s+/)
+        .map(id => document.getElementById(id)?.textContent?.trim() ?? "").filter(Boolean).join(" ").trim();
+    const nameOf = (node: HTMLElement) => authorName(node) || node.textContent?.trim() || "";
     const check = (role: string, childRole: string, countKey: keyof typeof counts) => {
       const containers = Array.from(document.querySelectorAll<HTMLElement>(`[role="${role}"]`));
       counts[countKey] = containers.length;
       containers.forEach((container, index) => {
         const id = container.id || `${role}-${index}`;
-        if (!nameOf(container)) issues.push({code:`${role}-name`,id,detail:`${role} needs an accessible name`});
+        if (!authorName(container)) issues.push({code:`${role}-name`,id,detail:`${role} needs an accessible name`});
         const children = Array.from(container.querySelectorAll<HTMLElement>(`[role="${childRole}"]`))
           .filter(child => child.closest(`[role="${role}"]`) === container);
         if (!children.length) issues.push({code:`${role}-children`,id,detail:`${role} needs ${childRole} children`});

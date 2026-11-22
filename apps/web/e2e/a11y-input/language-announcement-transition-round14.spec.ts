@@ -29,13 +29,13 @@ test.describe("P16 round 14 language and announcement interaction", () => {
     expect(result.controls.find(item => item.selector === "#continue")?.name).toBe("Continue");
   });
   test("French punctuation in hidden script is not checked", async ({ page }) => {
-    await languageFixture(page, "fr", `<script>const sample = "don't parse: this;";</script><p>l’élément\u00a0: «\u202ftexte\u202f».</p>`);
+    await languageFixture(page, "fr", `<script>const sample = "don't parse: this;";</script><p>l’élément\u00a0: «\u00a0texte\u00a0».</p>`);
     expect(await inspectLocaleContract(page)).toEqual([]);
   });
   test("French punctuation in visible text remains checked after live update", async ({ page }) => {
-    await languageFixture(page, "fr", `<p id="copy">Texte correct\u202f!</p>`);
+    await languageFixture(page, "fr", `<p id="copy">Texte correct\u00a0!</p>`);
     await page.locator("#copy").evaluate(node => { node.textContent = "Texte incorrect !"; });
-    expect((await inspectLocaleContract(page)).map(item => item.code)).toContain("french-narrow-spacing");
+    expect((await inspectLocaleContract(page)).map(item => item.code)).toContain("french-punctuation-spacing");
   });
   test("alert priority remains assertive after text update", async ({ page }) => {
     await languageFixture(page, "fr", `<p id="alert" role="alert" aria-live="assertive">Erreur</p>`);

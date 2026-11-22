@@ -61,7 +61,7 @@ test.describe("P16 round 16 orientation and viewport adaptation",()=>{
     await setViewport(page,320,720);await expectNoHorizontalOverflow(page);
   });
   test("viewport resizing does not duplicate controls",async({page})=>{
-    for(const [width,height] of [[320,720],[720,320],[768,1024],[1280,900]]){await setViewport(page,width,height);await expect(page.getByRole("button")).toHaveCount(3);}
+    for(const [width,height] of [[320,720],[720,320],[768,1024],[1280,900]] as const){await setViewport(page,width,height);await expect(page.getByRole("button")).toHaveCount(3);}
   });
   test("viewport resizing does not change page language",async({page})=>{
     await setViewport(page,320,720);await setViewport(page,720,320);await expect(page.locator("html")).toHaveAttribute("lang","en");
