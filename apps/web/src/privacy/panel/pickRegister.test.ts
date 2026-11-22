@@ -39,18 +39,18 @@ describe("the real register", () => {
     expect(() => assertPick(PICK_REGISTER)).not.toThrow();
   });
 
-  it("has 34 rows: 33 picks and one reader, at 36 places in 33 files", () => {
-    expect(PICK_REGISTER).toHaveLength(34);
-    expect(picksOfKind(PICK_REGISTER, "pick")).toHaveLength(33);
+  it("has 35 rows: 34 picks and one reader, at 37 places in 34 files", () => {
+    expect(PICK_REGISTER).toHaveLength(35);
+    expect(picksOfKind(PICK_REGISTER, "pick")).toHaveLength(34);
     expect(picksOfKind(PICK_REGISTER, "reader")).toHaveLength(1);
     const c = pickCounts(PICK_REGISTER);
-    expect(c.uses).toBe(36);
-    expect(c.files).toBe(33);
+    expect(c.uses).toBe(37);
+    expect(c.files).toBe(34);
   });
 
   it("counts limits: 29 before reading, 2 after, 1 mixed, 1 with no check found in its own file", () => {
     const c = pickCounts(PICK_REGISTER);
-    expect(c.before).toBe(29);
+    expect(c.before).toBe(30);
     expect(c.after).toBe(2);
     expect(c.unlimited).toBe(2);
   });
