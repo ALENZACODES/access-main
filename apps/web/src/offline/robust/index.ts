@@ -113,3 +113,9 @@ export * from "./dependencyPlannerExport";
 export type { CoordinationBrief, BriefStep, BriefProvenance, BriefStatus, BriefPriority,
   BriefTopic, BriefEvent, BriefSummary, StepDraft, BriefPageOptions } from "./coordinationBrief";
 export type { BriefChange, BriefDiff, BriefChangeKind } from "./coordinationBriefDiff";
+
+// Portable metadata-only receipts are loaded on demand by the offline dashboard.
+export * from "./packReceipt";
+export * from "./packReceiptCopy";
+export * from "./packReceiptExport";
+export * from "./packReceiptPanel";
