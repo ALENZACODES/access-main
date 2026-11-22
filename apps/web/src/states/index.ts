@@ -210,3 +210,12 @@ export { PackFingerprint, MAX_LISTED as FINGERPRINT_MAX_LISTED } from "./PackFin
 export * from "./packGroupDetail.ts";
 export * from "./packGroupDetailCopy.ts";
 export { PackGroupDetail, MAX_DETAIL_LISTED } from "./PackGroupDetail.tsx";
+export * from "./noteSyllables.ts";
+export * from "./noteSentences.ts";
+export * from "./noteReadability.ts";
+export * from "./noteLanguage.ts";
+export * from "./noteReadabilityIndex.ts";
+export * from "./noteReadabilityCopy.ts";
+export * from "./noteReadabilityExport.ts";
+export * from "./noteHints.ts";
+export { NoteReading, READING_ROWS_SHOWN } from "./NoteReading.tsx";
