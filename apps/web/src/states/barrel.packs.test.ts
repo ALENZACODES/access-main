@@ -23,6 +23,7 @@ describe("the states barrel exposes the pack tools", () => {
     "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
     "MeetUp", "buildMeetUp", "halfway", "meetUpPage", "MEET_UP_ORDERS", "MEET_UP_LIMITS", "isMeetUpOrder", "isMeetUpLimit", "meetUpToText", "meetUpToCsv", "meetUpRowText", "meetUpOrderLabel", "meetUpCaveat", "MEET_UP_FILENAMES", "MEET_UP_CSV_FILENAMES", "meetUpMinutes", "readPaces", "hasPace", "NO_PACES", "meetUpTimeText", "meetUpPaceNote", "meetUpMinutesCell", "meetUpToGeoJson", "MEET_UP_GEOJSON_FILENAMES",
     "PossibleRepeats", "REPEAT_GROUPS_SHOWN", "editDistance", "jaroWinkler", "nameSimilarity", "foldPlaceName", "scorePair", "isCandidate", "addressKeyOf", "findDuplicates", "candidatePairs", "duplicatesToCsv", "duplicatesToText", "dupReasonLabel", "compareRepeats", "fieldValue", "compareKey", "repeatFieldLabel", "repeatStats", "repeatStatsLine",
+    "NoteReading", "READING_ROWS_SHOWN", "readNote", "countSyllables", "splitSentences", "tokensOf", "rawScore", "clampScore", "readingBandOf", "guessNoteLanguage", "noteLocale", "buildReadingIndex", "filterReadings", "orderReadings", "readingsToCsv", "readingsToText", "readingBandLabel", "hintsFor", "hintText", "HINT_KINDS",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
   ])("exports %s", (name) => expect((states as Record<string, unknown>)[name], name).toBeDefined());
 });
