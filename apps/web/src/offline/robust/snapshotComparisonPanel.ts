@@ -1,7 +1,7 @@
 import { createOfflineAction } from "./accessibilityGuard";
 import type { DashboardModel } from "./offlineDashboard";
 import type { Language, RegionManifest } from "./regionDownload";
-import { compareSnapshots, fromRegionManifest, pageSnapshotMatrix, parseSnapshot,
+import { compareSnapshots, fromRegionManifest, pageSnapshotMatrix, parseSnapshot, rowHasDeclaredChange,
   type SnapshotFilter, type SnapshotMatrix, type SnapshotOrder, type SnapshotDocument } from "./snapshotComparison";
 import { SNAPSHOT_CHANGE_LABELS, SNAPSHOT_FILTER_LABELS, SNAPSHOT_ORDER_LABELS, snapshotCopy } from "./snapshotComparisonCopy";
 import { createSnapshotReport, saveSnapshotDocument, saveSnapshotReport } from "./snapshotComparisonExport";
@@ -127,7 +127,7 @@ export function mountSnapshotComparison(root: HTMLElement, manifest: RegionManif
     }
     exportText.disabled = false;
     exportJson.disabled = false;
-    summary.append(line(c.listed, String(matrix.rows.length)), line(c.changed, String(matrix.reviewCount)),
+    summary.append(line(c.listed, String(matrix.rows.length)), line(c.changed, String(matrix.rows.filter(rowHasDeclaredChange).length)),
       line(c.local, String(matrix.localSaved)), line(c.unknown, String(matrix.localUnknown)), line(c.physical, "UNKNOWN"));
     const options = { filter: filter.value as SnapshotFilter, order: order.value as SnapshotOrder,
       search: search.value, offset: page * 10, limit: 10 };
