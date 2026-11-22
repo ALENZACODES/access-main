@@ -24,19 +24,6 @@ Day 22 error and empty states, EN + FR, wired into the live module pages.
 - Tests: `states/stateCopy.test.ts`, `pages/ModulePage.states.dom.test.tsx`,
   `e2e/day22-states.spec.ts`.
 
-## Reading ease of the notes (round 10)
-
-- `NoteReading.tsx` gives each place's note a rough reading score from sentence
-  and word length (Flesch in English, Kandel and Moles in French), a band
-  (easy, fair, hard, very hard), the long words and long sentences, and
-  files in text or CSV. Closed until asked for; no heading; notes are shown as
-  written and never changed. It does not judge whether a note is right.
-- A note is read with the formula of its own language, guessed from common
-  small words (`noteLanguage.ts`); with too little to go on it uses the page's.
-- Notes under six words are counted as too short to score, never scored.
-- Modules: `noteSyllables.ts`, `noteSentences.ts`, `noteReadability.ts`,
-  `noteReadabilityIndex.ts`, `noteReadabilityCopy.ts`, `noteReadabilityExport.ts`.
-
 ## Places close together (P4, round 13)
 
 A closed-by-default section on the places list that groups the listed places that sit close together on the map.
@@ -57,43 +44,15 @@ used with a wheelchair. Everything is worked out on this device from the pack's 
 - `WalkGroups.tsx` is mounted in `PackPlaces.tsx` and shows nothing when fewer than two places have a map point.
 - Tests: `walkGroup*.test.ts`, `WalkGroups.dom.test.tsx`, `PackPlaces.walkGroups.dom.test.tsx`.
 
-## Tag and note (P4, round 12)
+## Reading ease of the notes (round 10)
 
-A closed-by-default section on the places list for places whose wheelchair tag and free-text note may point
-opposite ways. Everything is read from the words of the note on this device; nothing is sent anywhere.
-
-- `tagNoteSignals.ts`: finds access and barrier words in a note (ramp, lift, steps, stairs, step free,
-  automatic door, narrow or wide with a barrier or access reading, and French equivalents). A negated word
-  flips direction ("no ramp"), and words inside a phrase are counted once.
-- `tagNoteCheck.ts`: only tags yes, designated and no are compared. A tag of limited or unknown is never
-  flagged. Each finding is "one-sided" (all marked words point against the tag) or "mixed". It never says
-  which of the tag and the note is right.
-- `tagNoteMarks.ts`: splits the note into pieces that join back to the exact note, so the marked words can be
-  shown in place.
-- `tagNoteSpread.ts`: the compared places grouped by kind, with counts, clear cases and a share. A high share
-  is not read as a worse kind.
-- `tagNoteEarlier.ts`: reads a findings CSV saved by this tool (formula guard undone, bad rows counted, not
-  guessed at) and lists what is new, changed, no longer or the same.
-- `tagNoteCopy.ts`, `tagNoteMoreCopy.ts`: English and French wording; `tagNoteExport.ts`,
-  `tagNoteSpreadExport.ts`: text and CSV files made in the browser.
-- `TagNoteCheck.tsx` (with `TagNoteSpread.tsx` and `TagNoteEarlier.tsx`) is mounted in `PackPlaces.tsx` and
-  shows nothing when no place has a note.
-- Tests: `tagNote*.test.ts`, `TagNoteCheck.dom.test.tsx`, `TagNoteMore.dom.test.tsx`,
-  `PackPlaces.tagNote.dom.test.tsx`.
-
-## Possible repeats (round 11)
-
-- `PossibleRepeats.tsx` looks for places of the pack that may be one place
-  listed twice, from name (accents, case, articles and spelling variants
-  ignored, small slips allowed), street address, distance and kind. It goes
-  further than `packDuplicates.ts`, which only pairs the same folded name within
-  75 m for the data report.
-- Position and kind alone never make a pair; a name or street must also be
-  alike. Pairs come from buckets (same address, same name, same patch of
-  ground), a bucket over 40 places is skipped and counted, and groups are made
-  by joining pairs.
-- It points and says why. It merges, hides and removes nothing, and says it
-  cannot tell which record is right. A group whose members report different
-  wheelchair tags is marked.
-- Modules: `textSimilarity.ts`, `placeNameKey.ts`, `duplicateScore.ts`,
-  `duplicateGroups.ts`, `duplicateCopy.ts`, `duplicateExport.ts`.
+- `NoteReading.tsx` gives each place's note a rough reading score from sentence
+  and word length (Flesch in English, Kandel and Moles in French), a band
+  (easy, fair, hard, very hard), the long words and long sentences, and
+  files in text or CSV. Closed until asked for; no heading; notes are shown as
+  written and never changed. It does not judge whether a note is right.
+- A note is read with the formula of its own language, guessed from common
+  small words (`noteLanguage.ts`); with too little to go on it uses the page's.
+- Notes under six words are counted as too short to score, never scored.
+- Modules: `noteSyllables.ts`, `noteSentences.ts`, `noteReadability.ts`,
+  `noteReadabilityIndex.ts`, `noteReadabilityCopy.ts`, `noteReadabilityExport.ts`.
