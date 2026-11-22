@@ -52,6 +52,7 @@ export const ROUTE_COVERAGE: Readonly<Record<string, RouteCoverage>> = {
   help: { file: "pages/HelpPage.tsx", mechanism: "states", stateRoute: "help", why: "No matching articles and load failures." },
   "help/:id": { file: "pages/HelpPage.tsx", mechanism: "states", stateRoute: "help", why: "Same page as help." },
   contribute: { file: null, mechanism: "other-lane", why: "Entry file is owned by another lane." },
+  "/contribute/event": { file: "contribute/MappingDayPage.tsx", mechanism: "form", why: "Local draft review reports storage and export failures and lets the contributor retry." },
   "settings/*": { file: null, mechanism: "other-lane", why: "Route table is owned by another lane." },
   "more/*": { file: null, mechanism: "other-lane", why: "Route table is owned by another lane." },
   "dev/narrow": { file: null, mechanism: "other-lane", why: "Audit page owned by the narrow-route lane." },

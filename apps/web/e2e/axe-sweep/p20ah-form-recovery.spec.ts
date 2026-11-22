@@ -78,7 +78,7 @@ function validate(){
  }
  const list=document.querySelector("#error-list");list.replaceChildren();
  for(const item of errors){const li=document.createElement("li"),link=document.createElement("a");
-  link.href="#"+item.id;link.textContent=document.querySelector('label[for="'+item.id+'"]').textContent+" : "+item.message;
+  link.href="#"+item.id;link.textContent=document.querySelector('label[for="'+item.id+'"]').textContent+"\u00a0: "+item.message;
   li.append(link);list.append(li);}
  document.querySelector("#error-intro").textContent=errors.length+" erreurs dans ce formulaire.";
  summary.hidden=errors.length===0;

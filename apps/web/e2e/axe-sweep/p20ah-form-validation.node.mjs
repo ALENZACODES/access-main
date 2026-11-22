@@ -20,6 +20,14 @@ test("P20AH empty detection trims whitespace",()=>assert.equal(isEmptyValue(" \n
 test("P20AH empty detection accepts nonblank value",()=>assert.equal(isEmptyValue("  value "),false));
 test("P20AH control check accepts ordinary text",()=>assert.equal(isControlFree("A note"),true));
 test("P20AH control check rejects line feed",()=>assert.equal(isControlFree("a\nb"),false));
+test("C0 and C1 controls are rejected without excluding adjacent printable characters", () => {
+  for (const code of [0, 31, 127, 128, 159]) {
+    assert.equal(isControlFree("a" + String.fromCodePoint(code) + "b"), false, String(code));
+  }
+  for (const text of [" ", "~", "\u00a0", "été", "🚪"]) {
+    assert.equal(isControlFree(text), true, text);
+  }
+});
 test("P20AH field lookup returns existing field",()=>assert.equal(fieldById(form([field("name")]),"name")?.id,"name"));
 test("P20AH field lookup returns undefined for missing field",()=>assert.equal(fieldById(form([]),"missing"),undefined));
 test("P20AH ordered fields sort by explicit order",()=>assert.deepEqual(orderedFields(form([field("b",{order:2}),field("a",{order:1})])).map((x)=>x.id),["a","b"]));

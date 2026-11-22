@@ -94,7 +94,7 @@ export const DEFAULT_POLICY:ValidationPolicy={
   maximumIssues:500,requireBilingualLabels:true,rejectControlCharacters:true,
 };
 const ID=/^[A-Za-z][A-Za-z0-9_:.-]{0,127}$/;
-const CONTROL=/[\u0000-\u001f\u007f-\u009f]/;
+const CONTROL = /\p{Cc}/u;
 const EMAIL=/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/;
 const ISO_DATE=/^(\d{4})-(\d{2})-(\d{2})$/;
 const MESSAGES:Readonly<Record<IssueCode,Bilingual>>={

@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from "react-router-dom";
+import { createBrowserRouter, useOutlet, type RouteObject } from "react-router-dom";
 import { Section } from "./modules/Section.tsx";
 import { optionalPage, optionalRoutes } from "./modules/optionalRoutes.ts";
 import { HomePage } from "./pages/HomePage.tsx";
@@ -48,6 +48,13 @@ function OfflineWithEvidenceWorkbench() {
 // Entry files owned by other lanes. A missing file renders a "being connected" page, not a build error.
 const MapPage = optionalPage("map");
 const ContributePage = optionalPage("contribute");
+const MappingDayPage = lazy(() => import("./contribute/MappingDayPage.tsx").then(module => ({ default: module.MappingDayPage })));
+
+function ContributionSection() {
+  const eventPage = useOutlet();
+  return eventPage ?? <ContributePage />;
+}
+
 const SettingsRoutes = optionalRoutes("settings");
 const MoreRoutes = optionalRoutes("more");
 
@@ -74,7 +81,9 @@ export const routes: RouteObject[] = [
       { path: "games", element: <Section><ModulePage id="games" /></Section> },
       { path: "help", element: <Section><HelpPage /></Section> },
       { path: "help/:id", element: <Section><HelpPage /></Section> },
-      { path: "contribute", element: <Section><ContributePage /></Section> },
+      { path: "contribute", element: <Section><ContributionSection /></Section>, children: [
+        { path: "/contribute/event", element: <Section><MappingDayPage /></Section> },
+      ] },
       { path: "settings/*", element: <Section><SettingsRoutes /></Section> },
       { path: "more/*", element: <Section><MoreRoutes /></Section> },
       { path: "dev/narrow", element: <Section><NarrowAuditPage /></Section> },
