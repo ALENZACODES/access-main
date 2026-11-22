@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { Buffer } from 'node:buffer';
-import { DAY, asset, manifest, bilingual, mutate, SHA_B } from './release-impact-fixtures.mjs';
+import { DAY, asset, manifest, mutate, SHA_B } from './release-impact-fixtures.mjs';
 import { checkManifest, parseManifest, UNKNOWN } from './release-impact-contract.mjs';
 import { graphReview, impactFor, reachable } from './release-impact-graph.mjs';
 import { compareManifest } from './release-impact-delta.mjs';
