@@ -80,3 +80,20 @@ opposite ways. Everything is read from the words of the note on this device; not
   shows nothing when no place has a note.
 - Tests: `tagNote*.test.ts`, `TagNoteCheck.dom.test.tsx`, `TagNoteMore.dom.test.tsx`,
   `PackPlaces.tagNote.dom.test.tsx`.
+
+## Possible repeats (round 11)
+
+- `PossibleRepeats.tsx` looks for places of the pack that may be one place
+  listed twice, from name (accents, case, articles and spelling variants
+  ignored, small slips allowed), street address, distance and kind. It goes
+  further than `packDuplicates.ts`, which only pairs the same folded name within
+  75 m for the data report.
+- Position and kind alone never make a pair; a name or street must also be
+  alike. Pairs come from buckets (same address, same name, same patch of
+  ground), a bucket over 40 places is skipped and counted, and groups are made
+  by joining pairs.
+- It points and says why. It merges, hides and removes nothing, and says it
+  cannot tell which record is right. A group whose members report different
+  wheelchair tags is marked.
+- Modules: `textSimilarity.ts`, `placeNameKey.ts`, `duplicateScore.ts`,
+  `duplicateGroups.ts`, `duplicateCopy.ts`, `duplicateExport.ts`.
