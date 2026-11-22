@@ -220,17 +220,17 @@ describe("whether the returned response identifies a usable file", () => {
   });
 
   it.each([
-    ["?__WB_REVISION__=09dc", "present"],
-    ["?__WB_REVISION__=", "unknown"],
-    ["?__WB_REVISION__=09dc&__WB_REVISION__=abc", "unknown"],
-    ["?__WB_REVISION__=09dc&app=two", "unknown"],
-    ["?lang=fr", "unknown"],
-    ["?__WB_REVISION__=09dc#fragment", "unknown"],
-  ])("handles the fallback response URL suffix %s", async (suffix, expected) => {
+    "?__WB_REVISION__=09dc",
+    "?__WB_REVISION__=",
+    "?__WB_REVISION__=09dc&__WB_REVISION__=abc",
+    "?__WB_REVISION__=09dc&app=two",
+    "?lang=fr",
+    "?__WB_REVISION__=09dc#fragment",
+  ])("withholds cache evidence when the response URL carries %s", async (suffix) => {
     const f = fixture();
     f.files.set(`${htmlURL}?__WB_REVISION__=09dc`, metadata(htmlURL + suffix, "text/html"));
     const result = await f.read();
-    expect(result.files[0]?.state).toBe(expected);
+    expect(result.files[0]?.state).toBe("unknown");
     expect(JSON.stringify(result)).not.toContain("__WB_REVISION__");
   });
 

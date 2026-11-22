@@ -95,13 +95,9 @@ function expectedMime(kind: ShellKind, header: string | null): boolean {
 
 function matchesResource(file: ShellFile, response: CachedResponse): boolean {
   if (response.status !== 200 || response.redirected || response.type !== "basic") return false;
-  const served = new URL(response.url);
-  // A response's URL is normally the original resource, even when the request
-  // was indexed under a revision. A sole Workbox revision is also admissible.
-  if (file.kind === "document" && served.searchParams.size === 1 && served.searchParams.get("__WB_REVISION__")) {
-    served.search = "";
-  }
-  return served.href === file.url && expectedMime(file.kind, response.headers.get("Content-Type"));
+  // Workbox fetches the canonical resource URL. Its revision belongs to the
+  // cache key, never to the identity of the response we accept.
+  return response.url === file.url && expectedMime(file.kind, response.headers.get("Content-Type"));
 }
 
 async function readFile(file: ShellFile, cache: Precache, cacheName: string): Promise<ShellState> {

@@ -328,7 +328,7 @@ describe("file identity and incomplete evidence", () => {
     ["unrelated origin", "https://third.invalid/app/assets/sensitive.js"],
     ["data URL", "data:application/javascript,sensitive.js"],
     ["blob URL", "blob:https://third.invalid/sensitive.js"],
-    ["malformed host", "http://["],
+    ["malformed host", "https://["],
     ["empty src", ""],
   ])("omits %s without exposing its reference in the report", (_reason, src) => {
     document.head.append(script(src), script(entry));
