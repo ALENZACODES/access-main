@@ -24,6 +24,19 @@ Day 22 error and empty states, EN + FR, wired into the live module pages.
 - Tests: `states/stateCopy.test.ts`, `pages/ModulePage.states.dom.test.tsx`,
   `e2e/day22-states.spec.ts`.
 
+## Reading ease of the notes (round 10)
+
+- `NoteReading.tsx` gives each place's note a rough reading score from sentence
+  and word length (Flesch in English, Kandel and Moles in French), a band
+  (easy, fair, hard, very hard), the long words and long sentences, and
+  files in text or CSV. Closed until asked for; no heading; notes are shown as
+  written and never changed. It does not judge whether a note is right.
+- A note is read with the formula of its own language, guessed from common
+  small words (`noteLanguage.ts`); with too little to go on it uses the page's.
+- Notes under six words are counted as too short to score, never scored.
+- Modules: `noteSyllables.ts`, `noteSentences.ts`, `noteReadability.ts`,
+  `noteReadabilityIndex.ts`, `noteReadabilityCopy.ts`, `noteReadabilityExport.ts`.
+
 ## Tag and note (P4, round 12)
 
 A closed-by-default section on the places list for places whose wheelchair tag and free-text note may point

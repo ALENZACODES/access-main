@@ -17,6 +17,7 @@ import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, pack
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
 import { MeetUp } from "./MeetUp.tsx";
+import { NoteReading } from "./NoteReading.tsx";
 import { TagNoteCheck } from "./TagNoteCheck.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
@@ -210,6 +211,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
+      <NoteReading places={view.shownPlaces} locale={locale} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
       <TagNoteCheck places={view.shownPlaces} locale={locale} />
