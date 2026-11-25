@@ -43,6 +43,7 @@ export const SAVE_REGISTER: readonly SaveRow[] = [
   row("json", "apps/web/src/features/featureScreens.tsx", 1, ["An evidence pack", "Un dossier de preuves"]),
   row("none", "apps/web/src/hub/ReportsPage.tsx", 1, ["A report, in the format the report gives", "Un rapport, dans le format que le rapport indique"]),
   row("mixed", "apps/web/src/input/rehearsal/AccessRehearsalPage.tsx", 1, ["A file from the access rehearsal page", "Un fichier de la page de répétition de l’accès"]),
+  row("mixed", "apps/web/src/input/switch-workbench/WorkbenchPage.tsx", 1, ["A keyboard and switch rehearsal report or handoff", "Un rapport ou une fiche de transmission sur la navigation au clavier et par contacteur"]),
   row("mixed", "apps/web/src/data-status/standalone/main.ts", 1, ["A data status file", "Un fichier sur l’état des données"]),
   row("csv", "apps/web/src/pages/DataStatusPage.tsx", 1, ["A data status file", "Un fichier sur l’état des données"]),
   row("text", "apps/web/src/states/downloadFile.ts", 1, ["Any file handed to the shared download helper", "Tout fichier confié à l’outil de téléchargement commun"]),
