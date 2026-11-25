@@ -49,8 +49,8 @@ function selectOf<T extends string>(doc: Document, caption: string, options: Rec
   wrapper.append(control);
   return { wrapper, control };
 }
-export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: RegionManifest,
-  model: DashboardModel, language: Language): () => void {
+export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: RegionManifest | null,
+  model: DashboardModel | null, language: Language): () => void {
   const doc = root.ownerDocument;
   const copy = DEPENDENCY_COPY[language];
   const colon = language === "fr" ? "\u00a0: " : ": ";
@@ -58,13 +58,14 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
   section.className = "panel stack";
   section.setAttribute("aria-label", copy.title);
   const heading = el(doc, "h3", copy.title);
-  const intro = el(doc, "p", copy.intro);
+  const intro = el(doc, "p", manifest ? copy.intro : copy.personalIntro);
   const caution = el(doc, "p", copy.caution);
   const status = el(doc, "p", copy.dataOnly);
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
+  const regionId = manifest?.regionId ?? "UNKNOWN";
   const baseDate = "2026-01-01";
-  let book: DependencyBook = createDependencyBook(manifest.regionId, manifest.regionId, baseDate);
+  let book: DependencyBook = createDependencyBook(regionId, regionId, baseDate);
   let serial = 0;
   let disposed = false;
   let currentPage = 0;
@@ -147,7 +148,7 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
   };
   const refresh = (): void => {
     if (disposed) return;
-    const assessments = assessDependency(book, manifest, model.getState().inventory);
+    const assessments = assessDependency(book, manifest, model?.getState().inventory ?? null);
     const stats = summarizeDependencies(assessments);
     summary.textContent = `${copy.summary}${colon}${stats.total}. ${copy.essentials}${colon}${stats.essentials}. ${copy.saved}${colon}${stats.savedInformation}. ${copy.unknown}${colon}${stats.unknownInformation}. ${copy.followUp}${colon}${stats.requireFollowUp}. ${copy.unknownPhysical}`;
     const page = pageDependencies(assessments, { filter: filter.control.value as DependencyFilter,
@@ -215,15 +216,15 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
   };
   const onClear = (): void => {
     if (!doc.defaultView?.confirm(copy.confirm)) return;
-    book = createDependencyBook(manifest.regionId, manifest.regionId, today());
+    book = createDependencyBook(regionId, regionId, today());
     currentPage = 0; clearForm(); status.textContent = copy.savedMessage; refresh();
   };
   const onDownload = (kind: "json" | "txt"): void => {
     try {
-      const assessments = assessDependency(book, manifest, model.getState().inventory);
+      const assessments = assessDependency(book, manifest, model?.getState().inventory ?? null);
       const statistics = summarizeDependencies(assessments);
       const content = kind === "json" ? dependencyReportJson(book, assessments, statistics) : dependencyReportText(book, assessments, statistics, language);
-      downloadDependencyFile(doc, content, dependencyFileName(manifest.regionId, kind), kind === "json" ? "application/json;charset=utf-8" : "text/plain;charset=utf-8");
+      downloadDependencyFile(doc, content, dependencyFileName(regionId, kind), kind === "json" ? "application/json;charset=utf-8" : "text/plain;charset=utf-8");
       status.textContent = copy.privacy;
     } catch { status.textContent = copy.error; }
   };
@@ -233,7 +234,7 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
     void file.text().then((raw) => {
       if (disposed) return;
       try {
-        book = parseDependencyBook(raw, manifest.regionId);
+        book = parseDependencyBook(raw, regionId);
         serial = book.items.reduce((high, item) => Math.max(high, Number(item.id.match(/^local-(\d+)$/)?.[1] ?? 0)), 0);
         clearForm(); currentPage = 0; status.textContent = copy.imported; refresh();
       } catch { status.textContent = copy.invalid; }
@@ -249,12 +250,12 @@ export function mountOfflineDependencyPlanner(root: HTMLElement, manifest: Regio
   listen(previous, "click", () => { currentPage -= 1; refresh(); });
   listen(next, "click", () => { currentPage += 1; refresh(); });
   for (const control of [filter.control, sort.control, search.control]) listen(control, "change", () => { currentPage = 0; refresh(); });
-  const unsubscribe = model.subscribe(() => refresh());
+  const unsubscribe = model?.subscribe(refresh);
   clearForm();
   refresh();
   return () => {
     disposed = true;
-    unsubscribe();
+    if (unsubscribe) unsubscribe();
     for (const unlisten of subscriptions) unlisten();
     clearRows();
     section.remove();
