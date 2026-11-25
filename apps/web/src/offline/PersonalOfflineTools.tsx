@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Language } from "./robust/regionDownload";
 
-type Tool = "questions" | "brief" | "snapshots";
+type Tool = "questions" | "brief" | "snapshots" | "dependencies";
 type Mount = (host: HTMLElement, language: Language) => () => void;
 
 const tools: Record<Tool, () => Promise<Mount>> = {
@@ -12,6 +12,10 @@ const tools: Record<Tool, () => Promise<Mount>> = {
   async brief() {
     const { mountOfflineCoordinationBrief } = await import("./robust/coordinationBriefPanel");
     return (host, language) => mountOfflineCoordinationBrief(host, null, language);
+  },
+  async dependencies() {
+    const { mountOfflineDependencyPlanner } = await import("./robust/dependencyPlannerPanel");
+    return (host, language) => mountOfflineDependencyPlanner(host, null, null, language);
   },
   async snapshots() {
     const { mountSnapshotComparison } = await import("./robust/snapshotComparisonPanel");
@@ -25,6 +29,7 @@ const copy = {
     error: "This tool could not open. Select it again to retry.",
     questions: ["Open question sheet", "Close question sheet"],
     brief: ["Open coordination brief", "Close coordination brief"],
+    dependencies: ["Open dependency planner", "Close dependency planner"],
     snapshots: ["Open snapshot comparison", "Close snapshot comparison"],
   },
   fr: {
@@ -32,6 +37,7 @@ const copy = {
     error: "L’outil n’a pas pu s’ouvrir. Sélectionnez-le de nouveau pour réessayer.",
     questions: ["Ouvrir la fiche de questions", "Fermer la fiche de questions"],
     brief: ["Ouvrir la fiche de coordination", "Fermer la fiche de coordination"],
+    dependencies: ["Ouvrir le planificateur de dépendances", "Fermer le planificateur de dépendances"],
     snapshots: ["Ouvrir la comparaison des instantanés", "Fermer la comparaison des instantanés"],
   },
 } as const;
@@ -75,5 +81,6 @@ export function PersonalOfflineTools({ language }: { language: Language }) {
     <PersonalTool tool="questions" language={language} />
     <PersonalTool tool="brief" language={language} />
     <PersonalTool tool="snapshots" language={language} />
+    <PersonalTool tool="dependencies" language={language} />
   </section>;
 }
