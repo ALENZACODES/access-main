@@ -43,7 +43,11 @@ test("focused control in inert subtree is rejected", async ({ page }) => {
   await page.locator("#action").focus();
   await page.locator("#action").evaluate((node) => node.parentElement?.setAttribute("inert", ""));
   const state = await observeHandoffFocusRound11(page);
-  expect(state.findings.map((issue) => issue.code)).toContain("focus-inert");
+  // Chromium moves focus to the document when an ancestor becomes inert;
+  // the observable failure is therefore focus-disappeared, while the DOM
+  // assertion proves the previously focused control is now inside inert content.
+  expect(state.findings.map((issue) => issue.code)).toContain("focus-disappeared");
+  expect(await page.locator("#action").evaluate((node) => node.parentElement?.hasAttribute("inert"))).toBe(true);
 });
 
 test("positive tabindex changes keyboard order and is reported", async ({ page }) => {
