@@ -204,7 +204,8 @@ export function parseDependencyBook(raw: string, expectedRegionId: string): Depe
   const book = parsed;
   return { ...book, items: book.items.map((item) => ({ ...item, cellIds: [...item.cellIds] })) };
 }
-function sourceForCell(manifest: RegionManifest, cellId: string): DependencyCell {
+function sourceForCell(manifest: RegionManifest | null, cellId: string): DependencyCell {
+  if (!manifest) return { cellId, availability: "UNKNOWN", expectedBytes: null, source: null, reason: "listing-unavailable" };
   const listed = manifest.cells.find((cell) => cell.id === cellId);
   if (!listed) return { cellId, availability: "UNKNOWN", expectedBytes: null, source: null, reason: "not-listed" };
   if (!limited(listed.provenance.source, DEPENDENCY_MAX_LABEL) || !limited(listed.provenance.licence, DEPENDENCY_MAX_LABEL) ||
@@ -213,9 +214,9 @@ function sourceForCell(manifest: RegionManifest, cellId: string): DependencyCell
   return { cellId, availability: "UNKNOWN", expectedBytes: Number.isSafeInteger(listed.bytes) && listed.bytes >= 0 ? listed.bytes : null,
     source: { source: listed.provenance.source, licence: listed.provenance.licence, date: listed.provenance.date }, reason: "inventory-unavailable" };
 }
-export function assessDependency(book: DependencyBook, manifest: RegionManifest, inventory: RegionInventory | null): readonly DependencyAssessment[] {
+export function assessDependency(book: DependencyBook, manifest: RegionManifest | null, inventory: RegionInventory | null): readonly DependencyAssessment[] {
   validateDependencyBook(book);
-  const consistent = manifest.regionId === book.regionId && inventory?.regionId === manifest.regionId &&
+  const consistent = manifest !== null && manifest.regionId === book.regionId && inventory?.regionId === manifest.regionId &&
     inventory.cells.length === manifest.cells.length && new Set(inventory.cells.map((cell) => cell.id)).size === inventory.cells.length;
   const observed = consistent && inventory !== null ? new Map(inventory.cells.map((cell) => [cell.id, cell])) : new Map();
   return book.items.map((item): DependencyAssessment => {
