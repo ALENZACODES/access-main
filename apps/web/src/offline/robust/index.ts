@@ -130,3 +130,8 @@ export type { RecoveryCopyKey } from "./recoveryBatchesCopy";
 export type { RecoveryCopyKey as RecoveryGuideCopyKey } from "./recoveryGuideCopy";
 export * from "./recoveryGuideExport";
 export * from "./recoveryGuidePanel";
+// Portable metadata-only receipts are loaded on demand by the offline dashboard.
+export * from "./packReceipt";
+export * from "./packReceiptCopy";
+export * from "./packReceiptExport";
+export * from "./packReceiptPanel";

@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./support/first-install";
 
 const labels = {
   en: {
@@ -25,29 +26,9 @@ for (const language of ["en", "fr"] as const) {
   test.describe(language, () => {
     test.use({ locale: `${language}-CA`, serviceWorkers: "allow" });
 
-    test("the three planning tools work on the first offline visit", async ({ page, context }) => {
+    test("the three planning tools work on the first offline visit", async ({ firstOfflinePage: offline }) => {
       const copy = labels[language];
 
-      // Only the shell is visited online. Replacing this tab discards its module registry.
-      await page.goto("/");
-      await page.evaluate(async () => { await navigator.serviceWorker.ready; });
-      await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
-      const initialScripts = await page.evaluate(async () => {
-        const names = (await caches.keys()).filter((name) => name.includes("precache"));
-        const requests = await Promise.all(names.map(async (name) => (await caches.open(name)).keys()));
-        return requests.flat().map(({ url }) => new URL(url).pathname).filter((path) => path.endsWith(".js"));
-      });
-      expect(initialScripts.length).toBeGreaterThan(0);
-      await context.setOffline(true);
-      const offline = await context.newPage();
-      const scriptPaths = new Set<string>();
-      offline.on("request", (request) => {
-        if (request.resourceType() === "script") scriptPaths.add(new URL(request.url()).pathname);
-      });
-      await page.close();
-      const navigation = await offline.goto("/offline");
-      expect(navigation?.fromServiceWorker()).toBe(true);
-      expect(await offline.evaluate(() => navigator.onLine)).toBe(false);
       await expect(offline.locator("html")).toHaveAttribute("lang", language);
 
       await offline.getByRole("button", { name: copy.openSheet, exact: true }).click();
@@ -83,9 +64,6 @@ for (const language of ["en", "fr"] as const) {
       await offline.getByRole("button", { name: copy.compare, exact: true }).click();
       await expect(offline.getByText("entry-hall", { exact: true })).toBeVisible();
 
-      // Runtime caching or a browser HTTP-cache hit cannot substitute for an install entry.
-      expect(scriptPaths.size).toBeGreaterThan(0);
-      expect([...scriptPaths].filter((path) => !initialScripts.includes(path))).toEqual([]);
     });
   });
 }
