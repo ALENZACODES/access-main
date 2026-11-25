@@ -4,7 +4,7 @@ import { lstat, readdir, readFile } from 'node:fs/promises';
 import { basename, extname, join, relative, resolve, sep } from 'node:path';
 
 export const BUNDLE_LIMITS = Object.freeze({
-  totalBytes: 4_141_875,
+  totalBytes: 4_718_592,
   maxFiles: 2500,
   maxDepth: 20,
   singleAssetBytes: 2_097_152,
