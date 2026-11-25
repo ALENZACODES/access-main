@@ -21,15 +21,32 @@ import { statementsAsCsv, statementsAsText } from "./statementSection";
 import { receiptAsCsv, receiptAsText } from "./receiptSection";
 import type { HandoffRow } from "./handoffRegister";
 import { handoffAsCsv, handoffAsText } from "./handoffSection";
+import type { PickRow } from "./pickRegister";
+import { picksAsCsv, picksAsText } from "./pickSection";
+import type { BrowserRow } from "./browserRegister";
+import { BROWSER_QUESTIONS, browserCheck, readBrowser, type BrowserCheckView, type BrowserHost } from "./browserLive";
+import { browserAsCsv, browserAsText } from "./browserSection";
+import type { SaveRow } from "./saveRegister";
+import { SAVE_QUESTIONS, saveCheck, readSave, type SaveCheckView, type SaveHost } from "./saveLive";
+import { saveAsCsv, saveAsText } from "./saveSection";
+import type { RetentionRow } from "./retentionRegister";
+import { comparedCount, checkStored } from "./retentionLive";
+import { retentionAsCsv, retentionAsText, type RetentionCheckView } from "./retentionSection";
+import type { QueryRow } from "./queryRegister";
+import { checkAddress, type AddressCheck } from "./queryLive";
+import { queryAsCsv, queryAsText } from "./querySection";
+import type { AutoRow } from "./autoRegister";
+import { readWorkers, workerCheck, differenceCount, type WorkerCheckView, type WorkerHost } from "./autoLive";
+import { autoAsCsv, autoAsText } from "./autoSection";
 import { glanceFigures, type GlanceSources } from "./glance";
 import { readFeatureStates, type FeatureHost, type FeatureStates } from "./permissions";
 import { keptAsCsv, keptAsText, type KeptSources } from "./keptExport";
 import { clearDevice, removable, scanDevice, type ClearOptions, type DeviceHost, type DeviceScan } from "./deviceStorage";
-import { protect, unprotect, passphraseProblem, type CryptoLike } from "./protectedBackup";
+import { protect, unprotect, passphraseProblem, MAX_PROTECTED_BYTES, type CryptoLike } from "./protectedBackup";
 import { readSignals, type SignalHost, type Signals } from "./signals";
 import { buildPrintable } from "./printable";
 import { buildSupportSummary } from "./supportSummary";
-import { applyImport, prepareImport, type ImportPlan } from "./importData";
+import { applyImport, prepareImport, MAX_IMPORT_BYTES, type ImportPlan } from "./importData";
 import { loadBlocked } from "./egressLog";
 import type { EgressPolicy } from "./egress";
 import { assertScope, scopeKeysPresent, type DataScope } from "./dataScope";
@@ -76,6 +93,20 @@ export interface ControllerDeps {
   receipt?: boolean;
   /** The links in the App that open another app. With it, the panel lists them and offers a download. */
   handoffs?: readonly HandoffRow[];
+  /** What the App keeps, for how long and how much, as read from its code. With it, the panel shows the list and offers a download. */
+  retention?: readonly RetentionRow[];
+  /** The places in the App that read a file the person chooses. With it, the panel lists them and offers a download. */
+  picks?: readonly PickRow[];
+  /** The places in the App that ask the browser about the device or settings, and the browser to ask now. With it, the panel shows the list, offers a download and can ask. */
+  browser?: { register: readonly BrowserRow[]; host: BrowserHost };
+  /** The places in the App that make a file for the person to save, and the browser to ask now whether it can. With it, the panel shows the list, offers a download and can ask. */
+  save?: { register: readonly SaveRow[]; host: SaveHost };
+  /** The names the App reads from and builds into a web address. With it, the panel lists them and offers a download. */
+  queries?: readonly QueryRow[];
+  /** Reads the part of this page's address after the question mark, for example `() => window.location.search`. With it and `queries`, the panel can examine the address. Nothing is stored or changed. */
+  address?: () => string;
+  /** The places in the App that start work on their own, and the browser to ask about offline workers. With it, the panel shows the list, offers a download and can ask. */
+  auto?: { register: readonly AutoRow[]; host: WorkerHost };
   /** The App's lists of what it keeps. With them, the panel offers a download of everything kept on this device. */
   kept?: Pick<KeptSources, "register" | "unscanned">;
   now: () => Date;
@@ -119,6 +150,15 @@ export interface PrivacyState {
   scan: DeviceScan | null;
   /** The browser's answers about features, or null before the check */
   featureStates: FeatureStates | null;
+  /** What comparing the retention list with the stored values found, or null before the person asks */
+  retentionCheck: RetentionCheckView | null;
+  /** What the browser said when asked, or null before the person asks */
+  browserCheck: BrowserCheckView | null;
+  saveCheck: SaveCheckView | null;
+  /** What reading the address of this page found, or null before the person asks */
+  queryCheck: AddressCheck | null;
+  /** What the browser said about offline workers, or null before the person asks */
+  workerCheck: WorkerCheckView | null;
   confirmingClearDevice: boolean;
 }
 
@@ -143,10 +183,25 @@ export type PrivacyAction =
   | { type: "export-receipt-text" }
   | { type: "export-handoff-csv" }
   | { type: "export-handoff-text" }
+  | { type: "export-auto-csv" }
+  | { type: "export-auto-text" }
+  | { type: "check-retention" }
+  | { type: "check-query" }
+  | { type: "export-query-csv" }
+  | { type: "export-query-text" }
+  | { type: "export-picks-csv" }
+  | { type: "export-picks-text" }
+  | { type: "export-browser-csv" }
+  | { type: "export-browser-text" }
+  | { type: "export-save-csv" }
+  | { type: "export-save-text" }
+  | { type: "export-retention-csv" }
+  | { type: "export-retention-text" }
   | { type: "export-statements-csv" }
   | { type: "export-statements-text" }
   | { type: "mark-seen" }
-  | { type: "import-load"; text: string }
+  /** `size` is the size in bytes of the chosen file when the page knows it. A file over the limit is refused without being read. */
+  | { type: "import-load"; text: string; size?: number }
   | { type: "import-confirm" }
   | { type: "import-cancel" }
   | { type: "export-support" }
@@ -158,16 +213,22 @@ export type PrivacyAction =
   | { type: "publish"; file: ExportFile; status: Status }
   | { type: "signals-read"; signals: Signals }
   | { type: "device-scanned"; scan: DeviceScan }
-  | { type: "features-read"; states: FeatureStates };
+  | { type: "features-read"; states: FeatureStates }
+  | { type: "workers-read"; check: WorkerCheckView }
+  | { type: "browser-read"; check: BrowserCheckView }
+  | { type: "save-read"; check: SaveCheckView };
 
 /** Actions that wait for the browser. Passphrases are used once and never kept. */
 export type PrivacyAsyncAction =
   | { type: "read-signals" }
   | { type: "scan-device" }
   | { type: "check-features" }
+  | { type: "check-workers" }
+  | { type: "check-browser" }
+  | { type: "check-save" }
   | { type: "clear-device-confirm" }
   | { type: "protected-export"; passphrase: string; confirm: string }
-  | { type: "protected-import"; text: string; passphrase: string };
+  | { type: "protected-import"; text: string; passphrase: string; size?: number };
 
 export interface PrivacyController {
   getState(): PrivacyState;
@@ -264,6 +325,11 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
     signals: null,
     scan: null,
     featureStates: null,
+    retentionCheck: null,
+    browserCheck: null,
+    saveCheck: null,
+    queryCheck: null,
+    workerCheck: null,
     confirmingClearDevice: false,
   };
   let plan: ImportPlan | null = null;
@@ -407,6 +473,102 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "handoff-exported", format: csv ? "csv" : "text" } };
         break;
       }
+      case "export-auto-csv":
+      case "export-auto-text": {
+        if (deps.auto === undefined || deps.auto.register.length === 0) break;
+        const csv = action.type === "export-auto-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? autoAsCsv(loc, deps.auto.register, deps.now(), loc === "fr" ? ";" : ",") : autoAsText(loc, deps.auto.register, deps.now());
+        log({ kind: "auto-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "auto-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "workers-read":
+        if (deps.auto === undefined || deps.auto.register.length === 0) break;
+        state = { ...state, workerCheck: action.check, confirmingErase: false, lastExport: null, status: { kind: "workers-checked", registered: action.check.registered, differences: differenceCount(action.check.findings) } };
+        break;
+      case "check-retention": {
+        if (deps.retention === undefined || deps.retention.length === 0) break;
+        if (storage === null) {
+          state = unavailable();
+          break;
+        }
+        const findings = checkStored(storage, deps.retention, deps.now());
+        const compared = comparedCount(storage, deps.retention);
+        state = { ...state, confirmingErase: false, lastExport: null, retentionCheck: { compared, findings }, status: { kind: "retention-checked", compared, differences: findings.length } };
+        break;
+      }
+      case "check-query": {
+        if (deps.queries === undefined || deps.queries.length === 0 || deps.address === undefined) break;
+        let search: string;
+        try {
+          search = deps.address();
+        } catch {
+          state = { ...state, confirmingErase: false, lastExport: null, queryCheck: null, status: { kind: "query-unreadable" } };
+          break;
+        }
+        const check = checkAddress(deps.queries, search);
+        state = { ...state, confirmingErase: false, lastExport: null, queryCheck: check, status: { kind: "query-checked", params: check.params, findings: check.findings.length } };
+        break;
+      }
+      case "export-query-csv":
+      case "export-query-text": {
+        if (deps.queries === undefined || deps.queries.length === 0) break;
+        const csv = action.type === "export-query-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? queryAsCsv(loc, deps.queries, deps.now(), loc === "fr" ? ";" : ",") : queryAsText(loc, deps.queries, deps.now());
+        log({ kind: "query-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "query-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-picks-csv":
+      case "export-picks-text": {
+        if (deps.picks === undefined || deps.picks.length === 0) break;
+        const csv = action.type === "export-picks-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? picksAsCsv(loc, deps.picks, deps.now(), loc === "fr" ? ";" : ",") : picksAsText(loc, deps.picks, deps.now());
+        log({ kind: "picks-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "picks-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "export-browser-csv":
+      case "export-browser-text": {
+        if (deps.browser === undefined || deps.browser.register.length === 0) break;
+        const csv = action.type === "export-browser-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? browserAsCsv(loc, deps.browser.register, deps.now(), loc === "fr" ? ";" : ",") : browserAsText(loc, deps.browser.register, deps.now());
+        log({ kind: "browser-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "browser-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "browser-read":
+        if (deps.browser === undefined || deps.browser.register.length === 0) break;
+        state = { ...state, browserCheck: action.check, confirmingErase: false, lastExport: null, status: { kind: "browser-checked", answered: action.check.answered, asked: BROWSER_QUESTIONS.length } };
+        break;
+      case "export-save-csv":
+      case "export-save-text": {
+        if (deps.save === undefined || deps.save.register.length === 0) break;
+        const csv = action.type === "export-save-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? saveAsCsv(loc, deps.save.register, deps.now(), loc === "fr" ? ";" : ",") : saveAsText(loc, deps.save.register, deps.now());
+        log({ kind: "save-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "save-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
+      case "save-read":
+        if (deps.save === undefined || deps.save.register.length === 0) break;
+        state = { ...state, saveCheck: action.check, confirmingErase: false, lastExport: null, status: { kind: "save-checked", answered: action.check.answered, asked: SAVE_QUESTIONS.length } };
+        break;
+      case "export-retention-csv":
+      case "export-retention-text": {
+        if (deps.retention === undefined || deps.retention.length === 0) break;
+        const csv = action.type === "export-retention-csv";
+        const loc = state.prefs.locale;
+        const file = csv ? retentionAsCsv(loc, deps.retention, deps.now(), loc === "fr" ? ";" : ",") : retentionAsText(loc, deps.retention, deps.now());
+        log({ kind: "retention-export", format: csv ? "csv" : "text" });
+        state = { ...state, confirmingErase: false, lastExport: file, status: { kind: "retention-exported", format: csv ? "csv" : "text" } };
+        break;
+      }
       case "export-receipt-csv":
       case "export-receipt-text": {
         const rows = receiptFor(deps, state.consent);
@@ -480,7 +642,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
           state = unavailable();
           break;
         }
-        const r = prepareImport(action.text, storage, scope);
+        const r = action.size !== undefined && action.size > MAX_IMPORT_BYTES ? ({ ok: false, code: "too-large" } as const) : prepareImport(action.text, storage, scope);
         if (!r.ok) {
           state = { ...state, confirmingErase: false, importPending: false, lastExport: null, status: { kind: "import-problem", code: r.code } };
           break;
@@ -618,6 +780,18 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         if (deps.signals === undefined) return state;
         return dispatch({ type: "signals-read", signals: await readSignals(deps.signals) });
       }
+      case "check-workers": {
+        if (deps.auto === undefined || deps.auto.register.length === 0) return state;
+        return dispatch({ type: "workers-read", check: workerCheck(await readWorkers(deps.auto.host), deps.auto.register) });
+      }
+      case "check-browser": {
+        if (deps.browser === undefined || deps.browser.register.length === 0) return state;
+        return dispatch({ type: "browser-read", check: browserCheck(await readBrowser(deps.browser.host)) });
+      }
+      case "check-save": {
+        if (deps.save === undefined || deps.save.register.length === 0) return state;
+        return dispatch({ type: "save-read", check: saveCheck(await readSave(deps.save.host)) });
+      }
       case "check-features": {
         if (deps.features === undefined) return state;
         return dispatch({ type: "features-read", states: await readFeatureStates(deps.features.host, deps.features.register, deps.now()) });
@@ -658,6 +832,7 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
       }
       case "protected-import": {
         if (deps.storage === null) return dispatch({ type: "report", status: { kind: "unavailable" } });
+        if (action.size !== undefined && action.size > MAX_PROTECTED_BYTES) return dispatch({ type: "report", status: { kind: "protected-problem", code: "too-large" } });
         const r = await unprotect(action.text, action.passphrase, deps.prefix, deps.crypto, deps.minProtectedIterations === undefined ? {} : { minIterations: deps.minProtectedIterations });
         if (!r.ok) return dispatch({ type: "report", status: { kind: "protected-problem", code: r.code } });
         log({ kind: "protected-import" });
@@ -704,6 +879,12 @@ export function createPrivacyController(deps: ControllerDeps): PrivacyController
         ...(deps.addresses !== undefined ? { addresses: deps.addresses } : {}),
         ...(statementsFor(deps) !== null ? { statements: statementsFor(deps) as StatementResult[] } : {}),
         ...(deps.handoffs !== undefined && deps.handoffs.length > 0 ? { handoffs: deps.handoffs } : {}),
+        ...(deps.queries !== undefined && deps.queries.length > 0 ? { queries: deps.queries, queryCanCheck: deps.address !== undefined, ...(state.queryCheck !== null ? { queryCheck: state.queryCheck } : {}) } : {}),
+        ...(deps.picks !== undefined && deps.picks.length > 0 ? { picks: deps.picks } : {}),
+        ...(deps.browser !== undefined && deps.browser.register.length > 0 ? { browser: deps.browser.register, ...(state.browserCheck !== null ? { browserCheck: state.browserCheck } : {}) } : {}),
+        ...(deps.save !== undefined && deps.save.register.length > 0 ? { save: deps.save.register, ...(state.saveCheck !== null ? { saveCheck: state.saveCheck } : {}) } : {}),
+        ...(deps.retention !== undefined && deps.retention.length > 0 ? { retention: deps.retention, ...(state.retentionCheck !== null ? { retentionCheck: state.retentionCheck } : {}) } : {}),
+        ...(deps.auto !== undefined && deps.auto.register.length > 0 ? { auto: deps.auto.register, ...(state.workerCheck !== null ? { workerCheck: state.workerCheck } : {}) } : {}),
         ...(receiptFor(deps, state.consent) !== null ? { receipt: receiptFor(deps, state.consent) as ReceiptRow[] } : {}),
         ...(glanceSources(deps) !== null ? { glance: glanceSources(deps) as GlanceSources } : {}),
         ...(deps.kept !== undefined ? { keptList: true } : {}),
