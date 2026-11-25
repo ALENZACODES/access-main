@@ -8,7 +8,6 @@ import {
 const fixture = () => fictionalManifest();
 const doc = () => fixture().documents[0];
 const changes = data => ({...doc(),...data});
-const mutate = fn => {const m=fixture();fn(m);return m;};
 const review = m => coverageReview(m??fixture());
 test('document metrics report source id',()=>assert.equal(documentMetrics(doc()).id,'en-intro'));
 test('document metrics report path',()=>assert.equal(documentMetrics(doc()).path,'help/introduction.en.md'));

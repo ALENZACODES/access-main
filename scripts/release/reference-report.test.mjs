@@ -6,7 +6,7 @@ import {
 } from './reference-report.mjs';
 import { reviewReferences } from './reference-review.mjs';
 import { compareReferenceSets } from './reference-delta.mjs';
-import { DAY, entry, french, observed, pair, snapshot } from './reference-fixtures.mjs';
+import { DAY, entry, observed, pair, snapshot } from './reference-fixtures.mjs';
 
 const review = (manifest = pair()) => {
   const result = reviewReferences(manifest, { today: DAY });

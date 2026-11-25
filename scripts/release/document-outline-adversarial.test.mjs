@@ -12,7 +12,6 @@ import { renderReport } from './document-outline-report.mjs';
 const fixture = () => fictionalManifest();
 const changed = body => {const m=fixture();m.documents[0].body=body;return m;};
 const errorCodes = manifest => validateManifest(manifest).errors.map(x=>x.code);
-const issueCodes = body => reviewManifest(changed(body)).value.issues.map(x=>x.code);
 const output = (manifest,format='html',language='en') => renderReport(manifest,{format,language});
 test('prototype pollution key cannot be accepted in a manifest',()=>{
   const m=fixture();Object.defineProperty(m,'__proto__',{value:{admin:true},enumerable:true});

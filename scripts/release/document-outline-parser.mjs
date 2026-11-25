@@ -75,6 +75,7 @@ export function analyzeMarkdown(body) {
 export function normalizeLinkDestination(raw) {
   if (typeof raw !== 'string') return { kind: 'invalid', target: '' };
   const value = raw.trim();
+  // eslint-disable-next-line no-control-regex -- control characters are rejected on purpose
   if (!value || /[\u0000-\u001f\u007f\\]/u.test(value)) return { kind: 'invalid', target: value };
   if (value.startsWith('#')) return { kind: 'fragment', target: decodeFragment(value.slice(1)) };
   if (/^(?:https?):\/\//iu.test(value)) {
