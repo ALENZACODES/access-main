@@ -58,8 +58,9 @@ describe("multi-part transfer set creation", () => {
     const body = JSON.stringify(packetWith("État — transfert"), null, 2);
     const source = new File([Uint8Array.of(0xef, 0xbb, 0xbf), body], "original.json");
     const first = valueOf(await inspectMember(source));
-    const second = await makeMember(2);
-    const opened = setValueOf(await openTransferSet(setValueOf(await createTransferSet([first, second]))));
+    // A set needs at least two parts, so add enough ordinary exports to fill a second part.
+    const others = await manyMembers(12);
+    const opened = setValueOf(await openTransferSet(setValueOf(await createTransferSet([first, ...others]))));
     expect(await opened.parts[0]?.members[0]?.file.arrayBuffer()).toEqual(await source.arrayBuffer());
   });
 
@@ -67,7 +68,7 @@ describe("multi-part transfer set creation", () => {
     const body = JSON.stringify(packetWith("same"));
     const first = valueOf(await inspectMember(new File([body], "one.json")));
     const second = valueOf(await inspectMember(new File([body], "two.json")));
-    expect(await createTransferSet([first, second])).toEqual({ ok: false, problem: { code: "duplicate", slot: 2 } });
+    expect(await createTransferSet([first, second])).toEqual({ ok: false, problem: { code: "duplicate", part: 2 } });
   });
 
   it("creates an envelope that is distinct from an ordinary bundle", async () => {

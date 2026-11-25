@@ -73,16 +73,18 @@ function save(blob: Blob, name: string): boolean {
 }
 
 function MemberList({
-  members, locale, onSave,
+  members, locale, onSave, start = 0,
 }: {
   readonly members: readonly BundleMember[];
+  /** Position of the first member in the whole set, so numbers do not restart in each part. */
+  readonly start?: number;
   readonly locale: MultipartLocale;
   readonly onSave: (member: BundleMember, index: number) => void;
 }): ReactElement {
   const copy = multipartCopy(locale);
   return <ol aria-label={copy.members}>
     {members.map((member, index) => <li key={member.digest} style={{ ...frame, marginBlock: 8 }}>
-      <strong>{copy.fileName} {multipartNumber(locale, index + 1)}</strong>
+      <strong>{copy.fileName} {multipartNumber(locale, start + index + 1)}</strong>
       <p>{copy.memberKind}: {member.kind}</p>
       <p>{copy.recordCount}: {multipartNumber(locale, member.recordCount)} · {multipartNumber(locale, member.byteLength)} {copy.bytes.toLocaleLowerCase()}</p>
       <details>
@@ -90,7 +92,7 @@ function MemberList({
         <code style={mono}>{member.digest}</code>
       </details>
       <button type="button" style={control} onClick={() => onSave(member, index)}>
-        {copy.saveMember} {multipartNumber(locale, index + 1)}
+        {copy.saveMember} {multipartNumber(locale, start + index + 1)}
       </button>
     </li>)}
   </ol>;
@@ -131,7 +133,7 @@ function SetDetails({
         <button type="button" style={control} onClick={() => onSavePart(part)}>
           {copy.savePart} {multipartNumber(locale, part.index)}
         </button>
-        <MemberList members={part.members} locale={locale}
+        <MemberList members={part.members} locale={locale} start={start}
           onSave={(member, index) => onSaveMember(member, start + index)} />
       </section>;
     })}

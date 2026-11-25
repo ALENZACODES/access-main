@@ -9,6 +9,29 @@ import { inspectMember } from "../model";
 import { createTransferSet } from "./model";
 import { MultipartTransferPanel } from "./Panel";
 
+// jsdom's Blob has only the older FileReader interface; the panel reads files
+// with arrayBuffer() and text(), as browsers do.
+function readWithFileReader(blob: Blob, mode: "buffer" | "text"): Promise<ArrayBuffer | string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer | string);
+    reader.onerror = () => reject(reader.error);
+    if (mode === "buffer") reader.readAsArrayBuffer(blob); else reader.readAsText(blob);
+  });
+}
+if (typeof Blob.prototype.arrayBuffer !== "function") {
+  Object.defineProperty(Blob.prototype, "arrayBuffer", {
+    configurable: true,
+    value(this: Blob) { return readWithFileReader(this, "buffer"); },
+  });
+}
+if (typeof Blob.prototype.text !== "function") {
+  Object.defineProperty(Blob.prototype, "text", {
+    configurable: true,
+    value(this: Blob) { return readWithFileReader(this, "text"); },
+  });
+}
+
 async function exportFile(note: string, name = "export.json"): Promise<File> {
   return new File([JSON.stringify(packetWith(note))], name, { type: "application/json" });
 }
@@ -102,7 +125,7 @@ describe("multi-part transfer panel in English and French", () => {
     const files = await Promise.all([exportFile("one"), exportFile("two"), ...Array.from({ length: 11 }, (_, index) => exportFile(`more-${index}`))]);
     fireEvent.change(input, { target: { files } });
     await screen.findByText(/12 exports/u);
-    fireEvent.click(screen.getByRole("button", { name: "Clear selection" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear multi-part selection" }));
     expect(screen.getByRole("status").textContent).toBe("Selection cleared.");
     expect(document.activeElement).toBe(input);
     expect(screen.queryByText(/Transfer plan/u)).toBeNull();

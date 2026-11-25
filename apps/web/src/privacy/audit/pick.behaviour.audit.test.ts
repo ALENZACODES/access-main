@@ -59,18 +59,30 @@ describe("a row limited before reading compares the size before any read", () =>
 });
 
 describe("a row with no check found in its own file", () => {
-  it("is the packing list backup, which hands the file to a function that compares the size before reading it", () => {
+  // Each of these files hands the picked file to a function in another file, and that function compares the size
+  // before it reads the file.
+  const CALLED: Record<string, { call: RegExp; reader: string; size: string; read: string }> = {
+    "apps/web/src/offline/packing/PackingTransfer.tsx": { call: /readPackingBackup\(file\)/, reader: "apps/web/src/offline/packing/transfer.ts", size: "file.size >", read: "file.arrayBuffer()" },
+    "apps/web/src/recovery/transferBundle/PackingListPanel.tsx": { call: /readPackingList\(file\)/, reader: "apps/web/src/recovery/transferBundle/packingList.ts", size: "file.size > MAX_LIST_BYTES", read: "file.arrayBuffer()" },
+    "apps/web/src/recovery/transferBundle/Panel.tsx": { call: /inspectMember\(file\)[\s\S]*openBundle\(file\)/, reader: "apps/web/src/recovery/transferBundle/model.ts", size: "file.size > limit", read: "file.arrayBuffer()" },
+  };
+
+  it("are the files whose picks hand the file to a reader that compares the size first", () => {
     const rows = PICK_REGISTER.filter((r) => r.limit === "none-found");
-    expect(rows.map((r) => r.path)).toEqual(["apps/web/src/offline/packing/PackingTransfer.tsx"]);
-    const pick = text("apps/web/src/offline/packing/PackingTransfer.tsx");
-    expect(sizeCheckLines(pick), "the row says no check is found in the file").toEqual([]);
-    expect(pick).toMatch(/readPackingBackup\(file\)/);
-    const reader = text("apps/web/src/offline/packing/transfer.ts");
-    const size = reader.indexOf("file.size >");
-    const read = reader.indexOf("file.arrayBuffer()");
-    expect(size, "a size comparison before the read").toBeGreaterThan(-1);
-    expect(size).toBeLessThan(read);
+    expect(rows.map((r) => r.path).sort()).toEqual(Object.keys(CALLED).sort());
   });
+
+  for (const [path, { call, reader, size, read }] of Object.entries(CALLED)) {
+    it(`${path} has no size check of its own and its reader compares the size before reading`, () => {
+      const pick = text(path);
+      expect(sizeCheckLines(pick), "the row says no check is found in the file").toEqual([]);
+      expect(pick).toMatch(call);
+      const r = text(reader);
+      const at = r.indexOf(size);
+      expect(at, "a size comparison before the read").toBeGreaterThan(-1);
+      expect(at).toBeLessThan(r.indexOf(read, at - 2000 < 0 ? 0 : at - 2000));
+    });
+  }
 });
 
 describe("a row limited after reading names a file with a byte limit", () => {
@@ -90,13 +102,30 @@ describe("a row limited after reading names a file with a byte limit", () => {
   }
 });
 
-describe("the one mixed file", () => {
-  it("is the contribute page: photos are limited by count, the JSON file by size before it is read", () => {
+describe("the mixed files", () => {
+  it("are the contribute page and the multi-part transfer panel", () => {
     const rows = PICK_REGISTER.filter((r) => r.limit === "mixed");
-    expect(rows.map((r) => r.path)).toEqual(["apps/web/src/contribute/ContributePage.tsx"]);
+    expect(rows.map((r) => r.path).sort()).toEqual(["apps/web/src/contribute/ContributePage.tsx", "apps/web/src/recovery/transferBundle/multipart/Panel.tsx"]);
+  });
+
+  it("contribute page: photos are limited by count, the JSON file by size before it is read", () => {
     const t = text("apps/web/src/contribute/ContributePage.tsx");
     expect(sizeCheckLines(t).length).toBe(1);
     expect(t).toMatch(/5\s*\*\s*1024\s*\*\s*1024/);
+  });
+
+  it("multi-part panel: the receipt is limited in the file, the exports and the set by the model before reading", () => {
+    const t = text("apps/web/src/recovery/transferBundle/multipart/Panel.tsx");
+    const checks = sizeCheckLines(t);
+    expect(checks.length).toBe(1);
+    expect(checks[0] as number).toBeLessThan(readLines(t)[0] as number);
+    expect(t).toMatch(/inspectMember\(file\)/);
+    expect(t).toMatch(/openTransferSet\(file\)/);
+    const bundle = text("apps/web/src/recovery/transferBundle/model.ts");
+    expect(bundle.indexOf("file.size > limit")).toBeLessThan(bundle.indexOf("file.arrayBuffer()"));
+    const set = text("apps/web/src/recovery/transferBundle/multipart/model.ts");
+    expect(set.indexOf("blob.size > cap")).toBeGreaterThan(-1);
+    expect(set.indexOf("blob.size > cap")).toBeLessThan(set.indexOf("blob.arrayBuffer()"));
   });
 });
 
