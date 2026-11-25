@@ -72,11 +72,17 @@ export function analyzeMarkdown(body) {
   if (fenced) alerts.push({ code: 'UNCLOSED_FENCE', line: fenced.start });
   return { headings, links, images, tables, fences, alerts, lines: lines.length, anchors: [...new Set(headings.map(h => h.anchor))].sort(lexical) };
 }
+function hasControlOrBackslash(value) {
+  for (const character of value) {
+    const code = character.codePointAt(0);
+    if (code <= 0x1f || code === 0x7f || character === '\\') return true;
+  }
+  return false;
+}
 export function normalizeLinkDestination(raw) {
   if (typeof raw !== 'string') return { kind: 'invalid', target: '' };
   const value = raw.trim();
-  // eslint-disable-next-line no-control-regex -- control characters are rejected on purpose
-  if (!value || /[\u0000-\u001f\u007f\\]/u.test(value)) return { kind: 'invalid', target: value };
+  if (!value || hasControlOrBackslash(value)) return { kind: 'invalid', target: value };
   if (value.startsWith('#')) return { kind: 'fragment', target: decodeFragment(value.slice(1)) };
   if (/^(?:https?):\/\//iu.test(value)) {
     try {
