@@ -26,6 +26,7 @@ import { mountOfflineRecoveryBatches } from "./recoveryBatchesPanel";
 import { mountOfflineSourceAge } from "./sourceAgePanel";
 import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
 import { mountOfflineCasebook } from "./offlineCasebookPanel";
+import { PACK_RECEIPT_COPY } from "./packReceiptCopy";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -482,6 +483,39 @@ export function mountOfflineDashboard(
   };
   packChangeLaunch.addEventListener("click", onPackChangeLaunch);
 
+  const receiptHost = element("div");
+  const receiptCopy = PACK_RECEIPT_COPY[language];
+  const receiptLaunch = action(receiptCopy.open);
+  receiptHost.append(receiptLaunch);
+  section.append(receiptHost);
+  let receiptDisposed = false;
+  let receiptOpen = false;
+  let receiptRevision = 0;
+  let unmountReceipts: () => void = () => undefined;
+  const onReceiptLaunch = (): void => {
+    if (receiptDisposed) return;
+    if (receiptOpen) {
+      receiptOpen = false;
+      receiptRevision += 1;
+      unmountReceipts();
+      unmountReceipts = () => undefined;
+      receiptLaunch.textContent = receiptCopy.open;
+      return;
+    }
+    receiptOpen = true;
+    const revision = ++receiptRevision;
+    receiptLaunch.textContent = receiptCopy.close;
+    void import("./packReceiptPanel").then(({ mountOfflinePackReceipts }) => {
+      if (receiptDisposed || !receiptOpen || revision !== receiptRevision) return;
+      unmountReceipts = mountOfflinePackReceipts(receiptHost, manifest, model, language);
+    }).catch(() => {
+      if (receiptDisposed || revision !== receiptRevision) return;
+      receiptOpen = false;
+      receiptLaunch.textContent = receiptCopy.open;
+    });
+  };
+  receiptLaunch.addEventListener("click", onReceiptLaunch);
+
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
     details.hidden = !state.expanded || state.inventory === null;
@@ -632,6 +666,10 @@ export function mountOfflineDashboard(
     packChangeRevision += 1;
     packChangeLaunch.removeEventListener("click", onPackChangeLaunch);
     unmountPackChange();
+    receiptDisposed = true;
+    receiptRevision += 1;
+    receiptLaunch.removeEventListener("click", onReceiptLaunch);
+    unmountReceipts();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
