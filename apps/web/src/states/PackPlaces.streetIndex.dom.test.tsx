@@ -1,10 +1,13 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import contentText from "../../public/packs/toronto/content.json?raw";
 import { PackPlaces } from "./PackPlaces.tsx";
 import type { Locale } from "./stateCopy.ts";
+
+// Renders the shipped pack with every place tool, often with an axe scan: slow on CI runners.
+vi.setConfig({ testTimeout: 20_000 });
 
 const prov = { source_name: "OpenStreetMap, Geofabrik Ontario extract", source_url: "https://www.openstreetmap.org/way/1", licence: "ODbL-1.0", retrieved_at: "2026-11-13", tier: 0 };
 const rec = (id: string, name: string, wheelchair: string, address: string) => ({ id, name, wheelchair, category: "attraction", address, lat: 43.65, lon: -79.38, provenance: prov });

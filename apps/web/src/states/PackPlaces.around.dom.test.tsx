@@ -1,10 +1,13 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { offset } from "./aroundFixtures";
 import { PackPlaces } from "./PackPlaces";
 import type { Locale } from "./stateCopy";
+
+// Renders the shipped pack with every place tool, often with an axe scan: slow on CI runners.
+vi.setConfig({ testTimeout: 20_000 });
 
 const prov = { source_name: "OpenStreetMap, Geofabrik Ontario extract", source_url: "https://www.openstreetmap.org/way/1", licence: "ODbL-1.0", retrieved_at: "2026-11-13", tier: 0 };
 const rec = (id: string, name: string, wheelchair: string, north: number | null, east: number | null) => ({
