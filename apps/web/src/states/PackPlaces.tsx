@@ -30,6 +30,7 @@ import { NoteReading } from "./NoteReading.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
 import { TagNoteReads } from "./TagNoteReads.tsx";
 import { SameName } from "./SameName.tsx";
+import { PointPaste } from "./PointPaste.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PackSearchWords, PackWordList } from "./PackWords.tsx";
@@ -190,6 +191,14 @@ export function PackPlaces({ places, locale, today }: Props) {
       <fieldset className="stack">
         <legend>{message("pack.nearLegend", locale)}</legend>
         <p>{message("pack.nearHelp", locale)}</p>
+        <PointPaste
+          locale={locale}
+          current={from}
+          onUse={(a, b) => {
+            setLat(a);
+            setLon(b);
+          }}
+        />
         <TextInput label={message("pack.lat", locale)} value={lat} onChange={setLat} error={view.nearError ?? undefined} />
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
