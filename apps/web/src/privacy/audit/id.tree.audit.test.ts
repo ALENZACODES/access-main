@@ -12,7 +12,8 @@ import { loadFiles } from "./repoFiles";
 const ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
 const files = loadFiles(ROOT, ["apps/web/src"]).filter((f) => /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/.test(f.path));
 
-describe("every script of the App", () => {
+// These read and mask every script of the App, several times over; the tree is large, so give them room on slow CI runners.
+describe("every script of the App", { timeout: 30_000 }, () => {
   it("is read", () => {
     expect(files.length).toBeGreaterThan(500);
     expect(files.some((f) => f.path.endsWith(".tsx"))).toBe(true);
