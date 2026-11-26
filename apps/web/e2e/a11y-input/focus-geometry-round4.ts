@@ -100,6 +100,28 @@ export async function measureActiveFocus(page: Page): Promise<FocusGeometry | nu
 }
 
 /**
+ * Resolve once the page's height has not changed for 12 frames in a row, or after 5 s. A route that
+ * is still adding content when the first Tab is pressed moves its footer links after the focus
+ * scroll, so a link measured "outside the viewport" was a page still growing, not a focus fault.
+ * It waits on frames, not a fixed delay, and it never ends the audit early or skips a step.
+ */
+export async function waitForStableLayout(page: Page): Promise<void> {
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    const started = performance.now();
+    let last = -1;
+    let steady = 0;
+    const tick = () => {
+      const height = document.documentElement.scrollHeight;
+      steady = height === last ? steady + 1 : 0;
+      last = height;
+      if (steady >= 12 || performance.now() - started > 5000) resolve();
+      else requestAnimationFrame(tick);
+    };
+    tick();
+  }));
+}
+
+/**
  * Enumerate one pass through the page. DOM identity rather than a string
  * signature is used to detect wraparound; otherwise duplicate buttons with
  * identical text can accidentally terminate an audit early.
@@ -112,6 +134,7 @@ export async function auditKeyboardGeometry(
   if (!Number.isInteger(maxSteps) || maxSteps < 1 || maxSteps > 1000) {
     throw new Error("maxSteps must be an integer between 1 and 1000");
   }
+  await waitForStableLayout(page);
   await page.evaluate(() => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     document.body.focus();
