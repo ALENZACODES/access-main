@@ -58,6 +58,19 @@ function partsIn(manifest: PackManifest, cells: string[]): PackPart[] {
   }
   return [...result.values()];
 }
+/** Keep earlier fallbacks for paths outside this cell when saving new ownership. */
+function includeParts(id: string, previous: RegionEntry | undefined, parts: PackPart[]): RegionEntry {
+  const fresh = new Set(parts.map((part) => part.path));
+  return {
+    id,
+    hashes: [...new Set([...(previous?.hashes ?? []), ...parts.map((part) => part.sha256)])],
+    parts: [
+      ...(previous?.parts ?? []).filter((item) => !fresh.has(item.path)),
+      ...parts.map((part) => ({ path: part.path, sha256: part.sha256 })),
+    ],
+  };
+}
+
 function validateRecord(value: unknown): value is PackRecord {
   return checkPackRecord(value).ok;
 }
@@ -278,21 +291,37 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       pending.set(part.sha256, await fetchPart(part, !part.sourceId, onBytes));
       received += part.bytes;
     }
-    const previous = await readRegion(regionId);
-    // Older copies stay listed (and stored) so they can still stand in for a path whose newer part has not verified.
-    const fresh = new Set(parts.map((part) => part.path));
-    const entry: RegionEntry = {
-      id: regionId,
-      hashes: [...new Set([...(previous?.hashes ?? []), ...parts.map((part) => part.sha256)])],
-      parts: [...(previous?.parts ?? []).filter((item) => !fresh.has(item.path)), ...parts.map((part) => ({ path: part.path, sha256: part.sha256 }))],
-    };
     if (db) await db.transaction("rw", db.parts, db.regions, async () => {
+      const previous = await db.regions.get(regionId);
       await db.parts.bulkPut([...pending.values()]);
-      await db.regions.put(entry);
+      await db.regions.put(includeParts(regionId, previous, parts));
     });
-    else { for (const [key, value] of pending) memoryParts.set(key, value); memoryRegions.set(regionId, entry); }
+    else {
+      for (const [key, value] of pending) memoryParts.set(key, value);
+      memoryRegions.set(regionId, includeParts(regionId, memoryRegions.get(regionId), parts));
+    }
     return received;
   }
+
+  /** Shared physical bytes need a separate ownership entry for each region.
+   * Check keys and attach the region in the same transaction as the existence check. */
+  async function retainCachedRegion(id: string): Promise<boolean> {
+    const pack = await manifest();
+    const region = pack.regions.find((item) => item.id === id);
+    if (!region) throw new PackClientError("missing", id);
+    const parts = partsIn(pack, region.cells);
+    if (db) return db.transaction("rw", db.parts, db.regions, async () => {
+      const hashes = parts.map((part) => part.sha256);
+      if (hashes.length && await db.parts.where(":id").anyOf(hashes).count() !== hashes.length) return false;
+      const previous = await db.regions.get(id);
+      await db.regions.put(includeParts(id, previous, parts));
+      return true;
+    });
+    if (!parts.every((part) => memoryParts.has(part.sha256))) return false;
+    memoryRegions.set(id, includeParts(id, memoryRegions.get(id), parts));
+    return true;
+  }
+
   async function deleteRegion(id: string): Promise<void> {
     const pack = await manifest();
     const region = pack.regions.find((item) => item.id === id);
@@ -475,7 +504,7 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     }
     return (await regions()).find((value) => value.id === id)!;
   }
-  return { manifest, cellsFor, records, search, get, sourcesFor, regions, downloadRegion, downloadCell, deleteRegion, storedRegionIntegrity, fetchRegionPartBytes, commitCheckedRegion };
+  return { manifest, cellsFor, records, search, get, sourcesFor, regions, downloadRegion, downloadCell, retainCachedRegion, deleteRegion, storedRegionIntegrity, fetchRegionPartBytes, commitCheckedRegion };
 }
 
 /** In-memory source for deterministic consumer tests, never used as production data. */

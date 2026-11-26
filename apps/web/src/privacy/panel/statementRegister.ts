@@ -25,7 +25,7 @@ export interface StatementRow {
 const REVIEWED = "2026-11-21";
 const SOURCE = "Read from the source file named in the row";
 
-const row = (path: string, en: number, fr: number, whereEn: string, whereFr: string): StatementRow => ({ path, where: { en: whereEn, fr: whereFr }, en, fr, source: SOURCE, recordedOn: REVIEWED });
+const row = (path: string, en: number, fr: number, whereEn: string, whereFr: string, recordedOn = REVIEWED): StatementRow => ({ path, where: { en: whereEn, fr: whereFr }, en, fr, source: SOURCE, recordedOn });
 
 export const STATEMENT_REGISTER: readonly StatementRow[] = [
   row("apps/web/src/contribute/catalog.ts", 0, 1, "Contributing a place", "Contribuer un lieu"),
@@ -35,6 +35,7 @@ export const STATEMENT_REGISTER: readonly StatementRow[] = [
   row("apps/web/src/i18n/fr.ts", 0, 10, "The main text of the App in French", "Le texte principal de l’App en français"),
   row("apps/web/src/input/rehearsal/copy.ts", 1, 1, "Journey rehearsal", "La répétition de parcours"),
   row("apps/web/src/offline/evidence-workbench/EvidenceWorkbench.tsx", 1, 1, "Offline evidence workbench privacy note", "Note de confidentialité de l’atelier de preuves hors ligne"),
+  row("apps/web/src/offline/downloadQueue/queueCopy.ts", 1, 1, "Region download queue", "La file de téléchargement des régions", "2026-11-21"),
   row("apps/web/src/offline/robust/cleanupCopy.ts", 1, 0, "Offline storage cleanup", "Le nettoyage du stockage hors ligne"),
   row("apps/web/src/offline/robust/offlineCasebookCopy.ts", 0, 1, "Notes on offline copies", "Les notes sur les copies hors ligne"),
   row("apps/web/src/offline/robust/offlineCopy.ts", 0, 1, "Offline downloads", "Les téléchargements hors ligne"),

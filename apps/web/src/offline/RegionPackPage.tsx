@@ -1,7 +1,10 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { createPackSource, PackClientError, type PackManifest, type PackSource, type RegionStatus } from "../../../../packages/data-client/src/index.ts";
 import { PackFootprintLauncher } from "./robust/PackFootprintLauncher";
+import { DownloadQueueLauncher } from "./downloadQueue/DownloadQueueLauncher";
+import { RegionOperations } from "./downloadQueue/regionOperations";
+import type { QueueOutcome } from "./downloadQueue/queue";
 import { PackingListLauncher } from "./packing/PackingListLauncher";
 import { CommunicationCardsLauncher } from "./communicationCards/CommunicationCardsLauncher";
 import { ShellCheckLauncher } from "./shell-check/ShellCheckLauncher";
@@ -101,7 +104,9 @@ export function RegionFailsafeNotes({ region, language }: { region: RegionStatus
 }
 
 /** Inventory and storage-headroom dashboard for one region, mounted on the live /offline page. */
-function RegionInventoryDashboard({ source, pack, regionId, language }: { source: PackSource; pack: PackManifest; regionId: string; language: "en" | "fr" }) {
+function RegionInventoryDashboard({ source, pack, regionId, language, operations }: {
+  source: PackSource; pack: PackManifest; regionId: string; language: "en" | "fr"; operations: RegionOperations;
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const root = rootRef.current;
@@ -123,7 +128,10 @@ function RegionInventoryDashboard({ source, pack, regionId, language }: { source
           estimateStorage,
           fetchCell: async (rid, cell) => {
             if (!source.downloadCell) throw new PackClientError("missing", rid);
-            return source.downloadCell(rid, cell.id);
+            const release = operations.acquire("inventory");
+            if (!release) throw new Error("Another region command is active");
+            try { return await source.downloadCell(rid, cell.id); }
+            finally { release(); }
           },
         }, language);
       } catch {
@@ -134,7 +142,7 @@ function RegionInventoryDashboard({ source, pack, regionId, language }: { source
       cancelled = true;
       unmount?.();
     };
-  }, [source, pack, regionId, language]);
+  }, [source, pack, regionId, language, operations]);
   return <div ref={rootRef} className="offline-inventory" data-testid={`offline-inventory-${regionId}`} />;
 }
 
@@ -166,7 +174,10 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
   // The region whose stored copy is being checked. The check reads every stored part, so it can take a while.
   const [checking, setChecking] = useState<string | null>(null);
   const [checkedStatuses, setCheckedStatuses] = useState<Record<string, "corrupt" | "unknown">>({});
+  const [operations] = useState(() => new RegionOperations());
+  const activeOperation = useSyncExternalStore(operations.subscribe, operations.getSnapshot, operations.getSnapshot);
   const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
   const keepRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const confirmDeleteRef = useRef<HTMLButtonElement>(null);
@@ -196,21 +207,25 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     setManifest(pack);
     setRegions(statuses);
     setCells(await cellReports(pack, statuses));
+    return statuses;
   }
   /**
    * Cell by cell: each cell is checked and committed on its own, free space is
    * checked before each one, and a second run resumes from the cells already saved.
    */
-  async function download(id: string) {
+  async function download(id: string, signal: AbortSignal): Promise<QueueOutcome> {
+    if (signal.aborted) return "interrupted";
     setBusy(id); setError(""); setMessage(""); setProgress(null); setFailure(null);
-    const controller = new AbortController();
-    abortRef.current = controller;
     let fetchFailure: unknown;
     try {
       const pack = await source.manifest();
       const status = (await source.regions()).find((region) => region.id === id);
+      if (!status || !pack.regions.some((region) => region.id === id)) {
+        await refresh();
+        return "unavailable";
+      }
       const regionManifest = regionManifestFor(pack, id);
-      const store = createPackCellStore({ manifest: regionManifest, ledger, missingCells: new Set(status?.missingCells ?? regionManifest.cells.map((cell) => cell.id)) });
+      const store = createPackCellStore({ manifest: regionManifest, ledger, missingCells: new Set(status.missingCells) });
       const total = regionManifest.cells.reduce((sum, cell) => sum + cell.bytes, 0);
       let done = 0;
       setProgress({ done, total });
@@ -218,6 +233,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         store,
         estimateStorage,
         fetchCell: async (regionId, cell) => {
+          signal.throwIfAborted();
           if (!source.downloadCell) throw new PackClientError("missing", regionId);
           try {
             return await source.downloadCell(regionId, cell.id, (size) => { done += size; setProgress({ done: Math.min(done, total), total }); });
@@ -226,31 +242,67 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
             throw cause;
           }
         },
-      }, controller.signal);
+      }, signal);
+      // Overlapping regions can already have every physical part on the device.
+      // Claim their references before reporting a completed download.
+      if (result.completed && source.retainCachedRegion && !await source.retainCachedRegion(id)) {
+        throw new PackClientError("missing", id);
+      }
       setResults((current) => ({ ...current, [id]: result }));
-      await refresh();
+      const refreshed = await refresh();
       // A download changes what is stored, so an earlier "Check again" result no longer applies.
       // The region line returns to the stored state; only an explicit check sets a checked status.
       setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; });
-      if (result.completed) setMessage(c.complete);
-      else if (result.reason === "download-error") {
+      if (result.completed) {
+        if (!refreshed.find((region) => region.id === id)?.downloaded) {
+          setFailure({ region: id, failure: { operation: "download", reason: "unknown" } });
+          return "unavailable";
+        }
+        setMessage(c.complete);
+        return "complete";
+      }
+      if (result.reason === "download-error") {
         // Digest, size or record-count mismatches use the recovery notice.
         // A failed fetch that still saved earlier cells stays a partial result
         // so the user can resume.
         const classified = classifyPackDownloadError(fetchFailure, navigator.onLine);
         if (classified.reason === "invalid-data") setFailure({ region: id, failure: classified });
         else setError(downloadResultText(language, result));
-      } else setError(downloadResultText(language, result));
+        return classified.reason === "quota" ? "quota" : "error";
+      }
+      setError(downloadResultText(language, result));
+      return result.reason === "quota" ? "quota" : "interrupted";
     } catch (cause) {
       // Recovery copy names the cause and the next step; raw error text is never shown.
-      setFailure({ region: id, failure: classifyPackDownloadError(cause, navigator.onLine) });
+      const failure = classifyPackDownloadError(cause, navigator.onLine);
+      setFailure({ region: id, failure });
       setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; });
       await refresh().catch(() => undefined);
-    } finally { abortRef.current = null; setBusy(null); }
+      if (signal.aborted) return "interrupted";
+      return failure.reason === "quota" ? "quota" : "error";
+    } finally { setBusy(null); }
+  }
+
+  async function downloadOne(id: string) {
+    const release = operations.acquire("download");
+    if (!release) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    try { await download(id, controller.signal); }
+    finally { abortRef.current = null; release(); }
+  }
+
+  async function runBatch(task: () => Promise<void>): Promise<boolean> {
+    if (!online || confirmation !== null) return false;
+    const release = operations.acquire("queue");
+    if (!release) return false;
+    try { await task(); return true; }
+    finally { release(); }
   }
   /** Runs a real digest and record-count check over the stored pack. */
   async function recheck(id: string) {
-    if (checking !== null) return;
+    const release = operations.acquire("check");
+    if (!release) return;
     setChecking(id);
     setPackStatus(null); setMessage(""); setFailure(null);
     try {
@@ -270,9 +322,11 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
       // A check that could not run says nothing about the stored copy: it stays UNKNOWN, never "fine".
       setPackRegion(id); setPackStatus("unknown");
       setCheckedStatuses((previous) => ({ ...previous, [id]: "unknown" }));
-    } finally { setChecking(null); }
+    } finally { setChecking(null); release(); }
   }
   async function redownload(id: string) {
+    const release = operations.acquire("repair");
+    if (!release) return;
     setBusy(id); setError(""); setMessage(""); setProgress(null); setFailure(null);
     try {
       const snapshot = await source.storedRegionIntegrity(id);
@@ -313,15 +367,17 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
       setPackStatus(null);
       setFailure({ region: id, failure: classifyPackDownloadError(cause, navigator.onLine) });
       await refresh().catch(() => undefined);
-    } finally { setBusy(null); }
+    } finally { setBusy(null); release(); }
   }
   async function remove() {
     const id = confirmation;
     if (!id) return;
+    const release = operations.acquire("delete");
+    if (!release) return;
     setConfirmation(null); setBusy(id);
     try { await source.deleteRegion(id); await ledger.deleteRegion(id); setResults((current) => { const next = { ...current }; delete next[id]; return next; }); await refresh(); setCheckedStatuses((previous) => { const next = { ...previous }; delete next[id]; return next; }); setMessage(c.deleted); setProgress(null); }
     catch { setError(c.error); }
-    finally { setBusy(null); requestAnimationFrame(() => deleteRef.current?.focus()); }
+    finally { setBusy(null); release(); requestAnimationFrame(() => deleteRef.current?.focus()); }
   }
   return <div className="stack">
     <h1>{c.title}</h1>
@@ -329,6 +385,9 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     <CommunicationCardsLauncher language={language} />
     <PackingListLauncher language={language} />
     <ShellCheckLauncher language={language} />
+    <DownloadQueueLauncher language={language} online={online} busy={activeOperation !== null || confirmation !== null}
+      regions={regions.map((region) => ({ id: region.id, label: region.label[language], downloaded: region.downloaded }))}
+      runBatch={runBatch} download={download} />
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {listFailed ? <StateNotice lang={language} view={getRouteError("offline", "region-list-unavailable", language)} onAction={{ retry: () => { setListFailed(false); setListAttempt((n) => n + 1); } }} /> : null}
     {startedWithoutRegions && <PersonalOfflineTools language={language} />}
@@ -339,7 +398,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
         locale={language}
         onRedownload={() => { if (packRegion) void redownload(packRegion); }}
         onDismiss={() => setPackStatus(null)}
-        busy={!!busy}
+        busy={activeOperation !== null}
       />
     ) : null}
     {message && <p role="status" tabIndex={-1}>{message}</p>}
@@ -374,14 +433,14 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
           return <p data-testid="storage-pressure">{view.message} {view.details}</p>;
         })()}
         <div className="button-row">
-          {!region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!online || !!busy} onClick={() => void download(region.id)}>{statuses.includes("stale") ? r.update : partial ? r.resume : c.download}</button>}
-          {busy === region.id && <button type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => abortRef.current?.abort()}>{r.pause}</button>}
-          {region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy || checking !== null} aria-busy={checking === region.id} onClick={() => void recheck(region.id)}>{c.recheck}</button>}
-          {(region.downloaded || statuses.some((status) => status === "available" || status === "stale")) && <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!!busy} onClick={() => setConfirmation(region.id)}>{c.delete}</button>}
+          {!region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={!online || activeOperation !== null} onClick={() => void downloadOne(region.id)}>{statuses.includes("stale") ? r.update : partial ? r.resume : c.download}</button>}
+          {busy === region.id && activeOperation === "download" && <button type="button" style={{ minHeight: 44, minWidth: 44 }} onClick={() => abortRef.current?.abort()}>{r.pause}</button>}
+          {region.downloaded && <button type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={activeOperation !== null} aria-busy={checking === region.id} onClick={() => void recheck(region.id)}>{c.recheck}</button>}
+          {(region.downloaded || statuses.some((status) => status === "available" || status === "stale")) && <button ref={deleteRef} type="button" style={{ minHeight: 44, minWidth: 44 }} disabled={activeOperation !== null} onClick={() => setConfirmation(region.id)}>{c.delete}</button>}
         </div>
-        {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void download(region.id)} onDismiss={() => setFailure(null)} />}
+        {failure?.region === region.id && <RecoveryNotice failure={failure.failure} locale={language} onRetry={() => void downloadOne(region.id)} onDismiss={() => setFailure(null)} />}
         {busy === region.id && progress && <div className="stack"><label id={`${progressTitle}-${region.id}`}>{c.progress}{colon} {Math.round(progress.total ? 100 * progress.done / progress.total : 100)}%</label><progress aria-labelledby={`${progressTitle}-${region.id}`} value={progress.done} max={progress.total || 1}/></div>}
-        {manifest && <RegionInventoryDashboard source={source} pack={manifest} regionId={region.id} language={language} />}
+        {manifest && <RegionInventoryDashboard source={source} pack={manifest} regionId={region.id} language={language} operations={operations} />}
       </li>; })}</ul>
     </>}
     <RecoveryCenter locale={language} store={recoveryStore} />
