@@ -18,6 +18,12 @@ describe("recovery support brief live integration", () => {
   it("retains a polite loading fallback", () => { expect(shell).toContain("<Suspense fallback="); });
   it("mounts against the real inspected pack records", () => { expect(shell).toContain('<RecoverySupportBriefPanel locale={locale} records={inventory}'); });
   it("fails closed while inspection is incomplete", () => { expect(shell).toContain('inspected={hasInspected && !checking && !inventoryFailure}'); });
+  it("fails closed on the support panel while inspection is incomplete", () => {
+    const panelStart = shell.indexOf("<RecoverySupportBriefPanel locale={locale}");
+    expect(panelStart).toBeGreaterThan(-1);
+    const panelProps = shell.slice(panelStart, shell.indexOf("/>", panelStart));
+    expect(panelProps).toContain("inspected={hasInspected && !checking && !inventoryFailure}");
+  });
   it("retains manual inspection callback", () => { expect(shell).toContain('onInspect={() => { void refresh(); }} saveFile={saveFile}'); });
   it("exports the new panel", () => { expect(barrel).toContain('export { RecoverySupportBriefPanel } from "./RecoverySupportBriefPanel"'); });
   it("exports the new panel props", () => { expect(barrel).toContain('export type { RecoverySupportBriefPanelProps } from "./RecoverySupportBriefPanel"'); });

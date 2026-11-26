@@ -5,6 +5,7 @@ import { inspectInstalledPacks, inventoryCopy, type LocalPackRecord, type LocalP
 import { exportCopy, saveRecoveryExport, type RecoveryExportRecord, type SaveTextFile } from "./recoveryExport";
 import type { RecoveryLocale } from "./index";
 import { RecoveryNotice } from "./RecoveryNotice";
+import { RecoveryTransferBundleDisclosure } from "./transferBundle/Disclosure";
 import { RecoveryWorkbench } from "./RecoveryWorkbench";
 import { RecoveryQueuePanel } from "./RecoveryQueuePanel";
 import { RecoveryPlanReview } from "./RecoveryPlanReview";
@@ -50,8 +51,14 @@ const RecoveryReceiptLedgerPanel = lazy(async () => ({
 
 const RecoveryGuidedReviewPanel = lazy(async () => ({
   default: (await import("./RecoveryGuidedReviewPanel")).RecoveryGuidedReviewPanel,
+}));
+
 const RecoverySupportBriefPanel = lazy(async () => ({
   default: (await import("./RecoverySupportBriefPanel")).RecoverySupportBriefPanel,
+}));
+
+const RecoverySourceRefreshPanel = lazy(async () => ({
+  default: (await import("./RecoverySourceRefreshPanel")).RecoverySourceRefreshPanel,
 }));
 
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
@@ -81,6 +88,7 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
   const [inspectionDate, setInspectionDate] = useState("");
   const [checking, setChecking] = useState(false);
   const [guidedReviewOpened, setGuidedReviewOpened] = useState(false);
+  const [sourceReviewOpened, setSourceReviewOpened] = useState(false);
   const [inventoryFailure, setInventoryFailure] = useState(false);
   const [hasInspected, setHasInspected] = useState(false);
   const [transfer, setTransfer] = useState<DownloadSnapshot>(initialDownload);
@@ -164,6 +172,7 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
           ))}
         </ul>
       </section>
+      <RecoveryTransferBundleDisclosure locale={locale} />
       <RecoveryWorkbench locale={locale} records={inventory} previous={previousInventory}
         inspected={hasInspected && !checking && !inventoryFailure} inspectionDate={inspectionDate}
         onInspect={() => { void refresh(); }} />
@@ -231,6 +240,12 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         {guidedReviewOpened && (
           <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen guidé…" : "Loading guided review…"}</p>}>
             <RecoveryGuidedReviewPanel locale={locale} records={inventory}
+              inspected={hasInspected && !checking && !inventoryFailure}
+              onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          </Suspense>
+        )}
+      </details>
+      <details style={section} onToggle={(event) => {
         if (event.currentTarget.open) setBriefOpened(true);
       }}>
         <summary style={button}>
@@ -239,6 +254,20 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         {briefOpened && (
           <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du résumé local…" : "Loading local support brief…"}</p>}>
             <RecoverySupportBriefPanel locale={locale} records={inventory}
+              inspected={hasInspected && !checking && !inventoryFailure}
+              onInspect={() => { void refresh(); }} saveFile={saveFile} />
+          </Suspense>
+        )}
+      </details>
+      <details style={section} onToggle={(event) => {
+        if (event.currentTarget.open) setSourceReviewOpened(true);
+      }}>
+        <summary style={button}>
+          {locale === "fr" ? "Examen de l’actualité des sources" : "Source refresh review"}
+        </summary>
+        {sourceReviewOpened && (
+          <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen des sources…" : "Loading source review…"}</p>}>
+            <RecoverySourceRefreshPanel locale={locale} records={inventory}
               inspected={hasInspected && !checking && !inventoryFailure}
               onInspect={() => { void refresh(); }} saveFile={saveFile} />
           </Suspense>

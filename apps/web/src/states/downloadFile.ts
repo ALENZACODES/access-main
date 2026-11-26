@@ -15,20 +15,26 @@ export function safeFileName(name: string, fallback = "download.txt"): string {
   return cleaned === "" ? fallback : cleaned;
 }
 
-/** Save through a temporary link. Returns false, and does nothing, where the browser cannot make a file. */
-export function saveTextFile(file: SavedFile, doc: Document = document): boolean {
-  if (typeof URL === "undefined" || typeof URL.createObjectURL !== "function" || typeof Blob === "undefined") return false;
-  const url = URL.createObjectURL(new Blob([file.content], { type: file.mime }));
+/** Saves the supplied bytes through a temporary link, including any byte-order mark. */
+export function saveBlobFile(blob: Blob, name: string, doc: Document = document): boolean {
+  if (typeof URL === "undefined" || typeof URL.createObjectURL !== "function") return false;
+  const link = doc.createElement("a");
+  const url = URL.createObjectURL(blob);
   try {
-    const link = doc.createElement("a");
     link.href = url;
-    link.download = safeFileName(file.name);
+    link.download = safeFileName(name);
     link.rel = "noopener";
     doc.body.appendChild(link);
     link.click();
-    link.remove();
   } finally {
+    link.remove();
     URL.revokeObjectURL(url);
   }
   return true;
+}
+
+/** Save a text export using its declared MIME type. */
+export function saveTextFile(file: SavedFile, doc: Document = document): boolean {
+  if (typeof Blob === "undefined") return false;
+  return saveBlobFile(new Blob([file.content], { type: file.mime }), file.name, doc);
 }

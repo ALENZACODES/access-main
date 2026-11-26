@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { safeFileName, saveTextFile } from "./downloadFile";
+import { safeFileName, saveBlobFile, saveTextFile } from "./downloadFile";
 
 describe("safeFileName", () => {
   it("keeps an ordinary name", () => {
@@ -76,12 +76,21 @@ describe("saveTextFile", () => {
     expect(document.querySelectorAll("a")).toHaveLength(0);
     expect(revoke).toHaveBeenCalledWith("blob:test/1");
   });
+  it("hands the browser the original blob, including its original encoding and line endings", () => {
+    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0x7b, 0x7d, 0x0d, 0x0a]);
+    const original = new Blob([bytes], { type: "application/json" });
+    expect(saveBlobFile(original, "résumé.json")).toBe(true);
+    expect(created[0]).toBe(original);
+    expect(clicked[0]?.download).toBe("résumé.json");
+    expect(revoke).toHaveBeenCalledWith("blob:test/1");
+  });
   it("releases the address even when the click throws", () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {
       throw new Error("blocked");
     });
     expect(() => saveTextFile({ name: "r.txt", mime: "text/plain", content: "x" })).toThrow("blocked");
     expect(revoke).toHaveBeenCalledTimes(1);
+    expect(document.body.querySelector("a")).toBeNull();
   });
   it("returns false and does nothing where the browser cannot make a file", () => {
     (URL as unknown as Record<string, unknown>).createObjectURL = undefined;
