@@ -192,20 +192,24 @@ export function MapPage() {
             const sourceId = `tiles-${index}`;
             activeMap.addSource(sourceId, { type: "vector", url: `pmtiles://${file.url}` });
             for (const { id: sourceLayer } of metadata.vector_layers ?? []) {
-              const category = tileLayerName(sourceLayer);
-              if (!category) continue;
-              const id = `${sourceId}-${sourceLayer}`;
-              activeMap.addLayer({
-                id, type: "circle", source: sourceId, "source-layer": sourceLayer,
-                layout: { visibility: enabledRef.current.includes(category) ? "visible" : "none" },
-                paint: {
-                  "circle-color": ["match", ["downcase", ["to-string", ["coalesce", ["get", "wheelchair"], "unknown"]]],
-                    "yes", PAINT.yes, "true", PAINT.yes, "no", PAINT.no, "false", PAINT.no, PAINT.unknown],
-                  "circle-radius": 8, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
-                },
-              });
-              layerIds.current.push(id);
-              layerCategories.current.set(id, category);
+              // A layer named for one kind holds only that kind. A shared layer (the pack's "access")
+              // holds every kind, and each point says its own kind in its "tranche" property.
+              const named = tileLayerName(sourceLayer);
+              for (const category of named ? [named] : categories) {
+                const id = named ? `${sourceId}-${sourceLayer}` : `${sourceId}-${sourceLayer}-${category}`;
+                activeMap.addLayer({
+                  id, type: "circle", source: sourceId, "source-layer": sourceLayer,
+                  ...(named ? {} : { filter: ["all", ["==", ["geometry-type"], "Point"], ["==", ["get", "tranche"], category]] as import("maplibre-gl").FilterSpecification }),
+                  layout: { visibility: enabledRef.current.includes(category) ? "visible" : "none" },
+                  paint: {
+                    "circle-color": ["match", ["downcase", ["to-string", ["coalesce", ["get", "wheelchair"], "unknown"]]],
+                      "yes", PAINT.yes, "true", PAINT.yes, "no", PAINT.no, "false", PAINT.no, PAINT.unknown],
+                    "circle-radius": 8, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+                  },
+                });
+                layerIds.current.push(id);
+                layerCategories.current.set(id, category);
+              }
             }
           } catch (cause) {
             if (disposed) return;

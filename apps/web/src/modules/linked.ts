@@ -49,13 +49,41 @@ export async function getPlaceDetail(source: PackSource, id: string, hint?: Plac
  * pages, and Ajv onto every ModulePage visit, including place search and
  * journey plan (Day 22 first-result path).
  */
+/** The record files each finder kind can match in. Reading only these keeps an online search small. */
+const FINDER_TRANCHES: Record<string, readonly string[]> = {
+  washroom: ["washroom"],
+  "adult-change": ["washroom"],
+  parking: ["venue"],
+  charging: ["venue"],
+  repair: ["venue"],
+};
+
+/**
+ * The source as one finder search sees it: only the chosen area (Toronto until
+ * the person picks another) and only the record files that kind can match in.
+ */
+export function finderSource(source: PackSource, kind: string): PackSource {
+  const keep = new Set<string>(FINDER_TRANCHES[kind] ?? ["washroom", "venue", "transit"]);
+  return {
+    ...source,
+    manifest: async () => {
+      const pack = await source.manifest() as { regions?: Array<{ id: string }> };
+      const regions = pack.regions ?? [];
+      const wanted = placesSearchRegion() ?? "toronto";
+      const chosen = regions.filter((region) => region.id === wanted);
+      return { ...pack, regions: chosen.length > 0 ? chosen : regions.filter((region) => region.id === "toronto") };
+    },
+    records: (tranche, cell, signal) => keep.has(tranche) ? source.records(tranche, cell, signal) : (async function* () {})(),
+  };
+}
+
 function deferredFinders(source: PackSource): FindersModule {
   let pending: Promise<FindersModule> | undefined;
   const load = () => {
     pending ??= import("@access-tools/finders/shell").then((mod) => ({
       id: "finders" as const,
       search: (query: Parameters<FindersModule["search"]>[0], ctx: Parameters<FindersModule["search"]>[1]) =>
-        mod.searchFindersForShell(source, query, ctx),
+        mod.searchFindersForShell(finderSource(source, query.kind), query, ctx),
     }));
     return pending;
   };

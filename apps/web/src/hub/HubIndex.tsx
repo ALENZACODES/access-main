@@ -18,12 +18,12 @@ export function HubIndex() {
       {sections.map((section) => (
         <section key={section.key} aria-labelledby={`hub-${section.key}`}>
           <h2 id={`hub-${section.key}`}>{t(section.key)}</h2>
-          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))" }}>
+          <ul className="card-list tile-grid hub-grid">
             {section.pages.map(([page, path]) => (
               <li key={page}>
-                <Link to={`/more/${path}`} style={{ display: "block", padding: "0.8rem", minHeight: 44, border: "1px solid currentColor", borderRadius: "0.35rem" }}>
-                  <strong>{t(page)}</strong>
-                  <span style={{ display: "block" }}>{t(`${page}Description`)}</span>
+                <Link className="card" to={`/more/${path}`}>
+                  <span className="card-title">{t(page)}</span>
+                  <span>{t(`${page}Description`)}</span>
                 </Link>
               </li>
             ))}

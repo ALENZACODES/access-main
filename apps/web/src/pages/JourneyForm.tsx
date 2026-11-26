@@ -1,8 +1,10 @@
 import { useId, useRef, useState, type Ref } from "react";
+import { useTranslation } from "react-i18next";
 import type { JourneyPlan, ModuleResult, PlaceHit } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { TextInput } from "../design/fields.tsx";
 import { useLaneStrings } from "../modules/strings.ts";
+import { hitDetail } from "../places/PlaceSearchParts.tsx";
 
 export interface ChosenPlace {
   id: string;
@@ -41,6 +43,8 @@ function PlaceField({
   onChoose: (place: ChosenPlace) => void;
 }) {
   const { t } = useLaneStrings();
+  const { i18n } = useTranslation();
+  const locale = i18n.language.startsWith("fr") ? "fr" as const : "en" as const;
   const [matches, setMatches] = useState<PlaceHit[] | null>(null);
   const [failed, setFailed] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -80,13 +84,19 @@ function PlaceField({
       {matches && matches.length > 0 ? (
         <section className="stack" aria-labelledby={listLabel}>
           <h2 id={listLabel}>{t("journey.matchesFor", { field: label })}</h2>
-          <ul className="stack">
-            {matches.map((hit) => (
-              <li key={hit.id} className="button-row">
-                <span>{hit.name}</span>
+          <ul className="pick-list">
+            {matches.map((hit) => {
+              const detail = hitDetail(hit as Parameters<typeof hitDetail>[0], locale);
+              return (
+              <li key={hit.id} className="pick-row">
+                <span className="pick-name">
+                  <span className="pick-title">{hit.name}</span>
+                  {detail ? <span className="pick-detail" id={`${listLabel}-${hit.id}`}>{detail}</span> : null}
+                </span>
                 <Button
                   variant="secondary"
                   aria-label={t("journey.useName", { name: hit.name })}
+                  aria-describedby={detail ? `${listLabel}-${hit.id}` : undefined}
                   onPress={() => {
                     onChoose({ id: hit.id, name: hit.name });
                     setMatches(null);
@@ -96,7 +106,8 @@ function PlaceField({
                   {t("journey.use")}
                 </Button>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </section>
       ) : null}
@@ -126,7 +137,7 @@ export function JourneyForm({
   return (
     <form
       ref={formRef}
-      className="stack"
+      className="stack search-panel"
       aria-describedby={describedBy}
       onSubmit={(event) => {
         event.preventDefault();

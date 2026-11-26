@@ -14,6 +14,7 @@ The shell depends on these libraries. Their names are credits, not endorsements.
 | Vitest | MIT | See the package licence |
 | eslint-plugin-jsx-a11y | MIT | See the package licence |
 | React and React Router | MIT | See the package licences |
+| Open Sans (via @fontsource-variable/open-sans) | OFL-1.1 | Copyright The Open Sans Project Authors. Font files are bundled unmodified. |
 
 Map tiles are not shipped. When a map is added, OpenStreetMap attribution and the ODbL share-alike duty stay with that layer.
 
