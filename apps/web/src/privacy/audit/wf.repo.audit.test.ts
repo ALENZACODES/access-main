@@ -2,7 +2,7 @@
 // token permissions, jobs and time limits its row lists, and every finding of the workflow rules is one the accepted
 // list names, at the count it names. A new workflow, a new trigger, a wider token or a removed time limit fails here
 // until a person changes the row. It reads the files as text; it does not run a workflow and says nothing about what a
-// job does. The one workflow that publishes to Pages is kept in deploy/ and does not run.
+// job does. The workflow that publishes to Pages is reviewed in deploy/ and runs, by hand only, as an identical copy.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -87,10 +87,14 @@ describe("the rules the repository holds to", () => {
     for (const w of workflows) if (w.permissions !== null) expect(permString(w.permissions), w.path).toMatch(/(?:^|,)contents:read(?:,|$)/);
   });
 
-  it("keeps the workflow that publishes to Pages outside the folder GitHub reads, and manual", () => {
-    const pages = workflows.find((w) => w.path === "deploy/pages.yml");
-    expect(pages?.triggers).toEqual(["workflow_dispatch"]);
-    expect(workflows.filter((w) => isActivePath(w.path) && /pages/i.test(w.path))).toEqual([]);
+  it("runs the workflow that publishes to Pages by hand only, as one copy identical to the reviewed source", () => {
+    const source = workflows.find((w) => w.path === "deploy/pages.yml");
+    expect(source?.triggers).toEqual(["workflow_dispatch"]);
+    const active = workflows.filter((w) => isActivePath(w.path) && /pages/i.test(w.path));
+    expect(active.map((w) => w.path)).toEqual([".github/workflows/pages.yml"]);
+    expect(active[0]?.triggers).toEqual(["workflow_dispatch"]);
+    const text = (path: string): string | undefined => files.find((f) => f.path === path)?.text;
+    expect(text(".github/workflows/pages.yml")).toBe(text("deploy/pages.yml"));
   });
 
   it("uses only first-party actions, pinned by a version tag", () => {
@@ -157,10 +161,11 @@ describe("the audit fails when a workflow changes (the checks have teeth)", () =
     expect(compareShapes(ws, WF_REGISTER).map((p) => p.code)).toEqual(["unregistered"]);
   });
 
-  it("fails when a workflow file is deleted or when the staged one is moved into .github/workflows", () => {
+  it("fails when a workflow file is deleted, or when the Pages workflow gains a push trigger", () => {
     expect(compareShapes(workflows.filter((w) => w.path !== "deploy/pages.yml"), WF_REGISTER).map((p) => p.code)).toEqual(["missing"]);
-    const moved = workflows.map((w) => (w.path === "deploy/pages.yml" ? { ...w, path: ".github/workflows/pages.yml" } : w));
-    expect(compareShapes(moved, WF_REGISTER).map((p) => p.code).sort()).toEqual(["missing", "unregistered"]);
+    expect(compareShapes(workflows.filter((w) => w.path !== ".github/workflows/pages.yml"), WF_REGISTER).map((p) => p.code)).toEqual(["missing"]);
+    const pushed = changed(".github/workflows/pages.yml", (t) => t.replace("on:\n  workflow_dispatch:\n", "on:\n  workflow_dispatch:\n  push:\n    branches: [main]\n"));
+    expect(problemsOf(pushed)).toContain("triggers-changed");
   });
 
   it("fails when an accepted finding goes away, so the list cannot rot", () => {
@@ -178,7 +183,7 @@ describe("the report", () => {
 
   it("names every file and says what was accepted", () => {
     for (const r of WF_REGISTER) expect(text).toContain(r.path);
-    expect(text).toContain("Findings accepted as they stand: 4.");
+    expect(text).toContain("Findings accepted as they stand: 6.");
     expect(text).toMatch(/Differences from the register: none\.$/);
   });
 

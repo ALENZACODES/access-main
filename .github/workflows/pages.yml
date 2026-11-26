@@ -1,0 +1,105 @@
+# Publish the App to GitHub Pages (https://alenzacodes.github.io/access-main/).
+#
+# This is the reviewed source. The owner approved publishing on 2026-11-26, so
+# an identical copy runs from .github/workflows/pages.yml (a test keeps the two
+# the same). Settings > Pages > Source must be "GitHub Actions".
+#
+# The only trigger is a manual run (workflow_dispatch). The push trigger below
+# stays commented out until the owner asks for publish-on-merge.
+name: Publish to GitHub Pages
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  VITE_BASE: /access-main/
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out access-main
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm install -g npm@11.6.2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pull lane packages pinned in lanes.lock.json
+        run: node scripts/sync-lanes.mjs
+
+      - name: Resolve the pinned access-maps commit
+        id: maps
+        run: |
+          sha="$(node deploy/lock-commit.mjs lanes.lock.json access-maps)"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Sparse shallow checkout of access-maps (data and the pack builder)
+        uses: actions/checkout@v4
+        with:
+          repository: ALENZACODES/access-maps
+          ref: ${{ steps.maps.outputs.sha }}
+          path: .cache/access-maps
+          fetch-depth: 1
+          sparse-checkout: |
+            data
+            pack
+            tiles
+            packages
+            schema
+            scripts
+            sources
+            src
+          sparse-checkout-cone-mode: true
+
+      # pack/v1 is generated, not committed: build it from the pinned data.
+      - name: Build and verify the web pack in access-maps
+        working-directory: .cache/access-maps
+        run: |
+          npm ci
+          npm run build:web-pack
+          npm run verify:web-pack
+
+      - name: Build
+        run: npm run build
+
+      - name: Stage the pack, tiles and SPA fallback
+        run: node scripts/stage-pages.mjs --maps .cache/access-maps
+
+      - name: Budget check (file size, site size, precache)
+        run: node scripts/stage-pages.mjs --check-only
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

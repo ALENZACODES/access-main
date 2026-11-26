@@ -35,7 +35,10 @@ test("/, /help, a downloaded region's place page and /map reload with the networ
     ? byName.first()
     : page.getByRole("listitem").filter({ hasText: region.label.en }).getByRole("button", { name: /download/i }).first();
   await button.click();
-  await expect(page.getByText(/downloaded|available offline|ready offline/i).first()).toBeVisible({ timeout: 240_000 });
+  // Wait for this region's own state line. A loose /downloaded/ also matches "Not downloaded", which is shown
+  // before the download starts, so the test went on before anything was stored.
+  const regionCard = page.locator("li", { has: page.getByRole("heading", { name: region.label.en, exact: true }) });
+  await expect(regionCard.getByTestId("region-state")).toHaveText(/^Downloaded, integrity checked$/, { timeout: 240_000 });
 
   // Visit each page once online so the shell can serve it again.
   const paths = ["", "help", placePath, "map"];

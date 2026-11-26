@@ -90,8 +90,9 @@ describe("placeRouteView on the live place page", () => {
     await i18n.changeLanguage("en");
     renderPage();
     await waitFor(() => expect(screen.getByText("Hall")).toBeTruthy());
-    expect(screen.getByText(/You are offline/)).toBeTruthy();
-    expect(screen.getByText("These details come from a copy saved on this device.")).toBeTruthy();
+    expect(screen.getByText("You are offline. These details come from a copy saved on this device.")).toBeTruthy();
+    // The general offline banner would say nothing is saved, which is not true when a saved copy is shown.
+    expect(screen.queryByText(/No information is saved on this device yet/)).toBeNull();
     expect(screen.getByText(/Loading this section|pack view/)).toBeTruthy();
     expect(document.querySelector(".state-notice")).toBeNull();
   });

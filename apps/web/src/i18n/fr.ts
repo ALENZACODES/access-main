@@ -203,7 +203,7 @@ export const fr: Messages = {
     resultCount_other: "{{count}} résultats",
     placesTitle: "Lieux",
     placesBody:
-      "Les fiches de lieux afficheront une source, une licence, une date et un niveau de vérification sur chaque enregistrement. Rien n'est chargé. L'inconnu reste inconnu.",
+      "Cherchez des données ouvertes sur des lieux de l'Ontario\u00a0: ce qu'est chaque lieu, où il se trouve, ses heures et comment y entrer. Chaque fait indique sa source, sa licence, sa date et son niveau de vérification. L'inconnu reste inconnu.",
     journeyTitle: "Trajet",
     journeyBody:
       "Planifie un parcours en fauteuil entre deux lieux du jeu de données de cet appareil, à partir des seuls chemins qu'il contient. Les préférences d'itinéraire des réglages restent sur cet appareil et ne sont envoyées nulle part. L'état des ascenseurs en direct n'est pas disponible. Un plan indique sa source, sa date et ce qui est inconnu.",
@@ -298,6 +298,7 @@ export const fr: Messages = {
     languageTitle: "Langue",
     languageBody:
       "L'anglais et le français sont disponibles pour l'interface. Le texte français est une traduction provisoire en attente de révision. Changez la langue dans l'en-tête. Le choix reste dans ce navigateur.",
+    contactsTitle: "Contacts d’aide",
     adviceTitle: "Ce que the App ne dira pas",
     adviceBody:
       "the App ne donne pas de conseil médical et ne décide pas de l'admissibilité aux prestations.",

@@ -66,6 +66,17 @@ export const WF_REGISTER: readonly WfRow[] = [
     note: "The main checks, on every pull request and every push to main.",
   },
   { path: ".github/workflows/controls.yml", state: "active", triggers: ["pull_request"], permissions: "contents:read", jobs: [{ id: "controls", timeout: 15 }], note: "Runs the controls package's checks on a pull request." },
+  {
+    path: ".github/workflows/pages.yml",
+    state: "active",
+    triggers: ["workflow_dispatch"],
+    permissions: "contents:read,id-token:write,pages:write",
+    jobs: [
+      { id: "build", timeout: 30 },
+      { id: "deploy", timeout: 10 },
+    ],
+    note: "Publishes the App to GitHub Pages when the owner starts a run by hand. Approved by the owner on 2026-11-26; an identical copy of deploy/pages.yml.",
+  },
   { path: ".github/workflows/schema.yml", state: "active", triggers: ["pull_request"], permissions: "unset", jobs: [{ id: "test", timeout: null }], note: "Runs the schema package's tests on a pull request." },
   {
     path: "deploy/pages.yml",
@@ -76,14 +87,15 @@ export const WF_REGISTER: readonly WfRow[] = [
       { id: "build", timeout: 30 },
       { id: "deploy", timeout: 10 },
     ],
-    note: "Publishes the App to GitHub Pages. Kept outside .github/workflows, so GitHub does not run it, until the owner asks.",
+    note: "The reviewed source of the Pages workflow. GitHub does not run this file; it runs the identical copy in .github/workflows.",
   },
 ];
 
 export const WF_ACCEPTED: readonly WfAcceptRow[] = [
+  { path: ".github/workflows/pages.yml", code: "write-permission", count: 2, reason: "Publishing to Pages needs pages: write and id-token: write. The workflow runs only when the owner starts it by hand." },
   { path: ".github/workflows/schema.yml", code: "no-permissions", count: 1, reason: "The file sets no permissions, so its token has the repository default. Accepted as it stands; adding contents: read is a change to the file." },
   { path: ".github/workflows/schema.yml", code: "no-timeout", count: 1, reason: "The job has no timeout-minutes, so it has the default limit. Accepted as it stands." },
-  { path: "deploy/pages.yml", code: "write-permission", count: 2, reason: "Publishing to Pages needs pages: write and id-token: write. The file is staged outside .github/workflows and does not run." },
+  { path: "deploy/pages.yml", code: "write-permission", count: 2, reason: "Publishing to Pages needs pages: write and id-token: write. This is the reviewed source and does not run; GitHub runs its identical copy." },
 ];
 
 /** The findings that can be accepted with a reason. Every other code is a rule of the repository and cannot be listed. */

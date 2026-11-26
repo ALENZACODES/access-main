@@ -1,8 +1,8 @@
 import Dexie, { type Table } from "dexie";
-import type { FieldValue, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche, WithheldPart } from "./types.ts";
+import type { FieldValue, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, PlaceLookupHint, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche, WithheldPart } from "./types.ts";
 import { checkPackRecord, checkSearchHit } from "./failsafe.ts";
 export { checkPackRecord, checkSearchHit, ONTARIO_ENVELOPE, type DeviceCheck, type DeviceFaultCode } from "./failsafe.ts";
-export type { FieldValue, IntegritySource, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche, WithheldPart } from "./types.ts";
+export type { FieldValue, IntegritySource, PackManifest, PackPart, PackRecord, PackSource, PackSourceEntry, PlaceLookupHint, RegionIntegrityPart, RegionIntegritySnapshot, RegionStatus, SearchHit, Tranche, WithheldPart } from "./types.ts";
 
 /** `dropped` counts lines or entries that failed the device check and are never shown. */
 interface CachedPart { sha256: string; records: PackRecord[]; search: SearchHit[]; bytes?: Uint8Array; dropped?: number; }
@@ -86,10 +86,53 @@ function inPackSources(manifest: PackManifest): Set<string> {
  * kept. Only a part that does not decompress, or a search index that is not a
  * JSON array, fails as a whole.
  */
+async function inflatedLength(bytes: Uint8Array): Promise<number | null> {
+  try {
+    const reader = new Blob([new Uint8Array(bytes)]).stream().pipeThrough(new DecompressionStream("gzip")).getReader();
+    let length = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return length;
+      length += value.byteLength;
+    }
+  } catch {
+    return null;
+  }
+}
+/**
+ * Splits a file of concatenated gzip members. Browsers' DecompressionStream reads only the first member, but the
+ * pack builder writes some parts as several members. A boundary is a gzip signature where the bytes before it
+ * decompress to exactly the size the member's trailer records.
+ */
+export async function gzipMembers(bytes: Uint8Array): Promise<Uint8Array[]> {
+  const members: Uint8Array[] = [];
+  let start = 0;
+  for (let at = start + 18; at + 3 <= bytes.length; at++) {
+    if (bytes[at] !== 0x1f || bytes[at + 1] !== 0x8b || bytes[at + 2] !== 0x08) continue;
+    const trailer = new DataView(bytes.buffer, bytes.byteOffset + at - 4, 4).getUint32(0, true);
+    const length = await inflatedLength(bytes.subarray(start, at));
+    if (length === null || length % 2 ** 32 !== trailer) continue;
+    members.push(bytes.subarray(start, at));
+    start = at;
+    at = start + 17;
+  }
+  members.push(bytes.subarray(start));
+  return members;
+}
+async function* gunzipText(bytes: Uint8Array): AsyncIterable<string> {
+  for (const member of await gzipMembers(bytes)) {
+    const reader = new Blob([new Uint8Array(member)]).stream().pipeThrough(new DecompressionStream("gzip")).pipeThrough(new TextDecoderStream()).getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      yield value;
+    }
+  }
+}
 async function parseGzip(bytes: Uint8Array, isSearch: boolean, part: string, sources?: ReadonlySet<string>): Promise<CachedPart> {
   if (typeof DecompressionStream === "undefined") throw new PackClientError("content", part);
-  const stream = new Blob([new Uint8Array(bytes)]).stream().pipeThrough(new DecompressionStream("gzip"));
-  const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+  const chunks = gunzipText(bytes)[Symbol.asyncIterator]();
+  const reader = { read: async () => { const next = await chunks.next(); return next.done ? { done: true as const, value: undefined } : { done: false as const, value: next.value }; } };
   const records: PackRecord[] = [];
   const search: SearchHit[] = [];
   let dropped = 0;
@@ -127,7 +170,15 @@ async function digest(bytes: Uint8Array): Promise<string> {
   const buffer = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes));
   return Array.from(new Uint8Array(buffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
-export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; db?: "indexeddb" | "memory" }): PackSource {
+/** The region searched when nothing is stored on the device and no region is named. */
+export const DEFAULT_REGION = "toronto";
+
+/**
+ * `fetchOnDemand`: when a part is not stored on the device, fetch and check it for this session only (search,
+ * get and nearby), so a person can use the pack online without downloading a region. Off by default: the
+ * client then reads only what is stored.
+ */
+export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; db?: "indexeddb" | "memory"; fetchOnDemand?: boolean }): PackSource {
   const fetcher = opts.fetch ?? fetch;
   const url = opts.baseUrl.endsWith("/") ? opts.baseUrl : `${opts.baseUrl}/`;
   const db = opts.db === "memory" ? null : new PackDatabase();
@@ -137,6 +188,11 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
   let lastManifest: PackManifest | undefined;
   const readPart = async (hash: string) => db ? db.parts.get(hash) : memoryParts.get(hash);
   const readRegion = async (id: string) => db ? db.regions.get(id) : memoryRegions.get(id);
+  // Parts fetched on demand for this session only: checked like a download, never written to the device.
+  const sessionParts = new Map<string, CachedPart>();
+  const inFlight = new Map<string, Promise<CachedPart | undefined>>();
+  // Records of a part that passed the device check, by id: checked once per part, not once per lookup.
+  const checkedById = new Map<string, Map<string, PackRecord>>();
   async function manifest(): Promise<PackManifest> {
     if (!manifestPromise) manifestPromise = (async () => {
       const saved = await db?.metadata.get("manifest");
@@ -379,30 +435,119 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
       }
     }
   }
-  async function search(text: string, opts: { near?: { lat: number; lon: number }; tranches?: Tranche[]; limit?: number }): Promise<SearchHit[]> {
+  /** A stored part, else one fetched and checked for this session. Undefined when it cannot be read (offline, bad copy). */
+  async function readOrFetch(part: PackPart, isSearch: boolean): Promise<CachedPart | undefined> {
+    const stored = (await readPart(part.sha256)) ?? sessionParts.get(part.sha256);
+    if (stored || !opts.fetchOnDemand) return stored;
+    const pending = inFlight.get(part.sha256);
+    if (pending) return pending;
+    const next = fetchPart(part, isSearch).then(
+      (fetched) => { sessionParts.set(part.sha256, fetched); return fetched; },
+      () => undefined,
+    ).finally(() => inFlight.delete(part.sha256));
+    inFlight.set(part.sha256, next);
+    return next;
+  }
+  function regionCells(pack: PackManifest, id: string): string[] {
+    return pack.regions.find((region) => region.id === id)?.cells ?? [];
+  }
+  async function search(text: string, opts: { near?: { lat: number; lon: number }; tranches?: Tranche[]; limit?: number; region?: string }): Promise<SearchHit[]> {
     const pack = await manifest();
     const query = norm(text);
     if (!query) return [];
-    const selected = opts.near ? await cellsFor({ ...opts.near, radiusM: 25000 }) : await storedCells(pack);
-    const cells = selected.length ? selected : pack.regions.find((region) => region.id === "toronto")?.cells ?? [];
+    const selected = opts.near ? await cellsFor({ ...opts.near, radiusM: 25000 }) : opts.region ? regionCells(pack, opts.region) : await storedCells(pack);
+    const cells = selected.length ? selected : regionCells(pack, DEFAULT_REGION);
     const hits: SearchHit[] = [];
     for (const cell of cells) {
       const part = pack.search[cell];
       if (!part) continue;
-      const cached = await readPart(part.sha256);
+      const cached = await readOrFetch(part, true);
       if (!cached) continue;
       for (const hit of cached.search) if (hit.name && rank(norm(hit.nameNorm), query) < 3 && (!opts.tranches || opts.tranches.includes(hit.tranche))) hits.push(hit);
     }
     const unique = new Map(hits.map((hit) => [hit.id, hit]));
     return [...unique.values()].sort((a, b) => rank(norm(a.nameNorm), query) - rank(norm(b.nameNorm), query) || (opts.near ? distance(a, opts.near) - distance(b, opts.near) : 0) || a.id.localeCompare(b.id)).slice(0, Math.max(0, opts.limit ?? 50));
   }
-  async function get(id: string): Promise<PackRecord | null> {
+  /** Records of one part that pass the device check, by id. */
+  function checkedRecords(cached: CachedPart, sources: ReadonlySet<string>): Map<string, PackRecord> {
+    const key = `${cached.sha256}:${[...sources].sort().join(",")}`;
+    let byId = checkedById.get(key);
+    if (!byId) {
+      byId = new Map(cached.records.filter((record) => checkPackRecord(record, sources).ok).map((record) => [record.id, record]));
+      checkedById.set(key, byId);
+    }
+    return byId;
+  }
+  /** Looks for one record in a cell, reading parts of the record's own source first, then the rest. */
+  async function findInCell(pack: PackManifest, id: string, cell: string, tranches: Tranche[]): Promise<PackRecord | null> {
+    const sources = inPackSources(pack);
+    const prefix = id.split(":")[0] ?? "";
+    for (const tranche of tranches) {
+      const parts = (pack.tranches[tranche]?.cells[cell]?.parts ?? []).filter((part) => part.sourceId && sources.has(part.sourceId));
+      const own = (part: PackPart) => part.sourceId === prefix || (part.sourceId ?? "").startsWith(`${prefix}-`);
+      for (const part of [...parts.filter(own), ...parts.filter((part) => !own(part))]) {
+        const cached = await readOrFetch(part, false);
+        if (!cached) continue;
+        const match = checkedRecords(cached, sources).get(id);
+        if (match) return match;
+      }
+    }
+    return null;
+  }
+  async function get(id: string, hint: PlaceLookupHint = {}): Promise<PackRecord | null> {
     const pack = await manifest();
     const active = await storedCells(pack);
     for (const cell of active) for (const tranche of Object.keys(pack.tranches) as Tranche[]) {
       for await (const record of records(tranche, cell)) if (record.id === id) return record;
     }
+    // Not on the device: look in the cells and tranche the hint gives, then find the cell in the search index.
+    // Only the record's own tranche is read, so a lookup never walks the large path tranche by accident.
+    const looked = new Set(active);
+    if (hint.tranche) {
+      for (const cell of hint.cells ?? []) {
+        if (looked.has(cell)) continue;
+        looked.add(cell);
+        const found = await findInCell(pack, id, cell, [hint.tranche]);
+        if (found) return found;
+      }
+    }
+    const searchOrder = [...(hint.cells ?? []), ...regionCells(pack, DEFAULT_REGION), ...Object.keys(pack.search)];
+    const seen = new Set<string>();
+    for (const cell of searchOrder) {
+      if (seen.has(cell)) continue;
+      seen.add(cell);
+      const part = pack.search[cell];
+      if (!part) continue;
+      const index = await readOrFetch(part, true);
+      const hit = index?.search.find((entry) => entry.id === id);
+      if (!hit) continue;
+      if (looked.has(cell) && hit.tranche === hint.tranche) return null;
+      return findInCell(pack, id, cell, [hit.tranche]);
+    }
     return null;
+  }
+  async function nearby(point: { lat: number; lon: number }, opts: { tranches: Tranche[]; radiusM: number; limit: number }): Promise<Array<{ record: PackRecord; distanceM: number }>> {
+    const pack = await manifest();
+    const sources = inPackSources(pack);
+    const found: Array<{ record: PackRecord; distanceM: number }> = [];
+    for (const cell of await cellsFor({ ...point, radiusM: opts.radiusM })) {
+      for (const tranche of opts.tranches) {
+        for (const part of pack.tranches[tranche]?.cells[cell]?.parts ?? []) {
+          if (!part.sourceId || !sources.has(part.sourceId)) continue;
+          const cached = await readOrFetch(part, false);
+          if (!cached) continue;
+          for (const record of checkedRecords(cached, sources).values()) {
+            const lat = Number(record.fields.lat?.value);
+            const lon = Number(record.fields.lon?.value);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+            const distanceM = distance(point, { lat, lon });
+            if (distanceM <= opts.radiusM) found.push({ record, distanceM });
+          }
+        }
+      }
+    }
+    const unique = new Map(found.map((item) => [item.record.id, item]));
+    return [...unique.values()].sort((a, b) => a.distanceM - b.distanceM || a.record.id.localeCompare(b.record.id)).slice(0, Math.max(0, opts.limit));
   }
   function sourcesFor(record: PackRecord): PackSourceEntry[] {
     const ids = new Set(Object.values(record.fields).map((field) => field.source_id));
@@ -504,7 +649,7 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     }
     return (await regions()).find((value) => value.id === id)!;
   }
-  return { manifest, cellsFor, records, search, get, sourcesFor, regions, downloadRegion, downloadCell, retainCachedRegion, deleteRegion, storedRegionIntegrity, fetchRegionPartBytes, commitCheckedRegion };
+  return { manifest, cellsFor, records, search, get, nearby, sourcesFor, regions, downloadRegion, downloadCell, retainCachedRegion, deleteRegion, storedRegionIntegrity, fetchRegionPartBytes, commitCheckedRegion };
 }
 
 /** In-memory source for deterministic consumer tests, never used as production data. */

@@ -29,7 +29,8 @@ export default defineConfig({
     ? undefined
     : {
         command:
-          `cd ../.. && npm run build && node scripts/stage-pages.mjs --base ${BASE} && ` +
+          // Playwright runs this from the config folder (apps/web/e2e/release); go up to the repository root.
+          `cd ../../../.. && npm run build && node scripts/stage-pages.mjs --base ${BASE} && ` +
           `cd apps/web && npm run preview -- --host 127.0.0.1 --port ${port} --strictPort`,
         url: `${ORIGIN}${BASE}`,
         reuseExistingServer: !process.env.CI,

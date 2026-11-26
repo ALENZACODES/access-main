@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { torontoContent } from "../packs/bundledToronto.ts";
 import { tierMessageKey, type PackHelpNumber, type ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
@@ -31,6 +31,16 @@ export function HelpPage() {
   const locale = i18n.language.startsWith("fr") ? ("fr" as const) : ("en" as const);
   const { id } = useParams();
   const [contact, setContact] = useState<PackHelpNumber | null>(null);
+  // Every help contact the App ships with, each linking to its own page.
+  const [contacts, setContacts] = useState<PackHelpNumber[]>([]);
+  useEffect(() => {
+    let active = true;
+    void torontoContent().then(
+      (content) => { if (active) setContacts(content?.help_numbers ?? []); },
+      () => { if (active) setContacts([]); },
+    );
+    return () => { active = false; };
+  }, []);
   const selected = contact?.id === id ? contact : null;
   const heading = selected?.name[locale] ?? t("modules.helpTitle");
   useDocumentTitle(heading);
@@ -40,7 +50,7 @@ export function HelpPage() {
     let active = true;
     void torontoContent().then((content) => {
       if (active) setContact(content?.help_numbers.find((row) => row.id === id) ?? null);
-    });
+    }, () => { if (active) setContact(null); });
     return () => { active = false; };
   }, [id]);
 
@@ -116,6 +126,20 @@ export function HelpPage() {
           <p>{selected.contact}</p>
           <p>{t("offline.helpSource", { date: selected.provenance.retrieved_at })} {t(tierMessageKey(selected.provenance.tier))}</p>
         </div>
+      ) : null}
+      {contacts.length > 0 ? (
+        <section className="stack" aria-labelledby="help-contacts">
+          <h2 id="help-contacts">{t("help.contactsTitle")}</h2>
+          <ul className="stack">
+            {contacts.map((row) => (
+              <li key={row.id}>
+                <Link to={`/help/${encodeURIComponent(row.id)}`} style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} aria-current={row.id === id ? "page" : undefined}>
+                  {row.name[locale] || row.name.en}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
       <section className="stack" aria-labelledby="help-privacy">
         <h2 id="help-privacy">{t("help.privacyTitle")}</h2>

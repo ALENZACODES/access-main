@@ -66,11 +66,11 @@ describe("Day 22 states on the module page", () => {
 
   it("place search with no results offers Clear the search, which empties the field", async () => {
     const { container } = await view("en", "places");
-    await search("Text to look for", "Search", "zzqx");
+    await search("Search places by name", "Search", "zzqx");
     expect(await screen.findByRole("heading", { name: "No places match this search" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Clear the search" }));
     await waitFor(() => expect(document.querySelector(".state-notice")).toBeNull());
-    expect((screen.getByLabelText("Text to look for") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Search places by name") as HTMLInputElement).value).toBe("");
     const results = await axe.run(container, { rules: { region: { enabled: false }, "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
   });

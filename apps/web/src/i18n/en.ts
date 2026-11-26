@@ -194,7 +194,7 @@ export const en = {
     resultCount_other: "{{count}} results",
     placesTitle: "Places",
     placesBody:
-      "Place pages will show a source, a licence, a date, and a verification tier on every record. Nothing is loaded. Unknown stays unknown.",
+      "Search open data about places in Ontario: what each place is, where it is, its hours, and how you get in. Every fact shows its source, licence, date and verification tier. Unknown stays unknown.",
     journeyTitle: "Journey",
     journeyBody:
       "Plans a rolling route between two places in the data pack on this device, using only the paths that pack records. Route preferences in settings stay on this device and are not sent anywhere. Live elevator status is unavailable. A plan shows its source, its date and what is Unknown.",
@@ -285,6 +285,7 @@ export const en = {
     languageTitle: "Language",
     languageBody:
       "English and French are available for the shell. French text is a prototype translation pending review. Switch language from the header. The choice remains in this browser.",
+    contactsTitle: "Help contacts",
     adviceTitle: "Advice the App will not give",
     adviceBody:
       "the App does not give medical advice and does not decide benefits eligibility.",

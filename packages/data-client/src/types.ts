@@ -78,12 +78,24 @@ export interface RegionStatus {
   /** Parts of this region that the pack builder withheld; show these places as unavailable. */
   unavailable?: WithheldPart[];
 }
+/** Where a record probably is: its cell (from the search index) and its tranche. */
+export interface PlaceLookupHint {
+  cells?: string[];
+  tranche?: Tranche;
+}
 export interface PackSource {
   manifest(): Promise<PackManifest>;
   cellsFor(area: { bbox: [number, number, number, number] } | { lat: number; lon: number; radiusM: number }): Promise<string[]>;
   records(tranche: Tranche, cell: string, signal?: AbortSignal): AsyncIterable<PackRecord>;
-  search(text: string, opts: { near?: { lat: number; lon: number }; tranches?: Tranche[]; limit?: number }): Promise<SearchHit[]>;
-  get(id: string): Promise<PackRecord | null>;
+  /**
+   * Searches stored cells, or the region named in `region`. When a cell is not stored on the device the client
+   * fetches and checks its search part for this session only; nothing is written to the device.
+   */
+  search(text: string, opts: { near?: { lat: number; lon: number }; tranches?: Tranche[]; limit?: number; region?: string }): Promise<SearchHit[]>;
+  /** One record by id. `cells` and `tranche` say where to look first when the record is not stored on the device. */
+  get(id: string, opts?: PlaceLookupHint): Promise<PackRecord | null>;
+  /** Records of the given tranches within `radiusM` of a point, nearest first, each with its distance in metres. */
+  nearby?(point: { lat: number; lon: number }, opts: { tranches: Tranche[]; radiusM: number; limit: number }): Promise<Array<{ record: PackRecord; distanceM: number }>>;
   sourcesFor(record: PackRecord): PackSourceEntry[];
   regions(): Promise<RegionStatus[]>;
   downloadRegion(id: string, onProgress?: (done: number, total: number) => void): Promise<RegionStatus>;

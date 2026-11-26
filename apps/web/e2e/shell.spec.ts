@@ -81,7 +81,7 @@ test("module pages do not invent places and axe is clean", { annotation: [{ type
 
   await page.goto("/places");
   await expect(page.getByText("This part of the App is not available yet. No records are shown.")).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Text to look for" })).toBeDisabled();
+  await expect(page.getByRole("textbox", { name: "Search places by name" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
   await expect(page.getByText("access-maps")).toBeHidden();
 

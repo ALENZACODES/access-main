@@ -24,6 +24,8 @@ export interface ModuleContext {
   nowIso: string;
   /** Text the person submitted on this route. Omitted when the field is empty. */
   query?: string;
+  /** For places.get: where the record probably is (its pack cell and tranche), from the link that opened it. */
+  placeHint?: { cells?: string[]; tranche?: string };
 }
 
 export interface ModuleResult<T> {
