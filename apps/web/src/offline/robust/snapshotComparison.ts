@@ -147,7 +147,8 @@ function compareCells(slot: SnapshotSlot, before: SnapshotCell | null, after: Sn
   const licenceChanged = before !== null && after !== null && before.provenance.licence !== after.provenance.licence;
   const dateChanged = before !== null && after !== null && before.provenance.date !== after.provenance.date;
   const bytesChanged = before !== null && after !== null && before.bytes !== after.bytes;
-  const kind: SnapshotChange = absent ? "missing-snapshot" : before === null ? "added" : after === null ? "removed" :
+  const kind: SnapshotChange = absent ? "missing-snapshot" : before === null && after !== null ? "added" :
+    before !== null && after === null ? "removed" :
     sourceChanged || licenceChanged || dateChanged ? "metadata" : bytesChanged ? "bytes" : "same";
   const question = kind === "missing-snapshot" ? "What does this comparison option contain?" :
     kind === "removed" ? "Is a replacement listing available for this cell?" :
@@ -199,6 +200,14 @@ export function compareSnapshots(
     reviewCount: rows.filter((row) => row.attention === "review").length,
     baselineBytes: sumBytes(base.cells), optionABytes: a === null ? null : sumBytes(a.cells), optionBBytes: b === null ? null : sumBytes(b.cells) };
 }
+export function rowHasDeclaredChange(row: SnapshotMatrixRow): boolean {
+  const changed = (kind: SnapshotChange) => kind !== "same" && kind !== "missing-snapshot";
+  return changed(row.optionA.kind) || changed(row.optionB.kind);
+}
+function byteDifference(assessment: SnapshotAssessment): number {
+  if (assessment.kind === "missing-snapshot") return 0;
+  return Math.abs((assessment.after?.bytes ?? 0) - (assessment.before?.bytes ?? 0));
+}
 export function pageSnapshotMatrix(matrix: SnapshotMatrix, settings: SnapshotPageSettings): SnapshotPage {
   if (!Number.isSafeInteger(settings.offset) || settings.offset < 0 || !Number.isSafeInteger(settings.limit) || settings.limit < 1 || settings.limit > 100 ||
     settings.search.length > 160 || !filters.includes(settings.filter) || !orders.includes(settings.order)) throw new RangeError("Invalid page");
@@ -207,7 +216,7 @@ export function pageSnapshotMatrix(matrix: SnapshotMatrix, settings: SnapshotPag
     if (!row.cellId.toLocaleLowerCase("en-CA").includes(query)) return false;
     switch (settings.filter) {
       case "all": return true;
-      case "changed": return row.optionA.kind !== "same" || row.optionB.kind !== "same";
+      case "changed": return rowHasDeclaredChange(row);
       case "saved": return row.localState === "saved";
       case "UNKNOWN": return row.localState === "UNKNOWN";
       default: return row.optionA.kind === settings.filter || row.optionB.kind === settings.filter;
@@ -216,8 +225,7 @@ export function pageSnapshotMatrix(matrix: SnapshotMatrix, settings: SnapshotPag
   if (settings.order === "cell") rows.sort((x, y) => x.cellId.localeCompare(y.cellId));
   if (settings.order === "uncertainty") rows.sort((x, y) => Number(y.localState === "UNKNOWN") - Number(x.localState === "UNKNOWN") || x.cellId.localeCompare(y.cellId));
   if (settings.order === "largest-change") rows.sort((x, y) => {
-    const delta = (row: SnapshotMatrixRow) => Math.max(Math.abs((row.optionA.after?.bytes ?? 0) - (row.baseline?.bytes ?? 0)),
-      Math.abs((row.optionB.after?.bytes ?? 0) - (row.baseline?.bytes ?? 0)));
+    const delta = (row: SnapshotMatrixRow) => Math.max(byteDifference(row.optionA), byteDifference(row.optionB));
     return delta(y) - delta(x) || x.cellId.localeCompare(y.cellId);
   });
   return { rows: rows.slice(settings.offset, settings.offset + settings.limit), total: rows.length,

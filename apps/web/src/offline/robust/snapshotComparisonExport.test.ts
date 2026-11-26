@@ -16,6 +16,12 @@ describe("metadata-only three-way report", () => {
   it("includes source licence", () => expect(encodeSnapshotReport(report())).toContain("OGL"));
   it("does not include cell bytes", () => expect(encodeSnapshotReport(report())).not.toContain("Uint8Array"));
   it("uses a French nonbreaking colon", () => expect(formatSnapshotReport(report(), "fr")).toContain("\u00a0:"));
+  it("keeps declared changes separate from missing information in both text reports", () => {
+    const unchanged = report();
+    expect(unchanged.reviewCount).toBe(1);
+    expect(formatSnapshotReport(unchanged, "en")).toContain("Changed cells: 0");
+    expect(formatSnapshotReport(unchanged, "fr")).toContain("Cellules modifiées\u00a0: 0");
+  });
   it("uses English title", () => expect(formatSnapshotReport(report(), "en")).toContain("Compare local region listings"));
   it("makes a sanitized filename", () => expect(snapshotFilename("../North / East", "json")).toBe("offline-snapshot-comparison-north-east.json"));
   it("preserves text extension", () => expect(snapshotFilename("ontario", "txt")).toMatch(/\.txt$/));
