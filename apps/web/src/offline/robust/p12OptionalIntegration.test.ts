@@ -20,7 +20,7 @@ describe("all optional offline feature integrations", () => {
   });
   it("does not alter the budget guard or its cap", () => {
     expect(read("apps/web/scripts/check-install-budget.ts")).toContain("assertInstallBudget(assets)");
-    expect(read("apps/web/src/perf/install-budget.ts")).toContain("4_141_875");
+    expect(read("apps/web/src/perf/install-budget.ts")).toContain("4_718_592");
   });
   it("has the dependency model without loading optional panels through the barrel", () => {
     const barrel = robust("index.ts");

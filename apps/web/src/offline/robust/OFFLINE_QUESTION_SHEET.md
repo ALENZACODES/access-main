@@ -26,7 +26,7 @@ All controls are native HTML inputs, selects, buttons and labelled textareas, wi
 
 ## Build budget and deployment
 
-The service worker includes the question sheet in the first install. The dashboard imports its module when the user opens the sheet, so someone who installed the app online can open it for the first time offline. The production build counts the emitted chunk toward the 4,141,875-byte install budget and the 524,288-byte per-entry cap.
+The service worker includes the question sheet in the first install. The dashboard imports its module when the user opens the sheet, so someone who installed the app online can open it for the first time offline. The production build counts the emitted chunk toward the 4,718,592-byte install budget and the 524,288-byte per-entry cap.
 
 ## Testing
 

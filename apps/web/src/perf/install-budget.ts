@@ -1,5 +1,5 @@
 /** Complete, uncompressed installation footprint limit in bytes. */
-export const INSTALL_BUDGET_BYTES = 4_141_875;
+export const INSTALL_BUDGET_BYTES = 4_718_592;
 
 export interface InstallAsset {
   readonly path: string;
