@@ -104,6 +104,28 @@ used with a wheelchair. Everything is worked out on this device from the pack's 
   browser (coordinates written as plain numbers, so a negative longitude is not given a formula guard).
 - `WalkGroups.tsx` is mounted in `PackPlaces.tsx` and shows nothing when fewer than two places have a map point.
 - Tests: `walkGroup*.test.ts`, `WalkGroups.dom.test.tsx`, `PackPlaces.walkGroups.dom.test.tsx`.
+## Language of the names (P4, round 15)
+
+A closed-by-default section on the places list that checks each name for everyday French or English words ("rue",
+"bibliothèque", "library", "school"). It is a guess from common words and says so: a name made of a person's name,
+a brand or a town points to no language, and nothing here says what language a name is in or changes a name.
+
+- `nameLexicon.ts`: the word lists, folded (lower case, no accents). A word both languages use ("centre", "place",
+  "hotel", "route", "municipal") is in neither list.
+- `nameLanguage.ts`: splits a name into words (hyphens and apostrophes split; "l'" and "d'" count as French),
+  checks the alphabet (a name mostly in another alphabet is set aside), counts French-only letters, and marks a
+  name that is a French half and an English half split by a slash or bar.
+- `nameLanguageReport.ts`: runs the reader over the list, filters (a reading, pairs, accented names with no word
+  that points to a language), orders, lists the kinds of place behind a reading, and gives whole-number shares.
+- `addressLanguage.ts`: the same reading for the street part of an address (the street type and a direction after it
+  only, so "St. Clair Avenue" is not read by its "St"), and a comparison of what a name and its address point to.
+  "avenue" and "est" are in neither list. A place whose name and address point to different languages is a
+  filter choice, not a fault.
+- `nameLanguageKinds.ts`: a table of kinds of place against what their names point to, counts only, UNKNOWN last,
+  with its own CSV file.
+- `nameLanguageCopy.ts`, `nameLanguageExport.ts`: English and French wording, and text and CSV files.
+- `NameLanguages.tsx` is mounted in `PackPlaces.tsx` and shows nothing when no place has a name.
+- Tests: `name*.test.ts`, `NameLanguages.dom.test.tsx`, `PackPlaces.nameLanguages.dom.test.tsx`.
 
 ## Reading ease of the notes (round 10)
 

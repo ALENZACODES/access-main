@@ -38,6 +38,7 @@ import { SameName } from "./SameName.tsx";
 import { PointPaste } from "./PointPaste.tsx";
 import { WalkGroups } from "./WalkGroups.tsx";
 import { WritingCheck } from "./WritingCheck.tsx";
+import { NameLanguages } from "./NameLanguages.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PackSearchWords, PackWordList } from "./PackWords.tsx";
@@ -277,6 +278,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <PackNoteBrowser places={view.shownPlaces} locale={locale} />
       <SameName places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteReading places={view.shownPlaces} locale={locale} />
+      <NameLanguages places={view.shownPlaces} locale={locale} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <CallScript places={view.shownPlaces} locale={locale} today={day} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
