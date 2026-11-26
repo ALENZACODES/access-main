@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ModuleResult } from "@access/shared";
+import { useParams } from "react-router-dom";
+import { torontoContent } from "../packs/bundledToronto.ts";
+import { tierMessageKey, type PackHelpNumber, type ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { TextInput } from "../design/fields.tsx";
 import { ResultItems, statusKey } from "../modules/ResultItems.tsx";
@@ -20,7 +22,20 @@ export function HelpPage() {
   const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
   const [attempt, setAttempt] = useState(0);
   const locale = i18n.language.startsWith("fr") ? ("fr" as const) : ("en" as const);
-  useDocumentTitle(t("modules.helpTitle"));
+  const { id } = useParams();
+  const [contact, setContact] = useState<PackHelpNumber | null>(null);
+  const selected = contact?.id === id ? contact : null;
+  const heading = selected?.name[locale] ?? t("modules.helpTitle");
+  useDocumentTitle(heading);
+
+  useEffect(() => {
+    if (!id) return;
+    let active = true;
+    void torontoContent().then((content) => {
+      if (active) setContact(content?.help_numbers.find((row) => row.id === id) ?? null);
+    });
+    return () => { active = false; };
+  }, [id]);
 
   useEffect(() => {
     let active = true;
@@ -76,7 +91,14 @@ export function HelpPage() {
 
   return (
     <div className="stack">
-      <h1>{t("modules.helpTitle")}</h1>
+      <h1>{heading}</h1>
+      {selected ? (
+        <div className="stack">
+          <p>{selected.how[locale]}</p>
+          <p>{selected.contact}</p>
+          <p>{t("offline.helpSource", { date: selected.provenance.retrieved_at })} {t(tierMessageKey(selected.provenance.tier))}</p>
+        </div>
+      ) : null}
       <section className="stack" aria-labelledby="help-privacy">
         <h2 id="help-privacy">{t("help.privacyTitle")}</h2>
         <p>{t("help.privacyBody")}</p>
