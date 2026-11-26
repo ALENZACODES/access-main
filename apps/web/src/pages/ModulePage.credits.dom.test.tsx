@@ -57,7 +57,7 @@ describe("data credits on the places page", () => {
     await page("places");
     expect(await screen.findByRole("heading", { level: 2, name: "Sources of the records saved on this device" })).toBeTruthy();
     // The pack list already carries the credit once; the credits do not repeat it.
-    expect(screen.getAllByText("© OpenStreetMap contributors")).toHaveLength(1);
+    expect(await screen.findAllByText("© OpenStreetMap contributors", undefined, { timeout: 15_000 })).toHaveLength(1);
     expect(screen.getByRole("link", { name: "ODbL 1.0" }).getAttribute("href")).toBe("https://opendatacommons.org/licenses/odbl/1-0/");
     expect(screen.getByText(/^Tier 0: \d+/)).toBeTruthy();
   });

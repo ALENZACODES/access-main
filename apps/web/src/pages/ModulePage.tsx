@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FINDER_KINDS, type FinderKind, type JourneyPlan, type ModuleId, type ModuleResult, type PlaceHit } from "@access/shared";
 import { Button } from "../design/Button.tsx";
@@ -15,7 +15,6 @@ import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm
 import { DataCredits } from "../states/DataCredits.tsx";
 import { PackCompare } from "../states/PackCompare.tsx";
 import { PackFreshness } from "../states/PackFreshness.tsx";
-import { PackPlaces } from "../states/PackPlaces.tsx";
 import { PackReport } from "../states/PackReport.tsx";
 import { StateNotice } from "../states/StateNotice.tsx";
 import { creditRecordsFromPack } from "../states/dataCredits.ts";
@@ -23,6 +22,10 @@ import { escalateView } from "../states/retryPolicy.ts";
 import { moduleStateFor, moduleStateView, type ModuleAvailability } from "../states/moduleStates.ts";
 import { useFailureStreak } from "../states/useFailureStreak.ts";
 import { ElevatorNotices } from "../states/ElevatorNotices.tsx";
+
+// The place-list tools are most of this page's code. In their own chunk the page stays well under the
+// 512 KiB per-file cap; the chunk is still precached, so it works offline like the rest of the page.
+const PackPlaces = lazy(() => import("../states/PackPlaces.tsx").then((module) => ({ default: module.PackPlaces })));
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -233,7 +236,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
           ))}
         </ul>
       ) : null}
-      {id === "places" && packPlaces !== null ? <PackPlaces places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packPlaces !== null ? <Suspense fallback={null}><PackPlaces places={packPlaces} locale={locale} /></Suspense> : null}
       {id === "places" && packPlaces !== null ? <PackFreshness places={packPlaces} locale={locale} /> : null}
       {id === "places" && packPlaces !== null ? <PackReport places={packPlaces} locale={locale} /> : null}
       {id === "places" && packPlaces !== null ? <PackCompare places={packPlaces} locale={locale} today={new Date().toISOString().slice(0, 10)} /> : null}
