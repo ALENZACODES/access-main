@@ -29,6 +29,7 @@ import { AroundPlace } from "./AroundPlace.tsx";
 import { PackNoteBrowser } from "./PackNoteBrowser.tsx";
 import { CallScript } from "./CallScript.tsx";
 import { MeetUp } from "./MeetUp.tsx";
+import { PossibleRepeats } from "./PossibleRepeats.tsx";
 import { NoteReading } from "./NoteReading.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
 import { TagNoteReads } from "./TagNoteReads.tsx";
@@ -277,6 +278,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <NoteTopics places={view.shownPlaces} locale={locale} />
       <TagNoteReads places={view.shownPlaces} locale={locale} />
       <PackSpotCheck places={view.shownPlaces} locale={locale} today={day} />
+      <PossibleRepeats places={parsed.places} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
