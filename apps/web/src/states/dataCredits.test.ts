@@ -107,7 +107,7 @@ describe("buildCredits: tiers", () => {
   it("writes the counts in both languages with the token UNKNOWN", () => {
     const g = buildCredits([rec({ tier: 0 }), rec({ tier: null })], TODAY).groups[0]!;
     expect(tierCountsText(g, "en")).toBe("Tier 0: 1; Tier UNKNOWN: 1");
-    expect(tierCountsText(g, "fr")).toBe("Niveau 0 : 1; Niveau UNKNOWN : 1");
+    expect(tierCountsText(g, "fr")).toBe("Niveau 0 : 1\u202f; Niveau UNKNOWN : 1");
     expect(tierCountsText(g, "fr")).not.toMatch(/INCONNU/);
   });
 });
@@ -155,7 +155,7 @@ describe("text output", () => {
     expect(text).toContain("Licence : ODbL 1.0");
     expect(text).toContain("2 enregistrements.");
     expect(text).toContain("Consulté du 1er novembre 2026 au 13 novembre 2026.");
-    expect(text).toContain("Niveau 0 : 1; Niveau UNKNOWN : 1.");
+    expect(text).toContain("Niveau 0 : 1\u202f; Niveau UNKNOWN : 1.");
     expect(text).toContain("1 enregistrement sans source utilisable");
   });
   it("uses a single date when every record was retrieved on one day", () => {

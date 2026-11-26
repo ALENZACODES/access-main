@@ -36,7 +36,7 @@ describe("DataCredits", () => {
   it("is in French with the token UNKNOWN and French typography", async () => {
     const { container } = render(<DataCredits records={records} locale="fr" today={TODAY} />);
     expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Sources des enregistrements sur cet appareil");
-    const tiers = screen.getAllByText((_, el) => el?.tagName === "P" && el.textContent === "Niveau 0\u00a0: 1; Niveau UNKNOWN\u00a0: 1");
+    const tiers = screen.getAllByText((_, el) => el?.tagName === "P" && el.textContent === "Niveau 0\u00a0: 1\u202f; Niveau UNKNOWN\u00a0: 1");
     expect(tiers).toHaveLength(1);
     expect(screen.getByText("Consulté du 1er novembre 2026 au 13 novembre 2026")).toBeTruthy();
     expect(container.querySelector("section")?.getAttribute("lang")).toBe("fr");
