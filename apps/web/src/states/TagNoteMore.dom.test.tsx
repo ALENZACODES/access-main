@@ -6,7 +6,7 @@ import type { SavedFile } from "./downloadFile";
 import { withNote } from "./noteTopicFixtures";
 import type { Locale } from "./stateCopy";
 import { checkPlaces } from "./tagNoteCheck";
-import { findingsToCsv } from "./tagNoteExport";
+import { findingsToCsv } from "./tagNoteCheckExport";
 import { TagNoteCheck } from "./TagNoteCheck";
 import { TagNoteEarlier } from "./TagNoteEarlier";
 import { TagNoteSpread } from "./TagNoteSpread";

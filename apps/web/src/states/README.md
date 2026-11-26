@@ -157,7 +157,7 @@ opposite ways. Everything is read from the words of the note on this device; not
   is not read as a worse kind.
 - `tagNoteEarlier.ts`: reads a findings CSV saved by this tool (formula guard undone, bad rows counted, not
   guessed at) and lists what is new, changed, no longer or the same.
-- `tagNoteCopy.ts`, `tagNoteMoreCopy.ts`: English and French wording; `tagNoteExport.ts`,
+- `tagNoteCheckCopy.ts`, `tagNoteMoreCopy.ts`: English and French wording; `tagNoteCheckExport.ts`,
   `tagNoteSpreadExport.ts`: text and CSV files made in the browser.
 - `TagNoteCheck.tsx` (with `TagNoteSpread.tsx` and `TagNoteEarlier.tsx`) is mounted in `PackPlaces.tsx` and
   shows nothing when no place has a note.

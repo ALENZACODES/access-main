@@ -3,7 +3,7 @@ import { Button } from "../design/Button.tsx";
 import type { PackPlaceRecord } from "./packPlaces.ts";
 import type { Locale } from "./stateCopy.ts";
 import { checkPlaces } from "./tagNoteCheck.ts";
-import { tnNoName } from "./tagNoteCopy.ts";
+import { tnNoName } from "./tagNoteCheckCopy.ts";
 import { compareWithEarlier, looksLikeFindingsFile, readEarlierFindings, type EarlierReading } from "./tagNoteEarlier.ts";
 import { TE_SHOWN, teCaveat, teChangeLabel, teChangeLine, teClear, teCompare, teEmpty, teFileLabel, teHeading, teIntro, teNotThisFile, teNothing, teProblem, teSkipped, teSummary } from "./tagNoteMoreCopy.ts";
 

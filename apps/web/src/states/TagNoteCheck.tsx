@@ -10,8 +10,8 @@ import {
 import {
   tnCannotSave, tnCaveat, tnCoverage, tnDirectionLabel, tnFilterGroup, tnFilterLabel, tnHeading, tnIntro, tnKindLine, tnLeftOut, tnLegend, tnNoMatch, tnNone, tnNoName, tnOrderGroup, tnOrderLabel, tnSaveCsv, tnSaveText, tnSavedLine, tnSummary,
   tnTagLine, tnToggle, tnWeightLine,
-} from "./tagNoteCopy.ts";
-import { findingsCsvFile, findingsTextFile } from "./tagNoteExport.ts";
+} from "./tagNoteCheckCopy.ts";
+import { findingsCsvFile, findingsTextFile } from "./tagNoteCheckExport.ts";
 import { markPieces } from "./tagNoteMarks.ts";
 import { TagNoteEarlier } from "./TagNoteEarlier.tsx";
 import { TagNoteSpread } from "./TagNoteSpread.tsx";

@@ -7,7 +7,7 @@
  */
 import { parseCsv, undoFormulaGuard, MAX_CSV_BYTES } from "./csvParse";
 import type { Disagreement } from "./tagNoteCheck";
-import { TN_CSV_HEADER } from "./tagNoteCopy";
+import { TN_CSV_HEADER } from "./tagNoteCheckCopy";
 
 export interface EarlierFinding {
   readonly id: string;

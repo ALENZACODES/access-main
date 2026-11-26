@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkPlaces } from "./tagNoteCheck";
 import { compareWithEarlier, looksLikeFindingsFile, readEarlierFindings, type EarlierFinding } from "./tagNoteEarlier";
-import { findingsToCsv } from "./tagNoteExport";
+import { findingsToCsv } from "./tagNoteCheckExport";
 import { withNote } from "./noteTopicFixtures";
 
 const now = (notes: Array<[string, string, string]>) => checkPlaces(notes.map(([id, note, tag]) => withNote(id, note, { wheelchair: tag, name: `Name ${id}` }))).findings;
