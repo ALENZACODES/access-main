@@ -46,17 +46,6 @@ export function HomePage() {
   const french = i18n.language.startsWith("fr");
   useDocumentTitle(t("appName"));
 
-  const tools = [
-    ["/input-workbench", "keyboard",
-      french ? "Atelier clavier et contacteur" : "Keyboard and switch workbench",
-      french ? "Examiner les commandes et les annonces dans une séance locale." : "Review controls and announcements in a local session."],
-    ["/question-packet", "questions",
-      french ? "Fiche de questions sur l’accessibilité" : "Accessibility questions packet",
-      french ? "Préparez des questions et suivez les réponses consignées, sans envoi automatique." : "Prepare accessibility questions and record reported answers without automatic uploads."],
-    ["/access-rehearsal", "rehearsal",
-      french ? "Répétition d’accessibilité" : "Access rehearsal",
-      french ? "Parcours au clavier et par balayage, sans transmission de données." : "Practice keyboard and switch journeys without sending data."],
-  ] as const;
 
   return (
     <div className="stack">
@@ -101,15 +90,27 @@ export function HomePage() {
       <section className="stack" aria-labelledby="tools-title">
         <h2 id="tools-title">{french ? "Outils de préparation" : "Practice and preparation tools"}</h2>
         <ul className="card-list tile-grid">
-          {tools.map(([to, icon, title, body]) => (
-            <li key={to}>
-              <Link className="card" to={to}>
-                <Icon>{ICONS[icon]}</Icon>
-                <span className="card-title">{title}</span>
-                <span>{body}</span>
-              </Link>
-            </li>
-          ))}
+          <li>
+            <Link className="card" to="/input-workbench" style={{ minHeight: 44 }}>
+              <Icon>{ICONS.keyboard}</Icon>
+              <span className="card-title">{french ? "Atelier clavier et contacteur" : "Keyboard and switch workbench"}</span>
+              <span>{french ? "Examiner les commandes et les annonces dans une séance locale." : "Review controls and announcements in a local session."}</span>
+            </Link>
+          </li>
+          <li>
+            <Link className="card" to="/question-packet" style={{ minHeight: 44 }}>
+              <Icon>{ICONS.questions}</Icon>
+              <span className="card-title">{french ? "Fiche de questions sur l’accessibilité" : "Accessibility questions packet"}</span>
+              <span>{french ? "Préparez des questions et suivez les réponses consignées, sans envoi automatique." : "Prepare accessibility questions and record reported answers without automatic uploads."}</span>
+            </Link>
+          </li>
+          <li>
+            <Link className="card" to="/access-rehearsal" style={{ minHeight: 44 }}>
+              <Icon>{ICONS.rehearsal}</Icon>
+              <span className="card-title">{french ? "Répétition d’accessibilité" : "Access rehearsal"}</span>
+              <span>{french ? "Parcours au clavier et par balayage, sans transmission de données." : "Practice keyboard and switch journeys without sending data."}</span>
+            </Link>
+          </li>
         </ul>
       </section>
     </div>

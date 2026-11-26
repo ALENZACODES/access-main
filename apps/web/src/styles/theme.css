@@ -161,16 +161,12 @@ a:hover { color: var(--accent-hover); }
 .lang-button:hover { background: var(--header-soft); }
 .lang-button[aria-pressed="true"] { background: var(--header-ink); color: var(--header); }
 
-/* One row of tabs. On a narrow screen the row scrolls sideways inside the header;
-   the page itself never scrolls sideways (WCAG 1.4.10). */
+/* Tabs wrap onto as many rows as they need: every tab stays on screen and
+   in reach, and the page never scrolls sideways (WCAG 1.4.10). */
 .nav-list {
-  flex-wrap: nowrap;
-  gap: 0.25rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
-  padding: 0.15rem 0.15rem 0.7rem;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.15rem 0 0.75rem;
   margin-inline: auto;
 }
 .nav-list > li { flex: none; }
@@ -182,7 +178,6 @@ a:hover { color: var(--accent-hover); }
   font-weight: 600;
   font-size: 0.98rem;
   text-decoration: none;
-  white-space: nowrap;
 }
 .nav-link:hover { background: var(--header-soft); color: var(--header-ink); }
 .nav-link[aria-current="page"] {
@@ -478,10 +473,11 @@ html[data-contrast="more"] .tile-grid .tile-icon { background: #000000; color: #
   .card, .panel { box-shadow: none; }
 }
 
-/* Wide screens have room for every tab, so the row wraps instead of scrolling. */
-@media (min-width: 64rem) {
-  .nav-list { flex-wrap: wrap; overflow-x: visible; }
-  .nav-link { padding-inline: 0.8rem; }
+/* Phones: smaller tabs, so the thirteen of them take fewer rows. */
+@media (max-width: 40rem) {
+  .nav-list { gap: 0.25rem; }
+  .nav-link { padding: 0.3rem 0.7rem; font-size: 0.92rem; }
+  .header-bar { padding-block: 0.45rem; }
 }
 
 /* ---------- Search pages ---------- */
@@ -622,3 +618,13 @@ html[data-contrast="more"] .check-option[data-selected] { outline: 2px solid #ff
 .pick-name { display: grid; gap: 0.1rem; min-width: 0; flex: 1 1 14rem; }
 .pick-title { font-weight: 650; color: var(--heading); }
 .pick-detail { color: var(--muted); font-size: 0.92rem; }
+
+/* A card whose link holds only the title: the link's name stays short, and the
+   whole card answers a click through the link's stretched hit area. */
+.link-card { position: relative; }
+.link-card > a.card-title { text-decoration: none; justify-content: flex-start; }
+.link-card > a.card-title::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.link-card:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
+.link-card:hover > a.card-title { color: var(--accent); text-decoration: underline; }
+.link-card > p { margin: 0; color: var(--muted); }
+.tile-grid.hub-grid .link-card > * { grid-column: 1; }
