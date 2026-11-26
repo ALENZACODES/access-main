@@ -10,6 +10,7 @@ import { PackBands } from "./PackBands.tsx";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
 import { ViewCode } from "./ViewCode.tsx";
+import { LetterJump } from "./LetterJump.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
 import { VenueGroups } from "./VenueGroups.tsx";
 import { type VenueNote, venueNoteText, venueNotes } from "./venueGroups.ts";
@@ -199,11 +200,14 @@ export function PackPlaces({ places, locale, today }: Props) {
           <SuggestionList hints={hints} locale={locale} onPick={setText} />
         </>
       ) : (
+        <>
+        <LetterJump items={view.cards} locale={locale} />
         <ul className="record-list">
           {view.cards.map((card) => (
             <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} place={byId.get(card.id)} today={day} venue={venues.get(card.id)} />
           ))}
         </ul>
+        </>
       )}
       <VenueGroups places={view.shownPlaces} locale={locale} />
       <p aria-live="polite">{listNote}</p>

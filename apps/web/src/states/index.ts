@@ -179,6 +179,8 @@ export { ListTransfer } from "./ListTransfer.tsx";
 export * from "./viewCode.ts";
 export * from "./viewCodeCopy.ts";
 export { ViewCode } from "./ViewCode.tsx";
+export * from "./letterIndex.ts";
+export { LetterJump, focusPlaceAt } from "./LetterJump.tsx";
 export * from "./streetAddress.ts";
 export * from "./streetIndex.ts";
 export * from "./streetIndexExport.ts";

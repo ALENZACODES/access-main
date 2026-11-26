@@ -26,6 +26,7 @@ describe("the states barrel exposes the pack tools", () => {
     "Shortlist", "useShortlist", "browserStore", "parseShortlist", "addToShortlist", "resolveShortlist", "buildShortlistTable", "shortlistToText", "SHORTLIST_KEY",
     "OutingPlanner", "buildOuting", "nearestOrder", "reconcileOrder", "moveStop", "outingToText", "outingToCsv", "outingToGeoJson", "parsePace",
     "ViewCode", "viewToCode", "parseViewCode", "viewIsEmpty", "viewKeys", "VIEW_CODE_HEADER", "EMPTY_VIEW_PARTS", "VIEW_KEYS", "viewIgnoredText", "viewAppliedText",
+    "LetterJump", "focusPlaceAt", "buildLetterIndex", "letterOf", "letterButtonName", "showLetterIndex", "LETTER_INDEX_MIN_PLACES",
     "MeetUp", "buildMeetUp", "halfway", "meetUpPage", "MEET_UP_ORDERS", "MEET_UP_LIMITS", "isMeetUpOrder", "isMeetUpLimit", "meetUpToText", "meetUpToCsv", "meetUpRowText", "meetUpOrderLabel", "meetUpCaveat", "MEET_UP_FILENAMES", "MEET_UP_CSV_FILENAMES", "meetUpMinutes", "readPaces", "hasPace", "NO_PACES", "meetUpTimeText", "meetUpPaceNote", "meetUpMinutesCell", "meetUpToGeoJson", "MEET_UP_GEOJSON_FILENAMES",
     "NoteReading", "READING_ROWS_SHOWN", "readNote", "countSyllables", "splitSentences", "tokensOf", "rawScore", "clampScore", "readingBandOf", "guessNoteLanguage", "noteLocale", "buildReadingIndex", "filterReadings", "orderReadings", "readingsToCsv", "readingsToText", "readingBandLabel", "hintsFor", "hintText", "HINT_KINDS",
     "moduleStateFor", "escalateView", "SuggestionList", "useFailureStreak", "readTier", "tierLine",
