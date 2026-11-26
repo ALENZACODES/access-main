@@ -1,0 +1,25 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const source=readFileSync(new globalThis.URL("./p20ag-browser-focus.ts",import.meta.url),"utf8");
+test("P20AG browser observer exports dialog inspection",()=>assert.match(source,/export async function observeDialog/));
+test("P20AG browser observer exports active focus snapshot",()=>assert.match(source,/export async function activeFocusSnapshot/));
+test("P20AG browser observer exports Tab interaction",()=>assert.match(source,/export async function pressTabAndObserve/));
+test("P20AG browser observer exports open-state check",()=>assert.match(source,/export async function dialogIsOpen/));
+test("P20AG browser observer reads the active element",()=>assert.match(source,/document\.activeElement/));
+test("P20AG browser observer reads inert ancestry",()=>assert.match(source,/closest\("\[inert\]"\)/));
+test("P20AG browser observer reads aria-hidden ancestry",()=>assert.match(source,/closest\("\[aria-hidden=true\]"\)/));
+test("P20AG browser observer reads computed focus outline",()=>assert.match(source,/outlineStyle/));
+test("P20AG browser observer reads computed box shadow",()=>assert.match(source,/boxShadow/));
+test("P20AG browser observer records tabindex",()=>assert.match(source,/tabIndex/));
+test("P20AG browser observer records dialog label references",()=>assert.match(source,/aria-labelledby/));
+test("P20AG browser observer records dialog description references",()=>assert.match(source,/aria-describedby/));
+test("P20AG browser observer records native modal state",()=>assert.match(source,/:modal/));
+test("P20AG browser observer records native dialog open state",()=>assert.match(source,/HTMLDialogElement\)\.open/));
+test("P20AG browser observer records trigger id",()=>assert.match(source,/data-trigger-id/));
+test("P20AG browser observer has bounded node collection",()=>assert.match(source,/maximumNodes\?\?500/));
+test("P20AG browser observer does not use storage or network",()=>{
+ assert.doesNotMatch(source,/localStorage|sessionStorage|indexedDB|sendBeacon|fetch\s*\(|XMLHttpRequest/);
+});
+test("P20AG Tab observer uses the actual keyboard key",()=>assert.match(source,/keyboard\.press\(backwards\?"Shift\+Tab":"Tab"\)/));
+test("P20AG dialog id selector validates before interpolating",()=>assert.match(source,/if\(!\/\^\[A-Za-z\]/));

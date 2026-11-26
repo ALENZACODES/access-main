@@ -1,4 +1,4 @@
-import { PART_TITLES, SUMMARY_PARTS, notDoneText, requestText, summaryItems, summaryStatus, accessSummaryText, type SummaryItem, type SummaryLines, type SummaryPart } from './access-summary.js';
+import { PART_TITLES, SUMMARY_PARTS, notDoneText, requestText, summaryItems, summaryStatus, accessSummaryText, type SummaryItem, type SummaryLines, type SummaryNeeds, type SummaryPart } from './access-summary.js';
 import { escapeHtml } from './report.js';
 import { NBSP, type Lang } from './types.js';
 
@@ -25,6 +25,8 @@ export interface SummaryPanelState {
   /** When it was gathered. */
   readonly when: Date | null;
   readonly notice: string;
+  /** Which measured parts ask the site for something, gathered with the lines. */
+  readonly needs?: SummaryNeeds;
 }
 
 export const initialSummaryState = (): SummaryPanelState => ({ lines: null, when: null, notice: '' });
@@ -34,6 +36,8 @@ export interface SummaryOptions {
   readonly lang: Lang;
   /** What the other panels hold now. */
   readonly collect: () => SummaryLines;
+  /** Which measured parts ask the site for something now. Without it, every measured part does. */
+  readonly needs?: () => SummaryNeeds;
   /** Takes focus to the test of a part. Without it, the buttons to go there are left out. */
   readonly go?: (part: SummaryPart) => void;
   readonly copy?: (text: string) => Promise<void>;
@@ -83,9 +87,15 @@ export const SUMMARY_CSS =
   '.summary button:focus-visible,.summary textarea:focus-visible,.summary [tabindex="-1"]:focus-visible{outline:3px solid currentColor;outline-offset:3px}';
 
 const GO: Readonly<Record<SummaryPart, { readonly en: string; readonly fr: string }>> = {
+  tools: { en: 'Go to where to start', fr: 'Aller à par où commencer' },
   tap: { en: 'Go to the tap test', fr: 'Aller au test des touchers' },
   zones: { en: 'Go to the zones test', fr: 'Aller au test des zones' },
   press: { en: 'Go to the press test', fr: 'Aller au test d’appui' },
+  typing: { en: 'Go to the typing practice', fr: 'Aller à l’essai de saisie' },
+  drag: { en: 'Go to the drag test', fr: 'Aller au test de glissement' },
+  scan: { en: 'Go to the scanning settings', fr: 'Aller aux réglages du balayage' },
+  aim: { en: 'Go to the time to aim', fr: 'Aller au temps pour viser' },
+  hover: { en: 'Go to the hover question', fr: 'Aller à la question du survol' },
 };
 
 /** The words of a go button: the test it leads to, short and without the word button. */
@@ -101,7 +111,7 @@ function resultHtml(s: SummaryPanelState, lang: Lang, h: number, canGo: boolean)
   const items = summaryItemsOf(s, lang);
   if (!items) return '';
   const text = accessSummaryText(items, lang, s.when);
-  const request = requestText(items, lang);
+  const request = requestText(items, lang, s.needs);
   return (
     `<section aria-labelledby="summary-result-h"><h${h} id="summary-result-h" tabindex="-1">${tx('result', lang)}</h${h}>` +
     `<p>${escapeHtml(summaryStatus(items, lang))}</p>` +
@@ -155,9 +165,10 @@ export interface SummaryStep {
 }
 
 /** Making the summary: gathers what the other panels hold, says so and puts focus on it. */
-export function summaryStep(s: SummaryPanelState, lang: Lang, collect: () => SummaryLines, now: () => Date): SummaryStep {
+export function summaryStep(s: SummaryPanelState, lang: Lang, collect: () => SummaryLines, now: () => Date, needs?: () => SummaryNeeds): SummaryStep {
   try {
-    return { state: { lines: collect(), when: now(), notice: T.made[lang] }, focus: '#summary-result-h' };
+    const lines = collect();
+    return { state: { lines, when: now(), notice: T.made[lang], ...(needs ? { needs: needs() } : {}) }, focus: '#summary-result-h' };
   } catch (err) {
     const why = err instanceof Error ? err.message : String(err);
     return { state: { ...s, notice: `${T.failed[lang]}${lang === 'fr' ? `${NBSP}:` : ':'} ${why}` }, focus: '#summary-h' };
@@ -203,7 +214,7 @@ export function mountSummaryPanel(opts: SummaryOptions): { getState(): SummaryPa
     const target = e.target as { getAttribute?(n: string): string | null };
     const action = target.getAttribute?.('data-action') ?? null;
     if (action === 'summary-make') {
-      const step = summaryStep(state, lang, opts.collect, now);
+      const step = summaryStep(state, lang, opts.collect, now, opts.needs);
       state = step.state;
       render(step.focus);
       return;
@@ -217,7 +228,7 @@ export function mountSummaryPanel(opts: SummaryOptions): { getState(): SummaryPa
     if (!items) return;
     if (action === 'summary-copy') copyText(accessSummaryText(items, lang, state.when), '[data-action="summary-copy"]');
     if (action === 'summary-copy-request') {
-      const request = requestText(items, lang);
+      const request = requestText(items, lang, state.needs);
       if (request !== '') copyText(`${request}\n\n${accessSummaryText(items, lang, state.when)}`, '[data-action="summary-copy-request"]');
     }
   });
@@ -226,6 +237,16 @@ export function mountSummaryPanel(opts: SummaryOptions): { getState(): SummaryPa
 }
 
 /** The heading each part's test starts with on this page, for the go buttons. */
-export const PART_HEADINGS: Readonly<Record<SummaryPart, string>> = { tap: '#tap-h', zones: '#zones-h', press: '#press-h' };
+export const PART_HEADINGS: Readonly<Record<SummaryPart, string>> = {
+  tools: '#start-h',
+  tap: '#tap-h',
+  zones: '#zones-h',
+  press: '#press-h',
+  typing: '#typing-h',
+  drag: '#gest-h',
+  scan: '#scan-h',
+  aim: '#moving-h',
+  hover: '#hover-h',
+};
 
 export const summaryPanel = { title: T.title, mount: mountSummaryPanel, parts: PART_TITLES } as const;

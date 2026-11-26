@@ -70,13 +70,17 @@ const ajv = new Ajv2020({ allErrors: true });
 const check = ajv.compile(draftSchema);
 const forbidden = /^(diagnosis|injurylevel|ais|aisgrade|completeness|bladder|bowel|prescription|medication|medications|healthcard|ohip|locationhistory|password|token|apikey|secret)$/i;
 
+export function isPrivateChangeKey(key: string): boolean {
+  return forbidden.test(key.replace(/_/g, ""));
+}
+
 export function validateDraft(input: unknown): input is Draft {
   if (!check(input)) return false;
   const d = input as Draft;
   if (d.kind === "new-place" ? d.target !== "new place" : d.target === "new place") return false;
   if (Number.isNaN(Date.parse(`${d.observed}T00:00:00Z`)) || new Date(`${d.observed}T00:00:00Z`).toISOString().slice(0, 10) !== d.observed) return false;
   if (d.observed > new Date().toISOString().slice(0, 10)) return false;
-  return !Object.keys(d.changes).some((k) => forbidden.test(k.replace(/_/g, "")));
+  return !Object.keys(d.changes).some(isPrivateChangeKey);
 }
 
 export function assertDraft(input: unknown): asserts input is Draft {

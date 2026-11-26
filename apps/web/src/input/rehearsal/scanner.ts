@@ -30,8 +30,11 @@ export function scanPolicy(input: Partial<ScanPolicy> = {}): ScanPolicy {
   return Object.freeze({ mode, wrap, maxActions });
 }
 export function targetsForJourney(journey: Journey, locale: Locale): ScanTarget[] {
-  if (!Array.isArray(journey.steps)) return [];
-  return [...journey.steps]
+  return targetsForSteps(journey.steps, locale);
+}
+export function targetsForSteps(steps: readonly Step[], locale: Locale): ScanTarget[] {
+  if (!Array.isArray(steps)) return [];
+  return [...steps]
     .sort((a, b) => a.sequence - b.sequence || a.id.localeCompare(b.id, 'en'))
     .map((step) => ({
       id: step.id,

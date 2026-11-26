@@ -12,6 +12,8 @@
     "audit:input-continuity": "node --experimental-strip-types input-continuity-cli.mjs",
     "audit:evidence-review": "node --experimental-strip-types offline-evidence-review-cli.mjs",
     "audit:update-rehearsal": "node --experimental-strip-types offline-update-rehearsal-cli.mjs",
-    "audit:review-ledger": "node --experimental-strip-types review-ledger-cli.mjs"
+    "audit:review-ledger": "node --experimental-strip-types review-ledger-cli.mjs",
+    "audit:interaction-evidence": "node --experimental-strip-types interaction-evidence-cli.mjs",
+    "audit:document-outline": "node --experimental-strip-types document-outline-cli.mjs"
   }
 }

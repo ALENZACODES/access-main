@@ -7,18 +7,38 @@ import { parsePointInput } from "./packGeo.ts";
 import { placeNameHints } from "./hints.ts";
 import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
+import { NearGroups } from "./NearGroups.tsx";
+import { PackSort } from "./PackSort.tsx";
+import { DEFAULT_PACK_SORT, type PackSort as PackSortKey } from "./packSort.ts";
+import { PackSpotCheck } from "./PackSpotCheck.tsx";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
+import { ViewCode } from "./ViewCode.tsx";
+import { LetterJump } from "./LetterJump.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
+import { VenueGroups } from "./VenueGroups.tsx";
+import { type VenueNote, venueNoteText, venueNotes } from "./venueGroups.ts";
+import { PackFingerprint } from "./PackFingerprint.tsx";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
 import { EMPTY_PACK_QUERY, type PackPlaceCard, type TagFilter, TAG_FILTERS, packPlacesView } from "./packPlacesView.ts";
 import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
+import { AroundPlace } from "./AroundPlace.tsx";
+import { PackNoteBrowser } from "./PackNoteBrowser.tsx";
+import { CallScript } from "./CallScript.tsx";
 import { MeetUp } from "./MeetUp.tsx";
+import { PossibleRepeats } from "./PossibleRepeats.tsx";
 import { NoteReading } from "./NoteReading.tsx";
+import { TagNoteCheck } from "./TagNoteCheck.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
+import { TagNoteReads } from "./TagNoteReads.tsx";
+import { SameName } from "./SameName.tsx";
+import { PointPaste } from "./PointPaste.tsx";
+import { WalkGroups } from "./WalkGroups.tsx";
+import { WritingCheck } from "./WritingCheck.tsx";
+import { NameLanguages } from "./NameLanguages.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PackSearchWords, PackWordList } from "./PackWords.tsx";
@@ -27,6 +47,8 @@ import { Shortlist } from "./Shortlist.tsx";
 import { MAX_SHORTLIST, type AddResult, resolveShortlist } from "./shortlist.ts";
 import { SuggestionList } from "./SuggestionList.tsx";
 import { useShortlist } from "./useShortlist.ts";
+import { useVisitMarks } from "./useVisitMarks.ts";
+import { VisitMarks } from "./VisitMarks.tsx";
 import type { Locale } from "./stateCopy.ts";
 import { t } from "./typography.ts";
 
@@ -38,7 +60,7 @@ interface Props {
   today?: string;
 }
 
-function Card({ card, locale, listed, onToggle, place, today }: { card: PackPlaceCard; locale: Locale; listed: boolean; onToggle: () => void; place?: PackPlaceRecord; today: string }) {
+function Card({ card, locale, listed, onToggle, place, today, venue }: { card: PackPlaceCard; locale: Locale; listed: boolean; onToggle: () => void; place?: PackPlaceRecord; today: string; venue?: VenueNote }) {
   const titleId = useId();
   const buttonId = useId();
   return (
@@ -49,6 +71,7 @@ function Card({ card, locale, listed, onToggle, place, today }: { card: PackPlac
       </p>
       {card.distanceText ? <p>{card.distanceText}</p> : null}
       <p>{card.category}</p>
+      {venue ? <p>{venueNoteText(venue, locale)}</p> : null}
       <p>{card.address}</p>
       {card.note ? <p>{card.note}</p> : null}
       {card.noSourceNotice ? <p>{card.noSourceNotice}</p> : null}
@@ -85,6 +108,8 @@ export function PackPlaces({ places, locale, today }: Props) {
   const [facets, setFacets] = useState<FacetSelection>(EMPTY_FACETS);
   const [kind, setKind] = useState<string | null>(null);
   const [band, setBand] = useState<BandKey | null>(null);
+  const [sort, setSort] = useState<PackSortKey>(DEFAULT_PACK_SORT);
+  const [then, setThen] = useState<PackSortKey | null>(null);
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const day = today ?? new Date().toISOString().slice(0, 10);
@@ -92,15 +117,18 @@ export function PackPlaces({ places, locale, today }: Props) {
   const [listNote, setListNote] = useState("");
 
   const parsed = useMemo(() => parsePackPlaces(places), [places]);
+  const venues = useMemo(() => venueNotes(parsed.places), [parsed.places]);
   const byId = useMemo(() => new Map(parsed.places.map((p) => [p.id, p] as const)), [parsed.places]);
   const near = useMemo(() => parsePointInput(lat, lon), [lat, lon]);
   const stops = useMemo(() => inputsFromPlaces(resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place)), [shortlist.list, parsed.places]);
+  const visitMarks = useVisitMarks(day);
+  const listedPlaces = useMemo(() => resolveShortlist(shortlist.list, parsed.places).found.map((f) => f.place), [shortlist.list, parsed.places]);
   const from = near.status === "ok" ? near.point : null;
   // A distance band means nothing without a point, so it is ignored (not forgotten) until a point is typed again.
   const activeBand = from === null ? null : band;
   const view = useMemo(
-    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets, kind, band: activeBand }, { locale, today: day }),
-    [parsed, text, tag, near, facets, kind, activeBand, locale, day],
+    () => packPlacesView(parsed.places, parsed.dropped, { ...EMPTY_PACK_QUERY, text, tag, near, facets, kind, band: activeBand, sort, then }, { locale, today: day }),
+    [parsed, text, tag, near, facets, kind, activeBand, sort, then, locale, day],
   );
 
   // Other names to try when a typed search finds nothing. Only places the current filter allows are offered.
@@ -175,10 +203,28 @@ export function PackPlaces({ places, locale, today }: Props) {
       <fieldset className="stack">
         <legend>{message("pack.nearLegend", locale)}</legend>
         <p>{message("pack.nearHelp", locale)}</p>
+        <PointPaste
+          locale={locale}
+          current={from}
+          onUse={(a, b) => {
+            setLat(a);
+            setLon(b);
+          }}
+        />
         <TextInput label={message("pack.lat", locale)} value={lat} onChange={setLat} error={view.nearError ?? undefined} />
         <TextInput label={message("pack.lon", locale)} value={lon} onChange={setLon} />
       </fieldset>
+      <PackSort places={view.shownPlaces} sort={sort} onSort={setSort} then={then} onThen={setThen} locale={locale} />
       <TextMap places={view.shownPlaces} from={from} locale={locale} />
+      <NearGroups
+        places={view.shownPlaces}
+        locale={locale}
+        onUsePoint={(point) => {
+          setLat(String(point.lat));
+          setLon(String(point.lon));
+          setBand(null);
+        }}
+      />
       <PackBands places={view.beforeBand} shown={view.shownPlaces} from={from} locale={locale} today={day} selected={activeBand} onSelect={setBand} />
       <StreetIndex places={view.shownPlaces} locale={locale} onAdd={shortlist.add} />
       <p role="status">{view.announcement}</p>
@@ -191,12 +237,16 @@ export function PackPlaces({ places, locale, today }: Props) {
           <SuggestionList hints={hints} locale={locale} onPick={setText} />
         </>
       ) : (
+        <>
+        <LetterJump items={view.cards} locale={locale} />
         <ul className="record-list">
           {view.cards.map((card) => (
-            <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} place={byId.get(card.id)} today={day} />
+            <Card key={card.id} card={card} locale={locale} listed={shortlist.list.some((e) => e.id === card.id)} onToggle={() => toggleListed(card)} place={byId.get(card.id)} today={day} venue={venues.get(card.id)} />
           ))}
         </ul>
+        </>
       )}
+      <VenueGroups places={view.shownPlaces} locale={locale} />
       <p aria-live="polite">{listNote}</p>
       <Shortlist
         list={shortlist.list}
@@ -208,11 +258,35 @@ export function PackPlaces({ places, locale, today }: Props) {
         onRemove={shortlist.remove}
         onClear={shortlist.clear}
       />
+      <VisitMarks places={listedPlaces} packPlaces={parsed.places} state={visitMarks} locale={locale} today={day} />
+      <WritingCheck places={view.shownPlaces} locale={locale} />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
+      <ViewCode
+        view={{ text, tag, kind, facets }}
+        locale={locale}
+        onApply={(v) => {
+          setText(v.text);
+          setTag(v.tag);
+          setKind(v.kind);
+          setFacets(v.facets);
+          setBand(null);
+        }}
+      />
+      <PackFingerprint places={parsed.places} locale={locale} today={day} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
+      <AroundPlace places={view.shownPlaces} locale={locale} />
+      <PackNoteBrowser places={view.shownPlaces} locale={locale} />
+      <SameName places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteReading places={view.shownPlaces} locale={locale} />
+      <NameLanguages places={view.shownPlaces} locale={locale} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
+      <CallScript places={view.shownPlaces} locale={locale} today={day} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
+      <TagNoteReads places={view.shownPlaces} locale={locale} />
+      <PackSpotCheck places={view.shownPlaces} locale={locale} today={day} />
+      <PossibleRepeats places={parsed.places} locale={locale} />
+      <TagNoteCheck places={view.shownPlaces} locale={locale} />
+      <WalkGroups places={view.shownPlaces} locale={locale} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );

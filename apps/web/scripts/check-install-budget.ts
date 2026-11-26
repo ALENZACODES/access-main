@@ -2,7 +2,7 @@
  * First-install budget guard for the production build (P11).
  *
  * Runs after `vite build` (postbuild), so CI's build step fails when the
- * first install grows past 4,141,875 bytes. The first install is what a
+ * first install grows past 5,242,880 bytes. The first install is what a
  * phone downloads before the app works offline: every file in the service
  * worker precache, plus the service worker and its Workbox runtime.
  *

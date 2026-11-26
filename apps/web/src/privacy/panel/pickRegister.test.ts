@@ -39,20 +39,20 @@ describe("the real register", () => {
     expect(() => assertPick(PICK_REGISTER)).not.toThrow();
   });
 
-  it("has 35 rows: 34 picks and one reader, at 37 places in 34 files", () => {
-    expect(PICK_REGISTER).toHaveLength(35);
-    expect(picksOfKind(PICK_REGISTER, "pick")).toHaveLength(34);
+  it("has 42 rows: 41 picks and one reader, at 47 places in 41 files", () => {
+    expect(PICK_REGISTER).toHaveLength(42);
+    expect(picksOfKind(PICK_REGISTER, "pick")).toHaveLength(41);
     expect(picksOfKind(PICK_REGISTER, "reader")).toHaveLength(1);
     const c = pickCounts(PICK_REGISTER);
-    expect(c.uses).toBe(37);
-    expect(c.files).toBe(34);
+    expect(c.uses).toBe(47);
+    expect(c.files).toBe(41);
   });
 
-  it("counts limits: 29 before reading, 2 after, 1 mixed, 1 with no check found in its own file", () => {
+  it("counts limits: 34 before reading, 2 after, 2 mixed, 3 with no check found in their own file", () => {
     const c = pickCounts(PICK_REGISTER);
-    expect(c.before).toBe(30);
+    expect(c.before).toBe(34);
     expect(c.after).toBe(2);
-    expect(c.unlimited).toBe(2);
+    expect(c.unlimited).toBe(5);
   });
 
   it("is written in both languages, with different text, at least three words each", () => {

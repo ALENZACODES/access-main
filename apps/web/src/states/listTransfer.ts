@@ -24,9 +24,15 @@ export interface CodePlace {
   readonly name: string | null;
 }
 
-/** One line per place: `- id | name`. The name is for the reader; only the id is used when the code is read back. */
+/** The usual row remains readable by every v1 client. For an id containing the
+ * field separator, use a JSON pair on its own tagged line. Older clients count
+ * that line as unrecognised, so they cannot import just the prefix of the id.
+ */
 export function listToCode(places: readonly CodePlace[]): string {
-  const lines = places.filter((p) => isShortlistId(p.id)).map((p) => `- ${p.id} | ${(p.name ?? UNKNOWN).replace(CONTROL, " ").replace(/\|/g, "/").replace(/\s+/g, " ").trim() || UNKNOWN}`);
+  const lines = places.filter((p) => isShortlistId(p.id)).map(({ id, name }) => {
+    const label = (name ?? UNKNOWN).replace(CONTROL, " ").replace(/\|/g, "/").replace(/\s+/g, " ").trim() || UNKNOWN;
+    return id.includes("|") ? `PLACE ${JSON.stringify([id, label])}` : `- ${id} | ${label}`;
+  });
   return `${[LIST_CODE_HEADER, ...lines].join("\n")}\n`;
 }
 
@@ -38,6 +44,21 @@ export interface ParsedCode {
   readonly hadHeader: boolean;
   /** True when the paste was longer than the limits and was cut. */
   readonly cut: boolean;
+}
+
+function readCodeId(line: string): unknown {
+  if (line.startsWith("PLACE [")) {
+    try {
+      const row: unknown = JSON.parse(line.slice("PLACE ".length));
+      return Array.isArray(row) && row.length === 2 && typeof row[1] === "string" ? row[0] : null;
+    } catch {
+      return null;
+    }
+  }
+  // Older exports wrote a literal bar in the id. Their separator always had
+  // surrounding whitespace; prefer that form before accepting compact input.
+  const canonical = /^- ([^\s]+) \|/.exec(line);
+  return canonical?.[1] ?? LINE.exec(line)?.[1];
 }
 
 export function parseListCode(text: string): ParsedCode {
@@ -56,14 +77,14 @@ export function parseListCode(text: string): ParsedCode {
       hadHeader = true;
       continue;
     }
-    const m = LINE.exec(line);
-    if (m === null || !isShortlistId(m[1])) {
+    const id = readCodeId(line);
+    if (!isShortlistId(id)) {
       ignored += 1;
       continue;
     }
-    if (!seen.has(m[1])) {
-      seen.add(m[1]);
-      ids.push(m[1]);
+    if (!seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
     }
   }
   return { ids, ignored, hadHeader, cut: cut || tooManyLines };

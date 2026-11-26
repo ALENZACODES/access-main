@@ -1118,7 +1118,7 @@ describe("NarrowAuditPage: my access summary", () => {
     const { container } = render(page());
     await press(container, '.summary [data-action="summary-make"]');
     expect(document.activeElement).toBe(container.querySelector("#summary-result-h"));
-    expect([...container.querySelectorAll(".summary dd")].map((dd) => dd.firstChild?.textContent?.trim())).toEqual(["UNKNOWN, not done yet.", "UNKNOWN, not done yet.", "UNKNOWN, not done yet."]);
+    expect([...container.querySelectorAll(".summary dd")].map((dd) => dd.firstChild?.textContent?.trim())).toEqual(Array.from({ length: 9 }, () => "UNKNOWN, not done yet."));
     await press(container, '.summary [data-action="summary-go-zones"]');
     expect(document.activeElement).toBe(container.querySelector("#zones-h"));
     expect(container.querySelector("#zones-h")?.getAttribute("tabindex")).toBe("-1");
@@ -1505,5 +1505,570 @@ describe("NarrowAuditPage: dragging and gestures", () => {
     expect(container.querySelector(".typing")?.innerHTML).toBe(typingBefore);
     unmount();
     expect(document.querySelector(".gest")).toBeNull();
+  });
+});
+
+/** "Switch scanning" sits after dragging and gestures. jsdom lays nothing out: every element is given the same box, so all controls share one row. */
+describe("NarrowAuditPage: switch scanning", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The Send button is at the end of a long page.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+  const boxes = () =>
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, top: 0, left: 0, right: 80, bottom: 44, width: 80, height: 44, toJSON: () => ({}) } as DOMRect);
+
+  it("is on the page once, under an h2, between dragging and gestures and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".scancost")).toHaveLength(1);
+    const h2 = container.querySelector("#scan-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Switch scanning");
+    expect((container.querySelector("#gest-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("counts the controls of the page without its own, and keeps focus on a setting pressed", async () => {
+    boxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.scancost [data-action="scan-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#scan-result-h"));
+    const tabbable = [...container.querySelectorAll<HTMLElement>("a[href],button,input,select,textarea,summary,[tabindex]")].filter(
+      (e) => !e.closest(".scancost") && e.tabIndex >= 0 && !(e as HTMLButtonElement).disabled && (e as HTMLInputElement).type !== "hidden",
+    ).length;
+    expect(container.querySelector(".scancost")?.textContent).toContain(`${tabbable} controls on 1 row.`);
+    await press(container, '.scancost [data-action="scan-mode"][data-value="row-column"]');
+    expect(document.activeElement).toBe(container.querySelector('.scancost [data-action="scan-mode"][data-value="row-column"]'));
+    expect(document.activeElement?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector(".scancost [role=status]")?.textContent).toBe("Scanning row by row, with auto scan, 1.5 s a step.");
+  });
+
+  it("names the settings in the barrier text only once the person set them, in French after a switch", async () => {
+    boxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.scancost [data-action="scan-read"]');
+    expect(await barrierText(container)).not.toContain("Switch scanning:");
+    await press(container, '.scancost [data-action="scan-pace"][data-value="step"]');
+    expect(await barrierText(container)).toMatch(/Switch scanning: one by one, step by step, one press a step\./);
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".scancost")).toHaveLength(1);
+    expect(container.querySelector("#scan-h")?.textContent).toBe("Balayage par contacteur");
+    expect(container.querySelector(".scancost")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector('.scancost [data-value="step"]')?.getAttribute("aria-pressed")).toBe("true");
+    expect(await barrierText(container)).toContain("Balayage par contacteur : un par un, pas à pas, un appui par étape.");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const gestBefore = container.querySelector(".gest")?.innerHTML;
+    await press(container, '.scancost [data-action="scan-speed"][data-value="3000"]');
+    expect(container.querySelector(".gest")?.innerHTML).toBe(gestBefore);
+    unmount();
+    expect(document.querySelector(".scancost")).toBeNull();
+  });
+});
+
+/** Every named region on the page has its own name, as the axe sweep of the app asks (landmark-unique). */
+describe("NarrowAuditPage: named regions", () => {
+  const regionNames = (container: HTMLElement): string[] =>
+    [...container.querySelectorAll<HTMLElement>("section[aria-labelledby],section[aria-label],[role=region]")].map((e) => {
+      const by = e.getAttribute("aria-labelledby");
+      const name = by ? by.split(" ").map((id) => document.getElementById(id)?.textContent ?? "").join(" ") : (e.getAttribute("aria-label") ?? "");
+      return name.replace(/\s+/g, " ").trim().toLowerCase();
+    });
+
+  for (const lang of ["en", "fr"] as const) {
+    it(`has no two regions with the same name at first, in ${lang}`, async () => {
+      await act(() => i18n.changeLanguage(lang));
+      const { container } = render(page());
+      const names = regionNames(container);
+      expect(names.length).toBeGreaterThan(5);
+      expect(names.filter((n, i) => names.indexOf(n) !== i)).toEqual([]);
+    });
+  }
+});
+
+/** "Things that move" sits after switch scanning. jsdom runs no animation and lists none, so those stay UNKNOWN here. */
+describe("NarrowAuditPage: things that move", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The button moves when the banner loads.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+
+  it("is on the page once, under an h2, between switch scanning and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".moving")).toHaveLength(1);
+    const h2 = container.querySelector("#moving-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Things that move");
+    expect((container.querySelector("#scan-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("watches for the time to aim the person chose, then puts focus on the result", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.moving [data-action="moving-aim"][data-value="2"]');
+    expect(container.querySelector('.moving [data-value="2"]')?.getAttribute("aria-pressed")).toBe("true");
+    await press(container, '.moving [data-action="moving-watch"]');
+    expect(document.activeElement).toBe(container.querySelector("#moving-watch-h"));
+    expect(container.querySelector(".moving [role=status]")?.textContent).toBe("Watching the page. You can leave the pointer where it is.");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_000);
+    });
+    expect(document.activeElement).toBe(container.querySelector("#moving-result-h"));
+    const text = container.querySelector(".moving")?.textContent ?? "";
+    expect(text).toContain("You said you take about 2 s to aim.");
+    expect(text).toContain("Controls that moved: 0. Appeared: 0. Gone: 0.");
+    expect(text).toContain("This browser does not list animations, so what is animated is UNKNOWN.");
+    expect(await barrierText(container)).toContain("Things that move: I take about 2 s to aim, and controls need to stay in place for that long.");
+  });
+
+  it("stops at once, keeps the result in French after a switch, and in the barrier text", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(await barrierText(container)).not.toContain("Things that move:");
+    await press(container, '.moving [data-action="moving-watch"]');
+    await press(container, '.moving [data-action="moving-stop"]');
+    expect(document.activeElement).toBe(container.querySelector("#moving-result-h"));
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".moving")).toHaveLength(1);
+    expect(container.querySelector("#moving-h")?.textContent).toBe("Ce qui bouge");
+    expect(container.querySelector(".moving")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector(".moving")?.textContent).toContain("Vous avez dit viser en environ 5 s.");
+    expect(await barrierText(container)).toContain("Ce qui bouge : je mets environ 5 s à viser");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const scanBefore = container.querySelector(".scancost")?.innerHTML;
+    await press(container, '.moving [data-action="moving-watch"]');
+    await press(container, '.moving [data-action="moving-stop"]');
+    expect(container.querySelector(".scancost")?.innerHTML).toBe(scanBefore);
+    unmount();
+    expect(document.querySelector(".moving")).toBeNull();
+  });
+});
+
+/** "Shown on hover only" sits after the things that move. It reads the style sheets jsdom holds for the page. */
+describe("NarrowAuditPage: shown on hover only", () => {
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The menu opens only when the mouse rests on it.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+
+  it("is on the page once, under an h2, between the things that move and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".hoveronly")).toHaveLength(1);
+    const h2 = container.querySelector("#hover-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Shown on hover only");
+    expect((container.querySelector("#moving-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("finds a hover rule the page holds, and leaves out the other panels' own styles", async () => {
+    const style = document.createElement("style");
+    style.textContent = ".zz-menu .zz-sub{display:none} .zz-menu:hover .zz-sub{display:block}";
+    document.head.appendChild(style);
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(
+      <>
+        {page()}
+        <div className="zz-menu">
+          <div className="zz-sub">
+            <a href="#zz">Hidden link</a>
+          </div>
+        </div>
+      </>,
+    );
+    await press(container, '.hoveronly [data-action="hover-ability"][data-value="cannot"]');
+    expect(document.activeElement?.getAttribute("aria-pressed")).toBe("true");
+    await press(container, '.hoveronly [data-action="hover-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#hover-result-h"));
+    const text = container.querySelector(".hoveronly")?.textContent ?? "";
+    expect(text).toContain("Rule “.zz-menu:hover .zz-sub” (display): 1 hidden element holds controls shown on hover only, such as “Hidden link”.");
+    expect(text).toContain("You said you cannot hover");
+    expect(await barrierText(container)).toContain("Hover: I cannot hover. Content shown only on hover is out of my reach. Here, 1 rule hides something unless hovered.");
+    style.remove();
+  });
+
+  it("keeps the answer in French after a switch, and in the barrier text", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(await barrierText(container)).not.toContain("Hover: I c");
+    await press(container, '.hoveronly [data-action="hover-ability"][data-value="cannot"]');
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".hoveronly")).toHaveLength(1);
+    expect(container.querySelector("#hover-h")?.textContent).toBe("Montré au survol seulement");
+    expect(container.querySelector(".hoveronly")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector('.hoveronly [data-value="cannot"]')?.getAttribute("aria-pressed")).toBe("true");
+    expect(await barrierText(container)).toContain("Survol : je ne peux pas survoler.");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const movingBefore = container.querySelector(".moving")?.innerHTML;
+    await press(container, '.hoveronly [data-action="hover-read"]');
+    expect(container.querySelector(".moving")?.innerHTML).toBe(movingBefore);
+    unmount();
+    expect(document.querySelector(".hoveronly")).toBeNull();
+  });
+});
+
+/** "Asked twice" sits after "Shown on hover only". jsdom lays nothing out, so every element is given a box. */
+describe("NarrowAuditPage: asked twice", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "The form asks for my email twice.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+  const boxes = () =>
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, top: 0, left: 0, right: 120, bottom: 44, width: 120, height: 44, toJSON: () => ({}) } as DOMRect);
+
+  it("is on the page once, under an h2, between hover and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".twice")).toHaveLength(1);
+    const h2 = container.querySelector("#twice-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Asked twice");
+    expect((container.querySelector("#hover-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("finds a field the page asks for again, and puts it in the barrier text", async () => {
+    boxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(
+      <>
+        {page()}
+        <form>
+          <label>
+            Email <input type="email" />
+          </label>
+          <label>
+            Confirm email <input type="email" />
+          </label>
+        </form>
+      </>,
+    );
+    expect(await barrierText(container)).not.toContain("Asked twice:");
+    await press(container, '.twice [data-action="twice-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#twice-result-h"));
+    expect(container.querySelector(".twice")?.textContent).toContain("“Confirm email” asks for “Email” again.");
+    expect(await barrierText(container)).toContain("Asked twice: this page asks for 1 thing twice. I need to answer once.");
+  });
+
+  it("keeps the result in French after a switch", async () => {
+    boxes();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.twice [data-action="twice-read"]');
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".twice")).toHaveLength(1);
+    expect(container.querySelector("#twice-h")?.textContent).toBe("Demandé deux fois");
+    expect(container.querySelector(".twice")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#twice-result-h")?.textContent).toBe("Formulaires de cette page");
+  });
+
+  it("leaves the other panels alone, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    const hoverBefore = container.querySelector(".hoveronly")?.innerHTML;
+    await press(container, '.twice [data-action="twice-read"]');
+    expect(container.querySelector(".hoveronly")?.innerHTML).toBe(hoverBefore);
+    unmount();
+    expect(document.querySelector(".twice")).toBeNull();
+  });
+});
+
+/** The access summary gathers the person's lines from the panels added after the first three, never what those panels found on this page. */
+describe("NarrowAuditPage: the access summary with the later panels", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const summary = async (container: HTMLElement) => {
+    await press(container, '.summary [data-action="summary-make"], .summary [data-action="summary-make"]');
+    return {
+      text: (container.querySelector("#summary-text") as HTMLTextAreaElement).value,
+      request: (container.querySelector("#summary-request") as HTMLTextAreaElement | null)?.value ?? "",
+    };
+  };
+
+  it("brings in how the person scans, their time to aim and whether they can hover, without this page's counts", async () => {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, top: 0, left: 0, right: 80, bottom: 44, width: 80, height: 44, toJSON: () => ({}) } as DOMRect);
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.scancost [data-action="scan-pace"][data-value="step"]');
+    await press(container, '.scancost [data-action="scan-read"]');
+    await press(container, '.moving [data-action="moving-aim"][data-value="10"]');
+    await press(container, '.hoveronly [data-action="hover-ability"][data-value="cannot"]');
+    const { text, request } = await summary(container);
+    expect(text).toContain("\nSwitch scanning: one by one, step by step, one press a step.\n");
+    expect(text).toContain("\nThings that move: I take about 10 s to aim, and controls need to stay in place for that long.\n");
+    expect(text).toContain("\nHover: I cannot hover. Content shown only on hover is out of my reach.\n");
+    expect(text).not.toMatch(/main action takes|Here, \d/);
+    expect(text).toContain("My typing pace: UNKNOWN, not done yet.");
+    expect(text).toContain("Dragging: UNKNOWN, not done yet.");
+    expect(request).toContain("the main action early in the order of the keyboard, controls that stay in place while I aim and the same content on focus and on tap as on hover.");
+    expect(container.querySelector('.summary [data-action="summary-go-scan"]')).toBeNull();
+    expect(container.querySelector('.summary [data-action="summary-go-drag"]')).not.toBeNull();
+  });
+
+  it("asks nothing about dragging or hover when the person can do both", async () => {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function box(this: Element): DOMRect {
+      const width = this.classList.contains("gest-handle") ? 44 : 300;
+      return { x: 0, y: 0, top: 0, left: 0, right: width, bottom: 44, width, height: 44, toJSON: () => ({}) } as DOMRect;
+    });
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.gest [data-action="gest-start"]');
+    for (let i = 0; i < 3; i += 1) {
+      for (const [type, x] of [
+        ["pointerdown", 10],
+        ["pointermove", 260],
+      ] as const) {
+        const e = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x });
+        Object.defineProperty(e, "pointerId", { value: 1 });
+        Object.defineProperty(e, "pointerType", { value: "mouse" });
+        Object.defineProperty(e, "timeStamp", { value: 1_000 * i + (type === "pointerdown" ? 0 : 400) });
+        await act(async () => {
+          (container.querySelector(".gest-handle") as HTMLElement).dispatchEvent(e);
+        });
+      }
+    }
+    await press(container, '.hoveronly [data-action="hover-ability"][data-value="can"]');
+    const { text, request } = await summary(container);
+    expect(text).toContain("\nDragging: 3 of 3 tries made it, 0.4 s in the middle.\n");
+    expect(text).toContain("\nHover: I can hover.\n");
+    expect(request).toBe("");
+    expect(container.querySelector("#summary-request")).toBeNull();
+  });
+
+  it("brings in the typing pace in French after a switch", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.typing [data-action="typing-start"]');
+    const name = container.querySelector("#typing-field-name") as HTMLInputElement;
+    for (const [value, at] of [
+      ["A", 1_000],
+      ["Alex Martin", 5_000],
+    ] as const) {
+      vi.spyOn(Date, "now").mockReturnValue(at);
+      await act(async () => {
+        name.value = value;
+        name.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
+      });
+    }
+    await press(container, '.typing [data-action="typing-done"]');
+    await press(container, '[data-action="lang-fr"]');
+    const { text } = await summary(container);
+    expect(text).toMatch(/\nMon rythme de saisie\u00A0: environ \d+ caractères par minute, 4\u00A0s par champ court\.\n/);
+  });
+});
+
+/** "Where to start" sits right after the audit tool and points to the other tests. */
+describe("NarrowAuditPage: where to start", () => {
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+
+  it("is on the page once, under an h2, between the audit tool and the page on your screen", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".start")).toHaveLength(1);
+    const h2 = container.querySelector("#start-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Where to start");
+    expect((container.querySelector('[data-action="run"]') as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#fit-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("points to a heading that is on the page for every test it lists", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.start [data-action="start-tool"][data-value="finger"]');
+    const keys = [...container.querySelectorAll('.start [data-action="start-go"]')].map((b) => b.getAttribute("data-value"));
+    expect(keys.length).toBeGreaterThan(10);
+    for (const key of keys) expect(container.querySelector(`#${key === "gestures" ? "gest" : key}-h`), String(key)).not.toBeNull();
+  });
+
+  it("puts the tests for a switch first, and a go button takes focus to the test", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.start [data-action="start-tool"][data-value="switch"]');
+    expect(document.activeElement).toBe(container.querySelector('.start [data-value="switch"]'));
+    expect(document.activeElement?.getAttribute("aria-pressed")).toBe("true");
+    const first = container.querySelector(".start ol li");
+    expect(first?.textContent).toContain("Switch scanning");
+    await press(container, '.start [data-action="start-go"][data-value="scan"]');
+    expect(document.activeElement).toBe(container.querySelector("#scan-h"));
+  });
+
+  it("brings what the person uses into the summary, first, and keeps it in French after a switch", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.start [data-action="start-tool"][data-value="mouth-stick"]');
+    await press(container, '.start [data-action="start-tool"][data-value="voice"]');
+    await press(container, '.summary [data-action="summary-make"]');
+    const text = (container.querySelector("#summary-text") as HTMLTextAreaElement).value;
+    expect(text.split("\n")[2]).toBe("What I use: a mouth stick and my voice.");
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelector("#start-h")?.textContent).toBe("Par où commencer");
+    expect(container.querySelector('.start [data-value="voice"]')?.getAttribute("aria-pressed")).toBe("true");
+    await press(container, '.summary [data-action="summary-make"]');
+    expect((container.querySelector("#summary-text") as HTMLTextAreaElement).value).toContain("Ce que j’utilise : une baguette buccale et ma voix.");
+  });
+
+  it("the summary's go button for what the person uses takes focus here", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.summary [data-action="summary-make"]');
+    await press(container, '.summary [data-action="summary-go-tools"]');
+    expect(document.activeElement).toBe(container.querySelector("#start-h"));
+  });
+});
+
+/** "Covered controls" sits after "Asked twice". jsdom lays nothing out and has no elementFromPoint, so the tests give both. */
+describe("NarrowAuditPage: covered controls", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete (document as unknown as { elementFromPoint?: unknown }).elementFromPoint;
+  });
+  const press = async (container: HTMLElement, selector: string) => {
+    await act(async () => {
+      (container.querySelector(selector) as HTMLElement).click();
+    });
+  };
+  const barrierText = async (container: HTMLElement) => {
+    (container.querySelector("#fit-kind-too-small") as HTMLInputElement).checked = true;
+    (container.querySelector("#fit-what") as HTMLTextAreaElement).value = "A banner covers the Send button.";
+    await press(container, '[data-action="fit-make"]');
+    await act(async () => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    });
+    return (container.querySelector("#fit-text") as HTMLTextAreaElement).value;
+  };
+  /** Every element sits in one small box on the screen; the element with id zz-cover, when there is one, is on top of everything. */
+  const layout = () => {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ x: 10, y: 10, top: 10, left: 10, right: 90, bottom: 54, width: 80, height: 44, toJSON: () => ({}) } as DOMRect);
+    (document as unknown as { elementFromPoint: () => Element | null }).elementFromPoint = () => document.getElementById("zz-cover");
+  };
+
+  it("is on the page once, under an h2, between asked twice and the summary", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    expect(container.querySelectorAll(".hittest")).toHaveLength(1);
+    const h2 = container.querySelector("#hit-h") as HTMLElement;
+    expect(h2.tagName).toBe("H2");
+    expect(h2.textContent).toBe("Covered controls");
+    expect((container.querySelector("#twice-h") as Node).compareDocumentPosition(h2)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(h2.compareDocumentPosition(container.querySelector("#summary-h") as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("finds the controls something covers, leaves its own out, and puts it in the barrier text", async () => {
+    layout();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(
+      <>
+        {page()}
+        <div id="zz-cover">We use cookies</div>
+      </>,
+    );
+    expect(await barrierText(container)).not.toContain("Covered controls:");
+    await press(container, '.hittest [data-action="hit-read"]');
+    expect(document.activeElement).toBe(container.querySelector("#hit-result-h"));
+    const text = container.querySelector(".hittest")?.textContent ?? "";
+    expect(text).toMatch(/\d+ controls tested\. Fully covered: \d+\./);
+    expect(text).toContain("is fully covered by another element “We use cookies” (div#zz-cover).");
+    expect(text).not.toContain("“Find covered controls” is fully covered");
+    expect(await barrierText(container)).toMatch(/Covered controls: \d+ controls are covered by something else/);
+  });
+
+  it("keeps the result in French after a switch", async () => {
+    layout();
+    await act(() => i18n.changeLanguage("en"));
+    const { container } = render(page());
+    await press(container, '.hittest [data-action="hit-read"]');
+    await press(container, '[data-action="lang-fr"]');
+    expect(container.querySelectorAll(".hittest")).toHaveLength(1);
+    expect(container.querySelector("#hit-h")?.textContent).toBe("Commandes couvertes");
+    expect(container.querySelector(".hittest")?.parentElement?.getAttribute("lang")).toBe("fr");
+    expect(container.querySelector("#hit-result-h")?.textContent).toBe("Ce qui couvre des commandes");
+  });
+
+  it("is in where to start for a pointer, and leaves nothing behind when the page goes away", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    const { container, unmount } = render(page());
+    await press(container, '.start [data-action="start-tool"][data-value="head-pointer"]');
+    await press(container, '.start [data-action="start-go"][data-value="hit"]');
+    expect(document.activeElement).toBe(container.querySelector("#hit-h"));
+    unmount();
+    expect(document.querySelector(".hittest")).toBeNull();
   });
 });

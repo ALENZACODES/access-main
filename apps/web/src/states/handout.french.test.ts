@@ -15,6 +15,25 @@ function ownText(locale: "en" | "fr", places = [place("a", { wheelchair_descript
   return [h.title, h.intro, ...h.footer, ...h.entries.flatMap((e) => [...e.lines.map((l) => l.label), ...e.questions])];
 }
 
+describe("the source line joins its parts with French spacing", () => {
+  const sourced = place("s", { wheelchair_description: "x" });
+  const sourceValue = (locale: "en" | "fr") => buildHandout([sourced], locale, TODAY, { ...DEFAULT_HANDOUT, sources: true }).entries[0]!.lines.find((l) => l.label === (locale === "fr" ? "D’où cela vient" : "Where it comes from"))!.value;
+  it("puts a narrow no-break space before each semicolon in French", () => {
+    const v = sourceValue("fr");
+    expect(v.split(";").length).toBe(3);
+    expect(v).not.toMatch(/[^\u202f];/);
+    expect(v).toMatch(/\u202f; /);
+  });
+  it("keeps the plain semicolon in English", () => {
+    const v = sourceValue("en");
+    expect(v).toContain("; ");
+    expect(v).not.toContain("\u202f");
+  });
+  it("is clean French", () => {
+    expect(lintFrench(sourceValue("fr"))).toEqual([]);
+  });
+});
+
 describe("French copy on the page", () => {
   it("passes the French typography check for everything the App wrote", () => {
     for (const s of ownText("fr")) expect(lintFrench(s), s).toEqual([]);

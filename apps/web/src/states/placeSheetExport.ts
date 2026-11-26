@@ -78,15 +78,27 @@ export function placeNote(place: PackPlaceRecord, locale: Locale): string {
   );
 }
 
+/** Keep existing portable IDs. A tilde escapes one UTF-16 code unit, including a literal tilde.
+ * Replacing punctuation with a single dash gave different places the same identity on import. */
+function placeUid(id: string): string {
+  const encoded = id.replace(/[^A-Za-z0-9._-]/g, (unit) => `~${unit.charCodeAt(0).toString(16).padStart(4, "0")}`);
+  return `pack-place-${encoded}`;
+}
+
 /** One contact card for one place. The name is the place's name, or UNKNOWN. */
 export function placeToVcard(place: PackPlaceRecord, locale: Locale): string {
-  const name = place.name === null ? UNKNOWN : cleanLine(place.name) || UNKNOWN;
-  const lines = ["BEGIN:VCARD", "VERSION:3.0", "PRODID:-//Ontario accessibility app//Places//EN", `FN:${escapeVcard(name)}`, `N:${escapeVcard(name)};;;;`, `ORG:${escapeVcard(place.category ?? UNKNOWN)}`];
-  if (place.address) lines.push(`ADR;TYPE=WORK:;;${escapeVcard(place.address)};;;;`);
+  const name = escapeVcard(place.name ?? "") || UNKNOWN;
+  const category = escapeVcard(place.category ?? "") || UNKNOWN;
+  const address = escapeVcard(place.address ?? "");
+  const lines = [
+    "BEGIN:VCARD", "VERSION:3.0", "PRODID:-//Ontario accessibility app//Places//EN",
+    `FN:${name}`, `N:${name};;;;`, `ORG:${category}`,
+  ];
+  if (address) lines.push(`ADR;TYPE=WORK:;;${address};;;;`);
   if (hasPoint(place)) lines.push(`GEO:${place.location.lat.toFixed(5)};${place.location.lon.toFixed(5)}`);
   lines.push(`NOTE:${escapeVcard(placeNote(place, locale))}`);
   if (place.provenance?.url) lines.push(`URL:${cleanLine(place.provenance.url).replace(/\s/g, "")}`);
-  lines.push(`UID:pack-place-${cleanLine(place.id).replace(/[^A-Za-z0-9._-]/g, "-")}`, "END:VCARD");
+  lines.push(`UID:${placeUid(place.id)}`, "END:VCARD");
   return lines.map(foldVcardLine).join(CRLF) + CRLF;
 }
 

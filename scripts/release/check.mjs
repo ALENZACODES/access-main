@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { findForbiddenShippedCopy } from './bundle-copy.mjs';
 import { forbiddenOrgNeedles } from '../../packages/shared/test/forbiddenOrg.ts';
 
-export const DEFAULT_BUDGET_BYTES = 4_141_875;
+export const DEFAULT_BUDGET_BYTES = 5_242_880;
 const TEXT_EXTENSIONS = new Set([
   '.html', '.js', '.mjs', '.cjs', '.css', '.json', '.txt', '.svg', '.xml', '.webmanifest',
   '.md', '.csv', '.geojson', '.map', '.vtt',

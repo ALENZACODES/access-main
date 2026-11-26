@@ -289,3 +289,94 @@ export * from "./recoveryReceiptLedger";
 export * from "./recoveryReceiptAnalysis";
 export { recoveryReceiptCopy } from "./recoveryReceiptCopy";
 export type { ReceiptCopy } from "./recoveryReceiptCopy";
+
+// Manual local guided review; notes cannot change installed pack readiness.
+export { RecoveryGuidedReviewPanel } from "./RecoveryGuidedReviewPanel";
+export type { RecoveryGuidedReviewPanelProps } from "./RecoveryGuidedReviewPanel";
+export {
+  GUIDED_ACTIONS, GUIDED_CONDITIONS, GUIDED_EVIDENCE, GUIDED_LIMITS,
+  GUIDED_OUTCOMES, GUIDED_PHASES, GUIDED_TIERS, GUIDED_TOPICS,
+  appendGuidedEvent, beginGuidedCase, checkGuidedCase, checkGuidedDocument,
+  checkGuidedEvent, checkGuidedSource, checkGuidedStep, emptyGuidedDocument,
+  filterGuidedCases, guidedContentReady, guidedEventsFor, guidedPhaseFromEvents,
+  guidedStepsFor, guidedSummary, mergeGuidedDocuments, nextGuidedId,
+  parseGuidedDocument, previewGuidedMerge, recordGuidedStep,
+  serializeGuidedDocument,
+} from "./recoveryGuidedReview";
+export type {
+  GuidedAction, GuidedCase, GuidedCondition, GuidedCounts, GuidedDocument,
+  GuidedEvent, GuidedEvidence, GuidedFilter, GuidedIssue, GuidedLocale,
+  GuidedMergePreview, GuidedOutcome, GuidedPhase, GuidedResult,
+  GuidedSource, GuidedStep, GuidedTier, GuidedTopic,
+} from "./recoveryGuidedReview";
+export {
+  compareGuidedPacks, createGuidedReport, guidedDailyGroups, guidedFindings,
+  guidedNarrative, guidedPackReviews, guidedReviewPlan, guidedSourceGroups,
+  guidedTimeline, guidedTopicStatus,
+} from "./recoveryGuidedAnalysis";
+export type {
+  GuidedComparison, GuidedDailyGroup, GuidedFinding, GuidedFindingCode,
+  GuidedPackReview, GuidedReport, GuidedReviewPlan, GuidedSourceGroup,
+  GuidedTopicStatus,
+} from "./recoveryGuidedAnalysis";
+export { recoveryGuidedCopy } from "./recoveryGuidedCopy";
+export type { GuidedCopy } from "./recoveryGuidedCopy";
+
+// User-directed offline support briefs; no automated handoffs or pack readiness claims.
+export { RecoverySupportBriefPanel } from "./RecoverySupportBriefPanel";
+export type { RecoverySupportBriefPanelProps } from "./RecoverySupportBriefPanel";
+export * from "./recoverySupportBrief";
+export * from "./recoverySupportAnalysis";
+export { recoverySupportCopy } from "./recoverySupportCopy";
+export type { SupportCopy } from "./recoverySupportCopy";
+export { auditBriefPrivacy, briefExportAllowed, briefPrivacyCodes } from "./recoverySupportPrivacy";
+export type { BriefPrivacyCode, BriefPrivacyFinding, BriefPrivacyReport } from "./recoverySupportPrivacy";
+export { buildBriefReviewPlan, buildBriefPortfolio, briefTopicLabels, briefReviewText } from "./recoverySupportReview";
+export type { BriefTopicReview, BriefReviewPlan, BriefPortfolio } from "./recoverySupportReview";
+
+// User-initiated offline source-date review; never infers pack readiness.
+export { RecoverySourceRefreshPanel } from "./RecoverySourceRefreshPanel";
+export type { RecoverySourceRefreshPanelProps } from "./RecoverySourceRefreshPanel";
+export {
+  REFRESH_SCHEMA, REFRESH_LIMITS, REFRESH_TOPICS, REFRESH_CONDITIONS,
+  REFRESH_TIERS, REFRESH_DECISIONS, emptyRefreshDocument, checkRefreshSource,
+  checkRefreshSubject, checkRefreshObservation, checkRefreshReview,
+  checkRefreshDocument, refreshCalendarDay, refreshInstant,
+  appendRefreshSubject, appendRefreshObservation, appendRefreshReview,
+  nextRefreshId, exportRefreshDocument, parseRefreshDocument,
+  previewRefreshMerge, mergeRefreshDocuments, filterRefreshSubjects,
+  latestRefreshObservation, latestRefreshReview, refreshReviewCurrent, refreshObservationsFor,
+  refreshReviewsFor, summarizeRefresh, refreshContentReady,
+} from "./recoverySourceRefresh";
+export type {
+  RefreshTopic, RefreshCondition, RefreshTier, RefreshDecision,
+  RefreshIssue, RefreshResult, RefreshProvenance, RefreshSubject,
+  RefreshObservation, RefreshReview, RefreshDocument, RefreshFilter,
+  RefreshMergePreview, RefreshSummary,
+} from "./recoverySourceRefresh";
+export {
+  sourceAgeDays, refreshConflictPairs, refreshFindings, refreshReviewQueue,
+  refreshPackOverviews, refreshTopicOverviews, refreshAgeBuckets,
+  refreshTimeline, compareRefreshSubject, refreshReport, refreshNarrative,
+} from "./recoverySourceRefreshAnalysis";
+export type {
+  RefreshFindingCode, RefreshFinding, RefreshReviewRow, RefreshAgeBucket,
+  RefreshPackOverview, RefreshTopicOverview, RefreshTimelinePoint,
+  RefreshWindowOptions, RefreshReviewReport, RefreshSubjectComparison,
+} from "./recoverySourceRefreshAnalysis";
+export { recoverySourceRefreshCopy } from "./recoverySourceRefreshCopy";
+export type { RefreshCopy } from "./recoverySourceRefreshCopy";
+
+export { RecoveryTransferBundleDisclosure } from "./transferBundle/Disclosure";
+
+// Bounded multi-part transfer sets; each numbered part remains a regular bundle.
+export { createTransferSet, openTransferSet, transferSetMembers, transferSetReceipt, SET_LIMITS, SET_SCHEMA } from "./transferBundle/multipart/model";
+export type { SetProblem, SetProblemCode, SetResult, TransferPart, TransferSet } from "./transferBundle/multipart/model";
+export { planTransferParts, candidatesFromMembers, describePlan, planMatchesMembers } from "./transferBundle/multipart/planner";
+export type { PlannedPart, TransferPlan, PlanIssueCode, PlanResult } from "./transferBundle/multipart/planner";
+export { auditTransferSet, compareExpectedMembers, expectedMembersFromSet, summarizeAudit } from "./transferBundle/multipart/analysis";
+export type { KindCount, PartAuditRow, TransferSetAudit, ExpectedMember, MemberDifference, MemberComparison } from "./transferBundle/multipart/analysis";
+export { exportTransferReceipt, parseTransferReceipt, checkTransferReceipt, compareTransferReceipt, compareReceiptText, transferReceiptSummary, SET_RECEIPT_SCHEMA, RECEIPT_LIMIT_BYTES } from "./transferBundle/multipart/receipt";
+export type { TransferReceipt, TransferReceiptPart, ReceiptIssue, ReceiptResult, ReceiptComparison } from "./transferBundle/multipart/receipt";
+export { multipartCopy, multipartNumber, multipartFileName, multipartMemberName } from "./transferBundle/multipart/copy";
+export type { MultipartLocale, MultipartCopy } from "./transferBundle/multipart/copy";

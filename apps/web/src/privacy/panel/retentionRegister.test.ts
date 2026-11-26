@@ -41,7 +41,7 @@ describe("the real register", () => {
     expect(days).toEqual({ "access.activity.v1": 90, "access.egress.v1": 30, "access.seen.v1": 365 });
   });
   it("counts the rows by what was found", () => {
-    expect(retentionCounts(RETENTION_REGISTER)).toEqual({ total: 16, timed: 3, capped: 7, none: 7, unknown: 1 });
+    expect(retentionCounts(RETENTION_REGISTER)).toEqual({ total: 17, timed: 3, capped: 8, none: 7, unknown: 1 });
   });
 });
 

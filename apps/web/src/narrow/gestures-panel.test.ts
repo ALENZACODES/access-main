@@ -7,6 +7,7 @@ import {
   GESTURES_CSS,
   GESTURES_EXCLUDE,
   GESTURES_LISTED,
+  dragNeedsSite,
   gesturesDrag,
   gesturesModelOf,
   gesturesNoteOf,
@@ -422,5 +423,14 @@ describe('mountGesturesPanel', () => {
     root.click('gest-stop');
     expect(root.innerHTML).toBe(before);
     expect(panel.getState()).toEqual(initialGesturesState());
+  });
+});
+
+describe('dragNeedsSite', () => {
+  it('asks the site for something unless every try of a finished test made it', () => {
+    expect(dragNeedsSite(st({ tries: [tr(true, 900), tr(true, 1_100)], current: null, gaveUp: false }))).toBe(false);
+    expect(dragNeedsSite(st())).toBe(true);
+    expect(dragNeedsSite(st(giveUpDrag(emptyDragTrial())))).toBe(true);
+    expect(dragNeedsSite(initialGesturesState())).toBe(true);
   });
 });

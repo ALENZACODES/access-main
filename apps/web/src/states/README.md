@@ -21,8 +21,111 @@ Day 22 error and empty states, EN + FR, wired into the live module pages.
 - The shell's own states (not found, render failed, storage unavailable,
   profile save failed) stay in `shell/errorStates.ts` with `ErrorActions`.
 - The "accessibility unknown" state keeps UNKNOWN as UNKNOWN.
+- Spot-check sheet (`PackSpotCheck.tsx`, mounted in `PackPlaces.tsx`): picks a
+  few of the places on screen to look at in person, from a seed, so the same
+  places and seed give the same list on any device (`spotRandom.ts`,
+  `spotSample.ts`). The sheet (`spotSheet.ts`, `spotSheetExport.ts`: page, text,
+  CSV) puts what the pack reports next to the same five questions for every
+  place. It never says a place is accessible and never says the pack is right or
+  wrong. Nothing written on the sheet is read, kept or sent, and no storage key
+  is used.
 - Tests: `states/stateCopy.test.ts`, `pages/ModulePage.states.dom.test.tsx`,
   `e2e/day22-states.spec.ts`.
+
+## Saved-places fingerprint (P4, round 7)
+
+Two devices can tell whether they hold the same saved places without sending
+the places anywhere.
+
+- `sha256.ts` is a plain SHA-256 (same answer on every device, no secure
+  context needed). `packCanonical.ts` gives each record one fixed text form;
+  `packFingerprint.ts` hashes the whole pack, the ids alone, and 16 groups
+  chosen by a hash of the id.
+- `packFingerprintCode.ts` writes and reads the `PACKFP v1` code. It has a
+  check value, so a mistyped or cut code is refused rather than compared.
+- `packFingerprintCompare.ts` says: same, same ids with different details, or
+  different places, and which groups differ.
+- `packGroupDetail.ts` narrows a difference to ids: a `PACKGRP v1` code lists
+  one short hash per place in the groups that differ, and pasting the other
+  device's code shows only-here, only-there and changed ids.
+- `PackFingerprint.tsx` and `PackGroupDetail.tsx` are closed by default and add
+  no heading. They are mounted in `PackPlaces.tsx` after the list transfer.
+- A match means the saved records are the same on both devices, as read. It
+  never says they are correct or up to date. Codes hold counts, ids and hashes:
+  no names, notes, addresses or locations. No new storage key is used.
+
+## Call script (round 9)
+
+- `CallScript.tsx` writes a script for phoning one place, from what the pack
+  holds: an opening, the name (hard words spelled with the English or French
+  spelling alphabet), the address read in words, the visit questions with their
+  reasons and room to write, and a closing with fields for who, when and a
+  call-back date. Closed until asked for; no heading; nothing is dialled,
+  sent or stored.
+- Where the pack has no name, no street, or only a box or a corner, the script
+  says so and tells the caller to ask, and never fills the gap.
+- `numberWords.ts` (0 to 99 999, English and French rules), `spellOut.ts`,
+  `callScript.ts`, `callScriptPick.ts`, `callScriptExport.ts` (text and a
+  printable page), `speak.ts` (the browser's own voice, injected for tests).
+- Tests: one `*.test.ts` per module, `CallScript.dom.test.tsx` and
+  `PackPlaces.callScript.dom.test.tsx`.
+## Possible repeats (round 11)
+
+- `PossibleRepeats.tsx` looks for places of the pack that may be one place
+  listed twice, from name (accents, case, articles and spelling variants
+  ignored, small slips allowed), street address, distance and kind. It goes
+  further than `packDuplicates.ts`, which only pairs the same folded name within
+  75 m for the data report.
+- Position and kind alone never make a pair; a name or street must also be
+  alike. Pairs come from buckets (same address, same name, same patch of
+  ground), a bucket over 40 places is skipped and counted, and groups are made
+  by joining pairs.
+- It points and says why. It merges, hides and removes nothing, and says it
+  cannot tell which record is right. A group whose members report different
+  wheelchair tags is marked.
+- Modules: `textSimilarity.ts`, `placeNameKey.ts`, `duplicateScore.ts`,
+  `duplicateGroups.ts`, `duplicateCopy.ts`, `duplicateExport.ts`.
+## Places close together (P4, round 13)
+
+A closed-by-default section on the places list that groups the listed places that sit close together on the map.
+It uses straight-line distance only: a group is not a route, and nothing says a way between two places can be
+used with a wheelchair. Everything is worked out on this device from the pack's map points.
+
+- `walkGroups.ts`: groups places within 100, 200 or 400 metres of each other, joined end to end, with a grid
+  of cells so a long list is not compared pair by pair. Places with no map point are counted and left out; a very
+  long list is cut at `MAX_GROUPED_PLACES` and the cut is reported.
+- `walkGroupName.ts`: names a group by the street half of its places share, else by its first named place. Never
+  by a neighbourhood or district, which the pack does not give.
+- `walkGroupStats.ts`: counts, filters (different tags, every tag UNKNOWN, two or more UNKNOWN, a place tagged no)
+  and orders. None of them ranks a group as better or worse.
+- `walkGroupLinks.ts`: for a group of up to 400 places, the places whose absence would split the rest of the
+  group (shown as where a group is thin), each place's nearest neighbour and the closest pair.
+- `walkGroupCopy.ts`, `walkGroupExport.ts`: English and French wording, and text and CSV files made in the
+  browser (coordinates written as plain numbers, so a negative longitude is not given a formula guard).
+- `WalkGroups.tsx` is mounted in `PackPlaces.tsx` and shows nothing when fewer than two places have a map point.
+- Tests: `walkGroup*.test.ts`, `WalkGroups.dom.test.tsx`, `PackPlaces.walkGroups.dom.test.tsx`.
+## Language of the names (P4, round 15)
+
+A closed-by-default section on the places list that checks each name for everyday French or English words ("rue",
+"bibliothèque", "library", "school"). It is a guess from common words and says so: a name made of a person's name,
+a brand or a town points to no language, and nothing here says what language a name is in or changes a name.
+
+- `nameLexicon.ts`: the word lists, folded (lower case, no accents). A word both languages use ("centre", "place",
+  "hotel", "route", "municipal") is in neither list.
+- `nameLanguage.ts`: splits a name into words (hyphens and apostrophes split; "l'" and "d'" count as French),
+  checks the alphabet (a name mostly in another alphabet is set aside), counts French-only letters, and marks a
+  name that is a French half and an English half split by a slash or bar.
+- `nameLanguageReport.ts`: runs the reader over the list, filters (a reading, pairs, accented names with no word
+  that points to a language), orders, lists the kinds of place behind a reading, and gives whole-number shares.
+- `addressLanguage.ts`: the same reading for the street part of an address (the street type and a direction after it
+  only, so "St. Clair Avenue" is not read by its "St"), and a comparison of what a name and its address point to.
+  "avenue" and "est" are in neither list. A place whose name and address point to different languages is a
+  filter choice, not a fault.
+- `nameLanguageKinds.ts`: a table of kinds of place against what their names point to, counts only, UNKNOWN last,
+  with its own CSV file.
+- `nameLanguageCopy.ts`, `nameLanguageExport.ts`: English and French wording, and text and CSV files.
+- `NameLanguages.tsx` is mounted in `PackPlaces.tsx` and shows nothing when no place has a name.
+- Tests: `name*.test.ts`, `NameLanguages.dom.test.tsx`, `PackPlaces.nameLanguages.dom.test.tsx`.
 
 ## Reading ease of the notes (round 10)
 
@@ -36,3 +139,44 @@ Day 22 error and empty states, EN + FR, wired into the live module pages.
 - Notes under six words are counted as too short to score, never scored.
 - Modules: `noteSyllables.ts`, `noteSentences.ts`, `noteReadability.ts`,
   `noteReadabilityIndex.ts`, `noteReadabilityCopy.ts`, `noteReadabilityExport.ts`.
+
+## Tag and note (P4, round 12)
+
+A closed-by-default section on the places list for places whose wheelchair tag and free-text note may point
+opposite ways. Everything is read from the words of the note on this device; nothing is sent anywhere.
+
+- `tagNoteSignals.ts`: finds access and barrier words in a note (ramp, lift, steps, stairs, step free,
+  automatic door, narrow or wide with a barrier or access reading, and French equivalents). A negated word
+  flips direction ("no ramp"), and words inside a phrase are counted once.
+- `tagNoteCheck.ts`: only tags yes, designated and no are compared. A tag of limited or unknown is never
+  flagged. Each finding is "one-sided" (all marked words point against the tag) or "mixed". It never says
+  which of the tag and the note is right.
+- `tagNoteMarks.ts`: splits the note into pieces that join back to the exact note, so the marked words can be
+  shown in place.
+- `tagNoteSpread.ts`: the compared places grouped by kind, with counts, clear cases and a share. A high share
+  is not read as a worse kind.
+- `tagNoteEarlier.ts`: reads a findings CSV saved by this tool (formula guard undone, bad rows counted, not
+  guessed at) and lists what is new, changed, no longer or the same.
+- `tagNoteCheckCopy.ts`, `tagNoteMoreCopy.ts`: English and French wording; `tagNoteCheckExport.ts`,
+  `tagNoteSpreadExport.ts`: text and CSV files made in the browser.
+- `TagNoteCheck.tsx` (with `TagNoteSpread.tsx` and `TagNoteEarlier.tsx`) is mounted in `PackPlaces.tsx` and
+  shows nothing when no place has a note.
+- Tests: `tagNote*.test.ts`, `TagNoteCheck.dom.test.tsx`, `TagNoteMore.dom.test.tsx`,
+  `PackPlaces.tagNote.dom.test.tsx`.
+## Wording of names and addresses (P4, round 14)
+
+A closed-by-default section on the places list that points at names and addresses written differently from what a
+reader may expect. It reads the text as the pack gives it, says what it saw, and never says the text is wrong or
+changes it. A pack may write a place this way on purpose.
+
+- `writingRules.ts`: thirteen rules, seven for names and six for addresses: all capitals, all lower case, a phone
+  number, e-mail or web address, a name that looks like an address (a leading number and a street word, so "7 Eleven"
+  is not one), punctuation at the edge, a repeated word, a name equal to the address, a postal code or province inside
+  the address, a street with no number. Scripts with no upper or lower case are never flagged for case.
+- `writingStyle.ts`: a street type written two ways in the list ("St" and "Street"). Only the last word of the street
+  part counts, so "St. Clair Avenue" is an avenue. At least four addresses of a type are needed, and the places using
+  the less common form are pointed out.
+- `writingReport.ts`: runs the rules, then filters (names, addresses, street-type mix, or one rule) and orders.
+- `writingCopy.ts`, `writingExport.ts`: English and French wording, quoting the text seen, and text and CSV files.
+- `WritingCheck.tsx` is mounted in `PackPlaces.tsx` and shows nothing when no place has a name or an address.
+- Tests: `writing*.test.ts`, `WritingCheck.dom.test.tsx`, `PackPlaces.writing.dom.test.tsx`.

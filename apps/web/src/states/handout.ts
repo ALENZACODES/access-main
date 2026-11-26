@@ -87,7 +87,7 @@ export function buildHandout(places: readonly PackPlaceRecord[], locale: Locale,
       const known = parts.every((r) => r.known);
       lines.push({
         label: t(locale, "Where it comes from", "D’où cela vient"),
-        value: parts.every((r) => !r.known) ? UNKNOWN : parts.map((r) => r.value).join("; "),
+        value: parts.every((r) => !r.known) ? UNKNOWN : parts.map((r) => r.value).join(locale === "fr" ? "\u202f; " : "; "),
         known,
       });
     }

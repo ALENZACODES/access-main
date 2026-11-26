@@ -175,3 +175,157 @@ async function mutateStoredRecords(update: (value: unknown) => unknown): Promise
   });
   db.close();
 }
+
+function overlappingRegions(db: "memory" | "indexeddb") {
+  const f = fixture();
+  const region = f.manifest.regions[0]!;
+  f.manifest.regions.push(
+    { ...region, id: "south", cells: [cells[0]!] },
+    { ...region, id: "metro", cells: [...cells] },
+    { ...region, id: "empty", cells: [] },
+  );
+  const client = createPackSource({ baseUrl: "/data/", fetch: f.fetcher, db });
+  const status = async (id: string) => (await client.regions()).find((item) => item.id === id);
+  return { ...f, client, status };
+}
+
+describe.each(["memory", "indexeddb"] as const)("region ownership in %s", (db) => {
+  it("keeps the selected overlapping cells offline after the original owner is removed", async () => {
+    const { client, setOffline, calls, status } = overlappingRegions(db);
+    await client.downloadRegion("toronto");
+    setOffline(true);
+    const before = calls();
+    expect(await status("south")).toMatchObject({ downloaded: false, missingCells: [] });
+    expect(await client.storedRegionIntegrity("south")).toBeNull();
+
+    expect(await client.retainCachedRegion!("south")).toBe(true);
+    const kept = await client.storedRegionIntegrity("south");
+    expect(kept?.cellCount).toBe(1);
+    expect(kept?.parts.length).toBeGreaterThan(0);
+    expect(kept?.parts.every((part) => part.structurallyValid)).toBe(true);
+    expect(await client.retainCachedRegion!("south")).toBe(true);
+    expect(await client.storedRegionIntegrity("south")).toEqual(kept);
+
+    await client.deleteRegion("toronto");
+    expect(await client.storedRegionIntegrity("toronto")).toBeNull();
+    expect(await status("toronto")).toMatchObject({ missingCells: [cells[1]] });
+    expect(await status("south")).toMatchObject({ downloaded: true, verified: true, missingCells: [] });
+    expect(await client.get(first.id)).toEqual(first);
+    expect(await client.get(second.id)).toBeNull();
+    expect((await client.search("park", {})).map((hit) => hit.id)).toEqual([first.id, third.id]);
+
+    await client.deleteRegion("south");
+    expect(await client.retainCachedRegion!("south")).toBe(false);
+    expect(await status("toronto")).toMatchObject({ missingCells: cells });
+    expect(await client.search("park", {})).toEqual([]);
+    expect(calls()).toBe(before);
+  });
+
+  it("creates no owner when either the entire pack or one of its cells is missing", async () => {
+    const { client, setOffline, calls } = overlappingRegions(db);
+    await client.manifest();
+    expect(await client.retainCachedRegion!("metro")).toBe(false);
+    expect(await client.storedRegionIntegrity("metro")).toBeNull();
+    await client.downloadCell!("toronto", cells[0]!);
+    setOffline(true);
+    const before = calls();
+    expect(await client.retainCachedRegion!("metro")).toBe(false);
+    expect(await client.storedRegionIntegrity("metro")).toBeNull();
+    await client.deleteRegion("toronto");
+    expect(await client.retainCachedRegion!("south")).toBe(false);
+    expect(calls()).toBe(before);
+  });
+
+  it("preserves an existing partial selection and can retain it once other owners fill the gaps", async () => {
+    const { client, setOffline, status } = overlappingRegions(db);
+    await client.downloadCell!("metro", cells[0]!);
+    const partial = await client.storedRegionIntegrity("metro");
+    expect(partial?.parts.some((part) => part.data === null)).toBe(true);
+    expect(await client.retainCachedRegion!("metro")).toBe(false);
+    expect(await client.storedRegionIntegrity("metro")).toEqual(partial);
+
+    await client.downloadCell!("toronto", cells[1]!);
+    setOffline(true);
+    expect(await client.retainCachedRegion!("metro")).toBe(true);
+    await client.deleteRegion("toronto");
+    expect(await status("metro")).toMatchObject({ downloaded: true, missingCells: [] });
+    expect(await client.get(first.id)).toEqual(first);
+    expect(await client.get(second.id)).toEqual(second);
+  });
+
+  it("rejects an unknown region and allows a manifest region with no cells", async () => {
+    const { client, setOffline, calls, status } = overlappingRegions(db);
+    await client.manifest();
+    setOffline(true);
+    const before = calls();
+    await expect(client.retainCachedRegion!("absent")).rejects.toMatchObject({ code: "missing", part: "absent" });
+    expect(await client.retainCachedRegion!("empty")).toBe(true);
+    expect(await client.storedRegionIntegrity("empty")).toEqual({ regionId: "empty", cellCount: 0, parts: [] });
+    expect(await status("empty")).toMatchObject({ downloaded: true, bytes: 0 });
+    await client.deleteRegion("empty");
+    expect(await client.storedRegionIntegrity("empty")).toBeNull();
+    expect(await status("empty")).toMatchObject({ downloaded: false });
+    expect(calls()).toBe(before);
+  });
+
+  it("records both sets of owned hashes when two cached cells commit concurrently", async () => {
+    const { client, setOffline, calls, status } = overlappingRegions(db);
+    await client.downloadRegion("toronto");
+    setOffline(true);
+    const before = calls();
+    await Promise.all(cells.map((cell) => client.downloadCell!("metro", cell)));
+    await client.deleteRegion("toronto");
+    expect(await status("metro")).toMatchObject({ downloaded: true, missingCells: [] });
+    expect(await client.get(first.id)).toEqual(first);
+    expect(await client.get(second.id)).toEqual(second);
+    expect(calls()).toBe(before);
+  });
+
+  it("never leaves a successful retention pointing at bytes removed by a competing deletion", async () => {
+    const { client, setOffline, status } = overlappingRegions(db);
+    await client.downloadRegion("toronto");
+    setOffline(true);
+    const [retained] = await Promise.all([
+      client.retainCachedRegion!("south"),
+      client.deleteRegion("toronto"),
+    ]);
+    expect(await client.storedRegionIntegrity("toronto")).toBeNull();
+    if (retained) {
+      expect(await status("south")).toMatchObject({ downloaded: true, missingCells: [] });
+      expect(await client.get(first.id)).toEqual(first);
+    } else {
+      expect(await client.storedRegionIntegrity("south")).toBeNull();
+      expect(await status("south")).toMatchObject({ downloaded: false, missingCells: [cells[0]] });
+    }
+  });
+});
+
+it("retains an older verified path when a later manifest withholds it", async () => {
+  const original = overlappingRegions("indexeddb");
+  await original.client.downloadRegion("toronto");
+  original.setOffline(true);
+
+  const updated = overlappingRegions("indexeddb");
+  const cell = cells[0]!;
+  const venues = updated.manifest.tranches.venue!;
+  const oldPart = venues.cells[cell]!.parts[0]!;
+  delete venues.cells[cell];
+  const withheld = { path: oldPart.path, sourceId: source.sourceId, tranche: "venue" as const, cell, reason: "awaiting review" };
+  updated.manifest.withheld = [withheld];
+  await updated.client.manifest();
+  updated.setOffline(true);
+  const before = updated.calls();
+
+  expect(await updated.client.retainCachedRegion!("toronto")).toBe(true);
+  expect(await updated.status("toronto")).toMatchObject({ staleCells: [cell], unavailable: [] });
+  expect(await updated.client.get(first.id)).toEqual(first);
+  expect(await updated.client.get(third.id)).toEqual(third);
+  await updated.client.deleteRegion("toronto");
+  expect(await updated.status("toronto")).toMatchObject({ staleCells: [], unavailable: [withheld] });
+  expect(await updated.client.get(first.id)).toBeNull();
+  // The original manifest still addresses the old hash directly.
+  const oldCell: PackRecord[] = [];
+  for await (const record of original.client.records("venue", cell)) oldCell.push(record);
+  expect(oldCell).toEqual([]);
+  expect(updated.calls()).toBe(before);
+});

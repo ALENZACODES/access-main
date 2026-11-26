@@ -18,7 +18,7 @@ export function escapeHandoutHtml(value: string): string {
 export function handoutCss(sizePoints: number): string {
   return [
     `html { font-size: ${sizePoints}pt; }`,
-    "body { margin: 0 auto; max-width: 42rem; padding: 1.5rem 1rem; font-family: Arial, Helvetica, sans-serif; line-height: 1.5; color: #000; background: #fff; }",
+    "body { margin: 0 auto; max-width: 42rem; padding: 1.5rem 1rem; font-family: Arial, Helvetica, sans-serif; line-height: 1.5; color: #000; background: #fff; overflow-wrap: anywhere; }",
     "h1 { font-size: 1.5rem; margin: 0 0 0.5rem; }",
     "h2 { font-size: 1.2rem; margin: 2rem 0 0.5rem; padding-top: 0.75rem; border-top: 0.15rem solid #000; }",
     "h3 { font-size: 1.1rem; margin: 1.25rem 0 0.25rem; }",
@@ -27,7 +27,7 @@ export function handoutCss(sizePoints: number): string {
     ".answer { height: 2.5rem; border-bottom: 0.1rem solid #000; }",
     "dl { margin: 0; }",
     "dt { font-weight: bold; margin-top: 0.5rem; }",
-    "dd { margin: 0; overflow-wrap: anywhere; }",
+    "dd { margin: 0; }",
     "footer p { margin: 0.5rem 0; }",
     "@page { margin: 15mm; }",
     "@media print { body { padding: 0; max-width: none; } article { break-inside: avoid; } h2 { break-after: avoid; } }",
@@ -36,7 +36,7 @@ export function handoutCss(sizePoints: number): string {
 
 /** A complete HTML5 document. The language is set so a screen reader and the browser's hyphenation use the right one. */
 export function handoutToHtml(h: Handout): string {
-  const body: string[] = [`<h1>${escapeHandoutHtml(h.title)}</h1>`, `<p>${escapeHandoutHtml(h.intro)}</p>`];
+  const body: string[] = ["<main>", `<h1>${escapeHandoutHtml(h.title)}</h1>`, `<p>${escapeHandoutHtml(h.intro)}</p>`];
   h.entries.forEach((e, i) => {
     body.push('<article>', `<h2>${i + 1}. ${escapeHandoutHtml(e.heading)}</h2>`, "<dl>");
     for (const l of e.lines) body.push(`<dt>${escapeHandoutHtml(l.label)}</dt>`, `<dd>${escapeHandoutHtml(l.value)}</dd>`);
@@ -49,7 +49,7 @@ export function handoutToHtml(h: Handout): string {
     }
     body.push("</article>");
   });
-  body.push("<footer>", ...h.footer.map((f) => `<p>${escapeHandoutHtml(f)}</p>`), "</footer>");
+  body.push("</main>", "<footer>", ...h.footer.map((f) => `<p>${escapeHandoutHtml(f)}</p>`), "</footer>");
   return [
     "<!DOCTYPE html>",
     `<html lang="${h.locale}">`,

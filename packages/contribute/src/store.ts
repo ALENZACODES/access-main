@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
+import { DraftConflictError, draftHasEdits } from "./draftComparison";
 import type { Draft } from "./schema";
 
 export interface SavedPhoto { id: string; draftId: string; data: Blob }
@@ -12,8 +13,12 @@ class ContributionsDB extends Dexie {
 }
 export const contributions = new ContributionsDB();
 
-export async function deleteDraft(id: string): Promise<void> {
+export async function deleteDraft(id: string, reviewed?: Draft): Promise<void> {
   await contributions.transaction("rw", contributions.drafts, contributions.photos, async () => {
+    if (reviewed) {
+      const current = await contributions.drafts.get(id);
+      if (!current || draftHasEdits(reviewed, current)) throw new DraftConflictError();
+    }
     await contributions.photos.where("draftId").equals(id).delete();
     await contributions.drafts.delete(id);
   });

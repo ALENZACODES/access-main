@@ -96,6 +96,9 @@ export interface PackSource {
    * the client kept them, so a later integrity check can hash them.
    */
   storedRegionIntegrity(id: string): Promise<RegionIntegritySnapshot | null>;
+  /** Attach an installed region to already cached parts without requesting payloads.
+   * Returns false if any expected part is absent. */
+  retainCachedRegion?(id: string): Promise<boolean>;
   /** Fetches one part's bytes from the network. Does not read or write the store. */
   fetchRegionPartBytes(path: string): Promise<Uint8Array>;
   /**

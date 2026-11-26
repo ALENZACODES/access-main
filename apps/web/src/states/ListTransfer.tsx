@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { Button } from "../design/Button.tsx";
 import { LIST_CODE_HEADER, importSummary, listToCode, parseListCode, planImport } from "./listTransfer.ts";
 import type { PackPlaceRecord } from "./packPlaces.ts";
@@ -32,10 +32,11 @@ const browserCopy = async (text: string): Promise<boolean> => {
 export function ListTransfer({ list, places, locale, add, copy = browserCopy }: Props) {
   const panelId = useId();
   const pasteId = useId();
+  const pasteField = useRef<HTMLTextAreaElement>(null);
   const [open, setOpen] = useState(false);
   const [pasted, setPasted] = useState("");
   const [status, setStatus] = useState("");
-  const [shown, setShown] = useState<string | null>(null);
+  const [showCode, setShowCode] = useState(false);
 
   const byId = useMemo(() => new Map(places.map((p) => [p.id, p] as const)), [places]);
   const code = useMemo(() => listToCode(list.flatMap((e) => (byId.has(e.id) ? [{ id: e.id, name: byId.get(e.id)!.name }] : []))), [list, byId]);
@@ -45,7 +46,7 @@ export function ListTransfer({ list, places, locale, add, copy = browserCopy }: 
 
   const doCopy = async () => {
     const ok = await copy(code);
-    setShown(ok ? null : code);
+    setShowCode(!ok);
     setStatus(ok ? t(locale, "List code copied.", "Code de liste copié.") : t(locale, "This browser could not copy. The code is shown below so you can select it.", "Ce navigateur n’a pas pu copier. Le code est affiché ci-dessous pour que vous puissiez le sélectionner."));
   };
 
@@ -53,6 +54,7 @@ export function ListTransfer({ list, places, locale, add, copy = browserCopy }: 
     let added = 0;
     for (const id of plan.toAdd) if (add(id) === "added") added += 1;
     setPasted("");
+    pasteField.current?.focus();
     setStatus(t(locale, `${added} ${added === 1 ? "place" : "places"} added to your list.`, `${added} ${added === 1 ? "lieu ajouté" : "lieux ajoutés"} à votre liste.`));
   };
 
@@ -74,9 +76,9 @@ export function ListTransfer({ list, places, locale, add, copy = browserCopy }: 
             ) : (
               <p>{t(locale, "Your list is empty, so there is no code to copy.", "Votre liste est vide\u00a0: il n’y a donc aucun code à copier.")}</p>
             )}
-            {shown !== null ? <textarea readOnly aria-label={t(locale, "List code", "Code de liste")} rows={Math.min(14, shown.split("\n").length)} value={shown} onFocus={(e) => e.currentTarget.select()} /> : null}
+            {showCode && listedCount > 0 ? <textarea readOnly aria-label={t(locale, "List code", "Code de liste")} rows={Math.min(14, code.split("\n").length)} value={code} onFocus={(e) => e.currentTarget.select()} /> : null}
             <label htmlFor={pasteId}>{t(locale, "Paste a list code here", "Collez un code de liste ici")}</label>
-            <textarea id={pasteId} rows={5} value={pasted} placeholder={`${LIST_CODE_HEADER}\n- id | name`} onChange={(e) => setPasted(e.target.value)} />
+            <textarea ref={pasteField} id={pasteId} rows={5} value={pasted} placeholder={`${LIST_CODE_HEADER}\n- id | name`} onChange={(e) => setPasted(e.target.value)} />
             {pasted.trim() !== "" ? (
               <div data-list-transfer-plan>
                 <p>{importSummary(plan, parsed, locale)}</p>

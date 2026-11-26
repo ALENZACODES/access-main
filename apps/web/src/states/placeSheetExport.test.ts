@@ -138,8 +138,28 @@ describe("placeToVcard", () => {
     const l = unfold(placeToVcard(place("a", { address: "1 Main St, Unit 2; rear" }), "en"));
     expect(l).toContain("ADR;TYPE=WORK:;;1 Main St\\, Unit 2\\; rear;;;;");
   });
-  it("makes the id safe", () => {
-    expect(placeToVcard(place("a/b:c"), "en")).toContain("UID:pack-place-a-b-c");
+  it("keeps the existing identity of portable pack IDs across exports and languages", () => {
+    for (const locale of ["en", "fr"] as const) {
+      const renamed = place("R_1.a-42", { name: "A new label" });
+      expect(lines(placeToVcard(renamed, locale))).toContain("UID:pack-place-R_1.a-42");
+    }
+  });
+  it("gives distinct contacts to punctuation variants, including a literal escape marker", () => {
+    const ids = ["way/42", "way-42", "way:42", "way~002f42", "way,42", "way;42"];
+    const text = unfold(placesToVcards(ids.map((id) => place(id)), "en"));
+    expect(lines(text).filter((line) => line.startsWith("UID:"))).toEqual([
+      "UID:pack-place-way~002f42", "UID:pack-place-way-42", "UID:pack-place-way~003a42",
+      "UID:pack-place-way~007e002f42", "UID:pack-place-way~002c42", "UID:pack-place-way~003b42",
+    ]);
+  });
+  it("preserves distinct UTF-16 pack IDs even beyond the basic multilingual plane", () => {
+    const ids = ["café", "cafe\u0301", "🚲", "\ud83d", "\udc00", "\ufffd", "a\u202eb", "ab"];
+    const exportText = unfold(placesToVcards(ids.map((id) => place(id, { name: "Station" })), "fr"));
+    const uids = lines(exportText).filter((line) => line.startsWith("UID:"));
+    expect(new Set(uids).size).toBe(ids.length);
+    expect(uids).toContain("UID:pack-place-~d83d~deb2");
+    expect(uids).toContain("UID:pack-place-~d83d");
+    expect(uids).toContain("UID:pack-place-a~202eb");
   });
   it("gives a note that says it is not a check", () => {
     expect(unfold(card)).toContain("not a check of the place");

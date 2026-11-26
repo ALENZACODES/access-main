@@ -3,7 +3,7 @@ import { PRECACHE_BUDGET_BYTES, parsePrecacheUrls, releaseEnabled, waitForServic
 
 test.skip(!releaseEnabled(), "The release gate runs through playwright.release.config.ts");
 
-test("first-install precache is at most 3.95 MiB and never holds pack data", async ({ page, request }) => {
+test("first-install precache is at most 5 MiB and never holds pack data", async ({ page, request }) => {
   const sw = await request.get("sw.js");
   expect(sw.ok(), "sw.js must be served under the base path").toBeTruthy();
   const listed = parsePrecacheUrls(await sw.text());

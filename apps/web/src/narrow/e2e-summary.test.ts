@@ -18,14 +18,22 @@ const enabled = env['NARROW_E2E'] === '1';
 const WHEN = new Date(2026, 10, 20, 11, 30);
 const NONE: SummaryLines = { tap: '', zones: '', press: '' };
 const EN: SummaryLines = {
+  tools: 'What I use: a head pointer and one or two switches.',
   tap: 'Button size at which my taps land: 56 px',
   zones: 'Screen zones I can reach: Bottom, left; Bottom, centre; Bottom, right; Lower middle, left (4 of 12).',
   press: 'My presses (touch): held from 120 ms to 640 ms; at least 300 ms between presses.',
+  typing: 'My typing pace: about 42 characters a minute, 12.5 s a short field.',
+  drag: 'Dragging: I cannot drag. I need another way to do it, with a single tap or click.',
+  scan: 'Switch scanning: row by row, with auto scan, 1.5 s a step.',
+  aim: 'Things that move: I take about 10 s to aim, and controls need to stay in place for that long.',
+  hover: 'Hover: I cannot hover. Content shown only on hover is out of my reach.',
 };
 const FR: SummaryLines = {
-  tap: 'Taille de bouton où mes appuis atteignent leur cible : 56 px',
+  tap: 'Taille de bouton où mes appuis atteignent leur cible\u00A0: 56\u00A0px',
   zones: '',
-  press: 'Mes appuis (toucher) : tenus de 120 ms à 640 ms ; au moins 300 ms entre deux appuis.',
+  press: 'Mes appuis (toucher)\u00A0: tenus de 120\u00A0ms à 640\u00A0ms\u202F; au moins 300\u00A0ms entre deux appuis.',
+  scan: 'Balayage par contacteur\u00A0: un par un, pas à pas, un appui par étape.',
+  hover: 'Survol\u00A0: je peux survoler.',
 };
 const made = (lang: 'en' | 'fr', lines: SummaryLines): SummaryPanelState => summaryStep(initialSummaryState(), lang, () => lines, () => WHEN).state;
 
@@ -35,6 +43,19 @@ const SITE: Record<string, string> = {
   '/summary-none-en': pageAround(renderSummaryPanel('en', made('en', NONE)), 'en'),
   '/summary-all-en': pageAround(renderSummaryPanel('en', made('en', EN)), 'en'),
   '/summary-some-fr': pageAround(renderSummaryPanel('fr', made('fr', FR)), 'fr'),
+  '/summary-no-request-en': pageAround(
+    renderSummaryPanel(
+      'en',
+      summaryStep(
+        initialSummaryState(),
+        'en',
+        () => ({ drag: 'Dragging: 3 of 3 tries made it, 0.9 s in the middle.', hover: 'Hover: I can hover.' }),
+        () => WHEN,
+        () => ({ drag: false, hover: false }),
+      ).state,
+    ),
+    'en',
+  ),
 };
 
 interface Served {
@@ -111,7 +132,7 @@ describe.skipIf(!enabled)('"My access summary" in a real browser', () => {
       const area = t.getElementById('summary-text');
       return { value: area?.value ?? '', right: area?.getBoundingClientRect().right ?? 0, width: t.documentElement.clientWidth, scroll: t.documentElement.scrollWidth };
     });
-    expect(got.value.split('\n').slice(2, 5)).toEqual([EN.tap, EN.zones, EN.press]);
+    expect(got.value.split('\n').slice(2, 11)).toEqual([EN.tools, EN.tap, EN.zones, EN.press, EN.typing, EN.drag, EN.scan, EN.aim, EN.hover]);
     expect(got.right).toBeLessThanOrEqual(got.width);
     expect(got.scroll).toBeLessThanOrEqual(got.width);
   }, 60_000);
@@ -129,6 +150,11 @@ describe.skipIf(!enabled)('"My access summary" in a real browser', () => {
 
   it('the summary with every part, and with none, has no measured failure in English, in any profile', async () => {
     expect(failing(await audit(['/summary-all-en', '/summary-none-en'])).join('\n')).toBe('');
+  }, 240_000);
+
+  it('the summary with parts that need nothing from the site, and so no request, has no measured failure', async () => {
+    expect(SITE['/summary-no-request-en']).not.toContain('summary-request');
+    expect(failing(await audit(['/summary-no-request-en'], first)).join('\n')).toBe('');
   }, 240_000);
 
   it('the panel has no measured failure in French', async () => {

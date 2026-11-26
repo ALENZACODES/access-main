@@ -114,8 +114,30 @@ export type { CoordinationBrief, BriefStep, BriefProvenance, BriefStatus, BriefP
   BriefTopic, BriefEvent, BriefSummary, StepDraft, BriefPageOptions } from "./coordinationBrief";
 export type { BriefChange, BriefDiff, BriefChangeKind } from "./coordinationBriefDiff";
 
+export * from "./storageScenario";
+export * from "./storageScenarioCopy";
+export * from "./storageScenarioExport";
+export * from "./storageScenarioPanel";
+
+export * from "./recoveryJournal";
+export * from "./recoveryJournalCopy";
+export * from "./recoveryJournalExport";
+export * from "./recoveryJournalPanel";
+
+export * from "./recoveryGuide";
+export * from "./recoveryGuideCopy";
+export type { RecoveryCopyKey } from "./recoveryBatchesCopy";
+export type { RecoveryCopyKey as RecoveryGuideCopyKey } from "./recoveryGuideCopy";
+export * from "./recoveryGuideExport";
+export * from "./recoveryGuidePanel";
 // Portable metadata-only receipts are loaded on demand by the offline dashboard.
 export * from "./packReceipt";
 export * from "./packReceiptCopy";
 export * from "./packReceiptExport";
 export * from "./packReceiptPanel";
+
+// Shared-device handback is loaded on demand from the offline dashboard.
+export * from "./sharedDeviceHandback";
+export * from "./sharedDeviceHandbackCopy";
+export * from "./sharedDeviceHandbackExport";
+export * from "./sharedDeviceHandbackPanel";

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FINDER_KINDS, type FinderKind, type JourneyPlan, type ModuleId, type ModuleResult, type PlaceHit } from "@access/shared";
 import { Button } from "../design/Button.tsx";
@@ -12,7 +12,20 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
 import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm.tsx";
-import { DataCredits, PackCompare, PackFreshness, PackPlaces, PackReport, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { DataCredits } from "../states/DataCredits.tsx";
+import { PackCompare } from "../states/PackCompare.tsx";
+import { PackFreshness } from "../states/PackFreshness.tsx";
+import { PackReport } from "../states/PackReport.tsx";
+import { StateNotice } from "../states/StateNotice.tsx";
+import { creditRecordsFromPack } from "../states/dataCredits.ts";
+import { escalateView } from "../states/retryPolicy.ts";
+import { moduleStateFor, moduleStateView, type ModuleAvailability } from "../states/moduleStates.ts";
+import { useFailureStreak } from "../states/useFailureStreak.ts";
+import { ElevatorNotices } from "../states/ElevatorNotices.tsx";
+
+// The place-list tools are most of this page's code. In their own chunk the page stays well under the
+// 512 KiB per-file cap; the chunk is still precached, so it works offline like the rest of the page.
+const PackPlaces = lazy(() => import("../states/PackPlaces.tsx").then((module) => ({ default: module.PackPlaces })));
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },
@@ -64,12 +77,21 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   }, [online]);
   // Places in the pack stored on this device. A missing, unreadable or unsupported pack shows nothing here.
   const [packPlaces, setPackPlaces] = useState<unknown>(null);
+  const [packElevators, setPackElevators] = useState<unknown>(null);
   useEffect(() => {
     if (id !== "places") return;
     let active = true;
     getPack(OFFLINE_PACK_ID).then(
-      (pack) => { if (active) setPackPlaces(pack?.content?.places ?? null); },
-      () => { if (active) setPackPlaces(null); },
+      (pack) => {
+        if (!active) return;
+        setPackPlaces(pack?.content?.places ?? null);
+        setPackElevators(pack?.content?.elevator_status ?? null);
+      },
+      () => {
+        if (!active) return;
+        setPackPlaces(null);
+        setPackElevators(null);
+      },
     );
     return () => { active = false; };
   }, [id]);
@@ -214,10 +236,11 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
           ))}
         </ul>
       ) : null}
-      {id === "places" && packPlaces !== null ? <PackPlaces places={packPlaces} locale={locale} /> : null}
+      {id === "places" && packPlaces !== null ? <Suspense fallback={null}><PackPlaces places={packPlaces} locale={locale} /></Suspense> : null}
       {id === "places" && packPlaces !== null ? <PackFreshness places={packPlaces} locale={locale} /> : null}
       {id === "places" && packPlaces !== null ? <PackReport places={packPlaces} locale={locale} /> : null}
       {id === "places" && packPlaces !== null ? <PackCompare places={packPlaces} locale={locale} today={new Date().toISOString().slice(0, 10)} /> : null}
+      {id === "places" && packElevators !== null ? <ElevatorNotices notices={packElevators} locale={locale} /> : null}
       {id === "places" && packCredits.length > 0 ? <DataCredits records={packCredits} locale={locale} showOsmCredit={false} /> : null}
       <p>{t("data.liveBody")}</p>
     </div>

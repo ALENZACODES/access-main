@@ -1,7 +1,7 @@
-import { type Locale, type Status, type StepKind } from './model.ts';
+import { type AccessFact, type Copy, type LocalCopy, type Locale, type SourceTier, type Status, type StepKind } from './model.ts';
 
 export interface RehearsalCopy {
-  title: string; intro: string; caveat: string; add: string; remove: string; update: string;
+  title: string; intro: string; caveat: string; edit: string; add: string; remove: string; update: string;
   name: string; step: string; stepEn: string; stepFr: string; detailEn: string; detailFr: string; kind: string; detail: string; access: string;
   source: string; sourceUrl: string; licence: string; date: string; tier: string;
   offline: string; saved: string; cachePath: string; review: string;
@@ -16,7 +16,7 @@ const EN: RehearsalCopy = {
   title: 'Access rehearsal',
   intro: 'Plan and rehearse your own steps using keyboard or switch-style controls.',
   caveat: 'This device-local exercise does not describe current conditions at a place. Check sources and conditions before travelling.',
-  add: 'Add step', remove: 'Remove step', update: 'Save step', name: 'Journey name', step: 'Step name', stepEn: 'Step name in English', stepFr: 'Step name in French', detailEn: 'Details in English', detailFr: 'Details in French',
+  edit: 'Edit step', add: 'Add step', remove: 'Remove step', update: 'Save step', name: 'Journey name', step: 'Step name', stepEn: 'Step name in English', stepFr: 'Step name in French', detailEn: 'Details in English', detailFr: 'Details in French',
   kind: 'Type of step', detail: 'What to check', access: 'Information status',
   source: 'Source name (optional)', sourceUrl: 'Source URL', licence: 'Licence', date: 'Collection date', tier: 'Evidence tier',
   offline: 'Offline copy status', saved: 'Saved date', cachePath: 'Local copy path', review: 'Needs manual review',
@@ -32,7 +32,7 @@ const FR: RehearsalCopy = {
   title: 'Répétition d’accessibilité',
   intro: 'Préparez vos étapes et parcourez-les au clavier ou avec des commandes de balayage.',
   caveat: 'Cet exercice local ne décrit pas l’état actuel d’un lieu. Consultez les sources et les conditions avant de partir.',
-  add: 'Ajouter une étape', remove: 'Retirer l’étape', update: 'Enregistrer l’étape', name: 'Nom du parcours', step: 'Nom de l’étape', stepEn: 'Nom de l’étape en anglais', stepFr: 'Nom de l’étape en français', detailEn: 'Détails en anglais', detailFr: 'Détails en français',
+  edit: 'Modifier l’étape', add: 'Ajouter une étape', remove: 'Retirer l’étape', update: 'Enregistrer l’étape', name: 'Nom du parcours', step: 'Nom de l’étape', stepEn: 'Nom de l’étape en anglais', stepFr: 'Nom de l’étape en français', detailEn: 'Détails en anglais', detailFr: 'Détails en français',
   kind: 'Type d’étape', detail: 'Point à examiner', access: 'État de l’information',
   source: 'Nom de la source (facultatif)', sourceUrl: 'Adresse de la source', licence: 'Licence', date: 'Date de collecte', tier: 'Niveau de preuve',
   offline: 'État de la copie hors ligne', saved: 'Date d’enregistrement', cachePath: 'Chemin de copie locale', review: 'Examen manuel requis',
@@ -70,4 +70,39 @@ export function reasonLabel(code: string, locale: Locale): string {
   };
   const entry = labels[code];
   return entry ? entry[locale === 'fr' ? 1 : 0] : code;
+}
+
+type RehearsalChoice = AccessFact | SourceTier | LocalCopy['state'];
+
+const choiceText: Record<RehearsalChoice, readonly [string, string]> = {
+  unknown: ['UNKNOWN', 'UNKNOWN'],
+  UNKNOWN: ['UNKNOWN', 'UNKNOWN'],
+  supported: ['SUPPORTED', 'PRIS EN CHARGE'],
+  limited: ['LIMITED', 'LIMITÉ'],
+  unsupported: ['UNSUPPORTED', 'NON PRIS EN CHARGE'],
+  PRIMARY: ['PRIMARY', 'PRIMAIRE'],
+  SECONDARY: ['SECONDARY', 'SECONDAIRE'],
+  COMMUNITY: ['COMMUNITY', 'COMMUNAUTAIRE'],
+  absent: ['absent', 'Absente'],
+  stored: ['stored', 'Enregistrée'],
+};
+
+export function choiceLabel(value: RehearsalChoice, locale: Locale): string {
+  return choiceText[value][locale === 'fr' ? 1 : 0];
+}
+
+
+export interface StepChange {
+  readonly action: 'add' | 'edit' | 'remove';
+  readonly label: Copy;
+}
+
+export function stepChangeMessage(change: StepChange | null, locale: Locale): string {
+  if (!change) return '';
+  if (locale === 'fr') {
+    const action = { add: 'Étape ajoutée', edit: 'Étape modifiée', remove: 'Étape retirée' }[change.action];
+    return `${action}\u00a0: «\u00a0${change.label.fr}\u00a0».`;
+  }
+  const action = { add: 'Added', edit: 'Updated', remove: 'Removed' }[change.action];
+  return `${action} step “${change.label.en}”.`;
 }

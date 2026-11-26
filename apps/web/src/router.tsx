@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from "react-router-dom";
+import { createBrowserRouter, useOutlet, type RouteObject } from "react-router-dom";
 import { Section } from "./modules/Section.tsx";
 import { optionalPage, optionalRoutes } from "./modules/optionalRoutes.ts";
 import { HomePage } from "./pages/HomePage.tsx";
@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 const NarrowAuditPage = lazy(() => import("./pages/NarrowAuditPage.tsx").then((module) => ({ default: module.NarrowAuditPage })));
 const AccessRehearsalPage = lazy(() => import("./input/rehearsal/AccessRehearsalPage.tsx").then((module) => ({ default: module.AccessRehearsalPage })));
 const InputWorkbenchPage = lazy(() => import("./input/switch-workbench/WorkbenchPage.tsx").then((module) => ({ default: module.WorkbenchPage })));
+const QuestionPacketPage = lazy(() => import("./question-packet/QuestionPacketPage.tsx").then((module) => ({ default: module.QuestionPacketPage })));
 // The local evidence workbench is not requested until the user opens it.
 const EvidenceWorkbench = lazy(() => import("./offline/evidence-workbench/EvidenceWorkbench.tsx").then((module) => ({ default: module.EvidenceWorkbench })));
 
@@ -48,6 +49,13 @@ function OfflineWithEvidenceWorkbench() {
 // Entry files owned by other lanes. A missing file renders a "being connected" page, not a build error.
 const MapPage = optionalPage("map");
 const ContributePage = optionalPage("contribute");
+const MappingDayPage = lazy(() => import("./contribute/MappingDayPage.tsx").then(module => ({ default: module.MappingDayPage })));
+
+function ContributionSection() {
+  const eventPage = useOutlet();
+  return eventPage ?? <ContributePage />;
+}
+
 const SettingsRoutes = optionalRoutes("settings");
 const MoreRoutes = optionalRoutes("more");
 
@@ -65,6 +73,7 @@ export const routes: RouteObject[] = [
       { path: "offline", element: <Section><OfflineWithEvidenceWorkbench /></Section> },
       { path: "input-workbench", element: <Section><InputWorkbenchPage /></Section> },
       { path: "access-rehearsal", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><AccessRehearsalPage /></Suspense></Section> },
+      { path: "question-packet", element: <Section><Suspense fallback={<p role="status">Loading…</p>}><QuestionPacketPage /></Suspense></Section> },
       { path: "places", element: <Section><ModulePage id="places" /></Section> },
       { path: "places/:id", element: <Section><PlaceDetailPage /></Section> },
       { path: "map", element: <Section><MapPage /></Section> },
@@ -74,7 +83,9 @@ export const routes: RouteObject[] = [
       { path: "games", element: <Section><ModulePage id="games" /></Section> },
       { path: "help", element: <Section><HelpPage /></Section> },
       { path: "help/:id", element: <Section><HelpPage /></Section> },
-      { path: "contribute", element: <Section><ContributePage /></Section> },
+      { path: "contribute", element: <Section><ContributionSection /></Section>, children: [
+        { path: "/contribute/event", element: <Section><MappingDayPage /></Section> },
+      ] },
       { path: "settings/*", element: <Section><SettingsRoutes /></Section> },
       { path: "more/*", element: <Section><MoreRoutes /></Section> },
       { path: "dev/narrow", element: <Section><NarrowAuditPage /></Section> },

@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ModuleResult } from "@access/shared";
+import { useParams } from "react-router-dom";
+import { torontoContent } from "../packs/bundledToronto.ts";
+import { tierMessageKey, type PackHelpNumber, type ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { TextInput } from "../design/fields.tsx";
 import { ResultItems, statusKey } from "../modules/ResultItems.tsx";
 import { StubNote } from "../modules/StubNote.tsx";
 import { modules } from "../modules/stubs.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
+import { getPack } from "../storage/repository.ts";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
-import { StateNotice, SuggestionList, escalateView, helpTitleHints, moduleStateFor, moduleStateView, titledItems, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { StateNotice } from "../states/StateNotice.tsx";
+import { SuggestionList } from "../states/SuggestionList.tsx";
+import { escalateView } from "../states/retryPolicy.ts";
+import { helpTitleHints, titledItems } from "../states/hints.ts";
+import { moduleStateFor, moduleStateView, type ModuleAvailability } from "../states/moduleStates.ts";
+import { useFailureStreak } from "../states/useFailureStreak.ts";
+import { HelpNumbers } from "../states/HelpNumbers.tsx";
 
 export function HelpPage() {
   const { t, i18n } = useTranslation();
@@ -20,7 +29,20 @@ export function HelpPage() {
   const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
   const [attempt, setAttempt] = useState(0);
   const locale = i18n.language.startsWith("fr") ? ("fr" as const) : ("en" as const);
-  useDocumentTitle(t("modules.helpTitle"));
+  const { id } = useParams();
+  const [contact, setContact] = useState<PackHelpNumber | null>(null);
+  const selected = contact?.id === id ? contact : null;
+  const heading = selected?.name[locale] ?? t("modules.helpTitle");
+  useDocumentTitle(heading);
+
+  useEffect(() => {
+    if (!id) return;
+    let active = true;
+    void torontoContent().then((content) => {
+      if (active) setContact(content?.help_numbers.find((row) => row.id === id) ?? null);
+    });
+    return () => { active = false; };
+  }, [id]);
 
   useEffect(() => {
     let active = true;
@@ -54,6 +76,17 @@ export function HelpPage() {
   };
   const failures = useFailureStreak(result, result?.availability === "error");
 
+  // Help numbers in the pack stored on this device. A missing, unreadable or unsupported pack shows nothing here.
+  const [packHelp, setPackHelp] = useState<unknown>(null);
+  useEffect(() => {
+    let active = true;
+    getPack("toronto").then(
+      (pack) => { if (active) setPackHelp(pack?.content?.help_numbers ?? null); },
+      () => { if (active) setPackHelp(null); },
+    );
+    return () => { active = false; };
+  }, []);
+
   // Titles of every article, read once the search finds nothing, so close titles can be offered.
   const [allTitles, setAllTitles] = useState<ReturnType<typeof titledItems>>([]);
   const noMatches = choice?.type === "empty" && query.trim() !== "";
@@ -76,7 +109,14 @@ export function HelpPage() {
 
   return (
     <div className="stack">
-      <h1>{t("modules.helpTitle")}</h1>
+      <h1>{heading}</h1>
+      {selected ? (
+        <div className="stack">
+          <p>{selected.how[locale]}</p>
+          <p>{selected.contact}</p>
+          <p>{t("offline.helpSource", { date: selected.provenance.retrieved_at })} {t(tierMessageKey(selected.provenance.tier))}</p>
+        </div>
+      ) : null}
       <section className="stack" aria-labelledby="help-privacy">
         <h2 id="help-privacy">{t("help.privacyTitle")}</h2>
         <p>{t("help.privacyBody")}</p>
@@ -124,6 +164,7 @@ export function HelpPage() {
         <SuggestionList hints={hints} locale={locale} onPick={pick} />
         {result ? <ResultItems id="help" items={result.items} /> : null}
       </section>
+      {packHelp !== null ? <HelpNumbers numbers={packHelp} locale={locale} /> : null}
     </div>
   );
 }

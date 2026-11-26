@@ -170,7 +170,7 @@ describe("retentionAsText", () => {
     expect(f.text.endsWith("\n")).toBe(true);
     expect(f.text.includes("\r")).toBe(false);
     expect(f.mime).toBe("text/plain");
-    expect(f.count).toBe(16);
+    expect(f.count).toBe(17);
   });
   it("puts a no-break space before each colon in French and no space before it in English", () => {
     const fr = retentionAsText("fr", RETENTION_REGISTER, NOW).text;
@@ -195,7 +195,7 @@ describe("retentionAsText", () => {
 
 describe("counts shown", () => {
   it("are the counts of the rows given", () => {
-    expect(retentionCounts(RETENTION_REGISTER).total).toBe(16);
-    expect(renderRetentionHtml("en", RETENTION_REGISTER)).toContain("16 stored items are listed.");
+    expect(retentionCounts(RETENTION_REGISTER).total).toBe(17);
+    expect(renderRetentionHtml("en", RETENTION_REGISTER)).toContain("17 stored items are listed.");
   });
 });

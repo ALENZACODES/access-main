@@ -16,14 +16,14 @@ export interface FoundClaims {
   lines: number[];
 }
 
-const EN = /nothing (?:is )?(?:sent|uploaded|published)|not (?:sent|uploaded) anywhere|(?:stays?|stay) on (?:this|your) device|does not upload|\bno accounts?\b|never leaves?/i;
-const FR = /rien (?:ici )?n['’]est (?:envoy|publi)|aucune donnée n['’]est envoy|envoy\p{L}*\s+(?:nulle part|ailleurs)|reste(?:nt)? sur (?:cet|votre) appareil|n['’]envoie (?:rien|jamais)|pas de serveur/iu;
+const EN = /nothing (?:is )?(?:sent|uploaded|published|transmitted)|not (?:sent|uploaded) anywhere|(?:stays?|stay) on (?:this|your) device|does not upload|no uploads?|no data (?:is )?transmitted|\bno accounts?\b|never leaves?/i;
+const FR = /aucun(?:e)?\s+(?:téléversement|envoi)|aucune donnée n['’]est (?:envoy|transmis)|rien (?:ici )?n['’]est (?:envoy|publi|transmis)|envoy\p{L}*\s+(?:nulle part|ailleurs)|reste(?:nt)? sur (?:cet|votre) appareil|n['’]envoie (?:rien|jamais)|(?:ce panneau )?ne transmet aucune donnée|pas de serveur/iu;
 
 const HAS_QUOTE = /["'`]/;
 const isComment = (line: string): boolean => /^\s*(\/\/|\*|\/\*)/.test(line);
 
 /** Files that hold test data or tool output, where a matching line is not a statement to a person. */
-const SKIPPED: readonly RegExp[] = [/(^|\/)privacy\//, /\.node\.mjs$/, /-testkit\.ts$/, /(^|\/)samples\.ts$/];
+const SKIPPED: readonly RegExp[] = [/^apps\/web\/src\/privacy\//, /\.node\.mjs$/, /-testkit\.ts$/, /(^|\/)samples\.ts$/];
 
 export function scanClaims(files: readonly SourceFile[]): FoundClaims[] {
   const out: FoundClaims[] = [];
