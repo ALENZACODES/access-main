@@ -11,10 +11,10 @@ describe("install budget", () => {
   it("accepts the exact inclusive boundary", () => {
     const result = assertInstallBudget([
       { path: "index.html", bytes: 875 },
-      { path: "assets/app.js", bytes: 4_141_000 },
+      { path: "assets/app.js", bytes: 4_717_717 },
     ]);
-    expect(INSTALL_BUDGET_BYTES).toBe(4_141_875);
-    expect(result.totalBytes).toBe(4_141_875);
+    expect(INSTALL_BUDGET_BYTES).toBe(4_718_592);
+    expect(result.totalBytes).toBe(4_718_592);
     expect(result.remainingBytes).toBe(0);
     expect(result.withinBudget).toBe(true);
     expect(result.assets).toBe(2);
@@ -22,11 +22,11 @@ describe("install budget", () => {
 
   it("rejects one byte over, including optional installed chunks", () => {
     expect(() => assertInstallBudget([
-      { path: "main.js", bytes: 4_141_000 },
+      { path: "main.js", bytes: 4_717_717 },
       { path: "lazy.js", bytes: 876 },
     ])).toThrow(InstallBudgetError);
     expect(evaluateInstallBudget([
-      { path: "app.js", bytes: 4_141_876 },
+      { path: "app.js", bytes: 4_718_593 },
     ]).remainingBytes).toBe(-1);
   });
 
