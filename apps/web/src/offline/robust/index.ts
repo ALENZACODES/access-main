@@ -135,3 +135,9 @@ export * from "./packReceipt";
 export * from "./packReceiptCopy";
 export * from "./packReceiptExport";
 export * from "./packReceiptPanel";
+
+// Shared-device handback is loaded on demand from the offline dashboard.
+export * from "./sharedDeviceHandback";
+export * from "./sharedDeviceHandbackCopy";
+export * from "./sharedDeviceHandbackExport";
+export * from "./sharedDeviceHandbackPanel";

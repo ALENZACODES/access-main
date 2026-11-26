@@ -47,6 +47,7 @@ export const SAVE_REGISTER: readonly SaveRow[] = [
   row("mixed", "apps/web/src/input/switch-workbench/WorkbenchPage.tsx", 1, ["A keyboard and switch rehearsal report or handoff", "Un rapport ou une fiche de transmission sur la navigation au clavier et par contacteur"]),
   row("mixed", "apps/web/src/data-status/standalone/main.ts", 1, ["A data status file", "Un fichier sur l’état des données"]),
   row("csv", "apps/web/src/pages/DataStatusPage.tsx", 1, ["A data status file", "Un fichier sur l’état des données"]),
+  row("json-and-text", "apps/web/src/offline/robust/sharedDeviceHandbackExport.ts", 1, ["A shared-device handback review", "Un examen de restitution d’un appareil partagé"]),
   row("text", "apps/web/src/states/downloadFile.ts", 1, ["Any file handed to the shared download helper", "Tout fichier confié à l’outil de téléchargement commun"]),
   row("none", "apps/web/src/privacy/panel/mount.ts", 1, ["The lists and files this panel prepares", "Les listes et fichiers que ce panneau prépare"]),
   row("json", "apps/web/src/offline/robust/sourceLedgerPanel.ts", 1, ["A source ledger", "Un registre des sources"]),

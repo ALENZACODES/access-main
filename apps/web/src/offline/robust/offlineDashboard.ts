@@ -30,6 +30,7 @@ import { mountOfflineSourceAge } from "./sourceAgePanel";
 import { mountOfflineContinuityDrill } from "./continuityDrillPanel";
 import { mountOfflineCasebook } from "./offlineCasebookPanel";
 import { PACK_RECEIPT_COPY } from "./packReceiptCopy";
+import { HANDBACK_COPY } from "./sharedDeviceHandbackCopy";
 
 export type DashboardPhase = "checking" | "ready" | "downloading" | "error";
 
@@ -529,6 +530,39 @@ export function mountOfflineDashboard(
   };
   receiptLaunch.addEventListener("click", onReceiptLaunch);
 
+  const handbackHost = element("div");
+  const handbackCopy = HANDBACK_COPY[language];
+  const handbackLaunch = action(handbackCopy.open);
+  handbackHost.append(handbackLaunch);
+  section.append(handbackHost);
+  let handbackDisposed = false;
+  let handbackOpen = false;
+  let handbackRevision = 0;
+  let unmountHandback: () => void = () => undefined;
+  const onHandbackLaunch = (): void => {
+    if (handbackDisposed) return;
+    if (handbackOpen) {
+      handbackOpen = false;
+      handbackRevision += 1;
+      unmountHandback();
+      unmountHandback = () => undefined;
+      handbackLaunch.textContent = handbackCopy.open;
+      return;
+    }
+    handbackOpen = true;
+    const revision = ++handbackRevision;
+    handbackLaunch.textContent = handbackCopy.close;
+    void import("./sharedDeviceHandbackPanel").then(({ mountSharedDeviceHandback }) => {
+      if (handbackDisposed || !handbackOpen || revision !== handbackRevision) return;
+      unmountHandback = mountSharedDeviceHandback(handbackHost, manifest.regionId, language);
+    }).catch(() => {
+      if (handbackDisposed || revision !== handbackRevision) return;
+      handbackOpen = false;
+      handbackLaunch.textContent = handbackCopy.open;
+    });
+  };
+  handbackLaunch.addEventListener("click", onHandbackLaunch);
+
   const renderDetails = (state: DashboardState): void => {
     details.replaceChildren();
     details.hidden = !state.expanded || state.inventory === null;
@@ -686,6 +720,10 @@ export function mountOfflineDashboard(
     receiptRevision += 1;
     receiptLaunch.removeEventListener("click", onReceiptLaunch);
     unmountReceipts();
+    handbackDisposed = true;
+    handbackRevision += 1;
+    handbackLaunch.removeEventListener("click", onHandbackLaunch);
+    unmountHandback();
     model.dispose();
     refreshButton.removeEventListener("click", onRefresh);
     exportTextButton.removeEventListener("click", onText);
