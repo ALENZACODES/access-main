@@ -85,6 +85,25 @@ the places anywhere.
   wheelchair tags is marked.
 - Modules: `textSimilarity.ts`, `placeNameKey.ts`, `duplicateScore.ts`,
   `duplicateGroups.ts`, `duplicateCopy.ts`, `duplicateExport.ts`.
+## Places close together (P4, round 13)
+
+A closed-by-default section on the places list that groups the listed places that sit close together on the map.
+It uses straight-line distance only: a group is not a route, and nothing says a way between two places can be
+used with a wheelchair. Everything is worked out on this device from the pack's map points.
+
+- `walkGroups.ts`: groups places within 100, 200 or 400 metres of each other, joined end to end, with a grid
+  of cells so a long list is not compared pair by pair. Places with no map point are counted and left out; a very
+  long list is cut at `MAX_GROUPED_PLACES` and the cut is reported.
+- `walkGroupName.ts`: names a group by the street half of its places share, else by its first named place. Never
+  by a neighbourhood or district, which the pack does not give.
+- `walkGroupStats.ts`: counts, filters (different tags, every tag UNKNOWN, two or more UNKNOWN, a place tagged no)
+  and orders. None of them ranks a group as better or worse.
+- `walkGroupLinks.ts`: for a group of up to 400 places, the places whose absence would split the rest of the
+  group (shown as where a group is thin), each place's nearest neighbour and the closest pair.
+- `walkGroupCopy.ts`, `walkGroupExport.ts`: English and French wording, and text and CSV files made in the
+  browser (coordinates written as plain numbers, so a negative longitude is not given a formula guard).
+- `WalkGroups.tsx` is mounted in `PackPlaces.tsx` and shows nothing when fewer than two places have a map point.
+- Tests: `walkGroup*.test.ts`, `WalkGroups.dom.test.tsx`, `PackPlaces.walkGroups.dom.test.tsx`.
 
 ## Reading ease of the notes (round 10)
 
