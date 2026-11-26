@@ -37,6 +37,8 @@ const FLAGS = (extra: string): string => `${ALL},${extra}`;
 
 export const GUARD_REGISTER: GuardRegister = {
   tsFlags: {
+    "apps/web/e2e/axe-sweep/portable-shortlist/tsconfig.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
+    "apps/web/e2e/contribution-journeys/tsconfig.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
     "apps/web/tsconfig.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
     "apps/web/tsconfig.node.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
     "apps/web/tsconfig.scripts.json": FLAGS("skipLibCheck=true,noEmit=true,verbatimModuleSyntax=true"),

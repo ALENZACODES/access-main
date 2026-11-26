@@ -57,6 +57,9 @@ export function QuestionPacketPage() {
   const [questionEditor,setQuestionEditor]=useState<{stopId:string;questionId:string|null}|null>(null);
   const [draft,setDraft]=useState<Question>(()=>blankQuestion('question-1'));
   const [status,setStatus]=useState('');
+  const [confirmingClear,setConfirmingClear]=useState(false);
+  const confirmClearRef=useRef<HTMLParagraphElement>(null);
+  useEffect(()=>{if(confirmingClear)confirmClearRef.current?.focus();},[confirmingClear]);
   const stats=useMemo(()=>summary(packet),[packet]);
   const board=useMemo(()=>reviewBoard(packet,locale),[packet,locale]);
   const audit=useMemo(()=>auditPacket(packet,locale),[packet,locale]);
@@ -126,9 +129,16 @@ export function QuestionPacketPage() {
       <div className="button-row">
         <button type="button" style={TARGET} onClick={()=>inputRef.current?.click()}>{c.importJson}</button>
         <input ref={inputRef} type="file" accept=".json,application/json" aria-label={c.importJson} onChange={(event:ChangeEvent<HTMLInputElement>)=>void importPacket(event)} style={{maxWidth:'100%',minHeight:44}}/>
-        <button type="button" style={TARGET} onClick={()=>{if(globalThis.confirm(c.confirmClear)){const fresh=emptyPacket(today());previousPacket.current=fresh;setLedger(emptyLedger());eventSequence.current=0;
-          setPacket(fresh);setStatus('');setStopEditor(null);setQuestionEditor(null);}}}>{c.clear}</button>
+        <button type="button" style={TARGET} aria-expanded={confirmingClear} onClick={()=>setConfirmingClear(true)}>{c.clear}</button>
       </div>
+      {confirmingClear?<div className="panel stack" role="group" aria-labelledby={`${group}-confirm-clear`}>
+        <p id={`${group}-confirm-clear`} tabIndex={-1} ref={confirmClearRef}>{c.confirmClear}</p>
+        <div className="button-row">
+          <button type="button" style={TARGET} onClick={()=>{const fresh=emptyPacket(today());previousPacket.current=fresh;setLedger(emptyLedger());eventSequence.current=0;
+            setPacket(fresh);setStatus('');setStopEditor(null);setQuestionEditor(null);setConfirmingClear(false);}}>{c.confirmClearYes}</button>
+          <button type="button" style={TARGET} onClick={()=>setConfirmingClear(false)}>{c.confirmClearNo}</button>
+        </div>
+      </div>:null}
       <p>{c.importHelp}</p>
     </section>
     <section className="stack" aria-labelledby={`${group}-stops`}>

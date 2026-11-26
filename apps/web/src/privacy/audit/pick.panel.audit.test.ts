@@ -86,8 +86,8 @@ describe("the files-you-choose section in the live panel", () => {
 
   it("reports the real counts and does not round them", () => {
     const html = renderPickHtml("en", PICK_REGISTER);
-    expect(html).toContain("35 rows are listed, at 37 places in 34 files.");
-    expect(html).toContain("30 check the size before reading, 2 only after reading and 2 have no check");
+    expect(html).toContain("36 rows are listed, at 38 places in 35 files.");
+    expect(html).toContain("31 check the size before reading, 2 only after reading and 2 have no check");
   });
 
   it("does not show a download button when there is nothing listed", () => {
