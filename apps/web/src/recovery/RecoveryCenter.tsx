@@ -50,6 +50,8 @@ const RecoveryReceiptLedgerPanel = lazy(async () => ({
 
 const RecoveryGuidedReviewPanel = lazy(async () => ({
   default: (await import("./RecoveryGuidedReviewPanel")).RecoveryGuidedReviewPanel,
+const RecoverySupportBriefPanel = lazy(async () => ({
+  default: (await import("./RecoverySupportBriefPanel")).RecoverySupportBriefPanel,
 }));
 
 /** Complete local recovery shell. No timer, automatic retry or remote transmission. */
@@ -70,6 +72,7 @@ function initialDownload(): DownloadSnapshot {
   return { phase: "idle", received: 0, expected: null, percent: null };
 }
 export function RecoveryCenter({ locale, store, download, saveFile, onPackReady }: RecoveryCenterProps): ReactElement {
+  const [briefOpened, setBriefOpened] = useState(false);
   const inventoryHeading = useId();
   const transferHeading = useId();
   const exportHeading = useId();
@@ -228,6 +231,14 @@ export function RecoveryCenter({ locale, store, download, saveFile, onPackReady 
         {guidedReviewOpened && (
           <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement de l’examen guidé…" : "Loading guided review…"}</p>}>
             <RecoveryGuidedReviewPanel locale={locale} records={inventory}
+        if (event.currentTarget.open) setBriefOpened(true);
+      }}>
+        <summary style={button}>
+          {locale === "fr" ? "Résumé de soutien à la récupération" : "Recovery support brief"}
+        </summary>
+        {briefOpened && (
+          <Suspense fallback={<p role="status" aria-live="polite">{locale === "fr" ? "Chargement du résumé local…" : "Loading local support brief…"}</p>}>
+            <RecoverySupportBriefPanel locale={locale} records={inventory}
               inspected={hasInspected && !checking && !inventoryFailure}
               onInspect={() => { void refresh(); }} saveFile={saveFile} />
           </Suspense>
