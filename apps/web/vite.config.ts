@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
@@ -120,6 +120,30 @@ const hubAliases = (
   ]);
 
 /** Writes build-manifest.json beside index.html so a deployed copy can be checked against its tag. */
+/**
+ * `vite preview` (sirv) marks a requested *.gz file as Content-Encoding: gzip, so the browser unpacks it and the
+ * data client's size and sha256 checks fail. GitHub Pages serves these files as they are. Serve the staged pack the
+ * same way in preview, so the release gate tests what Pages serves.
+ */
+function packFilesAsStored(): Plugin {
+  return {
+    name: "access-pack-files-as-stored",
+    configurePreviewServer(server) {
+      const outDir = path.resolve(server.config.root, server.config.build.outDir);
+      const prefix = `${server.config.base}data/`;
+      server.middlewares.use((req, res, next) => {
+        const url = (req.url ?? "").split("?")[0] ?? "";
+        if (!url.startsWith(prefix) || !url.endsWith(".gz")) return next();
+        const file = path.resolve(outDir, "data", decodeURIComponent(url.slice(prefix.length)));
+        if (!file.startsWith(path.join(outDir, "data") + path.sep) || !existsSync(file)) return next();
+        res.setHeader("Content-Type", "application/gzip");
+        res.setHeader("Content-Length", String(statSync(file).size));
+        createReadStream(file).pipe(res);
+      });
+    },
+  };
+}
+
 function buildManifest(): Plugin {
   return {
     name: "access-build-manifest",
@@ -140,6 +164,7 @@ export default defineConfig({
   plugins: [
     react(),
     buildManifest(),
+    packFilesAsStored(),
     VitePWA({
       registerType: "prompt",
       includeAssets: ["favicon.svg", "icons/icon-192.png", "icons/icon-512.png"],

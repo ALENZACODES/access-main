@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { tierMessageKey, type ModuleResult, type PackPlace } from "@access/shared";
 import { torontoContent } from "../packs/bundledToronto.ts";
@@ -12,11 +12,16 @@ import { useOnline } from "../shell/useOnline.ts";
 import { StateNotice } from "../states/StateNotice.tsx";
 import { initialConnectivity, offlineBanner } from "../states/offline.ts";
 import { placeRouteView } from "../states/placeRoute.ts";
+import { PlaceSummary } from "../places/PlaceSummary.tsx";
 
 const PackPlaceView = lazy(() => import("@access-tools/place").then((module) => ({ default: module.PackPlaceView })));
 
 export function PlaceDetailPage() {
   const { id = "" } = useParams();
+  // The place view writes in-app links from the site root ("/contribute?..."). Under a base path (GitHub Pages)
+  // those would leave the App, so they are given the base and opened inside the App.
+  const viewRef = useRef<HTMLDivElement>(null);
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const { t, i18n } = useLaneStrings();
   const { profile } = useProfileState();
   const online = useOnline();
@@ -57,13 +62,36 @@ export function PlaceDetailPage() {
       : detail || bundled
         ? null
         : placeRouteView(result.availability === "error" ? { status: "error" } : { status: "not-found" }, routeCtx);
-  const banner = detail ? offlineBanner(connectivity, locale) : routeView && routeView.kind !== "error" ? routeView.banner : null;
+  // A record shown offline came from this device, so the general "nothing saved yet" banner would be wrong;
+  // the saved-copy notice below says it instead.
+  const banner = detail ? (online ? offlineBanner(connectivity, locale) : null) : routeView && routeView.kind !== "error" ? routeView.banner : null;
   const savedCopyNotice =
     detail && !online
       ? locale === "fr"
-        ? "Ces renseignements proviennent d’une copie enregistrée sur cet appareil."
-        : "These details come from a copy saved on this device."
+        ? "Vous êtes hors ligne. Ces renseignements proviennent d’une copie enregistrée sur cet appareil."
+        : "You are offline. These details come from a copy saved on this device."
       : null;
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    if (base) {
+      for (const anchor of view.querySelectorAll<HTMLAnchorElement>("a[href^='/']")) {
+        const href = anchor.getAttribute("href") ?? "";
+        if (!href.startsWith(`${base}/`)) anchor.setAttribute("href", `${base}${href}`);
+      }
+    }
+    // Links fire click for the mouse and for Enter alike; keep in-app links inside the App's router.
+    const openInApp = (event: MouseEvent) => {
+      const anchor = (event.target as HTMLElement | null)?.closest("a");
+      const href = anchor?.getAttribute("href") ?? "";
+      if (!anchor || anchor.target || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      if (!href.startsWith("/") || href.startsWith("//")) return;
+      event.preventDefault();
+      navigate(base && href.startsWith(`${base}/`) ? href.slice(base.length) : href);
+    };
+    view.addEventListener("click", openInApp);
+    return () => view.removeEventListener("click", openInApp);
+  });
   const odbl = detail?.sources.filter((source) => source.licence.toUpperCase().startsWith("ODBL")) ?? [];
 
   return (
@@ -101,10 +129,13 @@ export function PlaceDetailPage() {
           <p>{t("offline.osmCredit")}</p>
         </div>
       ) : null}
+      {detail ? <PlaceSummary record={detail.record} sources={detail.sources} locale={locale} /> : null}
       {detail ? (
-        <Suspense fallback={<SectionLoading />}>
-          <PackPlaceView record={detail.record} sources={detail.sources} locale={locale} />
-        </Suspense>
+        <div ref={viewRef}>
+          <Suspense fallback={<SectionLoading />}>
+            <PackPlaceView record={detail.record} sources={detail.sources} locale={locale} />
+          </Suspense>
+        </div>
       ) : null}
       {detail ? (
         <p>

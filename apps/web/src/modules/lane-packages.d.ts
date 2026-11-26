@@ -136,6 +136,8 @@ declare module "@access-main/data-client" {
   export type PackSource = import("./data-client-fallback.ts").PackSource;
   export type PackRecord = import("./data-client-fallback.ts").PackRecord;
   export type PackSourceEntry = import("./data-client-fallback.ts").PackSourceEntry;
+  export type PlaceLookupHint = import("./data-client-fallback.ts").PlaceLookupHint;
+  export type SearchHit = import("./data-client-fallback.ts").SearchHit;
   export const fieldValue: typeof import("./data-client-fallback.ts").fieldValue;
   export const createPackSource: typeof import("./data-client-fallback.ts").createPackSource;
   export const createFixtureSource: typeof import("./data-client-fallback.ts").createFixtureSource;

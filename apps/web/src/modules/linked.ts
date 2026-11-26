@@ -1,7 +1,9 @@
-import { createPackSource, fieldValue, type PackSource } from "@access-main/data-client";
+import { createPackSource, fieldValue, type PackSource, type PlaceLookupHint, type SearchHit } from "@access-main/data-client";
 import { createPlacesModule } from "@access-maps/places-shell";
-import { emptyModuleResult, type FindersModule, type GamesModule, type HelpModule, type ModuleRegistry, type ModuleResult, type NavigatorModule, type PlacesModule } from "@access/shared";
+import { emptyModuleResult, type FindersModule, type ModuleContext, type GamesModule, type HelpModule, type ModuleRegistry, type ModuleResult, type NavigatorModule, type PlacesModule } from "@access/shared";
 import { createJourneyModule } from "./lane-adapters.ts";
+import { placesSearchRegion } from "../places/searchRegion.ts";
+import { placeHintFor, rememberPlace } from "../places/placeHints.ts";
 import { createModules } from "./stubs.ts";
 import type { PackRecord, PlaceDetail } from "./types.ts";
 
@@ -24,9 +26,9 @@ function placeResult(availability: "ready" | "error", items: PlaceDetail[], mess
  * sources behind it. A record with a fact that has no source, licence, date or
  * tier is not shown. An unknown name stays "UNKNOWN".
  */
-export async function getPlaceDetail(source: PackSource, id: string): Promise<ModuleResult<PlaceDetail>> {
+export async function getPlaceDetail(source: PackSource, id: string, hint?: PlaceLookupHint): Promise<ModuleResult<PlaceDetail>> {
   try {
-    const record = await source.get(id);
+    const record = await source.get(id, hint);
     if (!record) return placeResult("ready", [], "placeDetail.notFound", null);
     const unsourced = Object.values(record.fields).some(
       (field) => !field || !field.source_id || !field.licence || !field.retrieved_at || field.tier === undefined || field.tier === null,
@@ -118,9 +120,28 @@ function placesWithPack(source: PackSource, places: PlacesModule): PlacesModule 
   };
 }
 
+export { cellOf, placeHintFor } from "../places/placeHints.ts";
+
+export function withPlaceHints(source: PackSource): PackSource {
+  const remember = (hits: SearchHit[]) => {
+    for (const hit of hits) rememberPlace(hit.id, hit.lat, hit.lon, hit.tranche);
+    return hits;
+  };
+  return {
+    ...source,
+    records: (tranche, cell, signal) => source.records(tranche, cell, signal),
+    search: async (text, opts) => {
+      const region = placesSearchRegion();
+      return remember(await source.search(text, region && !opts.near ? { ...opts, region } : opts));
+    },
+    get: (id, hint) => source.get(id, hint ?? placeHintFor(id)),
+  };
+}
+
 /** The six real modules over one shared data source. Every result goes through guardModules in createModules. */
-export function createLinkedModules(source: PackSource): ModuleRegistry {
-  const get = (id: string) => getPlaceDetail(source, id);
+export function createLinkedModules(rawSource: PackSource): ModuleRegistry {
+  const source = withPlaceHints(rawSource);
+  const get = (id: string, ctx?: ModuleContext) => getPlaceDetail(source, id, ctx?.placeHint);
   const places = placesWithPack(source, { ...createPlacesModule(source), get });
   const guarded = createModules({
     places,
@@ -139,7 +160,8 @@ let sharedModules: ModuleRegistry | null = null;
 
 /** One data source for the whole app, reading from `${BASE_URL}data/`. Created on first use. */
 export function getPackSource(): PackSource {
-  sharedSource ??= createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/` });
+  // Online, parts that are not stored are fetched and checked for this session only, so Places works before a download.
+  sharedSource ??= createPackSource({ baseUrl: `${import.meta.env.BASE_URL}data/`, fetchOnDemand: true });
   return sharedSource;
 }
 

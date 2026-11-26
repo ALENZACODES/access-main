@@ -1,11 +1,13 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { FINDER_KINDS, type FinderKind, type JourneyPlan, type ModuleId, type ModuleResult, type PlaceHit } from "@access/shared";
+import { FINDER_KINDS, type FinderKind, type JourneyPlan, type ModuleId, type ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { ResultItems, statusKey } from "../modules/ResultItems.tsx";
 import { StubNote } from "../modules/StubNote.tsx";
 import { getModules } from "../modules/linked.ts";
+import { setPlacesSearchRegion } from "../places/searchRegion.ts";
+import { DEFAULT_SEARCH_REGION, PlaceResults, RegionPicker } from "../places/PlaceSearchParts.tsx";
+import { say } from "../places/copy.ts";
 import { useLaneStrings } from "../modules/strings.ts";
 import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
@@ -61,6 +63,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   const online = useOnline();
   const [text, setText] = useState("");
   const [kind, setKind] = useState<FinderKind>("washroom");
+  const [region, setRegion] = useState(DEFAULT_SEARCH_REGION);
   const [submitted, setSubmitted] = useState({ text: "", origin: "", destination: "", originId: null as string | null, destinationId: null as string | null, kind: "washroom" as FinderKind });
   const [result, setResult] = useState<ModuleResult<unknown> | null>(null);
   // Day 22 states: whether the person has asked for something, and a retry counter.
@@ -100,6 +103,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   useDocumentTitle(t(copy.title));
 
   useEffect(() => {
+    if (id === "places") setPlacesSearchRegion(region);
     const modules = getModules();
     const ctx = {
       locale: i18n.language.startsWith("fr") ? "fr" as const : "en" as const,
@@ -135,7 +139,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
       () => { if (active) setResult({ moduleId: id, availability: "error", items: [], messageKey: "modules.error", asOf: null, liveStatus: "unavailable" }); },
     );
     return () => { active = false; };
-  }, [id, i18n.language, online, profile, submitted, attempt]);
+  }, [id, i18n.language, online, profile, submitted, attempt, region]);
 
   const canSearch = result?.availability === "ready";
   const hasSearch = id === "places" || id === "finders" || id === "journey";
@@ -195,7 +199,12 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
               options={FINDER_KINDS.map((value) => ({ value, label: t(KIND_KEY[value]) }))}
             />
           ) : null}
-          <TextInput label={t("modules.searchLabel")} value={text} onChange={setText} isDisabled={!canSearch} />
+          {id === "places" ? <RegionPicker value={region} onChange={setRegion} locale={i18n.language.startsWith("fr") ? "fr" : "en"} isDisabled={!canSearch} /> : null}
+          {id === "places" ? (
+            <TextInput label={say(i18n.language.startsWith("fr") ? "fr" : "en", "searchLabel")} description={say(i18n.language.startsWith("fr") ? "fr" : "en", "searchHelp")} value={text} onChange={setText} isDisabled={!canSearch} />
+          ) : (
+            <TextInput label={t("modules.searchLabel")} value={text} onChange={setText} isDisabled={!canSearch} />
+          )}
           <div className="button-row">
             <Button type="submit" isDisabled={!canSearch}>{t("modules.searchAction")}</Button>
           </div>
@@ -225,17 +234,9 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
           }}
         />
       ) : null}
-      {result ? <ResultItems id={id} items={result.items} /> : null}
+      {result && id !== "places" ? <ResultItems id={id} items={result.items} /> : null}
+      {result && id === "places" ? <PlaceResults items={result.items} locale={locale} /> : null}
       {id === "journey" && result?.availability === "ready" ? <JourneyPlanDetails items={result.items as JourneyPlan[]} /> : null}
-      {id === "places" && result && result.items.length > 0 ? (
-        <ul className="stack">
-          {(result.items as PlaceHit[]).map((item) => (
-            <li key={item.id}>
-              <Link to={`/places/${encodeURIComponent(item.id)}`}>{t("lanes.openPlace", { name: item.name })}</Link>
-            </li>
-          ))}
-        </ul>
-      ) : null}
       {id === "places" && packPlaces !== null ? <Suspense fallback={null}><PackPlaces places={packPlaces} locale={locale} /></Suspense> : null}
       {id === "places" && packPlaces !== null ? <PackFreshness places={packPlaces} locale={locale} /> : null}
       {id === "places" && packPlaces !== null ? <PackReport places={packPlaces} locale={locale} /> : null}
