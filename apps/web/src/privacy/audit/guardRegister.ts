@@ -74,6 +74,7 @@ export const GUARD_REGISTER: GuardRegister = {
     { path: "apps/web/src/states/placeSheetExport.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/shortlist.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/urlState.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
+    { path: "apps/web/src/states/viewCode.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
   ],
   lists: {
     "vitest.config.ts": {

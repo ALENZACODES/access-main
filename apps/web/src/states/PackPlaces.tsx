@@ -9,6 +9,7 @@ import { parsePackPlaces, type PackPlaceRecord } from "./packPlaces.ts";
 import { PackBands } from "./PackBands.tsx";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
+import { ViewCode } from "./ViewCode.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
 import { VenueGroups } from "./VenueGroups.tsx";
 import { type VenueNote, venueNoteText, venueNotes } from "./venueGroups.ts";
@@ -217,6 +218,17 @@ export function PackPlaces({ places, locale, today }: Props) {
         onClear={shortlist.clear}
       />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
+      <ViewCode
+        view={{ text, tag, kind, facets }}
+        locale={locale}
+        onApply={(v) => {
+          setText(v.text);
+          setTag(v.tag);
+          setKind(v.kind);
+          setFacets(v.facets);
+          setBand(null);
+        }}
+      />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <AroundPlace places={view.shownPlaces} locale={locale} />
       <PackNoteBrowser places={view.shownPlaces} locale={locale} />
