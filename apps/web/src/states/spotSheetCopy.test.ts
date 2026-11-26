@@ -18,7 +18,7 @@ function everything(l: Locale): string[] {
   ];
   for (const k of copy.CHECK_KEYS) out.push(copy.checkQuestion(k, l));
   for (const k of ["yes", "no", "not-sure", "same", "different", "could-not-tell"] as const) out.push(copy.answerWord(k, l));
-  for (const tag of TAGS) out.push(copy.tagWord(tag, l));
+  for (const tag of TAGS) out.push(copy.spotTagWord(tag, l));
   return out.filter((s) => s !== "");
 }
 
@@ -33,7 +33,7 @@ describe("the spot-check copy", () => {
     for (const l of LOCALES) for (const s of everything(l)) expect(s, s).not.toMatch(/inconnu/i);
   });
   it("keeps UNKNOWN as UNKNOWN in both languages", () => {
-    for (const l of LOCALES) expect(copy.tagWord("unknown", l)).toBe("UNKNOWN");
+    for (const l of LOCALES) expect(copy.spotTagWord("unknown", l)).toBe("UNKNOWN");
   });
   it("never says a place is accessible, safe, correct, wrong or confirmed", () => {
     for (const l of LOCALES) {

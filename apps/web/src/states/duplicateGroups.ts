@@ -19,7 +19,7 @@ export interface RepeatPair {
   readonly pair: PairScore;
 }
 
-export interface DuplicateGroup {
+export interface DuplicatePlaceGroup {
   /** The ids, in the pack's order. */
   readonly ids: readonly string[];
   readonly pairs: readonly RepeatPair[];
@@ -32,7 +32,7 @@ export interface DuplicateGroup {
 }
 
 export interface DuplicateReport {
-  readonly groups: readonly DuplicateGroup[];
+  readonly groups: readonly DuplicatePlaceGroup[];
   readonly placesInGroups: number;
   readonly compared: number;
   /** Buckets left out for being bigger than MAX_BUCKET. */
@@ -171,6 +171,6 @@ export function findDuplicates(places: readonly PackPlaceRecord[], strictness: S
       };
     })
     .sort((x, y) => y.top - x.top || x.first - y.first);
-  const groups: DuplicateGroup[] = built.map((g) => ({ ids: g.ids, pairs: g.pairs, top: g.top, tagsDiffer: g.tagsDiffer, tags: g.tags }));
+  const groups: DuplicatePlaceGroup[] = built.map((g) => ({ ids: g.ids, pairs: g.pairs, top: g.top, tagsDiffer: g.tagsDiffer, tags: g.tags }));
   return { groups, placesInGroups: groups.reduce((n, g) => n + g.ids.length, 0), compared: pairs.length, skippedBuckets, strictness };
 }

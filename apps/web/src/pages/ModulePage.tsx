@@ -22,7 +22,7 @@ import { creditRecordsFromPack } from "../states/dataCredits.ts";
 import { escalateView } from "../states/retryPolicy.ts";
 import { moduleStateFor, moduleStateView, type ModuleAvailability } from "../states/moduleStates.ts";
 import { useFailureStreak } from "../states/useFailureStreak.ts";
-import { DataCredits, ElevatorNotices, PackCompare, PackFreshness, PackPlaces, PackReport, StateNotice, creditRecordsFromPack, escalateView, moduleStateFor, moduleStateView, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { ElevatorNotices } from "../states/ElevatorNotices.tsx";
 
 const COPY: Record<ModuleId, { title: string; body: string }> = {
   places: { title: "modules.placesTitle", body: "modules.placesBody" },

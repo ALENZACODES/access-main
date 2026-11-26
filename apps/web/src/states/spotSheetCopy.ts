@@ -46,7 +46,7 @@ export const sheetFooter = (locale: Locale): readonly string[] => [
   t(locale, "This sheet does not change the pack. Places were chosen to spread the looking, not to represent the whole pack.", "Cette feuille ne modifie pas le jeu de lieux. Les lieux ont été choisis pour répartir les visites, non pour représenter tout le jeu."),
 ];
 
-export function tagWord(tag: WheelchairTag, locale: Locale): string {
+export function spotTagWord(tag: WheelchairTag, locale: Locale): string {
   switch (tag) {
     case "yes":
       return t(locale, "Yes", "Oui");
@@ -127,6 +127,6 @@ export function spotSampleLine(shown: number, wanted: number, available: number,
 
 export function tallyLine(byTag: Readonly<Record<WheelchairTag, number>>, locale: Locale): string {
   const order: WheelchairTag[] = ["yes", "limited", "no", "designated", "unknown"];
-  const parts = order.filter((k) => byTag[k] > 0).map((k) => t(locale, `${tagWord(k, locale)}: ${byTag[k]}`, `${tagWord(k, locale)}\u00a0: ${byTag[k]}`));
+  const parts = order.filter((k) => byTag[k] > 0).map((k) => t(locale, `${spotTagWord(k, locale)}: ${byTag[k]}`, `${spotTagWord(k, locale)}\u00a0: ${byTag[k]}`));
   return parts.length === 0 ? "" : t(locale, `By the tag the pack reports: ${parts.join("; ")}.`, `Selon l’étiquette rapportée\u00a0: ${parts.join("; ")}.`);
 }

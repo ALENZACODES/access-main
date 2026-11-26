@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_SPOKEN_NUMBER, digitWords, numberWords } from "./numberWords";
+import { MAX_SPOKEN_NUMBER, callDigitWords, numberWords } from "./numberWords";
 
 describe("numberWords in English", () => {
   it.each([
@@ -68,17 +68,17 @@ describe("numberWords limits", () => {
   });
 });
 
-describe("digitWords", () => {
+describe("callDigitWords", () => {
   it("reads each digit on its own", () => {
-    expect(digitWords("2650", "en")).toBe("two six five zero");
-    expect(digitWords("2650", "fr")).toBe("deux six cinq zéro");
+    expect(callDigitWords("2650", "en")).toBe("two six five zero");
+    expect(callDigitWords("2650", "fr")).toBe("deux six cinq zéro");
   });
   it("drops everything that is not a digit", () => {
-    expect(digitWords("12A-14", "en")).toBe("one two one four");
-    expect(digitWords("", "en")).toBe("");
-    expect(digitWords("abc", "fr")).toBe("");
+    expect(callDigitWords("12A-14", "en")).toBe("one two one four");
+    expect(callDigitWords("", "en")).toBe("");
+    expect(callDigitWords("abc", "fr")).toBe("");
   });
   it("does not read non-ASCII digits as digits", () => {
-    expect(digitWords("٣", "en")).toBe("");
+    expect(callDigitWords("٣", "en")).toBe("");
   });
 });

@@ -81,11 +81,11 @@ export function toolsLabel(open: boolean, locale: Locale): string {
   return open ? t(locale, "Hide search and saving", "Masquer la recherche et l’enregistrement") : t(locale, "Search, filter and save the notices", "Chercher, filtrer et enregistrer les avis");
 }
 
-export function searchLabel(locale: Locale): string {
+export function elevatorSearchLabel(locale: Locale): string {
   return t(locale, "Search the notices", "Chercher dans les avis");
 }
 
-export function searchHelp(locale: Locale): string {
+export function elevatorSearchHelp(locale: Locale): string {
   return t(locale, "A station, an elevator label, a place in the notice or a stop id.", "Une station, l’étiquette d’un ascenseur, un lieu de l’avis ou un identifiant d’arrêt.");
 }
 

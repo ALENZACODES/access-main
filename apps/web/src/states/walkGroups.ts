@@ -93,7 +93,7 @@ function cellOf(p: Point, cellLat: number, cellLon: number): [number, number] {
 }
 
 /** Centre of a set of points. Longitudes are averaged around the first so a group across ±180 is not torn apart. */
-export function centreOf(points: readonly Point[]): Point {
+export function walkGroupCentre(points: readonly Point[]): Point {
   if (points.length === 0) return { lat: 0, lon: 0 };
   const base = points[0]!.lon;
   let lat = 0;
@@ -172,7 +172,7 @@ export function groupPlaces(places: readonly PackPlaceRecord[], distanceM: numbe
 
 function buildGroup(members: readonly WalkLocated[], distanceM: number): WalkGroup {
   const points = members.map((m) => m.point);
-  const centre = centreOf(points);
+  const centre = walkGroupCentre(points);
   let spreadM = 0;
   let widthM: number | null = points.length <= MAX_WIDTH_MEMBERS ? 0 : null;
   for (let i = 0; i < points.length; i += 1) {

@@ -6,7 +6,7 @@
  * named plainly (space, hyphen, apostrophe) and anything else is called a symbol, never skipped.
  */
 import type { Locale } from "./stateCopy";
-import { digitWords } from "./numberWords";
+import { callDigitWords } from "./numberWords";
 
 export const MAX_SPELL_CHARS = 40;
 
@@ -85,7 +85,7 @@ export function spellUnits(text: string, locale: Locale): Spelling {
     if (/^[a-z]$/.test(base) && marks.every((m) => m in ACCENTS)) {
       units.push({ char, kind: "letter", say: letterSay(base, marks, locale) });
     } else if (/^[0-9]$/.test(char)) {
-      units.push({ char, kind: "digit", say: digitWords(char, locale) });
+      units.push({ char, kind: "digit", say: callDigitWords(char, locale) });
     } else {
       const named = SYMBOLS[char];
       units.push({ char, kind: "symbol", say: named ? named[locale] : locale === "fr" ? `le symbole\u202f« ${char} »` : `the symbol “${char}”` });

@@ -26,7 +26,7 @@ export function pickPlaces(places: readonly PackPlaceRecord[], query: string, li
 }
 
 /** The label of a place in the list. Two places with one name are told apart by their address when there is one. */
-export function pickLabel(place: PackPlaceRecord, among: readonly PackPlaceRecord[]): string {
+export function callPickLabel(place: PackPlaceRecord, among: readonly PackPlaceRecord[]): string {
   const name = place.name ?? "";
   const same = among.filter((p) => p.name === place.name).length;
   return same > 1 && place.address ? `${name}, ${place.address}` : name;

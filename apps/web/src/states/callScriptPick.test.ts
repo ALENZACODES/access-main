@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PICK_CHOICES, pickLabel, pickPlaces } from "./callScriptPick";
+import { MAX_PICK_CHOICES, callPickLabel, pickPlaces } from "./callScriptPick";
 import { bare, place } from "./placeFixtures";
 
 const set = [place("a", { name: "Café Étoile" }), place("b", { name: "Quesnel Library" }), place("c", { name: "Étoile Hall" }), bare("d"), place("e", { name: "Main Street Pharmacy" })];
@@ -41,17 +41,17 @@ describe("pickPlaces", () => {
   });
 });
 
-describe("pickLabel", () => {
+describe("callPickLabel", () => {
   it("is the name when it is the only one", () => {
-    expect(pickLabel(set[0]!, set)).toBe("Café Étoile");
+    expect(callPickLabel(set[0]!, set)).toBe("Café Étoile");
   });
   it("adds the address when two places share a name", () => {
     const two = [place("x", { name: "Cafe", address: "1 Elm Street" }), place("y", { name: "Cafe", address: "2 Oak Street" })];
-    expect(pickLabel(two[0]!, two)).toBe("Cafe, 1 Elm Street");
-    expect(pickLabel(two[1]!, two)).toBe("Cafe, 2 Oak Street");
+    expect(callPickLabel(two[0]!, two)).toBe("Cafe, 1 Elm Street");
+    expect(callPickLabel(two[1]!, two)).toBe("Cafe, 2 Oak Street");
   });
   it("stays the name when the twin has no address", () => {
     const two = [place("x", { name: "Cafe", address: null }), place("y", { name: "Cafe", address: "2 Oak Street" })];
-    expect(pickLabel(two[0]!, two)).toBe("Cafe");
+    expect(callPickLabel(two[0]!, two)).toBe("Cafe");
   });
 });

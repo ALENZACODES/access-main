@@ -5,7 +5,7 @@
  * text the person chooses to copy or save.
  */
 import { formatDate } from "./provenance";
-import { CHECK_KEYS, answerWord, checkQuestion, labels, sheetFooter, sourceLine, tagWord } from "./spotSheetCopy";
+import { CHECK_KEYS, answerWord, checkQuestion, labels, sheetFooter, sourceLine, spotTagWord } from "./spotSheetCopy";
 import { type ResultRow } from "./spotResults";
 import type { SpotSummary } from "./spotSummary";
 import type { Locale } from "./stateCopy";
@@ -17,7 +17,7 @@ const PACK_TAGS = ["yes", "limited", "no", "designated"] as const;
 
 /** The tag the sheet carried, in words. UNKNOWN stays UNKNOWN. */
 function tagText(tag: string, locale: Locale): string {
-  return (PACK_TAGS as readonly string[]).includes(tag) ? tagWord(tag as (typeof PACK_TAGS)[number], locale) : "UNKNOWN";
+  return (PACK_TAGS as readonly string[]).includes(tag) ? spotTagWord(tag as (typeof PACK_TAGS)[number], locale) : "UNKNOWN";
 }
 
 function sourceText(row: ResultRow, locale: Locale): string {

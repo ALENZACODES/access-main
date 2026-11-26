@@ -78,7 +78,7 @@ const EN_DIGITS = ["zero", "one", "two", "three", "four", "five", "six", "seven"
 const FR_DIGITS = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"] as const;
 
 /** Each digit of a string read on its own, other characters dropped: "2650" is "two six five zero". */
-export function digitWords(text: string, locale: Locale): string {
+export function callDigitWords(text: string, locale: Locale): string {
   const words = locale === "fr" ? FR_DIGITS : EN_DIGITS;
   return [...text].filter((c) => c >= "0" && c <= "9").map((c) => words[Number(c)]!).join(" ");
 }

@@ -11,7 +11,7 @@ function allStrings(l: "en" | "fr"): string[] {
     copy.elevatorHeading(l), copy.elevatorLead(l), copy.droppedNote(1, l), copy.droppedNote(3, l), copy.stationName("", l),
     copy.stateText("out-of-service", l), copy.stateText("back-in-service", l), copy.noReadingNote(l), copy.stopIdsLine(["1", "2"], l),
     copy.languageNote("en", l === "en" ? "fr" : "en"), copy.languageNote("fr", l === "en" ? "fr" : "en"), copy.toolsLabel(true, l), copy.toolsLabel(false, l),
-    copy.searchLabel(l), copy.searchHelp(l), copy.ageFilterLabel(l), copy.sortLabel(l), copy.allLabel(l), copy.sortName("station", l), copy.sortName("oldest", l),
+    copy.elevatorSearchLabel(l), copy.elevatorSearchHelp(l), copy.ageFilterLabel(l), copy.sortLabel(l), copy.allLabel(l), copy.sortName("station", l), copy.sortName("oldest", l),
     copy.sortName("newest", l), copy.saveTextLabel(l), copy.saveCsvLabel(l), copy.savedNote("a.csv", l), copy.saveFailedNote(l),
   ];
   for (const r of copy.readingLines({ elevator: "1", state: "out-of-service", cause: "maintenance", between: "A and B" }, l)) out.push(r.label);

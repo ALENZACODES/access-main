@@ -3,7 +3,7 @@
  * address out in words, can spell the name, and asks the visit questions. It never looks anything
  * up and never fills a gap: where the pack is silent the script says so and tells the caller to ask.
  */
-import { numberWords, digitWords } from "./numberWords";
+import { numberWords, callDigitWords } from "./numberWords";
 import type { PackPlaceRecord } from "./packPlaces";
 import { MAX_SPELL_CHARS, spellLine, spellUnits, worthSpelling } from "./spellOut";
 import { parseAddress, type ParsedAddress } from "./streetAddress";
@@ -49,12 +49,12 @@ export interface CallScript {
 export function spokenNumber(raw: string | null, locale: Locale): string | null {
   if (raw === null) return null;
   const m = /^(\d+)([A-Za-z]?)(?:\s*[-–]\s*(\d+)([A-Za-z]?))?$/.exec(raw.trim());
-  if (!m) return digitWords(raw, locale) || null;
+  if (!m) return callDigitWords(raw, locale) || null;
   const one = (digits: string, suffix: string): string => {
     const n = Number(digits);
     // A number with a leading zero or too long for words is read digit by digit.
     const words = digits.startsWith("0") && digits.length > 1 ? null : numberWords(n, locale);
-    const body = words ?? digitWords(digits, locale);
+    const body = words ?? callDigitWords(digits, locale);
     return suffix ? `${body} ${suffix.toUpperCase()}` : body;
   };
   const first = one(m[1]!, m[2]!);

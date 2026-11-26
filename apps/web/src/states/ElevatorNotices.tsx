@@ -4,7 +4,7 @@ import { ChoiceGroup, TextInput } from "../design/fields.tsx";
 import { ELEVATOR_AGE_BANDS, bandName, ageLine } from "./elevatorAge.ts";
 import {
   allLabel, droppedNote, elevatorHeading, elevatorLead, ageFilterLabel, languageNote, noReadingNote, noticeSourceLine, readingLines,
-  saveCsvLabel, saveFailedNote, saveTextLabel, savedNote, searchHelp, searchLabel, sortLabel, sortName, stationName, stopIdsLine, toolsLabel,
+  saveCsvLabel, saveFailedNote, saveTextLabel, savedNote, elevatorSearchHelp, elevatorSearchLabel, sortLabel, sortName, stationName, stopIdsLine, toolsLabel,
 } from "./elevatorCopy.ts";
 import { exportFileName, noticesToCsv, noticesToText } from "./elevatorExport.ts";
 import { hasReading } from "./elevatorRead.ts";
@@ -67,7 +67,7 @@ export function ElevatorNotices({ notices, locale, today }: Props) {
       <div id={toolsId} hidden={!open} className="stack">
         {open ? (
           <>
-            <TextInput label={searchLabel(locale)} description={searchHelp(locale)} value={query.text} onChange={(text) => setQuery({ ...query, text })} />
+            <TextInput label={elevatorSearchLabel(locale)} description={elevatorSearchHelp(locale)} value={query.text} onChange={(text) => setQuery({ ...query, text })} />
             <ChoiceGroup label={ageFilterLabel(locale)} value={query.band} onChange={(v) => setQuery({ ...query, band: v === "all" ? "all" : (v as ElevatorQuery["band"]) })} options={bandOptions} />
             <ChoiceGroup
               label={sortLabel(locale)}

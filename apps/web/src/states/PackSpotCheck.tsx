@@ -6,7 +6,7 @@ import type { PackPlaceRecord } from "./packPlaces.ts";
 import { DEFAULT_SAMPLE_SIZE, MAX_SEED_CHARS, SAMPLE_SIZES, cleanSeed, parseSampleSize, sampleForSpotCheck } from "./spotSample.ts";
 import { buildSpotSheet } from "./spotSheet.ts";
 import { SpotResults } from "./SpotResults.tsx";
-import { SPOT_FILENAMES, spotSampleLine, tagWord, tallyLine } from "./spotSheetCopy.ts";
+import { SPOT_FILENAMES, spotSampleLine, spotTagWord, tallyLine } from "./spotSheetCopy.ts";
 import { spotSheetToCsv, spotSheetToHtml, spotSheetToText } from "./spotSheetExport.ts";
 import type { Locale } from "./stateCopy.ts";
 import { t } from "./typography.ts";
@@ -111,7 +111,7 @@ export function PackSpotCheck({ places, locale, today, onSave = (file) => saveTe
                     <ol>
                       {sample.picks.map((pick) => (
                         <li key={pick.place.id}>
-                          {pick.place.name ?? "UNKNOWN"} ({tagWord(pick.tag, locale)})
+                          {pick.place.name ?? "UNKNOWN"} ({spotTagWord(pick.tag, locale)})
                         </li>
                       ))}
                     </ol>

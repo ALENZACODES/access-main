@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { distanceMetres } from "./packGeo";
 import { lcg, place, varied } from "./placeFixtures";
-import { DEFAULT_WALK_DISTANCE, MAX_GROUPED_PLACES, MAX_WIDTH_MEMBERS, WALK_DISTANCES_M, centreOf, groupPlaces, isWalkDistance, locatedPlaces } from "./walkGroups";
+import { DEFAULT_WALK_DISTANCE, MAX_GROUPED_PLACES, MAX_WIDTH_MEMBERS, WALK_DISTANCES_M, walkGroupCentre, groupPlaces, isWalkDistance, locatedPlaces } from "./walkGroups";
 
 /** A place `east` metres east and `north` metres north of a fixed point in Toronto. */
 const at = (id: string, east: number, north: number, over: Record<string, unknown> = {}) => place(id, { lat: 43.65 + north / 111_195, lon: -79.38 + east / (111_195 * Math.cos((43.65 * Math.PI) / 180)), ...over });
@@ -147,12 +147,12 @@ describe("groupPlaces", () => {
   });
 });
 
-describe("centreOf", () => {
-  it("is the mean of the points", () => expect(centreOf([{ lat: 1, lon: 2 }, { lat: 3, lon: 4 }])).toEqual({ lat: 2, lon: 3 }));
-  it("is 0,0 for no points", () => expect(centreOf([])).toEqual({ lat: 0, lon: 0 }));
-  it("is the point itself for one", () => expect(centreOf([{ lat: 43.6, lon: -79.4 }])).toEqual({ lat: 43.6, lon: -79.4 }));
+describe("walkGroupCentre", () => {
+  it("is the mean of the points", () => expect(walkGroupCentre([{ lat: 1, lon: 2 }, { lat: 3, lon: 4 }])).toEqual({ lat: 2, lon: 3 }));
+  it("is 0,0 for no points", () => expect(walkGroupCentre([])).toEqual({ lat: 0, lon: 0 }));
+  it("is the point itself for one", () => expect(walkGroupCentre([{ lat: 43.6, lon: -79.4 }])).toEqual({ lat: 43.6, lon: -79.4 }));
   it("keeps points either side of the 180th meridian together", () => {
-    const c = centreOf([{ lat: 0, lon: 179.9 }, { lat: 0, lon: -179.9 }]);
+    const c = walkGroupCentre([{ lat: 0, lon: 179.9 }, { lat: 0, lon: -179.9 }]);
     expect(Math.abs(Math.abs(c.lon) - 180)).toBeLessThan(0.001);
   });
 });

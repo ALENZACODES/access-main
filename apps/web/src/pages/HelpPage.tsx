@@ -18,7 +18,7 @@ import { escalateView } from "../states/retryPolicy.ts";
 import { helpTitleHints, titledItems } from "../states/hints.ts";
 import { moduleStateFor, moduleStateView, type ModuleAvailability } from "../states/moduleStates.ts";
 import { useFailureStreak } from "../states/useFailureStreak.ts";
-import { HelpNumbers, StateNotice, SuggestionList, escalateView, helpTitleHints, moduleStateFor, moduleStateView, titledItems, useFailureStreak, type ModuleAvailability } from "../states/index.ts";
+import { HelpNumbers } from "../states/HelpNumbers.tsx";
 
 export function HelpPage() {
   const { t, i18n } = useTranslation();

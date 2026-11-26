@@ -6,7 +6,7 @@
 import type { PackPlaceRecord } from "./packPlaces";
 import { formatDate } from "./provenance";
 import { MAX_SEED_CHARS, type Sample } from "./spotSample";
-import { CHECK_ANSWERS, CHECK_KEYS, type AnswerKey, type CheckKey, answerWord, checkQuestion, labels, sheetFooter, sheetIntro, sheetTitle, sourceLine, tagWord } from "./spotSheetCopy";
+import { CHECK_ANSWERS, CHECK_KEYS, type AnswerKey, type CheckKey, answerWord, checkQuestion, labels, sheetFooter, sheetIntro, sheetTitle, sourceLine, spotTagWord } from "./spotSheetCopy";
 import type { Locale } from "./stateCopy";
 
 /** The longest pack note put on the sheet. Longer notes are cut and say so. */
@@ -53,7 +53,7 @@ function clipNote(note: string, locale: Locale): string {
 export function sheetEntry(n: number, place: PackPlaceRecord, locale: Locale): SheetEntry {
   const name = place.name ?? "UNKNOWN";
   const p = place.provenance;
-  const tagText = place.tag === "unknown" ? "UNKNOWN" : `${tagWord(place.tag, locale)} (${p ? sourceLine(p.source, formatDate(p.retrievedOn, locale), locale) : "UNKNOWN"})`;
+  const tagText = place.tag === "unknown" ? "UNKNOWN" : `${spotTagWord(place.tag, locale)} (${p ? sourceLine(p.source, formatDate(p.retrievedOn, locale), locale) : "UNKNOWN"})`;
   const lines: SheetLine[] = [
     { label: labels.name(locale), value: name },
     { label: labels.id(locale), value: place.id },

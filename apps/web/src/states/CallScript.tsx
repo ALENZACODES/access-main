@@ -8,7 +8,7 @@ import {
   scriptCopy,
 } from "./callScriptCopy.ts";
 import { scriptHtmlFile, scriptTextFile } from "./callScriptExport.ts";
-import { pickLabel, pickPlaces } from "./callScriptPick.ts";
+import { callPickLabel, pickPlaces } from "./callScriptPick.ts";
 import { saveTextFile, type SavedFile } from "./downloadFile.ts";
 import type { PackPlaceRecord } from "./packPlaces.ts";
 import { canSpeak, isSpeechRate, makeReader, type MakeUtterance, type SpeechLike, type SpeechRate, type UtteranceLike } from "./speak.ts";
@@ -175,7 +175,7 @@ export function CallScript({ places, locale, today, onSave = saveTextFile, speec
                 label={callScriptPickLabel(locale)}
                 value={found.shown.some((p) => p.id === pickedId) ? pickedId : ""}
                 onChange={change(setPickedId)}
-                options={found.shown.map((p) => ({ value: p.id, label: pickLabel(p, found.shown) }))}
+                options={found.shown.map((p) => ({ value: p.id, label: callPickLabel(p, found.shown) }))}
               />
             )}
             {found.hidden > 0 ? <p>{callScriptMoreLine(found.hidden, locale)}</p> : null}
