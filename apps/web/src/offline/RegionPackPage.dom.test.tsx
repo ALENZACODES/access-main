@@ -141,12 +141,16 @@ describe("offline region integrity re-check", { timeout: 30000 }, () => {
     expect(button.getAttribute("aria-busy")).toBe("false");
   });
 
-  it.each(["en", "fr"] as const)("keeps UNKNOWN and the map credit literal in the region list (%s)", async (language) => {
+  it.each([
+    ["en", "OpenStreetMap data is available under the Open Database License (ODbL 1.0)."],
+    ["fr", "Les données OpenStreetMap sont disponibles sous licence Open Database License (ODbL 1.0)."],
+  ] as const)("keeps UNKNOWN and shows the map credit beside its licence (%s)", async (language, licence) => {
     const source = mockSource({ parts: [] });
     source.storedRegionIntegrity = vi.fn(async () => { throw new Error("storage unavailable"); });
     const { container } = await view(language, source);
     const c = offlineCatalog[language];
-    expect(await screen.findByText("© OpenStreetMap contributors")).toBeTruthy();
+    const credit = await screen.findByText("© OpenStreetMap contributors", { exact: true });
+    expect(credit.nextElementSibling?.textContent).toBe(licence);
     const separator = language === "fr" ? "\u00a0: " : ": ";
     expect(container.textContent).toContain(c.built + separator + "2026-11-01");
     expect(container.textContent).toContain(c.retrieved + separator + "2026-11-01");
