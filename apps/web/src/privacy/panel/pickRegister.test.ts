@@ -48,7 +48,7 @@ describe("the real register", () => {
     expect(c.files).toBe(34);
   });
 
-  it("counts limits: 29 before reading, 2 after, 1 mixed, 1 with no check found in its own file", () => {
+  it("counts limits: 30 before reading, 2 after, 1 mixed, 1 with no check found in its own file", () => {
     const c = pickCounts(PICK_REGISTER);
     expect(c.before).toBe(30);
     expect(c.after).toBe(2);

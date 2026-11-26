@@ -199,7 +199,7 @@ describe("browserKindOrder and browserOfKind", () => {
   });
 
   it("keeps the order of the rows for one kind", () => {
-    expect(browserOfKind(BROWSER_REGISTER, "identifier")[0]?.path).toBe("apps/web/src/contribute/ContributePage.tsx");
+    expect(browserOfKind(BROWSER_REGISTER, "identifier")[0]?.path).toBe("apps/web/src/contribute/useDraftPhotos.ts");
     expect(browserOfKind([], "language")).toEqual([]);
   });
 });

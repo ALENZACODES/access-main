@@ -183,3 +183,105 @@ describe("importSummary", () => {
     expect(LIST_CODE_HEADER).toBe("LIST v1");
   });
 });
+
+describe("identifiers containing list-code separators", () => {
+  it("keeps the common format byte-for-byte for ids that need no quoting", () => {
+    const list = [
+      { id: "north-1", name: "North" },
+      { id: "osm:node/12", name: null },
+    ];
+    expect(listToCode(list)).toBe("LIST v1\n- north-1 | North\n- osm:node/12 | UNKNOWN\n");
+  });
+
+  it("imports a separator-bearing id without substituting any of its neighbours", () => {
+    const places = [P("floor|west", "Office"), P("floor", "Hall"), P("|", "Door")];
+    const code = listToCode(places);
+    const read = parseListCode(code);
+    expect(read.ids).toEqual(["floor|west", "floor", "|"]);
+    expect(read.ignored).toBe(0);
+    expect(planImport(read.ids, ["floor"], pack("floor", "|", "floor|west"))).toEqual({
+      toAdd: ["floor|west", "|"],
+      alreadyListed: ["floor"],
+      notInPack: [],
+      overCapacity: [],
+    });
+  });
+
+  it("retains exact identifiers at both sides of a JSON escape", () => {
+    const ids = [
+      'room|"quoted"',
+      "room|\\backslash",
+      "plain%7Cpercent",
+      "accent|é",
+      "accent|e\u0301",
+      "||double||",
+    ];
+    expect(parseListCode(listToCode(ids.map((id) => P(id)))).ids).toEqual(ids);
+  });
+
+  it("counts malformed tagged rows without interpreting their labels", () => {
+    const badRows = [
+      'PLACE ["ends|here"',
+      'PLACE [["not|text"],"Name"]',
+      'PLACE ["has space","Name"]',
+      'PLACE ["too|many","Name","extra"]',
+      'PLACE ["missing|name"]',
+      'PLACE ["valid|id",null]',
+      'PLACE ["valid|id",{"id":"other"}]',
+      'PLACE ["line\\nbreak","Name"]',
+    ];
+    const text = ["LIST v1", ...badRows, "- ok | Last row"].join("\n");
+    expect(parseListCode(text)).toEqual({
+      ids: ["ok"],
+      ignored: badRows.length,
+      hadHeader: true,
+      cut: false,
+    });
+  });
+
+  it("accepts old exports that printed the full identifier unquoted", () => {
+    const legacy = [
+      "LIST v1",
+      "- before | First",
+      "- osm/1|entrance | West",
+      "- |end| | East",
+    ].join("\r\n");
+    const current = listToCode([P("osm/1|entrance"), P("after")]);
+    expect(parseListCode(legacy + "\n" + current).ids).toEqual([
+      "before",
+      "osm/1|entrance",
+      "|end|",
+      "after",
+    ]);
+  });
+
+  it("leaves the familiar compact and numbered input forms available", () => {
+    const text = "a|A\n2. b | B\n* c | C\n- d | Also | part of the name";
+    expect(parseListCode(text).ids).toEqual(["a", "b", "c", "d"]);
+    expect(parseListCode("PLACE | a place whose literal id is PLACE").ids).toEqual(["PLACE"]);
+  });
+
+  it("does not import a different id from an incomplete tagged row at the input ceiling", () => {
+    const partial = 'PLACE ["main|west","' + "label".repeat(MAX_CODE_CHARS) + '"]';
+    const parsed = parseListCode("- accepted | OK\n" + partial);
+    expect(parsed.cut).toBe(true);
+    expect(parsed.ignored).toBe(1);
+    expect(parsed.ids).toEqual(["accepted"]);
+  });
+
+  it("keeps a multiline display label on one row in either encoding", () => {
+    const code = listToCode([
+      P("left|right", "Room\n- extra | name"),
+      P("second", "Line\r\nPLACE [\"extra|id\",\"room\"]"),
+    ]);
+    expect(code.trimEnd().split("\n")).toHaveLength(3);
+    expect(parseListCode(code).ids).toEqual(["left|right", "second"]);
+  });
+
+  it("counts an overlength id once and continues to the next entry", () => {
+    const invalid = "|".repeat(201);
+    const valid = "|".repeat(200);
+    const text = "PLACE " + JSON.stringify([invalid, "Too long"]) + "\n" + listToCode([P(valid)]);
+    expect(parseListCode(text)).toMatchObject({ ids: [valid], ignored: 1 });
+  });
+});

@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../design/Button.tsx";
 import type { PackPlaceRecord } from "./packPlaces.ts";
 import type { Point } from "./packGeo.ts";
@@ -49,7 +49,14 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
   const [order, setOrder] = useState<ShortlistOrder>("added");
   const table = useMemo(() => buildShortlistTable(resolved, locale, today, from, order), [resolved, locale, today, from, order]);
   const [status, setStatus] = useState("");
-  const [shown, setShown] = useState<null | "text" | "csv">(null);
+  const [shown, setShown] = useState<{ kind: "text" | "csv"; select: boolean } | null>(null);
+  const fallback = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    if (shown?.select) {
+      fallback.current?.focus();
+      fallback.current?.select();
+    }
+  }, [shown]);
   const text = useMemo(() => shortlistToText(resolved, locale, today), [resolved, locale, today]);
   const csv = useMemo(() => shortlistToCsv(resolved), [resolved]);
   const differs = useMemo(() => differingColumns(table), [table]);
@@ -58,13 +65,19 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
   if (list.length === 0) return status === "" ? null : <p aria-live="polite">{status}</p>;
 
   const doCopy = async (kind: "text" | "csv") => {
-    const ok = await copy(kind === "csv" ? csv : text);
+    const trigger = document.activeElement;
+    let ok = false;
+    try {
+      ok = await copy(kind === "csv" ? csv : text);
+    } catch {
+      // The injected writer can reject just as a denied browser clipboard write can.
+    }
     if (ok) {
       setStatus(kind === "csv" ? t(locale, "Copied as CSV.", "Copié en CSV.") : t(locale, "Copied to the clipboard.", "Copié dans le presse-papiers."));
       return;
     }
     setStatus(t(locale, "This browser could not copy. The text is shown below so you can select it.", "Ce navigateur n’a pas pu copier. Le texte est affiché ci-dessous pour que vous puissiez le sélectionner."));
-    setShown(kind);
+    setShown({ kind, select: document.activeElement === trigger });
   };
   const remove = (id: string) => {
     onRemove(id);
@@ -138,19 +151,28 @@ export function Shortlist({ list, places, locale, today, kept, from = null, onRe
             {t(locale, "Copy the list as CSV", "Copier la liste en CSV")}
           </Button>
         ) : null}
-        <Button variant="quiet" onPress={() => setShown((v) => (v === null ? "text" : null))} aria-expanded={shown !== null} aria-controls={textId}>
+        <Button variant="quiet" onPress={() => setShown((v) => (v === null ? { kind: "text", select: false } : null))} aria-expanded={shown !== null} aria-controls={textId}>
           {shown !== null ? t(locale, "Hide the text", "Masquer le texte") : t(locale, "Show the text", "Afficher le texte")}
         </Button>
         <Button variant="quiet" onPress={() => { onClear(); setStatus(t(locale, "The list is empty.", "La liste est vide.")); }}>
           {t(locale, "Empty the list", "Vider la liste")}
         </Button>
       </div>
+      <textarea
+        id={textId}
+        ref={fallback}
+        hidden={shown === null}
+        readOnly
+        rows={12}
+        value={shown?.kind === "csv" ? csv : shown ? text : ""}
+        aria-label={shown?.kind === "csv" ? t(locale, "The list as CSV", "La liste en CSV") : t(locale, "The list as text", "La liste en texte")}
+        style={{ width: "100%" }}
+      />
       {resolved.found.length > 0 ? <VisitPlan found={resolved.found.map((f) => f.place)} missing={resolved.missing.length} locale={locale} today={today} /> : null}
       <DistanceMatrix places={resolved.found.map((f) => f.place)} locale={locale} />
       <GapMatrix places={resolved.found.map((f) => f.place)} locale={locale} today={today} />
       <Handout places={resolved.found.map((f) => f.place)} locale={locale} today={today} />
       <ShortlistFiles places={resolved.found.map((f) => f.place)} locale={locale} />
-      {shown !== null ? <textarea id={textId} readOnly rows={12} value={shown === "csv" ? csv : text} aria-label={shown === "csv" ? t(locale, "The list as CSV", "La liste en CSV") : t(locale, "The list as text", "La liste en texte")} style={{ width: "100%" }} /> : null}
       <p aria-live="polite">{status}</p>
     </section>
   );

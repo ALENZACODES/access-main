@@ -32,13 +32,13 @@ describe("the real register", () => {
     expect(() => assertSave(SAVE_REGISTER)).not.toThrow();
   });
 
-  it("has 40 rows at 42 places in 40 files", () => {
-    expect(saveCounts(SAVE_REGISTER)).toEqual({ total: 40, uses: 42, files: 40, named: 36, caller: 4 });
+  it("has 41 rows at 43 places in 41 files", () => {
+    expect(saveCounts(SAVE_REGISTER)).toEqual({ total: 41, uses: 43, files: 41, named: 37, caller: 4 });
   });
 
   it("counts the kinds as the scan found them", () => {
     const by = (k: (typeof SAVE_KINDS)[number]): number => saveOfKind(SAVE_REGISTER, k).reduce((n, r) => n + r.uses, 0);
-    expect(SAVE_KINDS.map(by)).toEqual([8, 23, 3, 1, 3, 4]);
+    expect(SAVE_KINDS.map(by)).toEqual([8, 23, 3, 1, 4, 4]);
   });
 
   it("has rows of every kind", () => {
@@ -58,7 +58,7 @@ describe("the real register", () => {
       "packages/proposals/src/ReviewQueue.tsx",
       "packages/contribute/src/export.ts",
     ]);
-    expect(SAVE_REGISTER.filter((r) => r.path.startsWith("apps/web/src/")).length).toBe(35);
+    expect(SAVE_REGISTER.filter((r) => r.path.startsWith("apps/web/src/")).length).toBe(36);
   });
 
   it("lists this panel's own download, so the panel is not left out of its own list", () => {
