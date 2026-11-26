@@ -21,6 +21,14 @@ Day 22 error and empty states, EN + FR, wired into the live module pages.
 - The shell's own states (not found, render failed, storage unavailable,
   profile save failed) stay in `shell/errorStates.ts` with `ErrorActions`.
 - The "accessibility unknown" state keeps UNKNOWN as UNKNOWN.
+- Spot-check sheet (`PackSpotCheck.tsx`, mounted in `PackPlaces.tsx`): picks a
+  few of the places on screen to look at in person, from a seed, so the same
+  places and seed give the same list on any device (`spotRandom.ts`,
+  `spotSample.ts`). The sheet (`spotSheet.ts`, `spotSheetExport.ts`: page, text,
+  CSV) puts what the pack reports next to the same five questions for every
+  place. It never says a place is accessible and never says the pack is right or
+  wrong. Nothing written on the sheet is read, kept or sent, and no storage key
+  is used.
 - Tests: `states/stateCopy.test.ts`, `pages/ModulePage.states.dom.test.tsx`,
   `e2e/day22-states.spec.ts`.
 

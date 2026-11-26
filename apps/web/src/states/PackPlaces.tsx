@@ -10,6 +10,7 @@ import { PackBands } from "./PackBands.tsx";
 import { NearGroups } from "./NearGroups.tsx";
 import { PackSort } from "./PackSort.tsx";
 import { DEFAULT_PACK_SORT, type PackSort as PackSortKey } from "./packSort.ts";
+import { PackSpotCheck } from "./PackSpotCheck.tsx";
 import { TextMap } from "./TextMap.tsx";
 import { StreetIndex } from "./StreetIndex.tsx";
 import { ViewCode } from "./ViewCode.tsx";
@@ -273,6 +274,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
       <TagNoteReads places={view.shownPlaces} locale={locale} />
+      <PackSpotCheck places={view.shownPlaces} locale={locale} today={day} />
       <p>{message("pack.osmCredit", locale)}</p>
     </section>
   );
