@@ -67,6 +67,7 @@ export const GUARD_REGISTER: GuardRegister = {
     { path: "apps/web/src/states/downloadFile.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/handoutHtml.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/listTransfer.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
+    { path: "apps/web/src/states/marksTransfer.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/packAudit.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/packEarlierId.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/packExport.test.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
