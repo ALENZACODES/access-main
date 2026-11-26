@@ -414,13 +414,14 @@ export function createPackSource(opts: { baseUrl: string; fetch?: typeof fetch; 
     for (const part of pack.tranches[tranche]?.cells[cell]?.parts ?? []) {
       if (signal?.aborted) return;
       if (!part.sourceId || !sources.has(part.sourceId)) continue;
-      const cached = (await readPart(part.sha256)) ?? (await lastKnownGood(part.path));
+      // Online with fetchOnDemand, a part that is not stored is fetched and checked for this session only.
+      const cached = (await readPart(part.sha256)) ?? (await lastKnownGood(part.path)) ?? (opts.fetchOnDemand ? await readOrFetch(part, false) : undefined);
       if (!cached) continue;
       // Checked again here so a copy stored by an older version of this client
       // is held to the same rule; a record that fails is never yielded.
-      for (const record of cached.records) {
+      for (const record of checkedRecords(cached, sources).values()) {
         if (signal?.aborted) return;
-        if (checkPackRecord(record, sources).ok) yield record;
+        yield record;
       }
     }
     // A part the builder withheld from this pack: show the last verified copy on the device, if there is one.

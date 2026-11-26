@@ -103,7 +103,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   useDocumentTitle(t(copy.title));
 
   useEffect(() => {
-    if (id === "places") setPlacesSearchRegion(region);
+    if (id === "places" || id === "finders") setPlacesSearchRegion(region);
     const modules = getModules();
     const ctx = {
       locale: i18n.language.startsWith("fr") ? "fr" as const : "en" as const,
@@ -173,13 +173,13 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
     <div className="stack">
       <h1>{t(copy.title)}</h1>
       <p className="lead">{t(copy.body)}</p>
-      {id === "places" || id === "journey" ? <p>{t("modules.noMap")}</p> : null}
+      {id === "places" || id === "journey" ? <p className="fine-print">{t("modules.noMap")}</p> : null}
       {result?.availability === "stub" ? <StubNote id={id} search={hasSearch} /> : (
-        <p>{result ? t(statusKey(result)) : t("home.checking")}</p>
+        <p className="fine-print">{result ? t(statusKey(result)) : t("home.checking")}</p>
       )}
       {id === "places" || id === "finders" ? (
         <form
-          className="stack"
+          className="stack search-panel"
           aria-describedby={result?.availability === "stub" ? `${id}-search-unavailable` : undefined}
           onSubmit={(event) => {
             event.preventDefault();
@@ -199,7 +199,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
               options={FINDER_KINDS.map((value) => ({ value, label: t(KIND_KEY[value]) }))}
             />
           ) : null}
-          {id === "places" ? <RegionPicker value={region} onChange={setRegion} locale={i18n.language.startsWith("fr") ? "fr" : "en"} isDisabled={!canSearch} /> : null}
+          {id === "places" || id === "finders" ? <RegionPicker value={region} onChange={setRegion} locale={i18n.language.startsWith("fr") ? "fr" : "en"} isDisabled={!canSearch} purpose={id} /> : null}
           {id === "places" ? (
             <TextInput label={say(i18n.language.startsWith("fr") ? "fr" : "en", "searchLabel")} description={say(i18n.language.startsWith("fr") ? "fr" : "en", "searchHelp")} value={text} onChange={setText} isDisabled={!canSearch} />
           ) : (
@@ -222,7 +222,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
           }}
         />
       ) : null}
-      <p role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
+      <p className="result-count" role="status">{result ? t("modules.resultCount", { count: result.items.length }) : t("home.checking")}</p>
       {choice ? (
         <StateNotice
           lang={locale}

@@ -13,17 +13,15 @@ export type Entry = (typeof entries)[number];
 function SettingsIndex(): ReactNode {
   const { t } = useTranslation();
   return <><h1>{t("features.title")}</h1><p>{t("features.description")}</p>
-    <nav aria-label={t("features.title")}><ul>
-      <li>
-        <Link style={{ display: "inline-block", minHeight: 44, padding: 8 }} to="/profile">
-          {t("features.profile")}
-        </Link><p>{t("features.profileDesc")}</p>
+    <nav aria-label={t("features.title")}><ul className="card-list tile-grid hub-grid">
+      <li className="card link-card">
+        <Link className="card-title" to="/profile">{t("features.profile")}</Link>
+        <p>{t("features.profileDesc")}</p>
       </li>
-      {entries.map((entry) => <li key={entry}>
-      <Link style={{ display: "inline-block", minHeight: 44, padding: 8 }} to={`/settings/${entry}`}>
-        {t(`features.${entry}`)}
-      </Link><p>{t(`features.${entry}Desc`)}</p>
-    </li>)}</ul></nav>
+      {entries.map((entry) => <li key={entry} className="card link-card">
+        <Link className="card-title" to={`/settings/${entry}`}>{t(`features.${entry}`)}</Link>
+        <p>{t(`features.${entry}Desc`)}</p>
+      </li>)}</ul></nav>
   </>;
 }
 

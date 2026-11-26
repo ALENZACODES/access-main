@@ -13,7 +13,7 @@ const NEARBY_LIMIT = 5;
 
 function Section({ id, heading, section, locale }: { id: string; heading: string; section: SummarySection; locale: Locale }) {
   return (
-    <section aria-labelledby={id} className="stack">
+    <section aria-labelledby={id} className="stack place-section">
       <h2 id={id}>{heading}</h2>
       {section.facts.length === 0 ? <p>{say(locale, "noneKnown")}</p> : (
         <dl className="place-facts">
@@ -96,13 +96,15 @@ function Nearby({ record, locale }: { record: PackRecord; locale: Locale }) {
     <div className="stack">
       <h3>{heading}</h3>
       {items.length === 0 ? <p>{say(locale, "nearbyNone", { distance: radius })}</p> : (
-        <ul className="stack">
+        <ul className="nearby-list">
           {items.map((item) => {
             const access = plainWheelchair(locale, item.wheelchair);
             return (
               <li key={item.id}>
                 <Link to={item.href} style={TARGET}><span lang={item.nameLang}>{item.name}</span></Link>
-                {" "}· {say(locale, "away", { distance: distanceWords(locale, item.distanceM) })}{access ? ` · ${access}` : ""}
+                <span className="nearby-meta">
+                  {" "}· {say(locale, "away", { distance: distanceWords(locale, item.distanceM) })}{access ? ` · ${access}` : ""}
+                </span>
               </li>
             );
           })}
@@ -111,7 +113,7 @@ function Nearby({ record, locale }: { record: PackRecord; locale: Locale }) {
     </div>
   );
   return (
-    <section aria-labelledby="place-nearby" className="stack">
+    <section aria-labelledby="place-nearby" className="stack place-section">
       <h2 id="place-nearby">{say(locale, "nearbyHeading", { distance: radius })}</h2>
       {!point ? <p>{say(locale, "nearbyNoPoint")}</p> : state?.id !== record.id ? <p role="status">{say(locale, "nearbyLoading")}</p> : (
         <>
@@ -131,7 +133,7 @@ export function PlaceSummary({ record, sources, locale }: { record: PackRecord; 
       <Section id="place-getting-in" heading={say(locale, "gettingInHeading")} section={gettingInFacts(record, sources, locale)} locale={locale} />
       <Section id="place-inside" heading={say(locale, "insideHeading")} section={insideFacts(record, sources, locale)} locale={locale} />
       <Nearby record={record} locale={locale} />
-      <p>{say(locale, "fullTable")}</p>
+      <p className="fine-print">{say(locale, "fullTable")}</p>
     </div>
   );
 }

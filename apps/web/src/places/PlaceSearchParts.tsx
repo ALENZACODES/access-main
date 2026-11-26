@@ -16,7 +16,7 @@ function sizeWords(locale: Locale, bytes: number): string {
 }
 
 /** A plain select of the pack's regions, with the size of each region's search list. */
-export function RegionPicker({ value, onChange, locale, isDisabled }: { value: string; onChange: (id: string) => void; locale: Locale; isDisabled?: boolean }) {
+export function RegionPicker({ value, onChange, locale, isDisabled, purpose = "places" }: { value: string; onChange: (id: string) => void; locale: Locale; isDisabled?: boolean; purpose?: "places" | "finders" }) {
   const id = useId();
   const [options, setOptions] = useState<RegionOption[] | null>(null);
   useEffect(() => {
@@ -25,7 +25,8 @@ export function RegionPicker({ value, onChange, locale, isDisabled }: { value: s
       (raw) => {
         if (raw === null) { if (active) setOptions([]); return; }
         const pack = raw as { regions?: Array<{ id: string; label: { en: string; fr: string }; cells: string[] }>; search?: Record<string, { bytes: number }> };
-        const regions = (pack.regions ?? []).map((region) => ({
+        // Finders reads whole record files, so the all-Ontario area (every cell) is not offered there.
+        const regions = (pack.regions ?? []).filter((region) => purpose === "places" || region.cells.length <= 12).map((region) => ({
           id: region.id,
           label: region.label[locale] || region.label.en || region.id,
           bytes: region.cells.reduce((sum, cell) => sum + (pack.search?.[cell]?.bytes ?? 0), 0),
@@ -35,12 +36,12 @@ export function RegionPicker({ value, onChange, locale, isDisabled }: { value: s
       () => { if (active) setOptions([]); },
     );
     return () => { active = false; };
-  }, [locale]);
+  }, [locale, purpose]);
   if (!options || options.length === 0) return null;
   return (
     <div className="field">
       <label htmlFor={id}>{say(locale, "region")}</label>
-      <span id={`${id}-help`} className="field-help">{say(locale, "regionHelp")}</span>
+      <span id={`${id}-help`} className="field-help">{say(locale, purpose === "finders" ? "finderRegionHelp" : "regionHelp")}</span>
       <select
         id={id}
         aria-describedby={`${id}-help`}
@@ -50,7 +51,7 @@ export function RegionPicker({ value, onChange, locale, isDisabled }: { value: s
         onChange={(event: ChangeEvent<HTMLSelectElement>) => onChange(event.currentTarget.value)}
       >
         {options.map((option) => (
-          <option key={option.id} value={option.id}>{say(locale, "regionSize", { label: option.label, size: sizeWords(locale, option.bytes) })}</option>
+          <option key={option.id} value={option.id}>{purpose === "places" ? say(locale, "regionSize", { label: option.label, size: sizeWords(locale, option.bytes) }) : option.label}</option>
         ))}
       </select>
     </div>
@@ -71,6 +72,21 @@ function words(value: string | null | undefined): string | null {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
+/**
+ * "Restaurant · in Toronto · OpenStreetMap": what a hit is, where, and whose record it is,
+ * so places with the same name can be told apart. Empty when none is known.
+ */
+export function hitDetail(
+  hit: { category?: string | null; city?: string | null; tranche?: string | null; provenance?: { source_name?: string } },
+  locale: Locale,
+): string {
+  const fallback = hit.tranche === "transit" ? say(locale, "kindTransit") : hit.tranche === "washroom" ? say(locale, "kindWashroom") : hit.tranche === "venue" ? say(locale, "kindVenue") : null;
+  const kind = words(hit.category) ?? fallback;
+  const city = words(hit.city);
+  const source = hit.provenance?.source_name?.trim() || null;
+  return [kind, city ? say(locale, "resultIn", { city }) : null, source].filter(Boolean).join(" · ");
+}
+
 /** Search results: each place's name as a link, what it is, where, and where its name came from. */
 export function PlaceResults({ items, locale }: { items: readonly unknown[]; locale: Locale }) {
   const hits = items.filter((item): item is Hit => typeof item === "object" && item !== null && typeof (item as Hit).id === "string" && typeof (item as Hit).name === "string");
@@ -84,10 +100,10 @@ export function PlaceResults({ items, locale }: { items: readonly unknown[]; loc
           const city = words(hit.city);
           const p = hit.provenance;
           return (
-            <li key={hit.id} className="stack">
+            <li key={hit.id} className="place-hit">
               <Link to={`/places/${encodeURIComponent(hit.id)}`} style={TARGET}><span lang={locale === "fr" ? "en" : undefined}>{hit.name}</span></Link>
               {kind || city ? (
-                <p>
+                <p className="place-hit-kind">
                   {kind ? <span lang={locale === "fr" ? "en" : undefined}>{kind}</span> : null}
                   {kind && city ? " · " : null}
                   {city ? say(locale, "resultIn", { city }) : null}
