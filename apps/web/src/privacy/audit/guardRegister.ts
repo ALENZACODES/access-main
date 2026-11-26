@@ -63,6 +63,7 @@ export const GUARD_REGISTER: GuardRegister = {
     { path: "apps/web/src/states/MeetUp.tsx", kind: "eslint-disable-next-line", rules: "jsx-a11y/no-noninteractive-tabindex", count: 1 },
     { path: "apps/web/src/states/OutingPlanner.tsx", kind: "eslint-disable-next-line", rules: "jsx-a11y/no-noninteractive-tabindex", count: 1 },
     { path: "apps/web/src/states/Shortlist.tsx", kind: "eslint-disable-next-line", rules: "jsx-a11y/no-noninteractive-tabindex", count: 1 },
+    { path: "apps/web/src/states/callScriptExport.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/correction.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/downloadFile.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/handoutHtml.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },

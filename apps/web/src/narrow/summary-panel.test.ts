@@ -67,7 +67,7 @@ describe('renderSummaryPanel', () => {
 
   it('lists each part, gives UNKNOWN with a way to the test for a part not done, and the text to share', () => {
     const html = renderSummaryPanel('en', made(SOME));
-    expect(html).toContain('<p>2 of 3 parts done. The others stay UNKNOWN.</p>');
+    expect(html).toContain('<p>2 of 9 parts done. The others stay UNKNOWN.</p>');
     expect(html).toContain(`<dt>Button size for my taps</dt><dd>${SOME.tap}</dd>`);
     expect(html).toContain('<dt>Screen zones I can reach</dt><dd>UNKNOWN, not done yet. <button type="button" data-action="summary-go-zones">Go to the zones test</button></dd>');
     expect(html).toContain('<label for="summary-text">Summary to share</label>');
@@ -82,7 +82,7 @@ describe('renderSummaryPanel', () => {
     const none = renderSummaryPanel('en', made(NONE));
     expect(none).not.toContain('summary-request');
     expect(none).not.toContain('summary-copy-request');
-    expect(none.match(/data-action="summary-go-/g)).toHaveLength(3);
+    expect(none.match(/data-action="summary-go-/g)).toHaveLength(9);
   });
 
   it('escapes what the panels gave', () => {
@@ -177,7 +177,7 @@ describe('the wording of the panel', () => {
   it('has the title and the part titles in both languages for the app shell', () => {
     expect(summaryPanel.title).toEqual({ en: 'My access summary', fr: 'Mon résumé d’accès' });
     expect(summaryPanel.mount).toBe(mountSummaryPanel);
-    expect(Object.keys(summaryPanel.parts)).toEqual(['tap', 'zones', 'press']);
+    expect(Object.keys(summaryPanel.parts)).toEqual(['tools', 'tap', 'zones', 'press', 'typing', 'drag', 'scan', 'aim', 'hover']);
   });
 });
 
@@ -192,8 +192,19 @@ describe('goPartOf, goText and the part headings', () => {
 
   it('names the test in the button, and points each part to the heading of its panel', () => {
     const items = summaryItemsOf(made(NONE), 'fr') ?? [];
-    expect(items.map((i) => goText(i, 'fr'))).toEqual(['Aller au test des touchers', 'Aller au test des zones', 'Aller au test d’appui']);
-    expect(PART_HEADINGS).toEqual({ tap: '#tap-h', zones: '#zones-h', press: '#press-h' });
+    expect(items.map((i) => goText(i, 'fr'))).toEqual([
+      'Aller à par où commencer',
+      'Aller au test des touchers',
+      'Aller au test des zones',
+      'Aller au test d’appui',
+      'Aller à l’essai de saisie',
+      'Aller au test de glissement',
+      'Aller aux réglages du balayage',
+      'Aller au temps pour viser',
+      'Aller à la question du survol',
+    ]);
+    expect(new Set(items.map((i) => goText(i, 'en'))).size).toBe(items.length);
+    expect(PART_HEADINGS).toEqual({ tools: '#start-h', tap: '#tap-h', zones: '#zones-h', press: '#press-h', typing: '#typing-h', drag: '#gest-h', scan: '#scan-h', aim: '#moving-h', hover: '#hover-h' });
   });
 });
 
@@ -245,8 +256,38 @@ describe('mountSummaryPanel', () => {
     expect(root.innerHTML).toContain('No part is done yet.');
     lines = ALL;
     root.click('summary-make');
-    expect(root.innerHTML).toContain('All 3 parts are done.');
+    expect(root.innerHTML).toContain('3 of 9 parts done.');
     expect(root.focused).toEqual(['#summary-result-h', '#summary-result-h']);
+  });
+
+  it('asks the site only for the parts that need something, as the needs said when the summary was made', async () => {
+    const copied: string[] = [];
+    const root = fakeRoot();
+    const panel = mountSummaryPanel({
+      root,
+      lang: 'en',
+      collect: () => ({ ...ALL, drag: 'Dragging: 3 of 3 tries made it, 1.2 s in the middle.', hover: 'Hover: I cannot hover. Content shown only on hover is out of my reach.' }),
+      needs: () => ({ drag: false, hover: true }),
+      now: () => WHEN,
+      copy: async (t) => void copied.push(t),
+    });
+    root.click('summary-make');
+    expect(panel.getState().needs).toEqual({ drag: false, hover: true });
+    expect(root.innerHTML).toContain('5 of 9 parts done.');
+    expect(root.innerHTML).toContain('the same content on focus and on tap as on hover');
+    expect(root.innerHTML).not.toContain('by dragging');
+    root.click('summary-copy-request');
+    await settle();
+    expect(copied[0]).toContain('Dragging: 3 of 3 tries made it');
+    expect(copied[0]).not.toContain('by dragging');
+  });
+
+  it('keeps every measured part in the request when no needs are given', () => {
+    const root = fakeRoot();
+    const panel = mountSummaryPanel({ root, lang: 'en', collect: () => ({ drag: 'Dragging: 3 of 3 tries made it, 1.2 s in the middle.' }), now: () => WHEN });
+    root.click('summary-make');
+    expect(panel.getState().needs).toBeUndefined();
+    expect(root.innerHTML).toContain('a way to do with a single tap what is done by dragging');
   });
 
   it('sends a go button to the test of its part, and shows no go button without a way to go', () => {

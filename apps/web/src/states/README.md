@@ -54,6 +54,21 @@ the places anywhere.
   never says they are correct or up to date. Codes hold counts, ids and hashes:
   no names, notes, addresses or locations. No new storage key is used.
 
+## Call script (round 9)
+
+- `CallScript.tsx` writes a script for phoning one place, from what the pack
+  holds: an opening, the name (hard words spelled with the English or French
+  spelling alphabet), the address read in words, the visit questions with their
+  reasons and room to write, and a closing with fields for who, when and a
+  call-back date. Closed until asked for; no heading; nothing is dialled,
+  sent or stored.
+- Where the pack has no name, no street, or only a box or a corner, the script
+  says so and tells the caller to ask, and never fills the gap.
+- `numberWords.ts` (0 to 99 999, English and French rules), `spellOut.ts`,
+  `callScript.ts`, `callScriptPick.ts`, `callScriptExport.ts` (text and a
+  printable page), `speak.ts` (the browser's own voice, injected for tests).
+- Tests: one `*.test.ts` per module, `CallScript.dom.test.tsx` and
+  `PackPlaces.callScript.dom.test.tsx`.
 ## Reading ease of the notes (round 10)
 
 - `NoteReading.tsx` gives each place's note a rough reading score from sentence

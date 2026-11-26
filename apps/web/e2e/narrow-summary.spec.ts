@@ -24,7 +24,7 @@ test("with no test done, every part is UNKNOWN and each go button takes focus to
   await panel(page).getByRole("button", { name: "Make my summary", exact: true }).click();
   await expect(page.locator("#summary-result-h")).toBeFocused();
   await expect(panel(page)).toContainText("No part is done yet.");
-  await expect(panel(page).locator("dd")).toHaveCount(3);
+  await expect(panel(page).locator("dd")).toHaveCount(9);
   await panel(page).getByRole("button", { name: "Go to the press test", exact: true }).click();
   await expect(page.locator("#press-h")).toBeFocused();
   for (const box of await panel(page).locator("button").evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ w: r.width, h: r.height })))) {
@@ -49,7 +49,7 @@ test("gathers the zones marked and the presses made, with a request to send", as
   }
   await page.locator(".press").getByRole("button", { name: "Stop the test", exact: true }).click();
   await panel(page).getByRole("button", { name: "Make my summary", exact: true }).click();
-  await expect(panel(page)).toContainText("2 of 3 parts done. The others stay UNKNOWN.");
+  await expect(panel(page)).toContainText("2 of 9 parts done. The others stay UNKNOWN.");
   const text = await page.locator("#summary-text").inputValue();
   expect(text).toContain("Screen zones I can reach: Bottom, left (1 of 12).");
   expect(text).toMatch(/My presses \(mouse or pointer\): held from \d+ ms to \d+ ms; at least \d+ ms between presses\./);
@@ -64,4 +64,18 @@ test("works by keyboard alone, and in French", async ({ page }) => {
   await expect(page.locator("#summary-result-h")).toBeFocused();
   await expect(page.locator("#summary-result-h")).toHaveText("Votre résumé");
   await expect(page.locator("#summary-text")).toHaveValue(/^Mon résumé d’accès\nMesuré le \d+ \S+ \d{4}, sur cet écran\./);
+});
+
+test("brings in the later panels' answers, and a go button reaches one of them", async ({ page }) => {
+  await open(page);
+  await page.locator(".hoveronly").getByRole("button", { name: "I cannot hover", exact: true }).click();
+  await page.locator(".moving").getByRole("button", { name: "10 s", exact: true }).click();
+  await panel(page).getByRole("button", { name: "Make my summary", exact: true }).click();
+  await expect(panel(page)).toContainText("2 of 9 parts done. The others stay UNKNOWN.");
+  const text = await page.locator("#summary-text").inputValue();
+  expect(text).toContain("Hover: I cannot hover. Content shown only on hover is out of my reach.");
+  expect(text).toContain("Things that move: I take about 10 s to aim, and controls need to stay in place for that long.");
+  await expect(page.locator("#summary-request")).toHaveValue(/controls that stay in place while I aim and the same content on focus and on tap as on hover\./);
+  await panel(page).getByRole("button", { name: "Go to the drag test", exact: true }).click();
+  await expect(page.locator("#gest-h")).toBeFocused();
 });

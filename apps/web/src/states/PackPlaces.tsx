@@ -27,6 +27,7 @@ import { getRouteError } from "./routeStates.ts";
 import { OutingPlanner } from "./OutingPlanner.tsx";
 import { AroundPlace } from "./AroundPlace.tsx";
 import { PackNoteBrowser } from "./PackNoteBrowser.tsx";
+import { CallScript } from "./CallScript.tsx";
 import { MeetUp } from "./MeetUp.tsx";
 import { NoteReading } from "./NoteReading.tsx";
 import { NoteTopics } from "./NoteTopics.tsx";
@@ -272,6 +273,7 @@ export function PackPlaces({ places, locale, today }: Props) {
       <SameName places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
       <NoteReading places={view.shownPlaces} locale={locale} />
       <MeetUp places={view.shownPlaces} locale={locale} from={near.status === "ok" ? near.point : null} />
+      <CallScript places={view.shownPlaces} locale={locale} today={day} />
       <NoteTopics places={view.shownPlaces} locale={locale} />
       <TagNoteReads places={view.shownPlaces} locale={locale} />
       <PackSpotCheck places={view.shownPlaces} locale={locale} today={day} />
