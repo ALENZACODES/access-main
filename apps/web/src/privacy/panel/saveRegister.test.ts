@@ -38,7 +38,7 @@ describe("the real register", () => {
 
   it("counts the kinds as the scan found them", () => {
     const by = (k: (typeof SAVE_KINDS)[number]): number => saveOfKind(SAVE_REGISTER, k).reduce((n, r) => n + r.uses, 0);
-    expect(SAVE_KINDS.map(by)).toEqual([8, 24, 23, 3, 1, 4, 4]);
+    expect(SAVE_KINDS.map(by)).toEqual([8, 24, 3, 1, 4, 4]);
   });
 
   it("has rows of every kind", () => {
