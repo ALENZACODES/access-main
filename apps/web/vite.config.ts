@@ -135,6 +135,9 @@ function buildManifest(): Plugin {
   };
 }
 
+// Panels mounted only by states/PackPlaces.tsx; see manualChunks.
+const PLACE_TOOLS = new Set(["AroundPlace", "CallScript", "LetterJump", "ListTransfer", "MeetUp", "NameLanguages", "NearGroups", "NoteReading", "NoteTopics", "OutingPlanner", "PackBands", "PackCategories", "PackFingerprint", "PackNoteBrowser", "PackSearchHelp", "PackSort", "PackSpotCheck", "PackWords", "PlaceSheet", "PointPaste", "PossibleRepeats", "SameName", "Shortlist", "StreetIndex", "TagNoteCheck", "TagNoteReads", "TextMap", "VenueGroups", "ViewCode", "VisitMarks", "WalkGroups", "WritingCheck"]);
+
 export default defineConfig({
   base,
   plugins: [
@@ -214,6 +217,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // The place-list tools are imported only by PackPlaces. Chunks of their own keep the places page
+          // well under the 512 KiB per-file cap. They are still precached and load with the page as before.
+          const tool = /\/src\/states\/([A-Za-z]+)\.tsx$/.exec(id)?.[1];
+          if (tool !== undefined && PLACE_TOOLS.has(tool)) return tool < "O" ? "place-tools-1" : tool < "PackS" ? "place-tools-2" : tool < "S" ? "place-tools-3" : "place-tools-4";
           if (!id.includes("node_modules")) return;
           if (
             id.includes("/react-aria-components/") ||
