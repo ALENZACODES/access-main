@@ -37,6 +37,7 @@ import { TagNoteReads } from "./TagNoteReads.tsx";
 import { SameName } from "./SameName.tsx";
 import { PointPaste } from "./PointPaste.tsx";
 import { WalkGroups } from "./WalkGroups.tsx";
+import { WritingCheck } from "./WritingCheck.tsx";
 import { inputsFromPlaces } from "./outingPlan.ts";
 import { PackSearchEcho, PackSearchHelp, PackSearchWhy } from "./PackSearchHelp.tsx";
 import { PackSearchWords, PackWordList } from "./PackWords.tsx";
@@ -257,6 +258,7 @@ export function PackPlaces({ places, locale, today }: Props) {
         onClear={shortlist.clear}
       />
       <VisitMarks places={listedPlaces} packPlaces={parsed.places} state={visitMarks} locale={locale} today={day} />
+      <WritingCheck places={view.shownPlaces} locale={locale} />
       <ListTransfer list={shortlist.list} places={parsed.places} locale={locale} add={shortlist.add} />
       <ViewCode
         view={{ text, tag, kind, facets }}

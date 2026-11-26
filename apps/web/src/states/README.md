@@ -141,3 +141,20 @@ opposite ways. Everything is read from the words of the note on this device; not
   shows nothing when no place has a note.
 - Tests: `tagNote*.test.ts`, `TagNoteCheck.dom.test.tsx`, `TagNoteMore.dom.test.tsx`,
   `PackPlaces.tagNote.dom.test.tsx`.
+## Wording of names and addresses (P4, round 14)
+
+A closed-by-default section on the places list that points at names and addresses written differently from what a
+reader may expect. It reads the text as the pack gives it, says what it saw, and never says the text is wrong or
+changes it. A pack may write a place this way on purpose.
+
+- `writingRules.ts`: thirteen rules, seven for names and six for addresses: all capitals, all lower case, a phone
+  number, e-mail or web address, a name that looks like an address (a leading number and a street word, so "7 Eleven"
+  is not one), punctuation at the edge, a repeated word, a name equal to the address, a postal code or province inside
+  the address, a street with no number. Scripts with no upper or lower case are never flagged for case.
+- `writingStyle.ts`: a street type written two ways in the list ("St" and "Street"). Only the last word of the street
+  part counts, so "St. Clair Avenue" is an avenue. At least four addresses of a type are needed, and the places using
+  the less common form are pointed out.
+- `writingReport.ts`: runs the rules, then filters (names, addresses, street-type mix, or one rule) and orders.
+- `writingCopy.ts`, `writingExport.ts`: English and French wording, quoting the text seen, and text and CSV files.
+- `WritingCheck.tsx` is mounted in `PackPlaces.tsx` and shows nothing when no place has a name or an address.
+- Tests: `writing*.test.ts`, `WritingCheck.dom.test.tsx`, `PackPlaces.writing.dom.test.tsx`.
