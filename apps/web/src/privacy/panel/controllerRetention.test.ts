@@ -30,7 +30,7 @@ describe("the how-long-kept section", () => {
   it("shows the section with the real list and its buttons", () => {
     const html = make({ retention: RETENTION_REGISTER }).c.html();
     expect(html).toContain("data-privacy-retention");
-    expect(html).toContain("16 stored items are listed.");
+    expect(html).toContain("17 stored items are listed.");
     expect(html).toContain("Expires 90 days after the latest save.");
     expect(html).toContain("Download this list (CSV)");
   });
@@ -52,7 +52,7 @@ describe("downloading the list", () => {
     const { c } = make({ retention: RETENTION_REGISTER });
     const csv = c.dispatch({ type: "export-retention-csv" });
     expect(csv.lastExport?.mime).toBe("text/csv");
-    expect(csv.lastExport?.count).toBe(16);
+    expect(csv.lastExport?.count).toBe(17);
     expect(csv.lastExport?.filename).toBe("the-app-how-long-kept-2026-11-20.csv");
     expect(PANEL_STRINGS.en.status(csv.status!)).toBe("List of how long the App keeps things prepared as CSV.");
     c.dispatch({ type: "set-locale", locale: "fr" });

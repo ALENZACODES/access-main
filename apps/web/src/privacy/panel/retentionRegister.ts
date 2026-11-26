@@ -121,6 +121,14 @@ export const RETENTION_REGISTER: readonly RetentionRow[] = [
     recordedOn: REVIEWED,
   },
   {
+    key: "app.visit-marks.v1",
+    holds: items("Your marks on listed places: to visit, been there or ruled out", "Vos marques sur les lieux de la liste\u00a0: à visiter, déjà allé ou écarté"),
+    files: [`${SRC}/states/visitMarks.ts`],
+    limits: [{ kind: "count", max: 200, unit: items("marks", "marques"), whenFull: "new-refused", from: { path: `${SRC}/states/visitMarks.ts`, name: "MAX_VISIT_MARKS" } }],
+    source: SOURCE,
+    recordedOn: REVIEWED,
+  },
+  {
     key: "data-status:history:v1",
     holds: items("A history of data status checks", "Un historique des contrôles de l’état des données"),
     files: [`${SRC}/data-status/history.ts`],
