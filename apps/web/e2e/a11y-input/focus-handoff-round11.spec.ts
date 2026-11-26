@@ -48,6 +48,9 @@ test("focused control in inert subtree is rejected", async ({ page }) => {
   await action.evaluate((node) => node.parentElement!.setAttribute("inert", ""));
   // The browser can apply inert and clear activeElement in different rendering steps.
   await expect(action).not.toBeFocused();
+  await page.locator("#action").focus();
+  await page.locator("#action").evaluate((node) => node.parentElement?.setAttribute("inert", ""));
+  await expect(page.locator("#action")).not.toBeFocused();
   const state = await observeHandoffFocusRound11(page);
   expect(state.findings.map((issue) => issue.code)).toContain("focus-disappeared");
   expect(await action.evaluate((node) => node.parentElement!.inert)).toBe(true);

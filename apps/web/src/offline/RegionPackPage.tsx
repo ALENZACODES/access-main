@@ -4,6 +4,7 @@ import { createPackSource, PackClientError, type PackManifest, type PackSource, 
 import { PackFootprintLauncher } from "./robust/PackFootprintLauncher";
 import { PackingListLauncher } from "./packing/PackingListLauncher";
 import { CommunicationCardsLauncher } from "./communicationCards/CommunicationCardsLauncher";
+import { ShellCheckLauncher } from "./shell-check/ShellCheckLauncher";
 import { PersonalOfflineTools } from "./PersonalOfflineTools";
 import { offlineCatalog } from "./catalog.ts";
 import {
@@ -327,6 +328,7 @@ export function OfflineRegionPage({ packSource = defaultSource }: { packSource?:
     <p>{c.intro}</p>
     <CommunicationCardsLauncher language={language} />
     <PackingListLauncher language={language} />
+    <ShellCheckLauncher language={language} />
     {!online && <p role="status" className="offline-banner">{c.offline}</p>}
     {listFailed ? <StateNotice lang={language} view={getRouteError("offline", "region-list-unavailable", language)} onAction={{ retry: () => { setListFailed(false); setListAttempt((n) => n + 1); } }} /> : null}
     {startedWithoutRegions && <PersonalOfflineTools language={language} />}
