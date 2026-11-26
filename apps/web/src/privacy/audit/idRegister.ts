@@ -14,13 +14,15 @@ export interface IdAcceptRow {
 const R_RECORD_ID = "The value is the id of a record that is kept on the device. Not checked: whether any later code sends that id off the device.";
 
 export const ID_ACCEPTED: readonly IdAcceptRow[] = [
-  { path: "apps/web/src/contribute/ContributePage.tsx", code: "id-uuid", count: 1, reason: "The value is the id of a photo in a draft that is kept on the device, made by the browser's own randomUUID. Not checked: the export of the draft." },
+  { path: "apps/web/src/contribute/useDraftPhotos.ts", code: "id-uuid", count: 1, reason: "The value is the id of a photo in a draft that is kept on the device, made by the browser's own randomUUID. Not checked: the export of the draft." },
   { path: "apps/web/src/data-status/standalone/main.ts", code: "id-device-low", count: 1, reason: "navigator.language is passed as the browser language that the page uses to pick French or English. Not checked: that it is not logged." },
   { path: "apps/web/src/hub/RouteReportsPage.tsx", code: "id-math-random", count: 1, reason: "Math.random is the fallback for the id of a report when randomUUID does not exist, in a template on one line with Date.now. The line does not store or send anything." },
   { path: "apps/web/src/hub/RouteReportsPage.tsx", code: "id-time-id", count: 1, reason: "Date.now is part of the fallback id of a report, in a template next to Math.random, used only when randomUUID does not exist. The line does not store or send anything." },
   { path: "apps/web/src/hub/RouteReportsPage.tsx", code: "id-uuid", count: 1, reason: R_RECORD_ID },
   { path: "apps/web/src/i18n/index.ts", code: "id-device-low", count: 1, reason: "navigator.language is lower-cased and tested with startsWith(\"fr\") to choose French or English, and only when no language was chosen. The value is not kept." },
   { path: "apps/web/src/map/camera.ts", code: "id-device-low", count: 1, reason: "matchMedia reads the reduced motion setting and returns a yes or no. The value is not kept." },
+  { path: "apps/web/src/narrow/hover-inpage.ts", code: "id-device-low", count: 2, reason: "matchMedia reads whether the device can hover, as yes, no or unknown, for the hover audit report of the narrow audit page. Not checked: where the report is saved." },
+  { path: "apps/web/src/narrow/moving-inpage.ts", code: "id-device-low", count: 2, reason: "matchMedia reads the reduced motion setting as yes, no or unknown for the moving-content audit report of the narrow audit page. Not checked: where the report is saved." },
   { path: "apps/web/src/offline/robust/contingencyPanel.ts", code: "id-time-id", count: 1, reason: "Date.now is part of the id of an element of the page, made with a counter, in a template on one line. It is not kept or sent." },
   { path: "apps/web/src/offline/robust/offlineDiagnosticsPanel.ts", code: "id-math-random", count: 1, reason: "Math.random makes the id of an element of the page so that aria-controls points at it. It is not kept or sent." },
   { path: "apps/web/src/offline/robust/recoveryBatchesPanel.ts", code: "id-math-random", count: 1, reason: "Math.random makes the id of an element of the page so that aria-controls points at it. It is not kept or sent." },

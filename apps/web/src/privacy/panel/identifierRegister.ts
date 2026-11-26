@@ -28,7 +28,7 @@ const row = (path: string, count: number, kept: IdentifierKept, where: Bilingual
 
 export const IDENTIFIER_REGISTER: readonly IdentifierRow[] = [
   row(
-    "apps/web/src/contribute/ContributePage.tsx", 1, "on-device",
+    "apps/web/src/contribute/useDraftPhotos.ts", 1, "on-device",
     { en: "Contributing a place", fr: "Contribuer un lieu" },
     { en: "A random number for each photo in a draft", fr: "Un nombre aléatoire pour chaque photo d’un brouillon" },
   ),
@@ -51,6 +51,16 @@ export const IDENTIFIER_REGISTER: readonly IdentifierRow[] = [
     "apps/web/src/map/camera.ts", 1, "not-kept",
     { en: "The map", fr: "La carte" },
     { en: "Whether your browser asks for less motion", fr: "Si votre navigateur demande moins de mouvement" },
+  ),
+  row(
+    "apps/web/src/narrow/hover-inpage.ts", 2, "shown-only",
+    { en: "The narrow-screen audit page, a testing tool", fr: "La page d’audit des écrans étroits, un outil de test" },
+    { en: "Whether your device can hover, shown in the audit report", fr: "Si votre appareil peut survoler, affiché dans le rapport d’audit" },
+  ),
+  row(
+    "apps/web/src/narrow/moving-inpage.ts", 2, "shown-only",
+    { en: "The narrow-screen audit page, a testing tool", fr: "La page d’audit des écrans étroits, un outil de test" },
+    { en: "Whether your browser asks for less motion, shown in the audit report", fr: "Si votre navigateur demande moins de mouvement, affiché dans le rapport d’audit" },
   ),
   row(
     "apps/web/src/offline/robust/contingencyPanel.ts", 1, "not-kept",

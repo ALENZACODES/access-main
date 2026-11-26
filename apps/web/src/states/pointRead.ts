@@ -36,10 +36,11 @@ export type PointRead =
     };
 
 const invalid = (problem: PointProblem): PointRead => ({ status: "invalid", problem });
-const round6 = (n: number): number => Number(n.toFixed(6));
+// Five decimals (about 1 m): the app never writes a coordinate finer than that.
+const round5 = (n: number): number => Number(n.toFixed(5));
 
 function ok(lat: number, lon: number, format: PointFormat, swapped = false): PointRead {
-  const point = { lat: round6(lat), lon: round6(lon) };
+  const point = { lat: round5(lat), lon: round5(lon) };
   return isPoint(point) ? { status: "ok", point, format, swapped } : invalid("out-of-range");
 }
 

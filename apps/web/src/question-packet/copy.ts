@@ -7,7 +7,7 @@ export interface Labels {
   empty: string; noQuestions: string; required: string; exportJson: string; exportCsv: string; exportText: string;
   importJson: string; invalidImport: string; imported: string; report: string; unknown: string; answered: string;
   toContact: string; toRecheck: string; sourced: string; provenance: string; questions: string; gaps: string;
-  cannotInfer: string; importHelp: string; sourceHelp: string; clear: string; confirmClear: string;
+  cannotInfer: string; importHelp: string; sourceHelp: string; clear: string; confirmClear: string; confirmClearYes: string; confirmClearNo: string;
 }
 export const LABELS: Record<Locale, Labels> = {
   en: {
@@ -24,7 +24,7 @@ export const LABELS: Record<Locale, Labels> = {
     sourced:'Sources recorded',provenance:'Evidence source',questions:'Questions',gaps:'Outstanding questions',
     cannotInfer:'Do not assume a missing answer means the feature is available or unavailable.',
     importHelp:'Only local JSON packets with valid fields are accepted; importing replaces this draft.',
-    sourceHelp:'If the source is not known, leave UNKNOWN rather than inventing a date, licence or URL.',clear:'Start over',confirmClear:'Clear the entire local draft?',
+    sourceHelp:'If the source is not known, leave UNKNOWN rather than inventing a date, licence or URL.',clear:'Start over',confirmClear:'Clear the entire local draft?',confirmClearYes:'Clear the draft',confirmClearNo:'Keep the draft',
   },
   fr: {
     title:'Fiche de questions sur l’accessibilité',intro:'Préparez les questions d’un parcours, consignez les réponses reçues et conservez la source de chaque réponse.',
@@ -42,7 +42,7 @@ export const LABELS: Record<Locale, Labels> = {
     cannotInfer:'Une réponse manquante ne signifie pas que l’aménagement est disponible ou indisponible.',
     importHelp:'Seules les fiches JSON locales valides sont acceptées. L’importation remplace l’ébauche.',
     sourceHelp:'Si la source est inconnue, conservez UNKNOWN au lieu d’inventer une date, une licence ou une adresse.',
-    clear:'Recommencer',confirmClear:'Effacer toute l’ébauche locale ?',
+    clear:'Recommencer',confirmClear:'Effacer toute l’ébauche locale ?',confirmClearYes:'Effacer l’ébauche',confirmClearNo:'Garder l’ébauche',
   },
 };
 export const TOPIC_LABELS: Record<Locale,Record<Topic,string>> = {

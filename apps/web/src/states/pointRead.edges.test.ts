@@ -96,7 +96,7 @@ describe("minutes and seconds at their edges", () => {
     expect(problem("43 N, 79 22 W")).toBe("mixed-parts");
   });
   it("reads minutes that carry to the next degree as written", () => {
-    expect(readPoint("43 59.9999 N, 79 0 W")).toMatchObject({ status: "ok", point: { lat: 43.999998, lon: -79 } });
+    expect(readPoint("43 59.9999 N, 79 0 W")).toMatchObject({ status: "ok", point: { lat: 44, lon: -79 } });
   });
 });
 

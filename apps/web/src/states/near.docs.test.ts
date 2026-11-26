@@ -9,7 +9,7 @@ const all = readdirSync(new URL("./", import.meta.url));
 describe("README.nearGroups.md", () => {
   for (const f of SOURCES) it(`names ${f}`, () => expect(readme).toContain(`\`${f}\``));
   it("names every test file of the feature", () => {
-    const tests = all.filter((f) => /^(near|Near|PackPlaces\.nearGroups).*\.test\.tsx?$/.test(f) && f !== "near.docs.test.ts");
+    const tests = all.filter((f) => /^(near(?!Names)|Near|PackPlaces\.nearGroups).*\.test\.tsx?$/.test(f) && f !== "near.docs.test.ts");
     expect(tests.length).toBeGreaterThanOrEqual(10);
     for (const f of tests) expect(readme, f).toContain(f);
   });

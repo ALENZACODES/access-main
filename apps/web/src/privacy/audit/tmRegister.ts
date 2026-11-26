@@ -13,6 +13,7 @@ export interface TmAcceptRow {
 
 const R_DATE_NAME = "A function that writes today's date as YYYY-MM-DD from the getters of a Date, so in the time zone of the device. It is used for a file name or a line the person reads. Not checked: whether the date is compared anywhere with a UTC time.";
 const R_DATE_NAME_3 = "The same three getters (year, month, day) written as one expression for a date of the form YYYY-MM-DD, in the time zone of the device. Not checked: what the date is used for beyond the line read.";
+const R_PANEL_TODAY = "localToday writes today's date as YYYY-MM-DD from the getters of a Date, in the time zone of the device. It is the panel's default day when the caller gives none (tests pass their own): it goes into file names and lines the person reads, and in the spot check into the default sample seed. Not checked: every use of the day.";
 const R_ACTIVITY_TIME = "formatActivityTime writes the stored time as YYYY-MM-DD HH:MM in the time zone of the device, for the line the person reads in the activity list. The stored value is UTC text; only the display is local.";
 const R_PACK_TIME = "Writes a date and a time (to the minute) from the getters of a Date, in the time zone of the device, for the offline pack page. Not checked: where the text is shown.";
 const R_PACK_FORMAT = "A format of a date and a time written with Intl.DateTimeFormat and no time zone, so in the time zone of the device, for a line the person reads.";
@@ -30,6 +31,7 @@ export const TM_ACCEPTED: readonly TmAcceptRow[] = [
   { path: "apps/web/src/input/switch-workbench/WorkbenchPage.tsx", code: "tm-local-getter", count: 3, reason: R_DATE_NAME_3 },
   { path: "apps/web/src/narrow/access-summary.ts", code: "tm-local-getter", count: 3, reason: R_MONTH_NAME },
   { path: "apps/web/src/narrow/gestures-panel.ts", code: "tm-hires-timer", count: 1, reason: R_TIMER },
+  { path: "apps/web/src/narrow/moving-inpage.ts", code: "tm-hires-timer", count: 1, reason: R_TIMER },
   { path: "apps/web/src/narrow/press-panel.ts", code: "tm-hires-timer", count: 1, reason: R_TIMER },
   { path: "apps/web/src/narrow/typing-panel.ts", code: "tm-hires-timer", count: 1, reason: R_TIMER },
   { path: "apps/web/src/offline/robust/contingencyPanel.ts", code: "tm-clock-in-text", count: 1, reason: R_ID_TIME },
@@ -52,6 +54,7 @@ export const TM_ACCEPTED: readonly TmAcceptRow[] = [
   { path: "apps/web/src/privacy/panel/featureExport.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/privacy/panel/glanceSection.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/privacy/panel/handoffSection.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
+  { path: "apps/web/src/privacy/panel/identifierSection.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/privacy/panel/inventoryExport.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/privacy/panel/keptExport.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/privacy/panel/localData.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
@@ -68,15 +71,19 @@ export const TM_ACCEPTED: readonly TmAcceptRow[] = [
   { path: "apps/web/src/privacy/panel/supportSummary.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/privacy/panel/wordingSection.ts", code: "tm-local-getter", count: 3, reason: R_DATE_NAME },
   { path: "apps/web/src/states/DataCredits.tsx", code: "tm-local-getter", count: 3, reason: R_DATE_NAME_3 },
+  { path: "apps/web/src/states/ElevatorNotices.tsx", code: "tm-local-getter", count: 3, reason: R_PANEL_TODAY },
+  { path: "apps/web/src/states/HelpNumbers.tsx", code: "tm-local-getter", count: 3, reason: R_PANEL_TODAY },
+  { path: "apps/web/src/states/PackFingerprint.tsx", code: "tm-local-getter", count: 3, reason: R_PANEL_TODAY },
   { path: "apps/web/src/states/PackFreshness.tsx", code: "tm-local-getter", count: 3, reason: R_DATE_NAME_3 },
   { path: "apps/web/src/states/PackReport.tsx", code: "tm-local-getter", count: 3, reason: R_DATE_NAME_3 },
+  { path: "apps/web/src/states/PackSpotCheck.tsx", code: "tm-local-getter", count: 3, reason: R_PANEL_TODAY },
 ];
 
 /**
  * The folders under apps/web/src, other than the privacy folder, whose code reads the clock or writes a time. A new
  * folder that does is a finding until it is added here, which is the moment to look at what it writes.
  */
-export const TM_FOLDERS: readonly string[] = ["contribute", "data-status", "hub", "input", "map", "narrow", "offline", "pages", "profile", "recovery", "states", "storage"];
+export const TM_FOLDERS: readonly string[] = ["contribute", "data-status", "hub", "input", "map", "narrow", "offline", "packs", "pages", "profile", "question-packet", "recovery", "states", "storage"];
 
 export function validateTmRegister(rows: readonly TmAcceptRow[] = TM_ACCEPTED, folders: readonly string[] = TM_FOLDERS): string[] {
   const out: string[] = [];

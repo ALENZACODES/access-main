@@ -37,6 +37,8 @@ const FLAGS = (extra: string): string => `${ALL},${extra}`;
 
 export const GUARD_REGISTER: GuardRegister = {
   tsFlags: {
+    "apps/web/e2e/axe-sweep/portable-shortlist/tsconfig.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
+    "apps/web/e2e/contribution-journeys/tsconfig.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
     "apps/web/tsconfig.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
     "apps/web/tsconfig.node.json": FLAGS("noFallthroughCasesInSwitch=true,skipLibCheck=true,noEmit=true,isolatedModules=true,verbatimModuleSyntax=true"),
     "apps/web/tsconfig.scripts.json": FLAGS("skipLibCheck=true,noEmit=true,verbatimModuleSyntax=true"),
@@ -68,12 +70,16 @@ export const GUARD_REGISTER: GuardRegister = {
     { path: "apps/web/src/states/downloadFile.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/handoutHtml.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/listTransfer.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
+    { path: "apps/web/src/states/marksTransfer.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/packAudit.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/packEarlierId.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/packExport.test.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/packPlaces.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 2 },
     { path: "apps/web/src/states/placeSheetExport.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/shortlist.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
+    { path: "apps/web/src/states/spotResults.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
+    { path: "apps/web/src/states/spotSheet.test.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
+    { path: "apps/web/src/states/spotSheet.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/urlState.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
     { path: "apps/web/src/states/viewCode.ts", kind: "eslint-disable-next-line", rules: "no-control-regex", count: 1 },
   ],

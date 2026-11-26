@@ -42,7 +42,7 @@ describe("the code of the App", () => {
   });
   it("uses randomUUID only where a record or a photo is made on the device", () => {
     expect([...new Set(sites.filter((s) => s.kind === "uuid").map((s) => s.path))]).toEqual([
-      "apps/web/src/contribute/ContributePage.tsx",
+      "apps/web/src/contribute/useDraftPhotos.ts",
       "apps/web/src/hub/RouteReportsPage.tsx",
       "apps/web/src/storage/repository.ts",
     ]);

@@ -33,7 +33,7 @@ describe("the what-the-App-does-on-its-own section", () => {
   it("shows the section with the real list and its buttons", () => {
     const html = make().c.html();
     expect(html).toContain("data-privacy-auto");
-    expect(html).toContain("20 rows are listed");
+    expect(html).toContain("21 rows are listed");
     expect(html).toContain('data-action="check-workers"');
   });
   it("shows it in French after the language is changed", () => {

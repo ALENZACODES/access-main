@@ -10,7 +10,7 @@ const bad = (s: string) => {
   const r = readPoint(s);
   return r.status === "invalid" ? r.problem : r.status;
 };
-const near = (a: number, b: number, d = 1e-6) => expect(Math.abs(a - b)).toBeLessThanOrEqual(d);
+const near = (a: number, b: number, d = 5e-6) => expect(Math.abs(a - b)).toBeLessThanOrEqual(d);
 
 describe("decimal degrees", () => {
   it.each([
@@ -39,8 +39,8 @@ describe("decimal degrees", () => {
     const r = ok("43.65, −79.38");
     expect(r.point.lon).toBe(-79.38);
   });
-  it("rounds to six places", () => {
-    expect(ok("43.123456789, -79.987654321").point).toEqual({ lat: 43.123457, lon: -79.987654 });
+  it("rounds to five places (about 1 m)", () => {
+    expect(ok("43.123456789, -79.987654321").point).toEqual({ lat: 43.12346, lon: -79.98765 });
   });
   it("accepts lat and lon words in either order", () => {
     expect(ok("lat 43.65 lon -79.38").point).toEqual({ lat: 43.65, lon: -79.38 });

@@ -17,7 +17,7 @@ describe("a list joined with a semicolon in what a person reads", () => {
       lines.forEach((line, i) => {
         if (isAuditErrorJoin(file, lines, i)) return;
         // A join inside t(locale, en, fr) is spaced by the French typography pass, so only its English side has a plain "; ".
-        if (/\bt\(locale,/.test(line)) return;
+        if (/\bt\((locale|l),/.test(line)) return;
         if (/\.join\(\s*"; "\s*\)/.test(line)) bad.push(`${file}:${i + 1}: ${line.trim()}`);
       });
     }
