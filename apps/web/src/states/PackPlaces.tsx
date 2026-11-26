@@ -17,6 +17,7 @@ import { LetterJump } from "./LetterJump.tsx";
 import { ListTransfer } from "./ListTransfer.tsx";
 import { VenueGroups } from "./VenueGroups.tsx";
 import { type VenueNote, venueNoteText, venueNotes } from "./venueGroups.ts";
+import { PackFingerprint } from "./PackFingerprint.tsx";
 import { PackCategories } from "./PackCategories.tsx";
 import type { BandKey } from "./packBands.ts";
 import { EMPTY_FACETS, type FacetId, type FacetSelection, selectFacet } from "./packFacets.ts";
@@ -263,6 +264,7 @@ export function PackPlaces({ places, locale, today }: Props) {
           setBand(null);
         }}
       />
+      <PackFingerprint places={parsed.places} locale={locale} today={day} />
       <OutingPlanner places={stops} locale={locale} today={day} start={from} />
       <AroundPlace places={view.shownPlaces} locale={locale} />
       <PackNoteBrowser places={view.shownPlaces} locale={locale} />
