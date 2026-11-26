@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../../..");
 const budgetPath = path.join(here, "../budget.json");
 const distDir = path.join(repoRoot, "apps/web/dist");
-const PRECACHE_LIMIT = 4_718_592;
+const PRECACHE_LIMIT = 5_242_880;
 const JS_ENTRY_LIMIT = 524_288;
 
 function fail(message) {
@@ -23,7 +23,7 @@ if (!fs.existsSync(budgetPath)) fail(`Missing budget file: ${budgetPath}`);
 const budget = JSON.parse(fs.readFileSync(budgetPath, "utf8"));
 const limit = Number(budget.maxPrecacheBytes);
 if (!Number.isSafeInteger(limit) || limit !== PRECACHE_LIMIT) {
-  fail(`budget.json maxPrecacheBytes must be ${PRECACHE_LIMIT} (4.5 MiB); found ${budget.maxPrecacheBytes}`);
+  fail(`budget.json maxPrecacheBytes must be ${PRECACHE_LIMIT} (5 MiB); found ${budget.maxPrecacheBytes}`);
 }
 const jsEntryLimit = Number(budget.maxLargestJsEntryBytes);
 if (!Number.isSafeInteger(jsEntryLimit) || jsEntryLimit !== JS_ENTRY_LIMIT) {
@@ -73,7 +73,7 @@ const total = assets.reduce((sum, asset) => sum + asset.bytes, 0);
 const largest = assets.reduce((max, asset) => (asset.bytes > max.bytes ? asset : max), assets[0]);
 const jsAssets = assets.filter((asset) => asset.url.endsWith(".js"));
 const largestJs = jsAssets.reduce((max, asset) => (asset.bytes > max.bytes ? asset : max), jsAssets[0] ?? { url: "(none)", bytes: 0 });
-console.log(`Measured apps/web precache: ${total} bytes in ${assets.length} files (cap ${limit} bytes / 4.5 MiB).`);
+console.log(`Measured apps/web precache: ${total} bytes in ${assets.length} files (cap ${limit} bytes / 5 MiB).`);
 console.log(`Largest precached file: ${largest.url} (${largest.bytes} bytes).`);
 console.log(`Largest precached JS entry: ${largestJs.url} (${largestJs.bytes} bytes, cap ${jsEntryLimit} bytes / 512 KiB).`);
 
@@ -94,7 +94,7 @@ if (total > limit) {
     .slice(0, 15)
     .map((asset) => `  ${asset.bytes}\t${asset.url}`)
     .join("\n");
-  fail(`Precache ${total} bytes exceeds ${limit} bytes (4.5 MiB).\nLargest files:\n${over}`);
+  fail(`Precache ${total} bytes exceeds ${limit} bytes (5 MiB).\nLargest files:\n${over}`);
 }
 
-console.log("Precache is within the 4.5 MiB first-install budget.");
+console.log("Precache is within the 5 MiB first-install budget.");

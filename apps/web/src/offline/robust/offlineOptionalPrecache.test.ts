@@ -30,7 +30,7 @@ describe("optional offline panels and the install cap", () => {
     const guard = read("apps/web/scripts/check-install-budget.ts");
     expect(guard).toContain("assertInstallBudget(assets)");
     expect(guard).not.toContain("offlineQuestionSheetPanel");
-    expect(read("apps/web/src/perf/install-budget.ts")).toContain("4_718_592");
+    expect(read("apps/web/src/perf/install-budget.ts")).toContain("5_242_880");
   });
   it("loads the question sheet only after a user click", () => {
     const dashboard = robust("offlineDashboard.ts");

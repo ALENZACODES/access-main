@@ -195,7 +195,7 @@ test('preflight fails on packaged sensitive file names', async () => {
 
 test('preflight fails when an artifact exceeds the total byte budget', async () => {
   await fixture(async (root, dist) => {
-    await writeFile(join(dist, 'large.bin'), Buffer.alloc(4_718_593));
+    await writeFile(join(dist, 'large.bin'), Buffer.alloc(5_242_881));
     const result = await runPreflight(root, dist);
     assert.equal(result.ok, false);
     assert.ok(rules(result).includes('BUDGET_TOTALBYTES'));

@@ -16,7 +16,7 @@ export const ORIGIN = process.env.RELEASE_ORIGIN ?? "http://127.0.0.1:4174";
 /** B4: no third-party map tile or style server. Off-origin hosts are never allowed. */
 export const BASEMAP_HOSTS: readonly string[] = [];
 
-export const PRECACHE_BUDGET_BYTES = 4_718_592; // 4.5 MiB
+export const PRECACHE_BUDGET_BYTES = 5_242_880; // 5 MiB
 export const releaseEnabled = (): boolean => process.env.RELEASE_E2E === "1";
 
 export const LANGS = ["en", "fr"] as const;

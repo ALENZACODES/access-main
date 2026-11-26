@@ -25,7 +25,7 @@ It builds with `VITE_BASE=/access-main/`, stages the pack with `scripts/stage-pa
 | [ ] | No page has `data-section-status="pending"` | `routes.spec.ts` |
 | [ ] | Places search for "Union" returns a real result in the fixture pack, and the result opens | `places-search.spec.ts` |
 | [ ] | `/`, `/help`, a downloaded region's place page and `/map` reload with the network off | `offline.spec.ts` |
-| [ ] | First-install precache is at most 4.5 MiB (4,718,592 bytes) and holds no pack or tile data | `budget.spec.ts`; also `stage-pages.mjs --check-only` |
+| [ ] | First-install precache is at most 5 MiB (5,242,880 bytes) and holds no pack or tile data | `budget.spec.ts`; also `stage-pages.mjs --check-only` |
 | [ ] | No request leaves the origin (no third-party map tile or style server) | `origin.spec.ts` |
 | [x] | Every published file is under 100 MB and the site is under 1 GB | `scripts/stage-pages.test.mjs` proves the check; the real build must still pass it in the workflow |
 | [x] | The workflow cannot run today: it lives outside `.github/workflows/`, has no push trigger, no schedule and no cron | `scripts/stage-pages.test.mjs` (`deploy/pages.yml`) |
@@ -43,7 +43,7 @@ Two boxes are ticked because the unit tests prove the checking code, not because
 
 - `lanes.lock.json` pins access-maps to a full 40-character commit. `deploy/lock-commit.mjs` accepts the common lock shapes and fails on a branch name; confirm it against the file lane I1 writes.
 - The access-maps checkout holds the manifest at `pack/v1/manifest.json` (under the repository root or under `data/`), parts and tiles at the manifest's relative paths under `data/` or the root, and the served pack root is `${BASE_URL}data/`. The staging script copies only the files the manifest lists, after checking size and sha256, so unreferenced files never ship.
-- The G10 budgets package (access-main #28) is used if `@access-main/budgets` resolves and exports `precacheBytes`. Both names are assumptions; the 4.5 MiB ceiling applies either way, so the package can only tighten it.
+- The G10 budgets package (access-main #28) is used if `@access-main/budgets` resolves and exports `precacheBytes`. Both names are assumptions; the 5 MiB ceiling applies either way, so the package can only tighten it.
 - Deep links on Pages first hit `404.html`, which redirects to the base with the path in a `spa-path` query parameter. `stage-pages.mjs` adds a short script to the built `index.html` that restores the path before the app starts. This edit happens after the build, so the precache revision for `index.html` is stale by one build; the file is fetched fresh on install and the next deploy corrects it.
 - The release specs reach the Offline page's download button by its accessible name ("Download" with the region name), and recognise completion by the text "downloaded", "available offline" or "ready offline". The French build is selected with the browser locale `fr-CA`. Adjust `support.ts` and `offline.spec.ts` if lanes I3 and I12 choose different wording.
 - B4: there is no third-party map tile or style server. Our data is shown on a plain background. Any off-origin request fails `origin.spec.ts`.

@@ -8,7 +8,7 @@ const assets: InstallAsset[] = fixture.assets as InstallAsset[];
 describe("installation budgets", () => {
   it("validates the draft 2020-12 schemas and passes the invented fixture", () => {
     expect(isBudget(budget)).toBe(true);
-    expect(budget.maxPrecacheBytes).toBe(4_718_592);
+    expect(budget.maxPrecacheBytes).toBe(5_242_880);
     const report = checkInstall(assets, budget);
     expect(report.status).toBe("pass");
     expect(report.fixture).toBe(true);

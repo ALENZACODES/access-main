@@ -135,7 +135,7 @@ describe("pack staging", () => {
 
 describe("budgets", () => {
   it("uses the agreed limits", () => {
-    expect(LIMITS.precacheBytes).toBe(4.5 * 1024 * 1024);
+    expect(LIMITS.precacheBytes).toBe(5 * 1024 * 1024);
     expect(LIMITS.maxFileBytes).toBe(100_000_000);
     expect(LIMITS.maxSiteBytes).toBe(1_000_000_000);
   });

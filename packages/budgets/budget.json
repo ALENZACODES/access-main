@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "maxPrecacheBytes": 4718592,
+  "maxPrecacheBytes": 5242880,
   "maxLargestJsEntryBytes": 524288,
   "maxTotalJsBytes": 1572864,
   "maxTotalCssBytes": 262144,

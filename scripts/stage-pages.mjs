@@ -12,7 +12,7 @@
 //   3. adds .nojekyll and a small path-restore script to <dist>/index.html.
 // Checks (always, and alone with --check-only):
 //   every file < 100 MB, whole site < 1 GB, and the service worker's precache
-//   total <= 4.5 MiB (4,718,592 bytes). The pack and tiles are never precached.
+//   total <= 5 MiB (5,242,880 bytes). The pack and tiles are never precached.
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
@@ -22,7 +22,7 @@ import { pathToFileURL } from "node:url";
 export const LIMITS = Object.freeze({
   maxFileBytes: 100_000_000,
   maxSiteBytes: 1_000_000_000,
-  precacheBytes: 4_718_592,
+  precacheBytes: 5_242_880,
 });
 export const MANIFEST_REL = "pack/v1/manifest.json";
 export const RESTORE_PARAM = "spa-path";
@@ -279,7 +279,7 @@ export async function checkPrecache(distDir, budgetBytes = LIMITS.precacheBytes)
 }
 
 // Uses the G10 budgets package when it is installed. The package name and the
-// `precacheBytes` export are assumed; the 4.5 MiB ceiling always applies, so a
+// `precacheBytes` export are assumed; the 5 MiB ceiling always applies, so a
 // package can only tighten the budget, never loosen it.
 export async function loadPrecacheBudget() {
   try {

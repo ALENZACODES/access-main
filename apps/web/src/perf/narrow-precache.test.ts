@@ -44,7 +44,7 @@ describe("the /dev/narrow page and the first install", () => {
     const guard = read("scripts/check-install-budget.ts");
     expect(guard).not.toMatch(/NarrowAuditPage/);
     expect(read("src/perf/install-budget.ts")).toContain(
-      "export const INSTALL_BUDGET_BYTES = 4_718_592;",
+      "export const INSTALL_BUDGET_BYTES = 5_242_880;",
     );
   });
 });
