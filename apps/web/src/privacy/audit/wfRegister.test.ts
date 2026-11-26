@@ -151,7 +151,7 @@ describe("validateWf and assertWf", () => {
 describe("wfCounts", () => {
   it("counts files, states, jobs, jobs with no timeout and accepted findings", () => {
     const c = wfCounts(WF_REGISTER, WF_ACCEPTED);
-    expect(c).toEqual({ files: 6, active: 5, staged: 1, jobs: 10, noTimeout: 1, accepted: 4 });
+    expect(c).toEqual({ files: 7, active: 6, staged: 1, jobs: 12, noTimeout: 1, accepted: 6 });
   });
 
   it("counts nothing for nothing", () => {

@@ -260,7 +260,17 @@ describe("deploy/pages.yml", () => {
     expect(yml).toMatch(/sparse-checkout: \|\n\s+data\n\s+pack\n\s+tiles\n/);
     expect(yml).toMatch(/fetch-depth: 1/);
   });
-  it("cannot run: the file is not under .github/workflows", async () => {
+  it("is the reviewed source: the file itself is not under .github/workflows", async () => {
     expect(new URL("../deploy/pages.yml", import.meta.url).pathname).not.toContain(".github/workflows");
+  });
+  it("runs only as its identical enabled copy in .github/workflows/pages.yml", async () => {
+    const enabled = await readFile(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8");
+    expect(enabled).toBe(yml);
+  });
+  it("builds and verifies the web pack before staging it", () => {
+    const build = yml.indexOf("npm run build:web-pack");
+    expect(build).toBeGreaterThan(yml.indexOf("repository: ALENZACODES/access-maps"));
+    expect(yml.indexOf("npm run verify:web-pack")).toBeGreaterThan(build);
+    expect(yml.indexOf("node scripts/stage-pages.mjs --maps")).toBeGreaterThan(build);
   });
 });

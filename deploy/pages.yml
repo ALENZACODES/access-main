@@ -1,9 +1,8 @@
 # Publish the App to GitHub Pages (https://alenzacodes.github.io/access-main/).
 #
-# STATUS: staged, NOT enabled. This file lives in deploy/, outside
-# .github/workflows/, so GitHub never runs it. To enable it after the owner
-# says yes: copy it to .github/workflows/pages.yml in a reviewed pull request,
-# and set Settings > Pages > Source to "GitHub Actions".
+# This is the reviewed source. The owner approved publishing on 2026-11-26, so
+# an identical copy runs from .github/workflows/pages.yml (a test keeps the two
+# the same). Settings > Pages > Source must be "GitHub Actions".
 #
 # The only trigger is a manual run (workflow_dispatch). The push trigger below
 # stays commented out until the owner asks for publish-on-merge.
@@ -53,7 +52,7 @@ jobs:
           sha="$(node deploy/lock-commit.mjs lanes.lock.json access-maps)"
           echo "sha=${sha}" >> "$GITHUB_OUTPUT"
 
-      - name: Sparse shallow checkout of access-maps (data, pack, tiles only)
+      - name: Sparse shallow checkout of access-maps (data and the pack builder)
         uses: actions/checkout@v4
         with:
           repository: ALENZACODES/access-maps
@@ -64,7 +63,20 @@ jobs:
             data
             pack
             tiles
+            packages
+            schema
+            scripts
+            sources
+            src
           sparse-checkout-cone-mode: true
+
+      # pack/v1 is generated, not committed: build it from the pinned data.
+      - name: Build and verify the web pack in access-maps
+        working-directory: .cache/access-maps
+        run: |
+          npm ci
+          npm run build:web-pack
+          npm run verify:web-pack
 
       - name: Build
         run: npm run build
