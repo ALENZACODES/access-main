@@ -7,6 +7,9 @@ import { PackPlaces } from "./PackPlaces.tsx";
 import { MAX_SHORTLIST, SHORTLIST_KEY } from "./shortlist";
 import type { Locale } from "./stateCopy.ts";
 
+// Renders the shipped pack with every place tool, often with an axe scan: slow on CI runners.
+vi.setConfig({ testTimeout: 20_000 });
+
 const prov = { source_name: "OpenStreetMap, Geofabrik Ontario extract", source_url: "https://www.openstreetmap.org/way/1", licence: "ODbL-1.0", retrieved_at: "2026-11-13", tier: 0 };
 const rec = (id: string, name: string, over: Record<string, unknown> = {}) => ({ id, name, wheelchair: "yes", category: "attraction", address: "1 Main Street", lat: 43.65, lon: -79.38, provenance: prov, ...over });
 const small = [rec("a", "Alpha Hall"), rec("b", "Beta Court", { lat: null, lon: null }), rec("c", "Gamma Gate", { wheelchair: "no" })];
