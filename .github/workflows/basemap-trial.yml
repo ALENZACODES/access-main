@@ -1,0 +1,54 @@
+# Temporary: builds the Toronto basemap on this branch so it can be checked
+# before the publish workflow uses it. Removed before merge.
+name: Basemap trial
+
+on:
+  push:
+    branches: [claude/map-ux]
+    paths: [scripts/build-basemap.mjs, .github/workflows/basemap-trial.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  basemap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Get the pmtiles CLI (protomaps/go-pmtiles release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(gh api repos/protomaps/go-pmtiles/releases/latest --jq .tag_name)"
+          echo "pmtiles ${tag}"
+          gh release download "${tag}" -R protomaps/go-pmtiles -p "go-pmtiles_*_Linux_x86_64.tar.gz" -D /tmp/pmtiles
+          tar -xzf /tmp/pmtiles/*.tar.gz -C /tmp/pmtiles
+          /tmp/pmtiles/pmtiles version
+      - name: Fonts and sprites (protomaps/basemaps-assets)
+        uses: actions/checkout@v4
+        with:
+          repository: protomaps/basemaps-assets
+          path: .cache/basemaps-assets
+          fetch-depth: 1
+          sparse-checkout: |
+            fonts/Noto Sans Regular
+            fonts/Noto Sans Medium
+            fonts/Noto Sans Italic
+            sprites/v4
+      - name: Build the Toronto basemap
+        run: |
+          key="$(curl -fsS https://build-metadata.protomaps.dev/builds.json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const b=JSON.parse(s);console.log(b[b.length-1].key)})')"
+          echo "build ${key}"
+          echo '{"regions":[{"id":"toronto","label":{"en":"Toronto","fr":"Toronto"},"bbox":[-79.64,43.58,-79.11,43.86]}]}' > /tmp/manifest.json
+          node scripts/build-basemap.mjs --manifest /tmp/manifest.json --out /tmp/basemap --pmtiles /tmp/pmtiles/pmtiles --assets .cache/basemaps-assets --source "https://build.protomaps.com/${key}"
+          ls -la /tmp/basemap /tmp/basemap/fonts/* /tmp/basemap/sprites
+          cat /tmp/basemap/index.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: basemap-toronto
+          path: /tmp/basemap
+          retention-days: 3
