@@ -4,8 +4,12 @@ import { useTranslation } from "react-i18next";
 export type ListFeature = {
   id: string;
   name: string;
-  statusCode: "yes" | "no" | "unknown";
+  statusCode: "yes" | "partly" | "no" | "unknown";
   status: string;
+  /** "Washroom", "Transit stop": what the place is. */
+  kind?: string;
+  /** "City of Toronto · OGL-Toronto-1.0 · 2026-11-13": the source in one short line. */
+  sourceLine?: string;
   source: string;
   licence: string;
   retrievedAt: string;
@@ -91,12 +95,17 @@ export function FeatureList({
               }}
             >
               <span className="feature-name">{feature.name}</span>
-              <span className={`status status-${feature.statusCode}`}>{feature.status}</span>
-              <span className="feature-detail">
-                {t("map.source")}{mark} {shown(feature.source, unknown)}. {t("map.licence")}{mark} {shown(feature.licence, unknown)}.{" "}
-                {feature.attribution ? `${t("map.attribution")}${mark} ${feature.attribution}. ` : ""}
-                {t("map.retrieved")}{mark} {shown(feature.retrievedOn || feature.retrievedAt, unknown)}. {feature.status}
-              </span>
+              {feature.kind ? <span className="feature-kind">{feature.kind}</span> : null}
+              <span className={`status status-${feature.statusCode}`}><i aria-hidden="true" />{feature.status}</span>
+              {feature.sourceLine !== undefined ? (
+                <span className="feature-detail">{t("map.source")}{mark} {feature.sourceLine || unknown}</span>
+              ) : (
+                <span className="feature-detail">
+                  {t("map.source")}{mark} {shown(feature.source, unknown)}. {t("map.licence")}{mark} {shown(feature.licence, unknown)}.{" "}
+                  {feature.attribution ? `${t("map.attribution")}${mark} ${feature.attribution}. ` : ""}
+                  {t("map.retrieved")}{mark} {shown(feature.retrievedOn || feature.retrievedAt, unknown)}. {feature.status}
+                </span>
+              )}
             </button>
           </li>
         );

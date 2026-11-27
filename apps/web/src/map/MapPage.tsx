@@ -7,13 +7,14 @@ import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { StateNotice, getRouteEmpty, getRouteError } from "../states/index.ts";
 import { TileBandNotice, type TileFailure } from "./TileBandNotice.tsx";
-import { filesForView, readTileList, TileFileUnavailable, VerifiedPMTilesSource, warmRegionTiles, type BBox, type TileFile } from "./tileCache.ts";
+import { filesForView, readTileList, TileFileUnavailable, VerifiedPMTilesSource, warmRegionTiles, type BBox, type SourceInfo, type TileFile } from "./tileCache.ts";
+import { boardingStatus, displayName, fieldLabel, headlineExpression, headlineStatus, mapWord, noteLines, SHOWN_ELSEWHERE, valueLabel, type MapStatus } from "./placeText.ts";
 import "./map.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 type Category = "washroom" | "venue" | "transit";
 type Need = "entrance" | "toilet" | "changing" | "boarding";
-type Status = "yes" | "no" | "unknown";
+type Status = MapStatus;
 type Fact = { value: unknown; source_id?: string; licence?: string; retrieved_at?: string; tier?: string };
 type Place = {
   id: string;
@@ -35,7 +36,8 @@ const fields: Record<Need, string[]> = {
   changing: ["changing_table", "changing_table_available"],
   boarding: ["wheelchair_boarding", "wheelchair_boarding_available"],
 };
-const PAINT: Record<Status, string> = { yes: "#146b44", no: "#a42b31", unknown: "#394c77" };
+const PAINT: Record<Status, string> = { yes: "#14803c", partly: "#b45f06", no: "#b3261e", unknown: "#ffffff" };
+const LEGEND: Status[] = ["yes", "partly", "no", "unknown"];
 
 function factFrom(value: unknown): Fact {
   if (value && typeof value === "object" && "value" in value) return value as Fact;
@@ -54,12 +56,14 @@ function needFact(place: Place, need: Need): Fact | undefined {
 }
 
 function needStatus(place: Place, need: Need): Status {
-  return status(needFact(place, need)?.value);
+  const fact = needFact(place, need);
+  if (need === "boarding" && place.facts.wheelchair_boarding === fact) return boardingStatus(fact?.value);
+  return status(fact?.value);
 }
 
+/** The headline for a place: wheelchair access for a place, the accessible washroom for a washroom, boarding for a stop. */
 function displayStatus(place: Place): Status {
-  const recorded = place.facts.wheelchair;
-  return status(recorded?.value);
+  return headlineStatus(place.category, (field) => place.facts[field]?.value);
 }
 
 function fromProperties(props: Record<string, unknown>, lon: number, lat: number): Place | null {
@@ -116,6 +120,8 @@ export function MapPage() {
   const online = useOnline();
   const [libraryError, setLibraryError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [sources, setSources] = useState<Map<string, SourceInfo>>(new Map());
+  const revealDetail = useRef(false);
   const listId = "map-place-list";
   const mapControlsOff = libraryError || !mapReady;
 
@@ -136,7 +142,9 @@ export function MapPage() {
       const place = fromProperties(feature.properties as Record<string, unknown>, lon, lat);
       if (place) unique.set(place.id, place);
     }
-    setPlaces(Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name, locale)));
+    // Places with recorded access come first; within each group, by name.
+    const known = (place: Place) => (displayStatus(place) === "unknown" ? 1 : 0);
+    setPlaces(Array.from(unique.values()).sort((a, b) => known(a) - known(b) || displayName(a.name).localeCompare(displayName(b.name), locale)));
     setLoading(false);
   }, [locale]);
 
@@ -157,7 +165,9 @@ export function MapPage() {
         // Without a readable tile list there is no map data, so no map is drawn and its controls stay off.
         let files: TileFile[];
         try {
-          files = (await readTileList()).files;
+          const list = await readTileList();
+          files = list.files;
+          if (!disposed && list.sources) setSources(list.sources);
         } catch {
           if (!disposed) { setTileListUnavailable(true); setLoading(false); }
           return;
@@ -171,9 +181,9 @@ export function MapPage() {
           style: {
             version: 8,
             sources: {},
-            layers: [{ id: "plain-background", type: "background", paint: { "background-color": "#eeeae1" } }],
+            layers: [{ id: "plain-background", type: "background", paint: { "background-color": "#f1f0ec" } }],
           },
-          center: [-79.38, 43.65], zoom: 11, fadeDuration: 0,
+          center: [-79.38, 43.65], zoom: 12.5, fadeDuration: 0,
         });
         const activeMap = map;
         mapRef.current = activeMap;
@@ -195,16 +205,39 @@ export function MapPage() {
               // A layer named for one kind holds only that kind. A shared layer (the pack's "access")
               // holds every kind, and each point says its own kind in its "tranche" property.
               const named = tileLayerName(sourceLayer);
+              if (!named) {
+                // Sidewalks and paths in the pack draw a light street outline under the places.
+                activeMap.addLayer({
+                  id: `${sourceId}-${sourceLayer}-paths`, type: "line", source: sourceId, "source-layer": sourceLayer,
+                  filter: ["==", ["get", "tranche"], "path"] as import("maplibre-gl").FilterSpecification,
+                  layout: { "line-cap": "round", "line-join": "round" },
+                  paint: {
+                    "line-color": "#c5cad6",
+                    "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 14, 1.5, 17, 4],
+                  },
+                }, layerIds.current[0]);
+              }
               for (const category of named ? [named] : categories) {
                 const id = named ? `${sourceId}-${sourceLayer}` : `${sourceId}-${sourceLayer}-${category}`;
+                const headline = headlineExpression() as unknown as import("maplibre-gl").ExpressionSpecification;
                 activeMap.addLayer({
                   id, type: "circle", source: sourceId, "source-layer": sourceLayer,
                   ...(named ? {} : { filter: ["all", ["==", ["geometry-type"], "Point"], ["==", ["get", "tranche"], category]] as import("maplibre-gl").FilterSpecification }),
-                  layout: { visibility: enabledRef.current.includes(category) ? "visible" : "none" },
+                  layout: {
+                    visibility: enabledRef.current.includes(category) ? "visible" : "none",
+                    "circle-sort-key": ["match", headline, "unknown", 0, 1],
+                  },
                   paint: {
-                    "circle-color": ["match", ["downcase", ["to-string", ["coalesce", ["get", "wheelchair"], "unknown"]]],
-                      "yes", PAINT.yes, "true", PAINT.yes, "no", PAINT.no, "false", PAINT.no, PAINT.unknown],
-                    "circle-radius": 8, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+                    // Recorded yes, partly or no is a filled dot; nothing recorded is a small hollow dot,
+                    // so the places with known access stand out.
+                    "circle-color": ["match", headline, "yes", PAINT.yes, "partly", PAINT.partly, "no", PAINT.no, PAINT.unknown],
+                    "circle-radius": ["interpolate", ["linear"], ["zoom"],
+                      9, ["match", headline, "unknown", 1.2, 3],
+                      12, ["match", headline, "unknown", 2, 4.5],
+                      14, ["match", headline, "unknown", 4, 6.5],
+                      16, ["match", headline, "unknown", 6, 9]],
+                    "circle-stroke-color": ["match", headline, "unknown", "#5b6478", "#ffffff"],
+                    "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 9, ["match", headline, "unknown", 0.8, 1.5], 14, ["match", headline, "unknown", 1.5, 2]],
                   },
                 });
                 layerIds.current.push(id);
@@ -227,7 +260,15 @@ export function MapPage() {
           refresh();
           if (!disposed && files.length > 0 && layerIds.current.length === 0) setLoading(false);
         };
-        activeMap.on("load", () => { void coverView(); });
+        activeMap.on("load", () => {
+          // A ring around the chosen place, drawn above every other layer.
+          activeMap.addSource("chosen-place", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+          activeMap.addLayer({
+            id: "chosen-place-ring", type: "circle", source: "chosen-place",
+            paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#d6006d", "circle-stroke-width": 4 },
+          });
+          void coverView();
+        });
         activeMap.on("moveend", () => { void coverView(); });
         activeMap.on("idle", refresh);
         activeMap.on("click", (event) => {
@@ -235,7 +276,7 @@ export function MapPage() {
           const feature = features.find((item) => item.geometry.type === "Point");
           if (feature) {
             const id = String(feature.properties?.id ?? feature.properties?.place_id ?? "");
-            if (id) setSelectedId(id);
+            if (id) { revealDetail.current = true; setSelectedId(id); }
           }
         });
         activeMap.on("error", () => setError(true));
@@ -265,6 +306,15 @@ export function MapPage() {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    const ring = map?.isStyleLoaded() ? map.getSource("chosen-place") as import("maplibre-gl").GeoJSONSource | undefined : undefined;
+    ring?.setData({ type: "FeatureCollection", features: selected ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [selected.lon, selected.lat] } }] : [] });
+    // A place picked on the map shows its details at once; one picked in the list keeps the list in view.
+    if (selected && revealDetail.current) document.querySelector(".map-detail")?.scrollIntoView({ block: "nearest" });
+    revealDetail.current = false;
+  }, [selected]);
+
   // Map instance is assigned only after construction, not after the first render.
   useEffect(() => {
     enabledRef.current = enabled;
@@ -283,13 +333,31 @@ export function MapPage() {
     if (place && mapRef.current) panMapTo(mapRef.current, [place.lon, place.lat]);
   }, [places]);
 
-  const listFeatures = useMemo(() => visible.map((place) => ({
-    id: place.id, name: place.name, lat: place.lat, lon: place.lon,
-    statusCode: displayStatus(place), status: t(`map.${displayStatus(place)}`),
-    source: place.source || "UNKNOWN", licence: place.licence || "UNKNOWN",
-    retrievedAt: place.retrieved || "UNKNOWN", retrievedOn: place.retrieved || "UNKNOWN",
-    attribution: t("map.attribution"), prototypeLabel: "",
-  })), [visible, t]);
+  /** Where a record comes from, in words: the source's name, licence and date, from the record or the pack's source list. */
+  const provenance = useCallback((place: Place) => {
+    const info = sources.get(place.source ?? "");
+    return {
+      name: info?.name || place.source || "",
+      licence: place.licence || info?.licence || "",
+      retrieved: place.retrieved || info?.retrieved || "",
+      attribution: info?.attribution || "",
+    };
+  }, [sources]);
+
+  const listFeatures = useMemo(() => visible.map((place) => {
+    const code = displayStatus(place);
+    const from = provenance(place);
+    return {
+      id: place.id, name: displayName(place.name), lat: place.lat, lon: place.lon,
+      statusCode: code,
+      status: `${mapWord(locale, `headline.${place.category}`)}: ${mapWord(locale, `state.${code}`)}`,
+      kind: mapWord(locale, `kind.${place.category}`),
+      sourceLine: [from.name, from.licence, from.retrieved].filter(Boolean).join(" · "),
+      source: from.name || "UNKNOWN", licence: from.licence || "UNKNOWN",
+      retrievedAt: from.retrieved || "UNKNOWN", retrievedOn: from.retrieved || "UNKNOWN",
+      attribution: from.attribution, prototypeLabel: "",
+    };
+  }), [visible, locale, provenance]);
 
   return (
     <div className="access-map-page">
@@ -311,7 +379,7 @@ export function MapPage() {
         </label>)}
       </fieldset>
       <div className="map-legend" role="group" aria-label={t("map.legend")}>
-        {(["yes", "no", "unknown"] as Status[]).map((state) => <span key={state} className={`map-legend-${state}`}><i aria-hidden="true" />{t(`map.${state}`)}</span>)}
+        {LEGEND.map((state) => <span key={state} className={`map-legend-${state}`}><i aria-hidden="true" />{state === "partly" ? mapWord(locale, "state.partly") : t(`map.${state}`)}</span>)}
       </div>
       <div className="map-toolbar" role="group" aria-label={t("map.viewControls")} aria-describedby={libraryError ? "map-library-error" : undefined}>
         <button type="button" disabled={mapControlsOff} onClick={() => mapRef.current && zoomMapBy(mapRef.current, 1)}>{t("map.zoomIn")}</button>
@@ -340,23 +408,56 @@ export function MapPage() {
               </div>
             ) : <p id={listId} tabIndex={-1}>{t("map.empty")}</p>}
         </section>
-        {selected && <aside className="map-detail" aria-label={t("map.selected")}>
-          <h2>{selected.name}</h2>
-          <button type="button" onClick={() => setSelectedId(null)}>{t("map.close")}</button>
-          <dl>
-            {needs.map((need) => {
-              const fact = needFact(selected, need);
-              return <div key={need}>
-                <dt>{t(`map.${need}`)}</dt><dd>{t(`map.${needStatus(selected, need)}`)}</dd>
-                <dd>{t("map.source")}{locale === "fr" ? " :" : ":"} {fact?.source_id ?? selected.source ?? t("map.notProvided")}</dd>
-                <dd>{t("map.licence")}{locale === "fr" ? " :" : ":"} {fact?.licence ?? selected.licence ?? t("map.notProvided")}</dd>
-                <dd>{t("map.retrieved")}{locale === "fr" ? " :" : ":"} {fact?.retrieved_at ?? selected.retrieved ?? t("map.notProvided")}</dd>
-                <dd>{t("map.tier")}{locale === "fr" ? " :" : ":"} {fact?.tier ?? selected.tier ?? t("map.notProvided")}</dd>
-              </div>;
-            })}
-          </dl>
-          <Link to={`/places/${encodeURIComponent(selected.id)}`}>{t("map.open")}</Link>
-        </aside>}
+        {selected && (() => {
+          const from = provenance(selected);
+          const code = displayStatus(selected);
+          const notes = selected.facts.wheelchair_description?.value;
+          const needFields = new Set(Object.values(fields).flat());
+          const others = Object.entries(selected.facts).filter(([key, fact]) => !SHOWN_ELSEWHERE.has(key) && !needFields.has(key)
+            && fact.value !== undefined && fact.value !== null && String(fact.value).trim() !== "" && String(fact.value).toUpperCase() !== "UNKNOWN");
+          const colon = locale === "fr" ? "\u00a0:" : ":";
+          return <aside className="map-detail" aria-label={t("map.selected")}>
+            <div className="map-detail-head">
+              <div>
+                <p className="map-detail-kind">{mapWord(locale, `kind.${selected.category}`)}</p>
+                <h2>{displayName(selected.name)}</h2>
+              </div>
+              <button type="button" className="btn btn-quiet" onClick={() => setSelectedId(null)}>{t("map.close")}</button>
+            </div>
+            <p className={`map-headline status-${code}`}>
+              <i aria-hidden="true" />
+              {mapWord(locale, `headline.${selected.category}`)}{colon} <strong>{mapWord(locale, `state.${code}`)}</strong>
+            </p>
+            {typeof notes === "string" && notes.trim() ? (
+              <div className="map-detail-notes">
+                {noteLines(locale, notes).map((line, index) => <p key={index}>{line.label ? <><strong>{line.label}{colon}</strong> </> : null}{line.text}</p>)}
+              </div>
+            ) : null}
+            <h3>{t("map.needs")}</h3>
+            <dl className="map-facts">
+              {needs.map((need) => {
+                const state = needStatus(selected, need);
+                return <div key={need}>
+                  <dt>{t(`map.${need}`)}</dt>
+                  <dd><span className={`map-state status-${state}`}>{state === "unknown" ? t("map.notProvided") : mapWord(locale, `state.${state}`)}</span></dd>
+                </div>;
+              })}
+              {others.map(([key, fact]) => <div key={key}>
+                <dt>{fieldLabel(locale, key)}</dt>
+                <dd>{valueLabel(locale, key, fact.value)}</dd>
+              </div>)}
+            </dl>
+            <h3>{t("map.source")}</h3>
+            <dl className="map-facts map-source">
+              <div><dt>{t("map.source")}</dt><dd>{from.name || t("map.notProvided")}</dd></div>
+              <div><dt>{t("map.licence")}</dt><dd>{from.licence || t("map.notProvided")}</dd></div>
+              <div><dt>{t("map.retrieved")}</dt><dd>{from.retrieved || t("map.notProvided")}</dd></div>
+              {selected.tier ? <div><dt>{t("map.tier")}</dt><dd>{selected.tier}</dd></div> : null}
+              {from.attribution ? <div><dt>{t("map.credit")}</dt><dd>{from.attribution}</dd></div> : null}
+            </dl>
+            <Link className="btn btn-primary" to={`/places/${encodeURIComponent(selected.id)}`}>{t("map.open")}</Link>
+          </aside>;
+        })()}
       </div>
       <p className="map-attribution"><a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">{t("map.attribution")}</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">{t("map.odbl")}</a></p>
     </div>
