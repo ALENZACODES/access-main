@@ -28,7 +28,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Check out access-main
         uses: actions/checkout@v4
@@ -83,6 +83,37 @@ jobs:
 
       - name: Stage the pack, tiles and SPA fallback
         run: node scripts/stage-pages.mjs --maps .cache/access-maps
+
+      # The street basemap: OpenStreetMap roads, names, parks and water for each
+      # pack region, cut from the Protomaps daily build and served from this site,
+      # so no outside map server sees where anyone looks.
+      - name: Get the pmtiles CLI (protomaps/go-pmtiles release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(gh api repos/protomaps/go-pmtiles/releases/latest --jq .tag_name)"
+          echo "pmtiles ${tag}"
+          gh release download "${tag}" -R protomaps/go-pmtiles -p "go-pmtiles_*_Linux_x86_64.tar.gz" -D /tmp/pmtiles
+          tar -xzf /tmp/pmtiles/*.tar.gz -C /tmp/pmtiles
+          /tmp/pmtiles/pmtiles version
+
+      - name: Basemap fonts and sprites (protomaps/basemaps-assets)
+        uses: actions/checkout@v4
+        with:
+          repository: protomaps/basemaps-assets
+          path: .cache/basemaps-assets
+          fetch-depth: 1
+          sparse-checkout: |
+            fonts/Noto Sans Regular
+            fonts/Noto Sans Medium
+            fonts/Noto Sans Italic
+            sprites/v4
+
+      - name: Build the street basemap for each region
+        run: |
+          key="$(curl -fsS https://build-metadata.protomaps.dev/builds.json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const b=JSON.parse(s);console.log(b[b.length-1].key)})')"
+          echo "basemap build ${key}"
+          node scripts/build-basemap.mjs --manifest .cache/access-maps/pack/v1/manifest.json --out apps/web/dist/data/basemap --pmtiles /tmp/pmtiles/pmtiles --assets .cache/basemaps-assets --source "https://build.protomaps.com/${key}"
 
       - name: Budget check (file size, site size, precache)
         run: node scripts/stage-pages.mjs --check-only

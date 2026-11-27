@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FINDER_KINDS, type FinderKind, type JourneyPlan, type ModuleId, type ModuleResult } from "@access/shared";
 import { Button } from "../design/Button.tsx";
 import { ChoiceGroup, TextInput } from "../design/fields.tsx";
@@ -13,7 +14,7 @@ import { useProfileState } from "../profile/ProfileProvider.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { getPack } from "../storage/repository.ts";
-import { JourneyForm, JourneyPlanDetails, type TripRequest } from "./JourneyForm.tsx";
+import { JourneyForm, JourneyPlanDetails, type ChosenPlace, type TripRequest } from "./JourneyForm.tsx";
 import { DataCredits } from "../states/DataCredits.tsx";
 import { PackCompare } from "../states/PackCompare.tsx";
 import { PackFreshness } from "../states/PackFreshness.tsx";
@@ -59,6 +60,12 @@ const KIND_KEY: Record<FinderKind, string> = {
 
 export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
   const { t, i18n } = useLaneStrings();
+  // The map's Directions button passes the chosen place in router state (memory only, never the URL).
+  const routeState = useLocation().state as { destination?: unknown } | null;
+  const journeyDestination = useMemo<ChosenPlace | null>(() => {
+    const given = routeState?.destination as Partial<ChosenPlace> | undefined;
+    return given && typeof given.id === "string" && typeof given.name === "string" ? { id: given.id, name: given.name } : null;
+  }, [routeState]);
   const { profile } = useProfileState();
   const online = useOnline();
   const [text, setText] = useState("");
@@ -216,6 +223,7 @@ export function ModulePage({ id }: { id: Exclude<ModuleId, "help"> }) {
           formRef={tripForm}
           describedBy={result?.availability === "stub" ? `${id}-search-unavailable` : undefined}
           search={placeSearch}
+          initialDestination={journeyDestination}
           onPlan={(trip: TripRequest) => {
             setAsked(true);
             setSubmitted((current) => ({ ...current, ...trip }));

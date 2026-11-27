@@ -72,7 +72,7 @@ export const WF_REGISTER: readonly WfRow[] = [
     triggers: ["workflow_dispatch"],
     permissions: "contents:read,id-token:write,pages:write",
     jobs: [
-      { id: "build", timeout: 30 },
+      { id: "build", timeout: 45 },
       { id: "deploy", timeout: 10 },
     ],
     note: "Publishes the App to GitHub Pages when the owner starts a run by hand. Approved by the owner on 2026-11-26; an identical copy of deploy/pages.yml.",
@@ -84,7 +84,7 @@ export const WF_REGISTER: readonly WfRow[] = [
     triggers: ["workflow_dispatch"],
     permissions: "contents:read,id-token:write,pages:write",
     jobs: [
-      { id: "build", timeout: 30 },
+      { id: "build", timeout: 45 },
       { id: "deploy", timeout: 10 },
     ],
     note: "The reviewed source of the Pages workflow. GitHub does not run this file; it runs the identical copy in .github/workflows.",
@@ -93,8 +93,10 @@ export const WF_REGISTER: readonly WfRow[] = [
 
 export const WF_ACCEPTED: readonly WfAcceptRow[] = [
   { path: ".github/workflows/pages.yml", code: "write-permission", count: 2, reason: "Publishing to Pages needs pages: write and id-token: write. The workflow runs only when the owner starts it by hand." },
+  { path: ".github/workflows/pages.yml", code: "host-not-allowed", count: 2, reason: "Building the street basemap reads the name of the newest Protomaps OpenStreetMap build (build-metadata.protomaps.dev) and cuts each region from it (build.protomaps.com). Only the build machine contacts these hosts, at publish time; people using the App never do, since the basemap is served from this site. Owner chose self-hosting on 2026-11-27." },
   { path: ".github/workflows/schema.yml", code: "no-permissions", count: 1, reason: "The file sets no permissions, so its token has the repository default. Accepted as it stands; adding contents: read is a change to the file." },
   { path: ".github/workflows/schema.yml", code: "no-timeout", count: 1, reason: "The job has no timeout-minutes, so it has the default limit. Accepted as it stands." },
+  { path: "deploy/pages.yml", code: "host-not-allowed", count: 2, reason: "Building the street basemap reads the name of the newest Protomaps OpenStreetMap build (build-metadata.protomaps.dev) and cuts each region from it (build.protomaps.com). Only the build machine contacts these hosts, at publish time; people using the App never do, since the basemap is served from this site. Owner chose self-hosting on 2026-11-27." },
   { path: "deploy/pages.yml", code: "write-permission", count: 2, reason: "Publishing to Pages needs pages: write and id-token: write. This is the reviewed source and does not run; GitHub runs its identical copy." },
 ];
 

@@ -183,7 +183,7 @@ describe("the report", () => {
 
   it("names every file and says what was accepted", () => {
     for (const r of WF_REGISTER) expect(text).toContain(r.path);
-    expect(text).toContain("Findings accepted as they stand: 6.");
+    expect(text).toContain("Findings accepted as they stand: 10.");
     expect(text).toMatch(/Differences from the register: none\.$/);
   });
 
