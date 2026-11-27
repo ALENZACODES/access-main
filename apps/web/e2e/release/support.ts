@@ -133,6 +133,9 @@ export async function expectNoHorizontalScroll(page: Page): Promise<void> {
 
 /** Same-origin links on the current page whose path starts with `<base><prefix>/`, as base-relative paths. */
 export async function linksUnder(page: Page, prefix: string, limit = 40): Promise<string[]> {
+  // Some index pages fill their list after the page shows (help contacts are read from the content
+  // pack), so wait up to ten seconds for a first matching link before reading them all.
+  await page.waitForSelector(`a[href*="${BASE}${prefix}/"]`, { timeout: 10_000 }).catch(() => undefined);
   const hrefs = await page.$$eval("a[href]", (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href));
   const origin = new URL(page.url()).origin;
   const lead = `${BASE}${prefix}/`;

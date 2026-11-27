@@ -232,7 +232,10 @@ export class VerifiedPMTilesSource implements Source {
  * The tile list from the pack manifest. The last list read is kept in the
  * tile cache, so a later offline visit still finds the files it stored.
  */
-export async function readTileList(baseUrl = dataBaseUrl(), deps: TileLoadDeps = defaultDeps): Promise<{ files: TileFile[]; rejected: string[] }> {
+export type SourceInfo = { name: string; licence: string; retrieved: string; attribution: string };
+
+/** The tile list, and the pack's source list read from the same manifest (empty when only the saved tile list is available). */
+export async function readTileList(baseUrl = dataBaseUrl(), deps: TileLoadDeps = defaultDeps): Promise<{ files: TileFile[]; rejected: string[]; sources?: Map<string, SourceInfo> }> {
   const cache = await (deps.listCache ?? deps.cache)();
   const listKey = new Request(new URL(TILE_LIST_KEY, baseUrl).href);
   try {
@@ -241,13 +244,33 @@ export async function readTileList(baseUrl = dataBaseUrl(), deps: TileLoadDeps =
     const manifest = await response.json() as unknown;
     if (!isRecord(manifest) || !isRecord(manifest.tiles)) throw new Error("manifest has no tile list");
     const list = parseTileList(manifest, baseUrl);
-    await cache?.put(listKey, new Response(JSON.stringify({ tiles: manifest.tiles }))).catch(() => {});
-    return list;
+    await cache?.put(listKey, new Response(JSON.stringify({ tiles: manifest.tiles, sources: manifest.sources }))).catch(() => {});
+    return { ...list, sources: parseSourceList(manifest) };
   } catch {
     const saved = await cache?.match(listKey);
     if (!saved) throw new Error("No tile list could be read");
-    return parseTileList(await saved.json(), baseUrl);
+    const savedList = await saved.json() as unknown;
+    return { ...parseTileList(savedList, baseUrl), sources: parseSourceList(savedList) };
   }
+}
+
+/**
+ * Each data source's own name, licence, date and credit, from the pack's list of sources,
+ * so the map can say "City of Toronto, OGL-Toronto, 2026-11-13" instead of a raw id.
+ */
+export function parseSourceList(manifest: unknown): Map<string, SourceInfo> {
+  const out = new Map<string, SourceInfo>();
+  if (!isRecord(manifest) || !Array.isArray(manifest.sources)) return out;
+  for (const entry of manifest.sources) {
+    if (!isRecord(entry) || typeof entry.sourceId !== "string") continue;
+    out.set(entry.sourceId, {
+      name: typeof entry.name === "string" ? entry.name : entry.sourceId,
+      licence: typeof entry.licence === "string" ? entry.licence : "",
+      retrieved: typeof entry.retrieved === "string" ? entry.retrieved : "",
+      attribution: typeof entry.attribution === "string" ? entry.attribution : "",
+    });
+  }
+  return out;
 }
 
 /** Load and store the checked files that cover a downloaded region. A file that fails is skipped. */
