@@ -122,18 +122,21 @@ export function JourneyForm({
   describedBy,
   search,
   onPlan,
+  initialDestination,
 }: {
   canPlan: boolean;
   formRef?: Ref<HTMLFormElement>;
   describedBy?: string;
   search: PlaceSearch;
   onPlan: (trip: TripRequest) => void;
+  /** A place chosen elsewhere (the map's Directions button), already set as where the trip goes. */
+  initialDestination?: ChosenPlace | null;
 }) {
   const { t } = useLaneStrings();
   const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+  const [destination, setDestination] = useState(initialDestination?.name ?? "");
   const [originChoice, setOriginChoice] = useState<ChosenPlace | null>(null);
-  const [destinationChoice, setDestinationChoice] = useState<ChosenPlace | null>(null);
+  const [destinationChoice, setDestinationChoice] = useState<ChosenPlace | null>(initialDestination ?? null);
   return (
     <form
       ref={formRef}

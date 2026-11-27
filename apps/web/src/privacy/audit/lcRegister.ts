@@ -4,7 +4,7 @@
 
 import type { LcAcceptRow } from "./lcRules";
 
-const R_MAP_CALL = "The place's longitude and latitude are written as an array to pan the map (a call to panMapTo), not into text or a file. Not checked: what the map library keeps.";
+const R_MAP_CALL = "The place's longitude and latitude are written as an array to pan the map (a call to panMapTo), to move the map to a place picked in the map search, and to draw the ring around the chosen place on the map, not into text or a file. Not checked: what the map library keeps.";
 const R_NEAR_FIELDS = "A point read from the address of the page is written back as the text of two fields, with every decimal it has, so the person sees what was read. Nothing here cuts it to five decimals.";
 const R_NEAR_FIELDS_ROUTE = "The point of the near query is written as the text of two fields on the page, with every decimal it has. Not checked: whether those fields are exported.";
 const R_GEOJSON_POINT = "pointFeature writes [lon, lat] for each point it is given: the two points typed by the person, the halfway point and each place. The numbers are written as they are, with all their decimals. The halfway point is rounded to five decimals before it gets here; the typed points are not.";
@@ -14,7 +14,7 @@ const R_CANONICAL = "The fixed text form of a saved place holds its latitude and
 const R_PACK_CSV = "Writes the latitude and longitude of a pack place into a CSV cell as the number is, with all its decimals. The text version of the same place is cut to four decimals.";
 
 export const LC_ACCEPTED: readonly LcAcceptRow[] = [
-  { path: "apps/web/src/map/MapPage.tsx", code: "lc-raw", count: 1, reason: R_MAP_CALL },
+  { path: "apps/web/src/map/MapPage.tsx", code: "lc-raw", count: 3, reason: R_MAP_CALL },
   { path: "apps/web/src/states/PackPlaces.tsx", code: "lc-raw", count: 2, reason: R_PASTED_POINT },
   { path: "apps/web/src/states/geo.ts", code: "lc-raw", count: 2, reason: R_NEAR_FIELDS },
   { path: "apps/web/src/states/mapRoute.ts", code: "lc-raw", count: 2, reason: R_NEAR_FIELDS_ROUTE },

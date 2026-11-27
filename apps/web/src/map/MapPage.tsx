@@ -1,19 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { MapSearch, type MapHit } from "./MapSearch.tsx";
+import { sharedPackSource } from "../places/packAccess.ts";
 import { panMapTo, silenceMapMotion, zoomMapBy } from "./camera.ts";
 import { FeatureList } from "./FeatureList.tsx";
 import { useDocumentTitle } from "../shell/useDocumentTitle.ts";
 import { useOnline } from "../shell/useOnline.ts";
 import { StateNotice, getRouteEmpty, getRouteError } from "../states/index.ts";
 import { TileBandNotice, type TileFailure } from "./TileBandNotice.tsx";
-import { filesForView, readTileList, TileFileUnavailable, VerifiedPMTilesSource, warmRegionTiles, type BBox, type TileFile } from "./tileCache.ts";
+import { basemapLayers, overlaps, readBasemapIndex, REGION_FROM_ZOOM, type BasemapFile } from "./basemap.ts";
+import { dataBaseUrl, filesForView, readTileList, TileFileUnavailable, VerifiedPMTilesSource, warmRegionTiles, type BBox, type SourceInfo, type TileFile } from "./tileCache.ts";
+import { boardingStatus, displayName, fieldLabel, headlineExpression, headlineStatus, mapWord, noteLines, SHOWN_ELSEWHERE, valueLabel, type MapStatus } from "./placeText.ts";
 import "./map.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 type Category = "washroom" | "venue" | "transit";
 type Need = "entrance" | "toilet" | "changing" | "boarding";
-type Status = "yes" | "no" | "unknown";
+type Status = MapStatus;
 type Fact = { value: unknown; source_id?: string; licence?: string; retrieved_at?: string; tier?: string };
 type Place = {
   id: string;
@@ -35,7 +39,8 @@ const fields: Record<Need, string[]> = {
   changing: ["changing_table", "changing_table_available"],
   boarding: ["wheelchair_boarding", "wheelchair_boarding_available"],
 };
-const PAINT: Record<Status, string> = { yes: "#146b44", no: "#a42b31", unknown: "#394c77" };
+const PAINT: Record<Status, string> = { yes: "#14803c", partly: "#b45f06", no: "#b3261e", unknown: "#ffffff" };
+const LEGEND: Status[] = ["yes", "partly", "no", "unknown"];
 
 function factFrom(value: unknown): Fact {
   if (value && typeof value === "object" && "value" in value) return value as Fact;
@@ -54,12 +59,14 @@ function needFact(place: Place, need: Need): Fact | undefined {
 }
 
 function needStatus(place: Place, need: Need): Status {
-  return status(needFact(place, need)?.value);
+  const fact = needFact(place, need);
+  if (need === "boarding" && place.facts.wheelchair_boarding === fact) return boardingStatus(fact?.value);
+  return status(fact?.value);
 }
 
+/** The headline for a place: wheelchair access for a place, the accessible washroom for a washroom, boarding for a stop. */
 function displayStatus(place: Place): Status {
-  const recorded = place.facts.wheelchair;
-  return status(recorded?.value);
+  return headlineStatus(place.category, (field) => place.facts[field]?.value);
 }
 
 function fromProperties(props: Record<string, unknown>, lon: number, lat: number): Place | null {
@@ -116,12 +123,19 @@ export function MapPage() {
   const online = useOnline();
   const [libraryError, setLibraryError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [sources, setSources] = useState<Map<string, SourceInfo>>(new Map());
+  const [streetsOn, setStreetsOn] = useState(false);
+  const localeRef = useRef<"en" | "fr">(locale);
+  localeRef.current = locale;
+  const revealDetail = useRef(false);
   const listId = "map-place-list";
   const mapControlsOff = libraryError || !mapReady;
 
   const visible = useMemo(() => places.filter((place) => enabled.includes(place.category) &&
     selectedNeeds.every((need) => needStatus(place, need) !== "no")), [places, enabled, selectedNeeds]);
-  const selected = visible.find((place) => place.id === selectedId) ?? null;
+  // The chosen place stays chosen when the map moves it out of view or a filter hides it.
+  const [chosenPlace, setChosenPlace] = useState<Place | null>(null);
+  const selected = visible.find((place) => place.id === selectedId) ?? (chosenPlace?.id === selectedId ? chosenPlace : null);
 
   const refresh = useCallback(() => {
     const map = mapRef.current;
@@ -136,7 +150,9 @@ export function MapPage() {
       const place = fromProperties(feature.properties as Record<string, unknown>, lon, lat);
       if (place) unique.set(place.id, place);
     }
-    setPlaces(Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name, locale)));
+    // Places with recorded access come first; within each group, by name.
+    const known = (place: Place) => (displayStatus(place) === "unknown" ? 1 : 0);
+    setPlaces(Array.from(unique.values()).sort((a, b) => known(a) - known(b) || displayName(a.name).localeCompare(displayName(b.name), locale)));
     setLoading(false);
   }, [locale]);
 
@@ -157,7 +173,9 @@ export function MapPage() {
         // Without a readable tile list there is no map data, so no map is drawn and its controls stay off.
         let files: TileFile[];
         try {
-          files = (await readTileList()).files;
+          const list = await readTileList();
+          files = list.files;
+          if (!disposed && list.sources) setSources(list.sources);
         } catch {
           if (!disposed) { setTileListUnavailable(true); setLoading(false); }
           return;
@@ -171,16 +189,51 @@ export function MapPage() {
           style: {
             version: 8,
             sources: {},
-            layers: [{ id: "plain-background", type: "background", paint: { "background-color": "#eeeae1" } }],
+            layers: [
+              { id: "plain-background", type: "background", paint: { "background-color": "#f1f0ec" } },
+              // Marks the line between the street basemap (below) and the places (above).
+              { id: "places-floor", type: "background", layout: { visibility: "none" }, paint: { "background-color": "#f1f0ec" } },
+            ],
           },
-          center: [-79.38, 43.65], zoom: 11, fadeDuration: 0,
+          center: [-79.38, 43.65], zoom: 12.5, fadeDuration: 0,
         });
         const activeMap = map;
+        let markLoaded = () => {};
+        const styleLoaded = new Promise<void>((resolve) => { markLoaded = resolve; });
         mapRef.current = activeMap;
         setMapReady(true);
         silenceMapMotion(activeMap);
         activeMap.getCanvas().tabIndex = -1;
         activeMap.getCanvas().setAttribute("aria-hidden", "true");
+        // The street basemap: the Ontario overview at low zoom, each region's own file nearer in.
+        void readBasemapIndex(dataBaseUrl()).then((basemap) => {
+          if (!basemap || disposed) return;
+          const added = new Set<string>();
+          const addBase = (file: BasemapFile, minzoom: number, maxzoom: number) => {
+            if (added.has(file.id) || !protocol) return;
+            added.add(file.id);
+            protocol.add(new tiles.PMTiles(file.url));
+            const sourceId = `basemap-${file.id}`;
+            activeMap.addSource(sourceId, { type: "vector", url: `pmtiles://${file.url}` });
+            for (const layer of basemapLayers(sourceId, localeRef.current, minzoom, maxzoom)) activeMap.addLayer(layer, "places-floor");
+          };
+          const coverStreets = () => {
+            if (activeMap.getZoom() < REGION_FROM_ZOOM - 1) return;
+            const b = activeMap.getBounds();
+            const view: BBox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+            for (const file of basemap.regions) if (overlaps(file.bbox, view)) addBase(file, REGION_FROM_ZOOM, 24);
+          };
+          const start = () => {
+            if (disposed) return;
+            if (basemap.glyphs) activeMap.setGlyphs(basemap.glyphs);
+            if (basemap.sprite) activeMap.setSprite(basemap.sprite);
+            addBase(basemap.overview, 0, REGION_FROM_ZOOM);
+            coverStreets();
+            activeMap.on("moveend", coverStreets);
+            setStreetsOn(true);
+          };
+          void styleLoaded.then(start);
+        });
         // Each file is added once, when it first covers the view, and only after it passed its check.
         const started = new Set<string>();
         const addFile = async (file: TileFile, index: number) => {
@@ -195,16 +248,39 @@ export function MapPage() {
               // A layer named for one kind holds only that kind. A shared layer (the pack's "access")
               // holds every kind, and each point says its own kind in its "tranche" property.
               const named = tileLayerName(sourceLayer);
+              if (!named) {
+                // Sidewalks and paths in the pack draw a light street outline under the places.
+                activeMap.addLayer({
+                  id: `${sourceId}-${sourceLayer}-paths`, type: "line", source: sourceId, "source-layer": sourceLayer,
+                  filter: ["==", ["get", "tranche"], "path"] as import("maplibre-gl").FilterSpecification,
+                  layout: { "line-cap": "round", "line-join": "round" },
+                  paint: {
+                    "line-color": "#c5cad6",
+                    "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 14, 1.5, 17, 4],
+                  },
+                }, layerIds.current[0]);
+              }
               for (const category of named ? [named] : categories) {
                 const id = named ? `${sourceId}-${sourceLayer}` : `${sourceId}-${sourceLayer}-${category}`;
+                const headline = headlineExpression() as unknown as import("maplibre-gl").ExpressionSpecification;
                 activeMap.addLayer({
                   id, type: "circle", source: sourceId, "source-layer": sourceLayer,
                   ...(named ? {} : { filter: ["all", ["==", ["geometry-type"], "Point"], ["==", ["get", "tranche"], category]] as import("maplibre-gl").FilterSpecification }),
-                  layout: { visibility: enabledRef.current.includes(category) ? "visible" : "none" },
+                  layout: {
+                    visibility: enabledRef.current.includes(category) ? "visible" : "none",
+                    "circle-sort-key": ["match", headline, "unknown", 0, 1],
+                  },
                   paint: {
-                    "circle-color": ["match", ["downcase", ["to-string", ["coalesce", ["get", "wheelchair"], "unknown"]]],
-                      "yes", PAINT.yes, "true", PAINT.yes, "no", PAINT.no, "false", PAINT.no, PAINT.unknown],
-                    "circle-radius": 8, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+                    // Recorded yes, partly or no is a filled dot; nothing recorded is a small hollow dot,
+                    // so the places with known access stand out.
+                    "circle-color": ["match", headline, "yes", PAINT.yes, "partly", PAINT.partly, "no", PAINT.no, PAINT.unknown],
+                    "circle-radius": ["interpolate", ["linear"], ["zoom"],
+                      9, ["match", headline, "unknown", 1.2, 3],
+                      12, ["match", headline, "unknown", 2, 4.5],
+                      14, ["match", headline, "unknown", 4, 6.5],
+                      16, ["match", headline, "unknown", 6, 9]],
+                    "circle-stroke-color": ["match", headline, "unknown", "#5b6478", "#ffffff"],
+                    "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 9, ["match", headline, "unknown", 0.8, 1.5], 14, ["match", headline, "unknown", 1.5, 2]],
                   },
                 });
                 layerIds.current.push(id);
@@ -227,7 +303,16 @@ export function MapPage() {
           refresh();
           if (!disposed && files.length > 0 && layerIds.current.length === 0) setLoading(false);
         };
-        activeMap.on("load", () => { void coverView(); });
+        activeMap.on("load", () => {
+          markLoaded();
+          // A ring around the chosen place, drawn above every other layer.
+          activeMap.addSource("chosen-place", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+          activeMap.addLayer({
+            id: "chosen-place-ring", type: "circle", source: "chosen-place",
+            paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#d6006d", "circle-stroke-width": 4 },
+          });
+          void coverView();
+        });
         activeMap.on("moveend", () => { void coverView(); });
         activeMap.on("idle", refresh);
         activeMap.on("click", (event) => {
@@ -235,9 +320,38 @@ export function MapPage() {
           const feature = features.find((item) => item.geometry.type === "Point");
           if (feature) {
             const id = String(feature.properties?.id ?? feature.properties?.place_id ?? "");
-            if (id) setSelectedId(id);
+            if (id) {
+              const [lon, lat] = (feature.geometry as { coordinates: number[] }).coordinates as [number, number];
+              const place = fromProperties(feature.properties as Record<string, unknown>, lon, lat);
+              if (place) setChosenPlace(place);
+              revealDetail.current = true;
+              setSelectedId(id);
+            }
           }
         });
+        // Pointing at a dot shows its name and headline, as a map app does; the list says the same for keyboards.
+        // The hover label is extra: if the map library has no popups, the map works without it.
+        let popup: import("maplibre-gl").Popup | null = null;
+        try { popup = new lib.Popup({ closeButton: false, closeOnClick: false, offset: 12, className: "map-hover" }); } catch { popup = null; }
+        activeMap.on("mousemove", (event) => {
+          const live = layerIds.current.filter((id) => activeMap.getLayer(id));
+          const feature = live.length ? activeMap.queryRenderedFeatures(event.point, { layers: live }).find((item) => item.geometry.type === "Point") : undefined;
+          activeMap.getCanvas().style.cursor = feature ? "pointer" : "";
+          if (!popup || !feature) { popup?.remove(); return; }
+          const [lon, lat] = (feature.geometry as { coordinates: number[] }).coordinates as [number, number];
+          const place = fromProperties(feature.properties as Record<string, unknown>, lon, lat);
+          if (!place) { popup.remove(); return; }
+          const box = document.createElement("div");
+          const title = document.createElement("strong");
+          title.textContent = displayName(place.name);
+          const line = document.createElement("span");
+          const code = displayStatus(place);
+          line.className = `status status-${code}`;
+          line.textContent = `${mapWord(localeRef.current, `headline.${place.category}`)}: ${mapWord(localeRef.current, `state.${code}`)}`;
+          box.append(title, line);
+          popup.setLngLat([lon, lat]).setDOMContent(box).addTo(activeMap);
+        });
+        activeMap.getCanvas().addEventListener("mouseleave", () => popup?.remove());
         activeMap.on("error", () => setError(true));
         // Downloaded regions from I3 may dispatch this event after a completed download.
         const onRegion = (event: Event) => {
@@ -265,6 +379,15 @@ export function MapPage() {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    const ring = map?.getSource("chosen-place") as import("maplibre-gl").GeoJSONSource | undefined;
+    ring?.setData({ type: "FeatureCollection", features: selected ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [selected.lon, selected.lat] } }] : [] });
+    // A place picked on the map shows its details at once; one picked in the list keeps the list in view.
+    if (selected && revealDetail.current) document.querySelector(".map-detail")?.scrollIntoView({ block: "nearest" });
+    revealDetail.current = false;
+  }, [selected]);
+
   // Map instance is assigned only after construction, not after the first render.
   useEffect(() => {
     enabledRef.current = enabled;
@@ -280,48 +403,165 @@ export function MapPage() {
   const select = useCallback((id: string) => {
     setSelectedId(id);
     const place = places.find((candidate) => candidate.id === id);
+    if (place) setChosenPlace(place);
     if (place && mapRef.current) panMapTo(mapRef.current, [place.lon, place.lat]);
   }, [places]);
 
-  const listFeatures = useMemo(() => visible.map((place) => ({
-    id: place.id, name: place.name, lat: place.lat, lon: place.lon,
-    statusCode: displayStatus(place), status: t(`map.${displayStatus(place)}`),
-    source: place.source || "UNKNOWN", licence: place.licence || "UNKNOWN",
-    retrievedAt: place.retrieved || "UNKNOWN", retrievedOn: place.retrieved || "UNKNOWN",
-    attribution: t("map.attribution"), prototypeLabel: "",
-  })), [visible, t]);
+  /**
+   * A place picked in the map search: the map moves there and the place's own full record opens in the card.
+   * The record is read from the pack, since the map's points at this zoom may not include it.
+   */
+  const pickFromSearch = useCallback(async (hit: MapHit) => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.jumpTo({ center: [hit.lon, hit.lat], zoom: Math.max(map.getZoom(), 16) });
+    const source = await sharedPackSource();
+    const record = await source?.get(hit.id).catch(() => null) ?? null;
+    const named = record?.fields.name;
+    const props: Record<string, unknown> = record
+      ? { id: record.id, tranche: record.tranche, name: named?.value ?? hit.name, fields: record.fields, source_id: named?.source_id, licence: named?.licence, retrieved_at: named?.retrieved_at, tier: named?.tier }
+      : { id: hit.id, name: hit.name };
+    const place = fromProperties(props, hit.lon, hit.lat);
+    if (!place) return;
+    revealDetail.current = true;
+    setChosenPlace(place);
+    setSelectedId(place.id);
+  }, []);
+
+  /** The pack region whose box holds the map's centre, for the map search. Toronto when none does. */
+  const regionNear = useCallback(async () => {
+    const map = mapRef.current;
+    const source = await sharedPackSource();
+    const pack = await source?.manifest().catch(() => null) as { regions?: Array<{ id: string; bbox?: number[] }> } | null;
+    if (!map || !pack?.regions) return "toronto";
+    const { lng, lat } = map.getCenter();
+    const inside = pack.regions.find((region) => region.id !== "ontario-all" && region.bbox && lng >= region.bbox[0]! && lng <= region.bbox[2]! && lat >= region.bbox[1]! && lat <= region.bbox[3]!);
+    return inside?.id ?? "toronto";
+  }, []);
+
+  const navigate = useNavigate();
+
+  /** Where a record comes from, in words: the source's name, licence and date, from the record or the pack's source list. */
+  const provenance = useCallback((place: Place) => {
+    const info = sources.get(place.source ?? "");
+    return {
+      name: info?.name || place.source || "",
+      licence: place.licence || info?.licence || "",
+      retrieved: place.retrieved || info?.retrieved || "",
+      attribution: info?.attribution || "",
+    };
+  }, [sources]);
+
+  const listFeatures = useMemo(() => visible.map((place) => {
+    const code = displayStatus(place);
+    const from = provenance(place);
+    return {
+      id: place.id, name: displayName(place.name), lat: place.lat, lon: place.lon,
+      statusCode: code,
+      status: `${mapWord(locale, `headline.${place.category}`)}: ${mapWord(locale, `state.${code}`)}`,
+      kind: mapWord(locale, `kind.${place.category}`),
+      sourceLine: [from.name, from.licence, from.retrieved].filter(Boolean).join(" · "),
+      source: from.name || "UNKNOWN", licence: from.licence || "UNKNOWN",
+      retrievedAt: from.retrieved || "UNKNOWN", retrievedOn: from.retrieved || "UNKNOWN",
+      attribution: from.attribution, prototypeLabel: "",
+    };
+  }), [visible, locale, provenance]);
 
   return (
     <div className="access-map-page">
-      <h1>{t("map.title")}</h1>
-      <p>{t("map.intro")}</p>
+      <div className="map-heading">
+        <h1>{t("map.title")}</h1>
+        <p className="fine-print">{t("map.intro")}</p>
+      </div>
       <a href={`#${listId}`} className="map-skip">{t("map.skip")}</a>
-      <fieldset className="map-filter-set">
-        <legend>{t("map.categories")}</legend>
-        {categories.map((category) => <label key={category} className="map-chip">
-          <input type="checkbox" checked={enabled.includes(category)} onChange={() => setEnabled((old) => old.includes(category) ? old.filter((c) => c !== category) : [...old, category])} />
-          {t(`map.${category}`)}
-        </label>)}
-      </fieldset>
-      <fieldset className="map-filter-set">
-        <legend>{t("map.needs")}</legend>
-        {needs.map((need) => <label key={need} className="map-chip">
-          <input type="checkbox" checked={selectedNeeds.includes(need)} onChange={() => setSelectedNeeds((old) => old.includes(need) ? old.filter((n) => n !== need) : [...old, need])} />
-          {t(`map.${need}`)}
-        </label>)}
-      </fieldset>
-      <div className="map-legend" role="group" aria-label={t("map.legend")}>
-        {(["yes", "no", "unknown"] as Status[]).map((state) => <span key={state} className={`map-legend-${state}`}><i aria-hidden="true" />{t(`map.${state}`)}</span>)}
-      </div>
-      <div className="map-toolbar" role="group" aria-label={t("map.viewControls")} aria-describedby={libraryError ? "map-library-error" : undefined}>
-        <button type="button" disabled={mapControlsOff} onClick={() => mapRef.current && zoomMapBy(mapRef.current, 1)}>{t("map.zoomIn")}</button>
-        <button type="button" disabled={mapControlsOff} onClick={() => mapRef.current && zoomMapBy(mapRef.current, -1)}>{t("map.zoomOut")}</button>
-        <button type="button" disabled={mapControlsOff} onClick={refresh}>{t("map.refresh")}</button>
-      </div>
-      <div className="map-columns">
-        <div ref={canvas} className="map-viewport" aria-hidden="true" data-testid="map-viewport" />
+      <div className="map-shell">
+        <div className="map-stage">
+          <div ref={canvas} className="map-viewport" aria-hidden="true" data-testid="map-viewport" />
+          <MapSearch locale={locale} regionNear={regionNear} onPick={(hit) => { void pickFromSearch(hit); }} />
+          <div className="map-filterbar">
+            <fieldset className="map-filter-set">
+              <legend className="visually-hidden">{t("map.categories")}</legend>
+              {categories.map((category) => <label key={category} className="map-chip">
+                <input type="checkbox" checked={enabled.includes(category)} onChange={() => setEnabled((old) => old.includes(category) ? old.filter((c) => c !== category) : [...old, category])} />
+                {t(`map.${category}`)}
+              </label>)}
+            </fieldset>
+            <fieldset className="map-filter-set">
+              <legend className="visually-hidden">{t("map.needs")}</legend>
+              {needs.map((need) => <label key={need} className="map-chip">
+                <input type="checkbox" checked={selectedNeeds.includes(need)} onChange={() => setSelectedNeeds((old) => old.includes(need) ? old.filter((n) => n !== need) : [...old, need])} />
+                {t(`map.${need}`)}
+              </label>)}
+            </fieldset>
+          </div>
+          <div className="map-toolbar" role="group" aria-label={t("map.viewControls")} aria-describedby={libraryError ? "map-library-error" : undefined}>
+            <button type="button" className="map-zoom-in" disabled={mapControlsOff} onClick={() => mapRef.current && zoomMapBy(mapRef.current, 1)}><span className="visually-hidden">{t("map.zoomIn")}</span></button>
+            <button type="button" className="map-zoom-out" disabled={mapControlsOff} onClick={() => mapRef.current && zoomMapBy(mapRef.current, -1)}><span className="visually-hidden">{t("map.zoomOut")}</span></button>
+          </div>
+          <div className="map-legend" role="group" aria-label={t("map.legend")}>
+            {LEGEND.map((state) => <span key={state} className={`map-legend-${state}`}><i aria-hidden="true" />{state === "partly" ? mapWord(locale, "state.partly") : t(`map.${state}`)}</span>)}
+          </div>
+        </div>
+        {selected && (() => {
+          const from = provenance(selected);
+          const code = displayStatus(selected);
+          const notes = selected.facts.wheelchair_description?.value;
+          const needFields = new Set(Object.values(fields).flat());
+          const others = Object.entries(selected.facts).filter(([key, fact]) => !SHOWN_ELSEWHERE.has(key) && !needFields.has(key)
+            && fact.value !== undefined && fact.value !== null && String(fact.value).trim() !== "" && String(fact.value).toUpperCase() !== "UNKNOWN");
+          const colon = locale === "fr" ? "\u00a0:" : ":";
+          return <aside className="map-detail" aria-label={t("map.selected")}>
+            <div className="map-detail-head">
+              <div>
+                <p className="map-detail-kind">{mapWord(locale, `kind.${selected.category}`)}</p>
+                <h2>{displayName(selected.name)}</h2>
+              </div>
+              <button type="button" className="btn btn-quiet" onClick={() => setSelectedId(null)}>{t("map.close")}</button>
+            </div>
+            <p className={`map-headline status-${code}`}>
+              <i aria-hidden="true" />
+              {mapWord(locale, `headline.${selected.category}`)}{colon} <strong>{mapWord(locale, `state.${code}`)}</strong>
+            </p>
+            <div className="map-card-actions">
+              <button type="button" className="btn btn-primary" onClick={() => navigate("/journey", { state: { destination: { id: selected.id, name: displayName(selected.name) } } })}>
+                {t("map.directions")}
+              </button>
+              <Link className="btn btn-secondary" to={`/places/${encodeURIComponent(selected.id)}`}>{t("map.open")}</Link>
+            </div>
+            {typeof notes === "string" && notes.trim() ? (
+              <div className="map-detail-notes">
+                {noteLines(locale, notes).map((line, index) => <p key={index}>{line.label ? <><strong>{line.label}{colon}</strong> </> : null}{line.text}</p>)}
+              </div>
+            ) : null}
+            <h3>{t("map.needs")}</h3>
+            <dl className="map-facts">
+              {needs.map((need) => {
+                const state = needStatus(selected, need);
+                return <div key={need}>
+                  <dt>{t(`map.${need}`)}</dt>
+                  <dd><span className={`map-state status-${state}`}>{state === "unknown" ? t("map.notProvided") : mapWord(locale, `state.${state}`)}</span></dd>
+                </div>;
+              })}
+              {others.map(([key, fact]) => <div key={key}>
+                <dt>{fieldLabel(locale, key)}</dt>
+                <dd>{valueLabel(locale, key, fact.value)}</dd>
+              </div>)}
+            </dl>
+            <h3>{t("map.source")}</h3>
+            <dl className="map-facts map-source">
+              <div><dt>{t("map.source")}</dt><dd>{from.name || t("map.notProvided")}</dd></div>
+              <div><dt>{t("map.licence")}</dt><dd>{from.licence || t("map.notProvided")}</dd></div>
+              <div><dt>{t("map.retrieved")}</dt><dd>{from.retrieved || t("map.notProvided")}</dd></div>
+              {selected.tier ? <div><dt>{t("map.tier")}</dt><dd>{selected.tier}</dd></div> : null}
+              {from.attribution ? <div><dt>{t("map.credit")}</dt><dd>{from.attribution}</dd></div> : null}
+            </dl>
+          </aside>;
+        })()}
         <section className="map-results" aria-label={t("map.list")}>
-          <p role="status">{loading ? t("map.loading") : `${visible.length} ${t("map.records")}`}</p>
+          <div className="map-results-head">
+            <p role="status">{loading ? t("map.loading") : `${visible.length} ${t("map.records")}`}</p>
+            <button type="button" className="btn btn-quiet" disabled={mapControlsOff} onClick={refresh}>{t("map.refresh")}</button>
+          </div>
           <TileBandNotice failures={tileFailures} listUnavailable={tileListUnavailable} />
           {libraryError && <p id="map-library-error" role="alert">{t("map.libraryUnavailable")} {t("map.controlsUnavailable")}</p>}
           {/* Offline, the map's data cannot load: say so with the offline state. Online, a load
@@ -340,25 +580,8 @@ export function MapPage() {
               </div>
             ) : <p id={listId} tabIndex={-1}>{t("map.empty")}</p>}
         </section>
-        {selected && <aside className="map-detail" aria-label={t("map.selected")}>
-          <h2>{selected.name}</h2>
-          <button type="button" onClick={() => setSelectedId(null)}>{t("map.close")}</button>
-          <dl>
-            {needs.map((need) => {
-              const fact = needFact(selected, need);
-              return <div key={need}>
-                <dt>{t(`map.${need}`)}</dt><dd>{t(`map.${needStatus(selected, need)}`)}</dd>
-                <dd>{t("map.source")}{locale === "fr" ? " :" : ":"} {fact?.source_id ?? selected.source ?? t("map.notProvided")}</dd>
-                <dd>{t("map.licence")}{locale === "fr" ? " :" : ":"} {fact?.licence ?? selected.licence ?? t("map.notProvided")}</dd>
-                <dd>{t("map.retrieved")}{locale === "fr" ? " :" : ":"} {fact?.retrieved_at ?? selected.retrieved ?? t("map.notProvided")}</dd>
-                <dd>{t("map.tier")}{locale === "fr" ? " :" : ":"} {fact?.tier ?? selected.tier ?? t("map.notProvided")}</dd>
-              </div>;
-            })}
-          </dl>
-          <Link to={`/places/${encodeURIComponent(selected.id)}`}>{t("map.open")}</Link>
-        </aside>}
       </div>
-      <p className="map-attribution"><a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">{t("map.attribution")}</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">{t("map.odbl")}</a></p>
+      <p className="map-attribution"><a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">{t("map.attribution")}</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">{t("map.odbl")}</a>{streetsOn ? ` · ${t("map.streets")}` : ""}</p>
     </div>
   );
 }

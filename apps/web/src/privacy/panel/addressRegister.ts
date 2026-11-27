@@ -59,6 +59,7 @@ export const CALL_REGISTER: readonly CallRow[] = [
   call("apps/web/src/data-status/standalone/sw.ts", 1, "same-site", "Repeats a request the page made, so a copy can be kept for offline use", "Répète une requête faite par la page, pour garder une copie pour l’usage hors ligne"),
   call("apps/web/src/states/serviceWorker.ts", 2, "same-site", "Repeats a request the page made, so a copy can be kept for offline use", "Répète une requête faite par la page, pour garder une copie pour l’usage hors ligne"),
   call("apps/web/src/packs/bundledToronto.ts", 1, "same-site", "Reads the shipped Toronto pack for a place or help detail when the device has no saved copy", "Lit le jeu de données de Toronto fourni avec le site pour afficher un lieu ou un contact d’aide en l’absence de copie sur l’appareil"),
+  call("apps/web/src/map/basemap.ts", 1, "same-site", "Loads the list of street map files kept on this site", "Charge la liste des fichiers de carte des rues gardés sur ce site"),
   call("apps/web/src/map/tileCache.ts", 3, "UNKNOWN", "Loads the offline map pack’s list and its files", "Charge la liste du lot de cartes hors ligne et ses fichiers"),
 ];
 

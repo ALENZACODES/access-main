@@ -14,6 +14,8 @@ The shell depends on these libraries. Their names are credits, not endorsements.
 | Vitest | MIT | See the package licence |
 | eslint-plugin-jsx-a11y | MIT | See the package licence |
 | React and React Router | MIT | See the package licences |
+| @protomaps/basemaps (street map style) | BSD-3-Clause | Copyright Protomaps LLC. Used unmodified to style the street basemap. |
+| Street basemap tiles, glyphs and sprites (Protomaps build of OpenStreetMap, protomaps/basemaps-assets) | ODbL-1.0 (map data); OFL-1.1 (Noto Sans glyphs); CC0 (sprites) | © OpenStreetMap contributors. Cut per region at publish time and served from this site. |
 | Open Sans (via @fontsource-variable/open-sans) | OFL-1.1 | Copyright The Open Sans Project Authors. Font files are bundled unmodified. |
 
 Map tiles are not shipped. When a map is added, OpenStreetMap attribution and the ODbL share-alike duty stay with that layer.
